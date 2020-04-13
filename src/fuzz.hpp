@@ -63,13 +63,11 @@ template<
 >
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT = char_type<Sentence1>,
-    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
->
-percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+template<typename CharT>
+percent token_ratio(
+	const Sentence<CharT>& s1,
+	const Sentence<CharT>& s2,
+	percent score_cutoff = 0);
 
 template<typename CharT>
 percent partial_token_ratio(
