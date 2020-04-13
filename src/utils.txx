@@ -48,7 +48,7 @@ uint64_t utils::bitmap_create(const std::basic_string<CharT>& sentence)
     return bitmap_create(boost::basic_string_view<CharT>(sentence));
 }
 
-inline percent utils::result_cutoff(double result, percent score_cutoff)
+inline percent utils::result_cutoff(const double result, const percent score_cutoff)
 {
     return (result >= score_cutoff) ? result : 0;
 }

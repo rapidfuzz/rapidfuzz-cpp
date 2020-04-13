@@ -5,6 +5,18 @@
 #include <vector>
 #include <boost/utility/string_view.hpp>
 
+namespace detail {
+    template<typename T>
+    auto char_type(T const*) -> T;
+
+    template<typename T, typename U = typename T::const_iterator>
+    auto char_type(T const&) -> typename std::iterator_traits<U>::value_type;
+}
+
+template<typename T>
+using char_type = decltype(detail::char_type(std::declval<T const&>()));
+
+
 /* 0.0% - 100.0% */
 using percent = double;
 
@@ -34,7 +46,7 @@ uint64_t bitmap_create(const boost::basic_string_view<CharT>& sentence);
 template<typename CharT>
 uint64_t bitmap_create(const std::basic_string<CharT>& sentence);
 
-percent result_cutoff(double result, percent score_cutoff);
+percent result_cutoff(const double result, const percent score_cutoff);
 }
 
 #include "utils.txx"
