@@ -69,17 +69,13 @@ percent token_ratio(
 	const Sentence<CharT>& s2,
 	percent score_cutoff = 0);
 
-template<typename CharT>
-percent partial_token_ratio(
-	const boost::basic_string_view<CharT>& s1,
-	const boost::basic_string_view<CharT>& s2,
-	percent score_cutoff = 0);
 
-template<typename CharT>
-percent partial_token_ratio(
-	const std::basic_string<CharT>& s1,
-	const std::basic_string<CharT>& s2,
-	percent score_cutoff = 0);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 template<typename CharT>
 std::size_t bitmap_distance(const Sentence<CharT>& s1, const Sentence<CharT>& s2);

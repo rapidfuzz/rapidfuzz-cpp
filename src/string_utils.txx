@@ -173,7 +173,7 @@ void string_utils::lower_case(std::wstring& s)
 }
 
 template<typename CharT>
-void replace_non_alnum(std::basic_string<CharT>& s) {
+void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
     // replace punctuation and control control characters
     // iscntrl and !alnum did replace e.g. some cyrillic characters aswell
     // so the ranges are manually checked

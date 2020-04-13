@@ -280,21 +280,21 @@ percent fuzz::token_ratio(
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
-// combines token_set and token_sort ratio from fuzzywuzzy so it is only required to
-// do a lot of operations once
-template<typename CharT>
-percent fuzz::partial_token_ratio(
-    const boost::basic_string_view<CharT>& s1,
-    const boost::basic_string_view<CharT>& s2,
-    percent score_cutoff)
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT, typename
+>
+percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
         return 0;
     }
 
-    std::vector<boost::wstring_view> tokens_a = string_utils::splitSV(s1);
+    string_view_vec<CharT> tokens_a = string_utils::splitSV(
+        boost::basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());
-    std::vector<boost::wstring_view> tokens_b = string_utils::splitSV(s2);
+    string_view_vec<CharT> tokens_b = string_utils::splitSV(
+        boost::basic_string_view<CharT>(s2));
     std::sort(tokens_b.begin(), tokens_b.end());
 
     auto unique_a = tokens_a;
@@ -325,18 +325,6 @@ percent fuzz::partial_token_ratio(
     return std::max(
         result,
         partial_ratio(string_utils::join(difference_ab), string_utils::join(difference_ba), score_cutoff));
-}
-
-template<typename CharT>
-percent fuzz::partial_token_ratio(
-    const std::basic_string<CharT>& s1,
-    const std::basic_string<CharT>& s2,
-    percent score_cutoff)
-{
-    return partial_token_ratio(
-        boost::basic_string_view<CharT>(s1),
-        boost::basic_string_view<CharT>(s2),
-        score_cutoff);
 }
 
 template<typename CharT>
