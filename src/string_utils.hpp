@@ -5,14 +5,7 @@
 #include <boost/utility/string_view.hpp>
 #include <vector>
 #include <tuple>
-
-// taken from https://stackoverflow.com/questions/52737760/how-to-define-string-literal-with-character-type-that-depends-on-template-parame/52742402#52742402
-#define TOWSTRING_(x) L##x
-#define TOWSTRING(x) TOWSTRING_(x)  
-#define CHARTYPE_STR(C, STR) (std::get<const C*>(std::tuple<const char*, const wchar_t*>(STR, TOWSTRING(STR))))
-
-template<typename CharT>
-using string_view_vec = std::vector<boost::basic_string_view<CharT>>;
+#include "utils.hpp"
 
 template<typename CharT>
 struct Sentence {

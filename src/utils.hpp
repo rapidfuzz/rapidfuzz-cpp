@@ -16,6 +16,16 @@ namespace detail {
 template<typename T>
 using char_type = decltype(detail::char_type(std::declval<T const&>()));
 
+template<
+    typename Sentence1, typename Sentence2,
+	typename Char1 = char_type<Sentence1>,
+	typename Char2 = char_type<Sentence2>
+>
+using IsConvertibleToSameStringView = std::enable_if_t<
+        std::is_same<Char1, Char2>::value
+     && std::is_convertible<Sentence1 const&, boost::basic_string_view<Char1>>::value
+    >;
+
 
 /* 0.0% - 100.0% */
 using percent = double;
