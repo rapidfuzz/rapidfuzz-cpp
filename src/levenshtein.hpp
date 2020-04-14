@@ -2,12 +2,14 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include <boost/utility/string_view.hpp>
-#include <vector>
+#include "utils.hpp"
+
 #include <cmath>
 #include <numeric>
+#include <vector>
 
-namespace levenshtein {
+namespace rapidfuzz { namespace levenshtein {
+
 struct WeightTable {
     std::size_t insert_cost;
     std::size_t delete_cost;
@@ -51,102 +53,57 @@ struct EditOp {
 };
 
 
-template<typename CharT>
-Matrix matrix(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+Matrix matrix(const Sentence1& s1, const Sentence2& s2);
 
-template <typename CharT>
-Matrix matrix(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+std::vector<MatchingBlock> matching_blocks(const Sentence1& s1, const Sentence2& s2);
 
-template<typename CharT>
-std::vector<MatchingBlock> matching_blocks(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2);
-
-template <typename CharT>
-std::vector<MatchingBlock> matching_blocks(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2);
-
-template<typename CharT>
-double normalized_distance(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2,
-    double min_ratio = 0.0);
-
-template <typename CharT>
-double normalized_distance(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2,
-    double min_ratio = 0.0);
-
-template<typename CharT>
-std::size_t distance(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2);
-
-template <typename CharT>
-std::size_t distance(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+std::size_t distance(const Sentence1& s1, const Sentence2& s2);
 
 
-/**
- * Calculates the minimum number of insertions, deletions, and substitutions
- * required to change one sequence into the other according to Levenshtein.
- * Opposed to the normal distance function which has a cost of 1 for all edit operations,
- * it uses the following costs for edit operations:
- *
- * edit operation | cost
- * :------------- | :---
- * Insert         | 1
- * Remove         | 1
- * Replace        | 2
- * 
- * @param sentence1 first sentence to match (can be either a string type or a vector of strings)
- * @param sentence2 second sentence to match (can be either a string type or a vector of strings)
- * @return weighted levenshtein distance
- */
-template<typename CharT>
-std::size_t weighted_distance(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+std::size_t weighted_distance(const Sentence1& s1, const Sentence2& s2);
 
-template <typename CharT>
-std::size_t weighted_distance(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+std::size_t generic_distance(const Sentence1& s1, const Sentence2& s2, WeightTable weights = { 1, 1, 1 });
 
-template<typename CharT>
-std::size_t generic_distance(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2,
-    WeightTable weights = { 1, 1, 1 });
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+double normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
 
-template <typename CharT>
-std::size_t generic_distance(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2,
-    WeightTable weights = { 1, 1, 1 });
 
-/**
-  * Calculates a normalized score of the weighted Levenshtein algorithm between 0.0 and
-  * 1.0 (inclusive), where 1.0 means the sequences are the same.
-  */
-template<typename CharT>
-double normalized_weighted_distance(
-    boost::basic_string_view<CharT> sentence1,
-    boost::basic_string_view<CharT> sentence2,
-    double min_ratio = 0.0);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
 
-template <typename CharT>
-double normalized_weighted_distance(
-    const std::basic_string<CharT>& sentence1,
-    const std::basic_string<CharT>& sentence2,
-    double min_ratio = 0.0);
+} /* levenshtein */ } /* rapidfuzz */
 
-}
 #include "levenshtein.txx"

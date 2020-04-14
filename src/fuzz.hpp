@@ -3,12 +3,12 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include <boost/utility/string_view.hpp>
-#include <type_traits>
-#include "utils.hpp"
 #include "string_utils.hpp"
+#include "utils.hpp"
 
-namespace fuzz {
+#include <type_traits>
+
+namespace rapidfuzz { namespace fuzz {
 
 template<
     typename Sentence1, typename Sentence2,
@@ -81,6 +81,7 @@ percent quick_lev_estimate(const Sentence<CharT>& s1, const Sentence<CharT>& s2,
 
 template<typename CharT>
 percent WRatio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff = 0);
-}
+
+} /* fuzz */ } /* rapidfuzz */
 
 #include "fuzz.txx"

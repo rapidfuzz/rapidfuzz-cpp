@@ -2,11 +2,14 @@
 /* Copyright © 2020 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
-#include "process.hpp"
 #include "fuzz.hpp"
-#include "utils.hpp"
+#include "process.hpp"
 #include "string_utils.hpp"
+#include "utils.hpp"
+
 #include <algorithm>
+
+namespace rapidfuzz {
 
 std::vector<std::pair<std::wstring, double> >
 process::extract(const std::wstring& query, const std::vector<std::wstring>& choices,
@@ -66,3 +69,5 @@ process::extractOne(const std::wstring& query, const std::vector<std::wstring>& 
     }
     return std::make_pair(result_choice, score_cutoff);
 }
+
+} /* rapidfuzz */
