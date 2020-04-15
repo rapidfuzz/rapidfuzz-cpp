@@ -4,12 +4,15 @@
 
 #include "fuzz.hpp"
 #include "levenshtein.hpp"
+
 #include <algorithm>
 #include <cmath>
-#include <vector>
-#include <tuple>
+#include <difflib/difflib.h>
 #include <iterator>
+#include <tuple>
+#include <vector>
 
+namespace rapidfuzz {
 
 template<
     typename Sentence1, typename Sentence2,
@@ -18,10 +21,10 @@ template<
 percent fuzz::ratio(const Sentence1 &s1, const Sentence2 &s2, const percent score_cutoff)
 {
     double result = levenshtein::normalized_weighted_distance(
-        boost::basic_string_view<CharT>(s1),
-        boost::basic_string_view<CharT>(s2),
+        basic_string_view<CharT>(s1),
+        basic_string_view<CharT>(s2),
         score_cutoff / 100);
-    return utils::result_cutoff(result * 100, score_cutoff);
+    return result * 100;
 }
 
 
@@ -31,31 +34,50 @@ template<
 >
 percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent score_cutoff)
 {
+    using std::get;
+
     if (score_cutoff > 100) {
         return 0;
     }
 
-    boost::basic_string_view<CharT> s1_view(s1);
-    boost::basic_string_view<CharT> s2_view(s2);
+    basic_string_view<CharT> s1_view(s1);
+    basic_string_view<CharT> s2_view(s2);
 
     if (s1_view.empty() || s2_view.empty()) {
         return 0;
+    }
+
+    // when both strings have the same length the is only one possible alignment
+    if (s1_view.length() == s2_view.length()) {
+        return ratio(s1_view, s2_view, score_cutoff);
     }
 
     if (s1_view.length() > s2_view.length()) {
         std::swap(s1_view, s2_view);
     }
 
-    auto blocks = levenshtein::matching_blocks(s1_view, s2_view);
-    score_cutoff /= 100;
+    std::size_t short_len = s1_view.length();
+
+    // TODO: This can be done based on the levenshtein distance aswell, which should
+    // be faster
+    auto matcher = difflib::SequenceMatcher<basic_string_view<CharT>>(s1_view, s2_view);
+    auto blocks = matcher.get_matching_blocks();
+
+    // when there is a full match exit early
+    for (const auto& block : blocks) {
+        if (get<2>(block) == short_len) {
+            return 100;
+        }
+    }
+
     double max_ratio = 0;
     for (const auto& block : blocks) {
-        std::size_t long_start = (block.second_start > block.first_start) ? block.second_start - block.first_start : 0;
-        boost::basic_string_view<CharT> long_substr = s2.substr(long_start, s1_view.length());
+        std::size_t long_start = (get<1>(block) > get<0>(block)) ? get<1>(block) - get<0>(block): 0;
+        basic_string_view<CharT> long_substr = s2.substr(long_start, short_len);
 
-        double ls_ratio = levenshtein::normalized_weighted_distance(s1_view, long_substr, score_cutoff);
+        double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
 
-        if (ls_ratio > 0.995) {
+        if (ls_ratio > 99.5) {
             return 100;
         }
 
@@ -64,7 +86,7 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
         }
     }
 
-    return max_ratio * 100;
+    return max_ratio;
 }
 
 template<
@@ -78,10 +100,10 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
     }
 
     string_view_vec<CharT> tokens_a = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s1));
+        basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());
     string_view_vec<CharT> tokens_b = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s2));
+        basic_string_view<CharT>(s2));
     std::sort(tokens_b.begin(), tokens_b.end());
 
     return levenshtein::normalized_weighted_distance(
@@ -102,10 +124,10 @@ percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
     }
 
     string_view_vec<CharT> tokens_a = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s1));
+        basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());
     string_view_vec<CharT> tokens_b = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s2));
+        basic_string_view<CharT>(s2));
     std::sort(tokens_b.begin(), tokens_b.end());
 
     return fuzz::partial_ratio(
@@ -126,10 +148,10 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
     }
 
     string_view_vec<CharT> tokens_a = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s1));
+        basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());
     string_view_vec<CharT> tokens_b = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s2));
+        basic_string_view<CharT>(s2));
     std::sort(tokens_b.begin(), tokens_b.end());
 
     auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
@@ -185,10 +207,10 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, 
     }
 
     string_view_vec<CharT> tokens_a = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s1));
+        basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());
     string_view_vec<CharT> tokens_b = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s2));
+        basic_string_view<CharT>(s2));
     std::sort(tokens_b.begin(), tokens_b.end());
 
     tokens_a.erase(std::unique(tokens_a.begin(), tokens_a.end()), tokens_a.end());
@@ -291,10 +313,10 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
     }
 
     string_view_vec<CharT> tokens_a = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s1));
+        basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());
     string_view_vec<CharT> tokens_b = string_utils::splitSV(
-        boost::basic_string_view<CharT>(s2));
+        basic_string_view<CharT>(s2));
     std::sort(tokens_b.begin(), tokens_b.end());
 
     auto unique_a = tokens_a;
@@ -302,11 +324,11 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
     unique_a.erase(std::unique(unique_a.begin(), unique_a.end()), unique_a.end());
     unique_b.erase(std::unique(unique_b.begin(), unique_b.end()), unique_b.end());
 
-    std::vector<boost::wstring_view> difference_ab;
+    string_view_vec<wchar_t> difference_ab;
     std::set_difference(unique_a.begin(), unique_a.end(), unique_b.begin(), unique_b.end(),
         std::back_inserter(difference_ab));
 
-    std::vector<boost::wstring_view> difference_ba;
+    string_view_vec<wchar_t> difference_ba;
     std::set_difference(unique_b.begin(), unique_b.end(), unique_a.begin(), unique_a.end(),
         std::back_inserter(difference_ba));
 
@@ -412,3 +434,5 @@ percent fuzz::WRatio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, perce
     score_cutoff = std::max(score_cutoff, sratio + 0.00001) / UNBASE_SCALE;
     return std::max(sratio, partial_token_ratio(s1.sentence, s2.sentence, score_cutoff) * UNBASE_SCALE * partial_scale);
 }
+
+} /* rapidfuzz */

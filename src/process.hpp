@@ -4,11 +4,11 @@
 
 #pragma once
 #include <optional>
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
 
-namespace process {
+namespace rapidfuzz { namespace process {
 std::vector<std::pair<std::wstring, double> >
 extract(const std::wstring& query, const std::vector<std::wstring>& choices,
     std::size_t limit = 5, double score_cutoff = 0, bool preprocess = true);
@@ -16,4 +16,4 @@ extract(const std::wstring& query, const std::vector<std::wstring>& choices,
 std::optional<std::pair<std::wstring, double> >
 extractOne(const std::wstring& query, const std::vector<std::wstring>& choices,
     double score_cutoff = 0, bool preprocess = true);
-}
+} /* process */ } /* rapidfuzz */

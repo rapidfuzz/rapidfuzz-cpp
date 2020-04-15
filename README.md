@@ -8,18 +8,6 @@
     <img src="https://github.com/maxbachmann/rapidfuzz/workflows/Build/badge.svg"
          alt="Continous Integration">
   </a>
-  <a href="https://pypi.org/project/rapidfuzz/">
-    <img src="https://img.shields.io/pypi/v/rapidfuzz"
-         alt="PyPI package version">
-  </a>
-  <a href="https://anaconda.org/conda-forge/rapidfuzz">
-    <img src="https://img.shields.io/conda/vn/conda-forge/rapidfuzz.svg"
-         alt="Conda Version">
-  </a>
-  <a href="https://www.python.org">
-    <img src="https://img.shields.io/pypi/pyversions/rapidfuzz"
-         alt="Python versions">
-  </a>
   <a href="https://github.com/maxbachmann/rapidfuzz/blob/dev/LICENSE">
     <img src="https://img.shields.io/github/license/maxbachmann/rapidfuzz"
          alt="GitHub license">

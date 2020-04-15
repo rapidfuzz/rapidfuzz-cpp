@@ -2,11 +2,14 @@
 /* Copyright © 2020 Max Bachmann */
 
 #include "string_utils.hpp"
-#include <algorithm>
-#include <cwctype>
-#include <cctype>
 
-inline string_view_vec<char> string_utils::splitSV(const boost::basic_string_view<char>& str)
+#include <algorithm>
+#include <cctype>
+#include <cwctype>
+
+namespace rapidfuzz {
+
+inline string_view_vec<char> string_utils::splitSV(const basic_string_view<char>& str)
 {
     string_view_vec<char> output;
 
@@ -24,7 +27,7 @@ inline string_view_vec<char> string_utils::splitSV(const boost::basic_string_vie
     return output;
 }
 
-inline string_view_vec<wchar_t> string_utils::splitSV(const boost::basic_string_view<wchar_t>& str)
+inline string_view_vec<wchar_t> string_utils::splitSV(const basic_string_view<wchar_t>& str)
 {
     string_view_vec<wchar_t> output;
 
@@ -45,7 +48,7 @@ inline string_view_vec<wchar_t> string_utils::splitSV(const boost::basic_string_
 template<typename CharT>
 string_view_vec<CharT> splitSV(const std::basic_string<CharT>& str)
 {
-    return splitSV(boost::basic_string_view<CharT>(str));
+    return splitSV(basic_string_view<CharT>(str));
 }
 
 template<typename CharT>
@@ -95,7 +98,7 @@ inline auto common_prefix_length(InputIterator1 first1, InputIterator1 last1,
  * Removes common prefix of two string views
  */
 template<typename CharT>
-std::size_t remove_common_prefix(boost::basic_string_view<CharT>& a, boost::basic_string_view<CharT>& b)
+std::size_t remove_common_prefix(basic_string_view<CharT>& a, basic_string_view<CharT>& b)
 {
     auto prefix = common_prefix_length(a.begin(), a.end(), b.begin(), b.end());
     a.remove_prefix(prefix);
@@ -107,7 +110,7 @@ std::size_t remove_common_prefix(boost::basic_string_view<CharT>& a, boost::basi
  * Removes common suffix of two string views
  */
 template<typename CharT>
-std::size_t remove_common_suffix(boost::basic_string_view<CharT>& a, boost::basic_string_view<CharT>& b)
+std::size_t remove_common_suffix(basic_string_view<CharT>& a, basic_string_view<CharT>& b)
 {
     auto suffix = common_prefix_length(a.rbegin(), a.rend(), b.rbegin(), b.rend());
     a.remove_suffix(suffix);
@@ -119,7 +122,7 @@ std::size_t remove_common_suffix(boost::basic_string_view<CharT>& a, boost::basi
  * Removes common affix of two string views
  */
 template<typename CharT>
-Affix string_utils::remove_common_affix(boost::basic_string_view<CharT>& a, boost::basic_string_view<CharT>& b)
+Affix string_utils::remove_common_affix(basic_string_view<CharT>& a, basic_string_view<CharT>& b)
 {
     return Affix{
         remove_common_prefix(a, b),
@@ -190,3 +193,5 @@ std::basic_string<CharT> string_utils::default_process(std::basic_string<CharT> 
     lower_case(s);
     return s;
 }
+
+} /* rapidfuzz */
