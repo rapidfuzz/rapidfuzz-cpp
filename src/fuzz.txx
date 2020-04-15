@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <difflib/difflib.h>
 #include <iterator>
 #include <tuple>
 #include <vector>
@@ -23,7 +24,7 @@ percent fuzz::ratio(const Sentence1 &s1, const Sentence2 &s2, const percent scor
         basic_string_view<CharT>(s1),
         basic_string_view<CharT>(s2),
         score_cutoff / 100);
-    return utils::result_cutoff(result * 100, score_cutoff);
+    return result * 100;
 }
 
 
@@ -33,6 +34,8 @@ template<
 >
 percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent score_cutoff)
 {
+    using std::get;
+
     if (score_cutoff > 100) {
         return 0;
     }
@@ -44,20 +47,37 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
         return 0;
     }
 
+    // when both strings have the same length the is only one possible alignment
+    if (s1_view.length() == s2_view.length()) {
+        return ratio(s1_view, s2_view, score_cutoff);
+    }
+
     if (s1_view.length() > s2_view.length()) {
         std::swap(s1_view, s2_view);
     }
 
-    auto blocks = levenshtein::matching_blocks(s1_view, s2_view);
-    score_cutoff /= 100;
+    std::size_t short_len = s1_view.length();
+
+    // TODO: This can be done based on the levenshtein distance aswell, which should
+    // be faster
+    auto matcher = difflib::SequenceMatcher<basic_string_view<CharT>>(s1_view, s2_view);
+    auto blocks = matcher.get_matching_blocks();
+
+    // when there is a full match exit early
+    for (const auto& block : blocks) {
+        if (get<2>(block) == short_len) {
+            return 100;
+        }
+    }
+
     double max_ratio = 0;
     for (const auto& block : blocks) {
-        std::size_t long_start = (block.second_start > block.first_start) ? block.second_start - block.first_start : 0;
-        basic_string_view<CharT> long_substr = s2.substr(long_start, s1_view.length());
+        std::size_t long_start = (get<1>(block) > get<0>(block)) ? get<1>(block) - get<0>(block): 0;
+        basic_string_view<CharT> long_substr = s2.substr(long_start, short_len);
 
-        double ls_ratio = levenshtein::normalized_weighted_distance(s1_view, long_substr, score_cutoff);
+        double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
 
-        if (ls_ratio > 0.995) {
+        if (ls_ratio > 99.5) {
             return 100;
         }
 
@@ -66,7 +86,7 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
         }
     }
 
-    return max_ratio * 100;
+    return max_ratio;
 }
 
 template<
