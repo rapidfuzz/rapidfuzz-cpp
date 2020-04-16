@@ -73,7 +73,7 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
     double max_ratio = 0;
     for (const auto& block : blocks) {
         std::size_t long_start = (get<1>(block) > get<0>(block)) ? get<1>(block) - get<0>(block): 0;
-        basic_string_view<CharT> long_substr = s2.substr(long_start, short_len);
+        basic_string_view<CharT> long_substr = s2_view.substr(long_start, short_len);
 
         double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
 
