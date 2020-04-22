@@ -185,13 +185,14 @@ void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
     }, (CharT)0x20);
 }
 
-template<typename CharT>
-std::basic_string<CharT> string_utils::default_process(std::basic_string<CharT> s)
+template<typename Sentence, typename CharT, typename>
+std::basic_string<CharT> string_utils::default_process(const Sentence& s)
 {
-    replace_non_alnum(s);
-    trim(s);
-    lower_case(s);
-    return s;
+    std::basic_string<CharT> processed(s);
+    replace_non_alnum(processed);
+    trim(processed);
+    lower_case(processed);
+    return processed;
 }
 
 } /* rapidfuzz */
