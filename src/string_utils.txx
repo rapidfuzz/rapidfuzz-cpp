@@ -177,21 +177,25 @@ void string_utils::lower_case(std::wstring& s)
 
 template<typename CharT>
 void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
-    // replace punctuation and control control characters
-    // iscntrl and !alnum did replace e.g. some cyrillic characters aswell
-    // so the ranges are manually checked
+    // replace punctuation, control control characters, whitespaces with whitespaces
     std::replace_if(s.begin(), s.end(), [](CharT ch) {
-        return std::ispunct(ch) || (int)ch < 0x1F || (int)ch == 0x7F;
+        int ascii = static_cast<int>(ch);
+        return ascii <= 2F // NUL <-> /
+            || ascii >= 0x3A && ascii <= 0x40 // : <-> @
+            || ascii >= 0x5B && ascii <= 0x60 // [ <-> `
+            || ascii >= 0x7B && ascii <= 0x7F // { <-> DEL
     }, (CharT)0x20);
 }
 
-template<typename CharT>
-std::basic_string<CharT> string_utils::default_process(std::basic_string<CharT> s)
+
+template<typename Sentence, typename CharT, typename>
+std::basic_string<CharT> string_utils::default_process(const Sentence& s)
 {
-    replace_non_alnum(s);
-    trim(s);
-    lower_case(s);
-    return s;
+    std::basic_string<CharT> processed(s);
+    replace_non_alnum(processed);
+    trim(processed);
+    lower_case(processed);
+    return processed;
 }
 
 } /* rapidfuzz */

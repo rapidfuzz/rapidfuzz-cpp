@@ -51,8 +51,11 @@ void lower_case(std::wstring& s);
 template<typename CharT>
 void replace_non_alnum(std::basic_string<CharT>& s);
 
-template<typename CharT>
-std::basic_string<CharT> default_process(std::basic_string<CharT> s);
+template<
+    typename Sentence, typename CharT = char_type<Sentence>,
+    typename = std::enable_if_t<std::is_constructible<std::basic_string<CharT>, Sentence const&>::value>
+>
+std::basic_string<CharT> default_process(const Sentence& s);
 
 } /* string_utils */ } /* rapidfuzz */
 
