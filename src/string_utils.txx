@@ -180,10 +180,10 @@ void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
     // replace punctuation, control control characters, whitespaces with whitespaces
     std::replace_if(s.begin(), s.end(), [](CharT ch) {
         int ascii = static_cast<int>(ch);
-        return ascii <= 2F // NUL <-> /
+        return ascii <= 0x2F // NUL <-> /
             || ascii >= 0x3A && ascii <= 0x40 // : <-> @
             || ascii >= 0x5B && ascii <= 0x60 // [ <-> `
-            || ascii >= 0x7B && ascii <= 0x7F // { <-> DEL
+            || ascii >= 0x7B && ascii <= 0x7F; // { <-> DEL
     }, (CharT)0x20);
 }
 
