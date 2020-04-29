@@ -99,6 +99,22 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
         return 0;
     }
 
+    if (!length_ratio(
+        Sentence<CharT>(s1),
+        Sentence<CharT>(s2),
+        score_cutoff))
+    {
+        return 0;
+    }
+
+    if (!bitmap_ratio(
+        Sentence<CharT>(s1, utils::bitmap_create(s1)),
+        Sentence<CharT>(s2, utils::bitmap_create(s2)),
+        score_cutoff))
+    {
+        return 0;
+    }
+
     string_view_vec<CharT> tokens_a = string_utils::splitSV(
         basic_string_view<CharT>(s1));
     std::sort(tokens_a.begin(), tokens_a.end());

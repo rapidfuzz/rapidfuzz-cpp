@@ -12,7 +12,7 @@ namespace rapidfuzz {
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT, typename
+    typename CharT, typename
 >
 std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2)
 {
@@ -53,7 +53,7 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2)
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT, typename
+    typename CharT, typename
 >
 std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2& s2)
 {
@@ -99,7 +99,7 @@ std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2&
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT, typename
+    typename CharT, typename
 >
 std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& s2, WeightTable weights)
 {
@@ -139,7 +139,7 @@ std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& 
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT, typename
+    typename CharT, typename
 >
 double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio)
 {
@@ -173,7 +173,7 @@ double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT, typename
+    typename CharT, typename
 >
 double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio)
 {
