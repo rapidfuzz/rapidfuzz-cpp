@@ -46,10 +46,7 @@ template<typename Sentence1, typename Sentence2>
 std::size_t count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2);
 
 template<typename CharT>
-void trim(std::basic_string<CharT>& s);
-
-void lower_case(std::string& s);
-void lower_case(std::wstring& s);
+void lower_case(std::basic_string<CharT>& s);
 
 template<typename CharT>
 void replace_non_alnum(std::basic_string<CharT>& s);

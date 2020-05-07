@@ -153,49 +153,13 @@ std::size_t string_utils::count_uncommon_chars(const Sentence1 &s1, const Senten
     return count;
 }
 
-inline void ltrim(std::string& s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const char& ch) {
-            return !std::isspace(ch);
-        }));
-}
-
-inline void ltrim(std::wstring& s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const wchar_t& ch) {
-            return !std::iswspace(ch);
-        }));
-}
-
-inline void rtrim(std::string& s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](const char& ch) {
-            return !std::isspace(ch);
-        }).base(), s.end());
-}
-
-inline void rtrim(std::wstring& s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](const wchar_t& ch) {
-            return !std::iswspace(ch);
-        }).base(), s.end());
-}
-
 template<typename CharT>
-void string_utils::trim(std::basic_string<CharT>& s)
+void string_utils::lower_case(std::basic_string<CharT>& s)
 {
-    ltrim(s);
-    rtrim(s);
-}
-
-void string_utils::lower_case(std::string& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-}
-
-void string_utils::lower_case(std::wstring& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), ::towlower);
+    // TODO: handle other characters like Ä <-> ä (maybe check how this is implemented in cpython)
+    std::transform(s.begin(), s.end(), s.begin(), [](CharT ch) {
+        return (ch >= 'A' && ch <= 'Z' ? ch + 32: ch);
+    });
 }
 
 template<typename CharT>
@@ -203,20 +167,28 @@ void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
     // replace punctuation, control control characters, whitespaces with whitespaces
     std::replace_if(s.begin(), s.end(), [](CharT ch) {
         int ascii = static_cast<int>(ch);
-        return ascii <= 0x2F // NUL <-> /
-            || ascii >= 0x3A && ascii <= 0x40 // : <-> @
-            || ascii >= 0x5B && ascii <= 0x60 // [ <-> `
-            || ascii >= 0x7B && ascii <= 0x7F; // { <-> DEL
+        return ascii <= '/'
+            || ascii >= ':' && ascii <= '@'
+            || ascii >= '[' && ascii <= '`'
+            || ascii >= '{' && ascii <= 0x7F /* DEL */;
     }, (CharT)0x20);
 }
-
 
 template<typename Sentence, typename CharT>
 std::basic_string<CharT> string_utils::default_process(const Sentence& s)
 {
     std::basic_string<CharT> processed(s);
     replace_non_alnum(processed);
-    trim(processed);
+
+    // only remove SPACE since all other space characters are already replaced with SPACE
+    processed.erase(processed.begin(), std::find_if(processed.begin(), processed.end(), [](const CharT& ch) {
+        return ch != ' ';
+    }));
+
+    processed.erase(std::find_if(processed.rbegin(), processed.rend(), [](const CharT& ch) {
+        return ch != ' ';
+    }).base(), processed.end());
+
     lower_case(processed);
     return processed;
 }
