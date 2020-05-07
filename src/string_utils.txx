@@ -130,6 +130,28 @@ Affix string_utils::remove_common_affix(basic_string_view<CharT>& a, basic_strin
     };
 }
 
+template<typename Sentence1, typename Sentence2>
+std::size_t string_utils::count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2) 
+{
+    // with %32 the results for a <-> A are equal
+    std::array<unsigned int, 32> char_freq1{};
+    std::array<unsigned int, 32> char_freq2{};
+
+    std::size_t count = 0;
+
+    for (const auto& ch : s1) char_freq1[ch%32]++;
+
+    for (const auto& ch : s2) char_freq2[ch%32]++;
+
+    for (std::size_t i = 0; i < 32; i++) {
+        auto count1 = char_freq1[i];
+        auto count2 = char_freq2[i];
+        count += count1 > count2 ? count1 - count2 : count2 - count1;
+    }
+
+    return count;
+}
+
 inline void ltrim(std::string& s)
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const char& ch) {
@@ -188,7 +210,7 @@ void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
 }
 
 
-template<typename Sentence, typename CharT, typename>
+template<typename Sentence, typename CharT>
 std::basic_string<CharT> string_utils::default_process(const Sentence& s)
 {
     std::basic_string<CharT> processed(s);

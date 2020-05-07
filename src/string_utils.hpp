@@ -42,6 +42,9 @@ std::basic_string<CharT> join(const string_view_vec<CharT>& sentence);
 template<typename CharT>
 Affix remove_common_affix(basic_string_view<CharT>& a, basic_string_view<CharT>& b);
 
+template<typename Sentence1, typename Sentence2>
+std::size_t count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2);
+
 template<typename CharT>
 void trim(std::basic_string<CharT>& s);
 
@@ -51,10 +54,7 @@ void lower_case(std::wstring& s);
 template<typename CharT>
 void replace_non_alnum(std::basic_string<CharT>& s);
 
-template<
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = std::enable_if_t<std::is_constructible<std::basic_string<CharT>, Sentence const&>::value>
->
+template<typename Sentence, typename CharT = char_type<Sentence>>
 std::basic_string<CharT> default_process(const Sentence& s);
 
 } /* string_utils */ } /* rapidfuzz */

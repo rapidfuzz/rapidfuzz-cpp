@@ -53,11 +53,12 @@ template<
 >
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-template<typename CharT>
-percent token_ratio(
-	const Sentence<CharT>& s1,
-	const Sentence<CharT>& s2,
-	percent score_cutoff = 0);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 
 template<
@@ -67,20 +68,26 @@ template<
 >
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-template<typename CharT>
-std::size_t bitmap_distance(const Sentence<CharT>& s1, const Sentence<CharT>& s2);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-template<typename CharT>
-percent bitmap_ratio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff = 0);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-template<typename CharT>
-percent length_ratio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff = 0);
-
-template<typename CharT>
-percent quick_lev_estimate(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff = 0);
-
-template<typename CharT>
-percent WRatio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff = 0);
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT = char_type<Sentence1>,
+    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+>
+percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 } /* fuzz */ } /* rapidfuzz */
 

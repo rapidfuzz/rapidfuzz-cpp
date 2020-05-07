@@ -11,6 +11,7 @@
 #include <iterator>
 #include <tuple>
 #include <vector>
+#include <iostream>
 
 namespace rapidfuzz {
 
@@ -99,19 +100,7 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
         return 0;
     }
 
-    if (!length_ratio(
-        Sentence<CharT>(s1),
-        Sentence<CharT>(s2),
-        score_cutoff))
-    {
-        return 0;
-    }
-
-    if (!bitmap_ratio(
-        Sentence<CharT>(s1, utils::bitmap_create(s1)),
-        Sentence<CharT>(s2, utils::bitmap_create(s2)),
-        score_cutoff))
-    {
+    if (!quick_lev_ratio(s1, s2, score_cutoff)){
         return 0;
     }
 
@@ -248,19 +237,19 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, 
     return partial_ratio(string_utils::join(difference_ab), string_utils::join(difference_ba), score_cutoff);
 }
 
-template<typename CharT>
-percent fuzz::token_ratio(
-    const Sentence<CharT>& s1,
-    const Sentence<CharT>& s2,
-    percent score_cutoff)
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT, typename
+>
+percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
         return 0;
     }
 
-    string_view_vec<CharT> tokens_a = string_utils::splitSV(s1.sentence);
+    string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
     std::sort(tokens_a.begin(), tokens_a.end());
-    string_view_vec<CharT> tokens_b = string_utils::splitSV(s2.sentence);
+    string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
     std::sort(tokens_b.begin(), tokens_b.end());
 
     auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
@@ -281,7 +270,7 @@ percent fuzz::token_ratio(
     }
 
     double result = 0;
-    if (quick_lev_estimate(s1, s2, score_cutoff)) {
+    if (quick_lev_ratio(s1, s2, score_cutoff)) {
         result = levenshtein::normalized_weighted_distance(
             string_utils::join(tokens_a),
             string_utils::join(tokens_b),
@@ -292,10 +281,11 @@ percent fuzz::token_ratio(
     std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
     std::size_t sect_ba_lensum = sect_len + !!sect_len + ba_len;
 
-    Sentence<CharT> diff_ab{diff_ab_joined,  utils::bitmap_create(diff_ab_joined)};
-    Sentence<CharT> diff_ba{diff_ba_joined,  utils::bitmap_create(diff_ba_joined)};
-    double bm_ratio = 1.0 - bitmap_distance(diff_ab, diff_ba) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
-    if (bm_ratio >= score_cutoff) {
+    // esitimate levenshtein distance by counting uncommon characters
+    std::size_t distance = string_utils::count_uncommon_chars(diff_ab_joined, diff_ba_joined);
+    double lev_estimate = 1.0 - distance / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+
+    if (lev_estimate*100 >= score_cutoff) {
         std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
         result = std::max(result, 1.0 - sect_distance / static_cast<double>(sect_ab_lensum + sect_ba_lensum));
     }
@@ -365,39 +355,31 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
         partial_ratio(string_utils::join(difference_ab), string_utils::join(difference_ba), score_cutoff));
 }
 
-template<typename CharT>
-std::size_t fuzz::bitmap_distance(const Sentence<CharT>& s1, const Sentence<CharT>& s2)
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT, typename
+>
+percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-    uint64_t bitmap1 = s1.bitmap;
-    uint64_t bitmap2 = s2.bitmap;
-
-    std::size_t distance = 0;
-    while (bitmap1 || bitmap2) {
-        uint8_t val1 = bitmap1 & 0b1111;
-        uint8_t val2 = bitmap2 & 0b1111;
-        distance += std::abs(val1 - val2);
-        bitmap1 >>= 4;
-        bitmap2 >>= 4;
+    if (!length_ratio(s1, s2, score_cutoff)) {
+        return 0;
     }
-    return distance;
-}
-
-template<typename CharT>
-percent fuzz::bitmap_ratio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff)
-{
-    std::size_t distance = bitmap_distance(s1, s2);
-    std::size_t lensum = s1.sentence.length() + s2.sentence.length();
+    std::size_t distance = string_utils::count_uncommon_chars(s1, s2);
+    std::size_t lensum = s1.length() + s2.length();
     percent result = 1.0 - static_cast<double>(distance) / lensum;
 
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
 
-template<typename CharT>
-percent fuzz::length_ratio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff)
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT, typename
+>
+percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-    std::size_t s1_len = s1.sentence.length();
-    std::size_t s2_len = s2.sentence.length();
+    std::size_t s1_len = s1.length();
+    std::size_t s2_len = s2.length();
     std::size_t distance = (s1_len > s2_len)
         ? s1_len - s2_len
         : s2_len - s1_len;
@@ -407,18 +389,12 @@ percent fuzz::length_ratio(const Sentence<CharT>& s1, const Sentence<CharT>& s2,
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
-template<typename CharT>
-percent fuzz::quick_lev_estimate(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff)
-{
-    if (s1.bitmap || s2.bitmap) {
-        return bitmap_ratio(s1, s2, score_cutoff);
-    } else {
-        return length_ratio(s1, s2, score_cutoff);
-    }
-}
 
-template<typename CharT>
-percent fuzz::WRatio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, percent score_cutoff)
+template<
+    typename Sentence1, typename Sentence2,
+	typename CharT, typename
+>
+percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
         return 0;
@@ -426,13 +402,13 @@ percent fuzz::WRatio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, perce
 
     const double UNBASE_SCALE = 0.95;
 
-    std::size_t len_a = s1.sentence.length();
-    std::size_t len_b = s2.sentence.length();
+    std::size_t len_a = s1.length();
+    std::size_t len_b = s2.length();
     double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / len_b : static_cast<double>(len_b) / len_a;
 
     double sratio = 0;
-    if (quick_lev_estimate(s1, s2, score_cutoff)) {
-        sratio = ratio(s1.sentence, s2.sentence, score_cutoff);
+    if (quick_lev_ratio(s1, s2, score_cutoff)) {
+        sratio = ratio(s1, s2, score_cutoff);
         // increase the score_cutoff by a small step so it might be able to exit early
         score_cutoff = std::max(score_cutoff, sratio + 0.00001);
     }
@@ -444,11 +420,11 @@ percent fuzz::WRatio(const Sentence<CharT>& s1, const Sentence<CharT>& s2, perce
     double partial_scale = (len_ratio < 8.0) ? 0.9 : 0.6;
 
     score_cutoff /= partial_scale;
-    sratio = std::max(sratio, partial_ratio(s1.sentence, s2.sentence, score_cutoff) * partial_scale);
+    sratio = std::max(sratio, partial_ratio(s1, s2, score_cutoff) * partial_scale);
 
     // increase the score_cutoff by a small step so it might be able to exit early
     score_cutoff = std::max(score_cutoff, sratio + 0.00001) / UNBASE_SCALE;
-    return std::max(sratio, partial_token_ratio(s1.sentence, s2.sentence, score_cutoff) * UNBASE_SCALE * partial_scale);
+    return std::max(sratio, partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * partial_scale);
 }
 
 } /* rapidfuzz */
