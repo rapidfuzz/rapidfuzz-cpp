@@ -4,6 +4,7 @@
 #include "string_utils.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cwctype>
 
