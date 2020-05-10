@@ -194,14 +194,14 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sent
         ? sentence1_len - sentence2_len
         : sentence2_len - sentence1_len;
 
-    double len_ratio = 1.0 - static_cast<double>(min_distance) / lensum;
+    double len_ratio = 1.0 - static_cast<double>(min_distance) / static_cast<double>(lensum);
     if (len_ratio < min_ratio) {
         return 0.0;
     }
 
     std::size_t dist =  weighted_distance(sentence1, sentence2);
 
-    double ratio = 1.0 - static_cast<double>(dist) / lensum;
+    double ratio = 1.0 - static_cast<double>(dist) / static_cast<double>(lensum);
     return (ratio >= min_ratio) ? ratio : 0.0;
 }
 

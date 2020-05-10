@@ -9,16 +9,6 @@
 
 namespace rapidfuzz {
 
-template<typename CharT>
-struct Sentence {
-    basic_string_view<CharT> sentence;
-    uint64_t bitmap = 0;
-    Sentence(basic_string_view<CharT> sentence, uint64_t bitmap = 0)
-        : sentence(sentence), bitmap(bitmap) {}
-    Sentence(std::basic_string<CharT> sentence, uint64_t bitmap = 0)
-        : sentence(basic_string_view<CharT>(sentence)), bitmap(bitmap) {}
-};
-
 struct Affix {
     std::size_t prefix_len;
     std::size_t suffix_len;
@@ -26,9 +16,8 @@ struct Affix {
 
 namespace string_utils {
 
-string_view_vec<char> splitSV(const basic_string_view<char>& str);
-
-string_view_vec<wchar_t> splitSV(const basic_string_view<wchar_t>& str);
+template<typename CharT>
+string_view_vec<CharT> splitSV(const basic_string_view<CharT>& s);
 
 template<typename CharT>
 string_view_vec<CharT> splitSV(const std::basic_string<CharT>& str);
@@ -51,8 +40,8 @@ void lower_case(std::basic_string<CharT>& s);
 template<typename CharT>
 void replace_non_alnum(std::basic_string<CharT>& s);
 
-template<typename Sentence, typename CharT = char_type<Sentence>>
-std::basic_string<CharT> default_process(const Sentence& s);
+template<typename CharT>
+std::basic_string<CharT> default_process(std::basic_string<CharT> s);
 
 } /* string_utils */ } /* rapidfuzz */
 

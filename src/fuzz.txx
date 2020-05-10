@@ -100,7 +100,7 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
         return 0;
     }
 
-    if (!quick_lev_ratio(s1, s2, score_cutoff)){
+    if (utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))){
         return 0;
     }
 
@@ -182,7 +182,7 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
 
     // TODO: use len_ratio as constant time evaluation to skip this
     std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
-    double result = 1.0 - sect_distance / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+    double result = 1.0 - static_cast<double>(sect_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
 
     // exit early since the other ratios are 0
     if (!sect_len) {
@@ -195,8 +195,8 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
     std::size_t sect_ba_distance = !!sect_len + ba_len;
 
     result = std::max({ result,
-        1.0 - sect_ab_distance / static_cast<double>(sect_len + sect_ab_lensum),
-        1.0 - sect_ba_distance / static_cast<double>(sect_len + sect_ba_lensum) });
+        1.0 - static_cast<double>(sect_ab_distance) / static_cast<double>(sect_len + sect_ab_lensum),
+        1.0 - static_cast<double>(sect_ba_distance) / static_cast<double>(sect_len + sect_ba_lensum) });
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
@@ -270,7 +270,7 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     }
 
     double result = 0;
-    if (quick_lev_ratio(s1, s2, score_cutoff)) {
+    if (!utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))) {
         result = levenshtein::normalized_weighted_distance(
             string_utils::join(tokens_a),
             string_utils::join(tokens_b),
@@ -283,11 +283,13 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
 
     // esitimate levenshtein distance by counting uncommon characters
     std::size_t distance = string_utils::count_uncommon_chars(diff_ab_joined, diff_ba_joined);
-    double lev_estimate = 1.0 - distance / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+    double lev_estimate = 1.0 - static_cast<double>(distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
 
     if (lev_estimate*100 >= score_cutoff) {
         std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
-        result = std::max(result, 1.0 - sect_distance / static_cast<double>(sect_ab_lensum + sect_ba_lensum));
+        result = std::max(
+            result,
+            1.0 - static_cast<double>(sect_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum));
     }
 
     // exit early since the other ratios are 0
@@ -303,8 +305,8 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     result = std::max({ result,
         // levenshtein distances sect+ab <-> sect and sect+ba <-> sect
         // would exit early after removing the prefix sect, so the distance can be directly calculated
-        1.0 - sect_ab_distance / static_cast<double>(sect_len + sect_ab_lensum),
-        1.0 - sect_ba_distance / static_cast<double>(sect_len + sect_ba_lensum) });
+        1.0 - static_cast<double>(sect_ab_distance) / static_cast<double>(sect_len + sect_ab_lensum),
+        1.0 - static_cast<double>(sect_ba_distance) / static_cast<double>(sect_len + sect_ba_lensum) });
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
@@ -330,11 +332,11 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
     unique_a.erase(std::unique(unique_a.begin(), unique_a.end()), unique_a.end());
     unique_b.erase(std::unique(unique_b.begin(), unique_b.end()), unique_b.end());
 
-    string_view_vec<wchar_t> difference_ab;
+    string_view_vec<CharT> difference_ab;
     std::set_difference(unique_a.begin(), unique_a.end(), unique_b.begin(), unique_b.end(),
         std::back_inserter(difference_ab));
 
-    string_view_vec<wchar_t> difference_ba;
+    string_view_vec<CharT> difference_ba;
     std::set_difference(unique_b.begin(), unique_b.end(), unique_a.begin(), unique_a.end(),
         std::back_inserter(difference_ba));
 
@@ -361,12 +363,12 @@ template<
 >
 percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-    if (!length_ratio(s1, s2, score_cutoff)) {
+    if (utils::is_zero(length_ratio(s1, s2, score_cutoff))) {
         return 0;
     }
     std::size_t distance = string_utils::count_uncommon_chars(s1, s2);
     std::size_t lensum = s1.length() + s2.length();
-    percent result = 1.0 - static_cast<double>(distance) / lensum;
+    percent result = 1.0 - static_cast<double>(distance) / static_cast<double>(lensum);
 
     return utils::result_cutoff(result * 100, score_cutoff);
 }
@@ -385,7 +387,7 @@ percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent sco
         : s2_len - s1_len;
     
     std::size_t lensum = s1_len + s2_len;
-    double result = 1.0 - static_cast<double>(distance) / lensum;
+    double result = 1.0 - static_cast<double>(distance) / static_cast<double>(lensum);
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
@@ -404,10 +406,12 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
 
     std::size_t len_a = s1.length();
     std::size_t len_b = s2.length();
-    double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / len_b : static_cast<double>(len_b) / len_a;
+    double len_ratio = (len_a > len_b)
+        ? static_cast<double>(len_a) / static_cast<double>(len_b)
+        : static_cast<double>(len_b) / static_cast<double>(len_a);
 
     double sratio = 0;
-    if (quick_lev_ratio(s1, s2, score_cutoff)) {
+    if (!utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))) {
         sratio = ratio(s1, s2, score_cutoff);
         // increase the score_cutoff by a small step so it might be able to exit early
         score_cutoff = std::max(score_cutoff, sratio + 0.00001);
