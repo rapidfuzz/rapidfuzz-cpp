@@ -57,16 +57,4 @@ struct is_explicitly_convertible
 template<typename From, typename To>
 constexpr bool is_explicitly_convertible_v = is_explicitly_convertible<From, To>::value;
 
-
-template<
-    typename Sentence1, typename Sentence2,
-	typename Char1 = char_type<Sentence1>,
-	typename Char2 = char_type<Sentence2>
->
-using IsConvertibleToSameStringView = std::enable_if_t<
-        std::is_same<Char1, Char2>::value
-     && std::is_convertible<Sentence1 const&, basic_string_view<Char1>>::value
-     && std::is_convertible<Sentence2 const&, basic_string_view<Char2>>::value
-    >;
-
 } /* rapidfuzz */

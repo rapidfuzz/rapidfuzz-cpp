@@ -12,16 +12,18 @@ namespace rapidfuzz {
 
 template<
     typename Sentence1, typename Sentence2,
-    typename CharT, typename
+    typename CharT
 >
 std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2)
 {
-    basic_string_view<CharT> sentence1(s1);
-    basic_string_view<CharT> sentence2(s2);
-    string_utils::remove_common_affix(sentence1, sentence2);
+    auto sentence1 = utils::to_string_view(s1);
+    auto sentence2 = utils::to_string_view(s2);
+    
+    if (sentence2.size() > sentence1.size()) {
+        return distance(sentence2, sentence1);
+    }
 
-    if (sentence2.size() > sentence1.size())
-        std::swap(sentence1, sentence2);
+    string_utils::remove_common_affix(sentence1, sentence2);
 
     if (sentence2.empty()) {
         return sentence1.length();
@@ -53,17 +55,18 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2)
 
 template<
     typename Sentence1, typename Sentence2,
-    typename CharT, typename
+    typename CharT
 >
 std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2& s2)
 {
-    basic_string_view<CharT> sentence1(s1);
-    basic_string_view<CharT> sentence2(s2);
-    string_utils::remove_common_affix(sentence1, sentence2);
+    auto sentence1 = utils::to_string_view(s1);
+    auto sentence2 = utils::to_string_view(s2);
 
     if (sentence2.size() > sentence1.size()) {
-        std::swap(sentence1, sentence2);
+        return weighted_distance(sentence2, sentence1);
     }
+
+    string_utils::remove_common_affix(sentence1, sentence2);
 
     if (sentence2.empty()) {
         return sentence1.length();
@@ -99,17 +102,19 @@ std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2&
 
 template<
     typename Sentence1, typename Sentence2,
-    typename CharT, typename
+    typename CharT
 >
 std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& s2, WeightTable weights)
 {
-    basic_string_view<CharT> sentence1(s1);
-    basic_string_view<CharT> sentence2(s2);
-    string_utils::remove_common_affix(sentence1, sentence2);
+    auto sentence1 = utils::to_string_view(s1);
+    auto sentence2 = utils::to_string_view(s2);
+
     if (sentence1.size() > sentence2.size()) {
-        std::swap(sentence1, sentence2);
         std::swap(weights.insert_cost, weights.delete_cost);
+        return generic_distance(sentence2, sentence1, weights);   
     }
+
+    string_utils::remove_common_affix(sentence1, sentence2);
 
     std::vector<std::size_t> cache(sentence1.size() + 1);
 
@@ -139,12 +144,12 @@ std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& 
 
 template<
     typename Sentence1, typename Sentence2,
-    typename CharT, typename
+    typename CharT
 >
 double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio)
 {
-    basic_string_view<CharT> sentence1(s1);
-    basic_string_view<CharT> sentence2(s2);
+    auto sentence1 = utils::to_string_view(s1);
+    auto sentence2 = utils::to_string_view(s2);
 
     if (sentence1.empty() || sentence2.empty()) {
         return sentence1.empty() && sentence2.empty();
@@ -173,12 +178,12 @@ double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2
 
 template<
     typename Sentence1, typename Sentence2,
-    typename CharT, typename
+    typename CharT
 >
 double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio)
 {
-    basic_string_view<CharT> sentence1(s1);
-    basic_string_view<CharT> sentence2(s2);
+    auto sentence1 = utils::to_string_view(s1);
+    auto sentence2 = utils::to_string_view(s2);
 
     if (sentence1.empty() || sentence2.empty()) {
         return sentence1.empty() && sentence2.empty();

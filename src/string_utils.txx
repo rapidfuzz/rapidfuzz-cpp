@@ -30,10 +30,10 @@ string_view_vec<CharT> string_utils::splitSV(const basic_string_view<CharT>& s)
     return output;
 }
 
-template<typename CharT>
-string_view_vec<CharT> string_utils::splitSV(const std::basic_string<CharT>& str)
+template<typename Sentence, typename CharT>
+string_view_vec<CharT> string_utils::splitSV(const Sentence& str)
 {
-    return splitSV(basic_string_view<CharT>(str));
+    return splitSV(utils::to_string_view(str));
 }
 
 template<typename CharT>
@@ -82,8 +82,8 @@ inline auto common_prefix_length(InputIterator1 first1, InputIterator1 last1,
 /**
  * Removes common prefix of two string views
  */
-template<typename CharT>
-std::size_t remove_common_prefix(basic_string_view<CharT>& a, basic_string_view<CharT>& b)
+template<typename CharT1, typename CharT2>
+std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
     auto prefix = common_prefix_length(a.begin(), a.end(), b.begin(), b.end());
     a.remove_prefix(prefix);
@@ -94,8 +94,8 @@ std::size_t remove_common_prefix(basic_string_view<CharT>& a, basic_string_view<
 /**
  * Removes common suffix of two string views
  */
-template<typename CharT>
-std::size_t remove_common_suffix(basic_string_view<CharT>& a, basic_string_view<CharT>& b)
+template<typename CharT1, typename CharT2>
+std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
     auto suffix = common_prefix_length(a.rbegin(), a.rend(), b.rbegin(), b.rend());
     a.remove_suffix(suffix);
@@ -106,8 +106,8 @@ std::size_t remove_common_suffix(basic_string_view<CharT>& a, basic_string_view<
 /**
  * Removes common affix of two string views
  */
-template<typename CharT>
-Affix string_utils::remove_common_affix(basic_string_view<CharT>& a, basic_string_view<CharT>& b)
+template<typename CharT1, typename CharT2>
+Affix string_utils::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
     return Affix{
         remove_common_prefix(a, b),

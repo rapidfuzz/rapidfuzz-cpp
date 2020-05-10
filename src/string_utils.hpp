@@ -19,8 +19,8 @@ namespace string_utils {
 template<typename CharT>
 string_view_vec<CharT> splitSV(const basic_string_view<CharT>& s);
 
-template<typename CharT>
-string_view_vec<CharT> splitSV(const std::basic_string<CharT>& str);
+template<typename Sentence, typename CharT = char_type<Sentence>>
+string_view_vec<CharT> splitSV(const Sentence& str);
 
 template<typename CharT>
 std::size_t joined_size(const string_view_vec<CharT>& x);
@@ -28,8 +28,8 @@ std::size_t joined_size(const string_view_vec<CharT>& x);
 template<typename CharT>
 std::basic_string<CharT> join(const string_view_vec<CharT>& sentence);
 
-template<typename CharT>
-Affix remove_common_affix(basic_string_view<CharT>& a, basic_string_view<CharT>& b);
+template<typename CharT1, typename CharT2>
+Affix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template<typename Sentence1, typename Sentence2>
 std::size_t count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2);
