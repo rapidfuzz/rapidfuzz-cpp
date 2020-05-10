@@ -19,6 +19,27 @@ static bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
 	return std::fabs(a) <= tolerance;
 }
 
+
+template<
+    typename Sentence, typename CharT = char_type<Sentence>,
+	typename = std::enable_if_t<is_explicitly_convertible_v<Sentence, basic_string_view<CharT>>>
+>
+basic_string_view<CharT> to_string_view(const Sentence& str)
+{
+	return basic_string_view<CharT>(str);
+}
+
+template<
+    typename Sentence, typename CharT = char_type<Sentence>,
+	typename = std::enable_if_t<!is_explicitly_convertible_v<Sentence, basic_string_view<CharT>>>
+>
+basic_string_view<CharT> to_string_view(Sentence str)
+{
+	return basic_string_view<CharT>(str.data(), str.size());
+}
+
+
+
 } /* utils */ } /* rapidfuzz */
 
 #include "utils.txx"

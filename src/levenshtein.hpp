@@ -18,38 +18,33 @@ struct WeightTable {
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT = char_type<Sentence1>,
-    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+	typename CharT = char_type<Sentence1>
 >
 std::size_t distance(const Sentence1& s1, const Sentence2& s2);
 
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT = char_type<Sentence1>,
-    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+	typename CharT = char_type<Sentence1>
 >
 std::size_t weighted_distance(const Sentence1& s1, const Sentence2& s2);
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT = char_type<Sentence1>,
-    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+	typename CharT = char_type<Sentence1>
 >
 std::size_t generic_distance(const Sentence1& s1, const Sentence2& s2, WeightTable weights = { 1, 1, 1 });
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT = char_type<Sentence1>,
-    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+	typename CharT = char_type<Sentence1>
 >
 double normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
 
 
 template<
     typename Sentence1, typename Sentence2,
-	typename CharT = char_type<Sentence1>,
-    typename = IsConvertibleToSameStringView<Sentence1, Sentence2>
+	typename CharT = char_type<Sentence1>
 >
 double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
 
