@@ -3,32 +3,12 @@
 
 #pragma once
 #include <vector>
-
-// use standard implementation when available
-/*#if __cplusplus >= 201703L
-#include <string_view>
-#else
-#include <boost/utility/string_view.hpp>
-#endif*/
-
 #include <boost/utility/string_view.hpp>
 
 namespace rapidfuzz {
 
 /* 0.0% - 100.0% */
 using percent = double;
-
-//TODO: Better implement optional support for std::string_view additionaly,
-// so existing code does using boost::string_view does not break when switching
-// to C++17
-
-/*#if __cplusplus >= 201703L
-template<typename CharT>
-using basic_string_view = std::basic_string_view<CharT>;
-#else
-template<typename CharT>
-using basic_string_view = boost::basic_string_view<CharT>;
-#endif*/
 
 template<typename CharT>
 using basic_string_view = boost::basic_string_view<CharT>;

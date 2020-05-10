@@ -1,29 +1,36 @@
 #include "process.hpp"
 #include <iostream>
+#include <string_view>
 
 namespace rapidfuzz {
 
 
 template<
-    typename Sentence, typename CharT,
-    typename Iterable, typename
+    typename Sentence1, typename CharT,
+    typename Iterable, typename Sentence2,
+    typename ProcessorFunc, typename ScorerFunc,
+    typename
 >
-std::optional<std::pair<Sentence, percent>> process::extractOne(
-    const Sentence& query,
+boost::optional<std::pair<Sentence2, percent>> process::extractOne(
+    const Sentence1& query,
     const Iterable& choices,
-    processor_func<Sentence> processor,
-    scorer_func<std::basic_string<CharT>, std::basic_string<CharT>> scorer,
+    ProcessorFunc&& processor,
+    ScorerFunc&& scorer,
     const percent score_cutoff
 )
 {
 	bool match_found = false;
 	percent best_score = score_cutoff;
-    Sentence best_match;
+    Sentence2 best_match;
 
-	auto processed_query = processor(query);
+	auto processed_query = processor(std::basic_string<CharT>(query));
 
 	for (const auto& choice : choices) {
-		percent score = scorer(processed_query, processor(choice), best_score);
+		percent score = scorer(
+            processed_query,
+            processor(std::basic_string<CharT>(choice)),
+            best_score);
+
 		if (score > best_score) {
 			match_found = true;
 			best_score = score;
@@ -32,7 +39,7 @@ std::optional<std::pair<Sentence, percent>> process::extractOne(
 	}
 
 	if (!match_found) {
-		return std::nullopt;
+		return boost::none;
 	}
 
 	return std::make_pair(best_match, best_score);
@@ -42,13 +49,15 @@ std::optional<std::pair<Sentence, percent>> process::extractOne(
 template<
     typename Sentence1, typename CharT,
     typename Iterable, typename Sentence2,
+    /*typename None, */typename ScorerFunc,
 	typename
 >
-std::optional<std::pair<Sentence2, percent>> process::extractOne(
+boost::optional<std::pair<Sentence2, percent>> process::extractOne(
     const Sentence1& query,
     const Iterable& choices,
-    std::nullopt_t processor,
-    scorer_func<Sentence1, Sentence2> scorer,
+    //None processor,
+    boost::none_t processor,
+    ScorerFunc&& scorer,
     const percent score_cutoff
 )
 {
@@ -66,12 +75,11 @@ std::optional<std::pair<Sentence2, percent>> process::extractOne(
 	}
 
 	if (!match_found) {
-		return std::nullopt;
+		return boost::none;
 	}
 
 	return std::make_pair(best_match, best_score);
 }
-
 
 template<
     typename Sentence, typename CharT,
@@ -136,7 +144,7 @@ template<
 std::vector<std::pair<Sentence2, percent>> process::extract(
     const Sentence1& query,
     const Iterable& choices,
-    std::nullopt_t processor,
+    boost::none_t processor,
     scorer_func<Sentence1, Sentence2> scorer,
     const std::size_t limit,
     const percent score_cutoff

@@ -10,32 +10,16 @@
 
 namespace rapidfuzz {
 
-inline string_view_vec<char> string_utils::splitSV(const basic_string_view<char>& str)
+template<typename CharT>
+string_view_vec<CharT> string_utils::splitSV(const basic_string_view<CharT>& s)
 {
-    string_view_vec<char> output;
+    string_view_vec<CharT> output;
 
-    auto first = str.data(), second = str.data(), last = first + str.size();
+    auto first = s.data(), second = s.data(), last = first + s.size();
     for (; second != last && first != last; first = second + 1) {
-        second = std::find_if(first, last, [](const char& c) {
-                return std::isspace(c);
-            });
-
-        if (first != second) {
-            output.emplace_back(first, second - first);
-        }
-    }
-
-    return output;
-}
-
-inline string_view_vec<wchar_t> string_utils::splitSV(const basic_string_view<wchar_t>& str)
-{
-    string_view_vec<wchar_t> output;
-
-    auto first = str.data(), second = str.data(), last = first + str.size();
-    for (; second != last && first != last; first = second + 1) {
-        second = std::find_if(first, last, [](const wchar_t& c) {
-                return std::iswspace(c);
+        second = std::find_if(first, last, [](const CharT& ch) {
+                //TODO: add comparisions for other whitespace chars like tab
+                return false;//ch == ' ';;
             });
 
         if (first != second) {
@@ -47,7 +31,7 @@ inline string_view_vec<wchar_t> string_utils::splitSV(const basic_string_view<wc
 }
 
 template<typename CharT>
-string_view_vec<CharT> splitSV(const std::basic_string<CharT>& str)
+string_view_vec<CharT> string_utils::splitSV(const std::basic_string<CharT>& str)
 {
     return splitSV(basic_string_view<CharT>(str));
 }
@@ -174,23 +158,22 @@ void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
     }, (CharT)0x20);
 }
 
-template<typename Sentence, typename CharT>
-std::basic_string<CharT> string_utils::default_process(const Sentence& s)
+template<typename CharT>
+std::basic_string<CharT> string_utils::default_process(std::basic_string<CharT> s)
 {
-    std::basic_string<CharT> processed(s);
-    replace_non_alnum(processed);
+    replace_non_alnum(s);
 
     // only remove SPACE since all other space characters are already replaced with SPACE
-    processed.erase(processed.begin(), std::find_if(processed.begin(), processed.end(), [](const CharT& ch) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const CharT& ch) {
         return ch != ' ';
     }));
 
-    processed.erase(std::find_if(processed.rbegin(), processed.rend(), [](const CharT& ch) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](const CharT& ch) {
         return ch != ' ';
-    }).base(), processed.end());
+    }).base(), s.end());
 
-    lower_case(processed);
-    return processed;
+    lower_case(s);
+    return s;
 }
 
 } /* rapidfuzz */

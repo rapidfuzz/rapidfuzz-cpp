@@ -330,11 +330,11 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
     unique_a.erase(std::unique(unique_a.begin(), unique_a.end()), unique_a.end());
     unique_b.erase(std::unique(unique_b.begin(), unique_b.end()), unique_b.end());
 
-    string_view_vec<wchar_t> difference_ab;
+    string_view_vec<CharT> difference_ab;
     std::set_difference(unique_a.begin(), unique_a.end(), unique_b.begin(), unique_b.end(),
         std::back_inserter(difference_ab));
 
-    string_view_vec<wchar_t> difference_ba;
+    string_view_vec<CharT> difference_ba;
     std::set_difference(unique_b.begin(), unique_b.end(), unique_a.begin(), unique_a.end(),
         std::back_inserter(difference_ba));
 
