@@ -9,16 +9,6 @@
 
 namespace rapidfuzz {
 
-template<typename CharT>
-struct Sentence {
-    basic_string_view<CharT> sentence;
-    uint64_t bitmap = 0;
-    Sentence(basic_string_view<CharT> sentence, uint64_t bitmap = 0)
-        : sentence(sentence), bitmap(bitmap) {}
-    Sentence(std::basic_string<CharT> sentence, uint64_t bitmap = 0)
-        : sentence(basic_string_view<CharT>(sentence)), bitmap(bitmap) {}
-};
-
 struct Affix {
     std::size_t prefix_len;
     std::size_t suffix_len;

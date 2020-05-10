@@ -4,12 +4,19 @@
 #pragma once
 #include "types.hpp"
 
+#include <boost/callable_traits.hpp>
 #include <iterator>
 #include <type_traits>
 #include <utility>
 #include <functional>
 
 namespace rapidfuzz {
+
+using boost::callable_traits::is_invocable;
+
+// the version used by boost currently has a bug https://github.com/boostorg/callable_traits/issues/184
+template <class Fn, class... ArgTypes>
+constexpr bool is_invocable_v = is_invocable<Fn, ArgTypes...>::value;
 
 namespace detail {
     template<typename T>
@@ -47,6 +54,10 @@ struct is_explicitly_convertible
     static bool const value = test<From,To>(0);
 };
 
+template<typename From, typename To>
+constexpr bool is_explicitly_convertible_v = is_explicitly_convertible<From, To>::value;
+
+
 template<
     typename Sentence1, typename Sentence2,
 	typename Char1 = char_type<Sentence1>,
@@ -57,14 +68,5 @@ using IsConvertibleToSameStringView = std::enable_if_t<
      && std::is_convertible<Sentence1 const&, basic_string_view<Char1>>::value
      && std::is_convertible<Sentence2 const&, basic_string_view<Char2>>::value
     >;
-
-template<typename Sentence1, typename Sentence2>
-using scorer_func = std::function<percent(const Sentence1&, const Sentence2&, const percent)>;
-
-template<
-    typename Sentence, typename CharT = char_type<Sentence>
->
-using processor_func = std::function<std::basic_string<CharT>(const Sentence&)>;
-
 
 } /* rapidfuzz */

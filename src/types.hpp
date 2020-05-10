@@ -21,10 +21,10 @@ struct DecomposedSet {
     string_view_vec<CharT> intersection;
     string_view_vec<CharT> difference_ab;
     string_view_vec<CharT> difference_ba;
-    DecomposedSet(string_view_vec<CharT> intersection, string_view_vec<CharT> difference_ab, string_view_vec<CharT> difference_ba)
-        : intersection(std::move(intersection))
-        , difference_ab(std::move(difference_ab))
-        , difference_ba(std::move(difference_ba))
+    DecomposedSet(string_view_vec<CharT> intersect, string_view_vec<CharT> diff_ab, string_view_vec<CharT> diff_ba)
+        : intersection(std::move(intersect))
+        , difference_ab(std::move(diff_ab))
+        , difference_ba(std::move(diff_ba))
     {}
 };
 

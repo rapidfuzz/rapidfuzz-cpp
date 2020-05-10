@@ -1,6 +1,4 @@
 #include "process.hpp"
-#include <iostream>
-#include <string_view>
 
 namespace rapidfuzz {
 
@@ -49,14 +47,13 @@ boost::optional<std::pair<Sentence2, percent>> process::extractOne(
 template<
     typename Sentence1, typename CharT,
     typename Iterable, typename Sentence2,
-    /*typename None, */typename ScorerFunc,
+    typename ScorerFunc,
 	typename
 >
 boost::optional<std::pair<Sentence2, percent>> process::extractOne(
     const Sentence1& query,
     const Iterable& choices,
-    //None processor,
-    boost::none_t processor,
+    boost::none_t,
     ScorerFunc&& scorer,
     const percent score_cutoff
 )
@@ -82,29 +79,34 @@ boost::optional<std::pair<Sentence2, percent>> process::extractOne(
 }
 
 template<
-    typename Sentence, typename CharT,
-    typename Iterable, typename
+    typename Sentence1, typename CharT,
+    typename Iterable, typename Sentence2,
+    typename ProcessorFunc, typename ScorerFunc,
+    typename
 >
-std::vector<std::pair<Sentence, percent>> process::extract(
-    const Sentence& query,
+std::vector<std::pair<Sentence2, percent>> process::extract(
+    const Sentence1& query,
     const Iterable& choices,
-    processor_func<Sentence> processor,
-    scorer_func<std::basic_string<CharT>, std::basic_string<CharT>> scorer,
+    ProcessorFunc&& processor,
+    ScorerFunc&& scorer,
     const std::size_t limit,
-    percent score_cutoff
+    const percent score_cutoff
 )
 {
-    std::vector<std::pair<Sentence, percent>> results;
+    std::vector<std::pair<Sentence2, percent>> results;
     results.reserve(limit);
     // minimal score thats still in the result
     percent min_score = score_cutoff;
 
-    auto processed_query = processor(query);
+    auto processed_query = processor(std::basic_string<CharT>(query));;
 
     for (const auto& choice : choices) {
-        percent score = scorer(processed_query, processor(choice), min_score);
+        percent score = scorer(
+            processed_query,
+            processor(std::basic_string<CharT>(choice)),
+            min_score);
 
-        if (score) {
+        if (!utils::is_zero(score)) {
             if (results.size() > limit) {
               results.pop_back();
             }
@@ -112,8 +114,8 @@ std::vector<std::pair<Sentence, percent>> process::extract(
             auto insert_pos = std::upper_bound(
                 results.begin(), results.end(),
                 score,
-                [](double score, auto const& t2) {
-                    return score > std::get<1>(t2);
+                [](percent new_score, auto const& t2) {
+                    return new_score > std::get<1>(t2);
                 }
             );
 
@@ -135,17 +137,17 @@ std::vector<std::pair<Sentence, percent>> process::extract(
     return results;
 }
 
-
 template<
     typename Sentence1, typename CharT,
     typename Iterable, typename Sentence2,
-	typename
+    typename ScorerFunc,
+    typename
 >
 std::vector<std::pair<Sentence2, percent>> process::extract(
     const Sentence1& query,
     const Iterable& choices,
-    boost::none_t processor,
-    scorer_func<Sentence1, Sentence2> scorer,
+    boost::none_t,
+    ScorerFunc&& scorer,
     const std::size_t limit,
     const percent score_cutoff
 )
@@ -158,7 +160,7 @@ std::vector<std::pair<Sentence2, percent>> process::extract(
     for (const auto& choice : choices) {
         percent score = scorer(query, choice, min_score);
 
-        if (score) {
+        if (!utils::is_zero(score)) {
             if (results.size() == limit) {
               results.pop_back();
             }
@@ -166,8 +168,8 @@ std::vector<std::pair<Sentence2, percent>> process::extract(
             auto insert_pos = std::upper_bound(
                 results.begin(), results.end(),
                 score,
-                [](double score, auto const& t2) {
-                    return score > std::get<1>(t2);
+                [](percent new_score, auto const& t2) {
+                    return new_score > std::get<1>(t2);
                 }
             );
 

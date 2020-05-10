@@ -19,7 +19,7 @@ string_view_vec<CharT> string_utils::splitSV(const basic_string_view<CharT>& s)
     for (; second != last && first != last; first = second + 1) {
         second = std::find_if(first, last, [](const CharT& ch) {
                 //TODO: add comparisions for other whitespace chars like tab
-                return false;//ch == ' ';;
+                return ch == ' ';
             });
 
         if (first != second) {
@@ -152,10 +152,10 @@ void string_utils::replace_non_alnum(std::basic_string<CharT>& s) {
     std::replace_if(s.begin(), s.end(), [](CharT ch) {
         int ascii = static_cast<int>(ch);
         return ascii <= '/'
-            || ascii >= ':' && ascii <= '@'
-            || ascii >= '[' && ascii <= '`'
-            || ascii >= '{' && ascii <= 0x7F /* DEL */;
-    }, (CharT)0x20);
+            || (ascii >= ':' && ascii <= '@')
+            || (ascii >= '[' && ascii <= '`')
+            || (ascii >= '{' && ascii <= 0x7F) /* DEL */;
+    }, static_cast<CharT>(' '));
 }
 
 template<typename CharT>
