@@ -100,10 +100,6 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
         return 0;
     }
 
-    if (utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))){
-        return 0;
-    }
-
     string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
     std::sort(tokens_a.begin(), tokens_a.end());
     string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
@@ -261,13 +257,10 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
         return 100;
     }
 
-    double result = 0;
-    if (!utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))) {
-        result = levenshtein::normalized_weighted_distance(
-            string_utils::join(tokens_a),
-            string_utils::join(tokens_b),
-            score_cutoff / 100);
-    }
+    double result = levenshtein::normalized_weighted_distance(
+        string_utils::join(tokens_a),
+        string_utils::join(tokens_b),
+        score_cutoff / 100);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
     std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
@@ -400,12 +393,9 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
         ? static_cast<double>(len_a) / static_cast<double>(len_b)
         : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-    double sratio = 0;
-    if (!utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))) {
-        sratio = ratio(s1, s2, score_cutoff);
-        // increase the score_cutoff by a small step so it might be able to exit early
-        score_cutoff = std::max(score_cutoff, sratio + 0.00001);
-    }
+    double sratio = ratio(s1, s2, score_cutoff);
+    // increase the score_cutoff by a small step so it might be able to exit early
+    score_cutoff = std::max(score_cutoff, sratio + 0.00001);
 
     if (len_ratio < 1.5) {
         return std::max(sratio, token_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE);
