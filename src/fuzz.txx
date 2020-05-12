@@ -267,8 +267,11 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
 
     // TODO: find uncommon chars in the two sequences to exit early in many cases in linear time (same for tokens_a <-> tokens_b)
     // ^ thats not correct since diff stuff erases duplicates
-    std::size_t uncommon_char_distance = string_utils::count_uncommon_chars(diff_ab, diff_ba);
-    double lev_estimate = 1.0 - static_cast<double>(uncommon_char_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+    double lev_estimate = 0;
+    if (score_cutoff) {
+        std::size_t uncommon_char_distance = string_utils::count_uncommon_chars(diff_ab, diff_ba);
+        lev_estimate = 1.0 - static_cast<double>(uncommon_char_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+    }
 
     if (lev_estimate*100 >= score_cutoff) {
         std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
