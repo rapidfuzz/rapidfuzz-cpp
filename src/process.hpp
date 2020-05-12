@@ -23,7 +23,9 @@ namespace rapidfuzz {
 namespace process {
 
 /**
- * @brief Find the best match in a list of choices
+ * @brief
+ * Finds the best match in a list of choices by comparing them
+ * using the provided scorer functions.
  * 
  * @details
  * @code{.cpp}
@@ -87,7 +89,9 @@ boost::optional<std::pair<Sentence2, percent>> extractOne(
 
 
 /**
- * @brief Find the best match in a list of choices without any string preprocessing
+ * @brief
+ * Finds the best match in a list of choices by comparing them
+ * using the provided scorer functions without any string preprocessing.
  * 
  * @details
  * @code{.cpp}

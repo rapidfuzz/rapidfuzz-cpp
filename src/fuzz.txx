@@ -150,43 +150,43 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
     std::sort(tokens_b.begin(), tokens_b.end());
 
     auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
-    auto intersection = decomposition.intersection;
-    auto difference_ab = decomposition.difference_ab;
-    auto difference_ba = decomposition.difference_ba;
+    auto intersect = decomposition.intersection;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-    std::basic_string<CharT> diff_ab_joined = string_utils::join(difference_ab);
-    std::basic_string<CharT> diff_ba_joined = string_utils::join(difference_ba);
-
-    std::size_t ab_len = diff_ab_joined.length();
-    std::size_t ba_len = diff_ba_joined.length();
-    std::size_t sect_len = string_utils::joined_size(intersection);
-
-    // exit early since this will always result in a ratio of 1
-    if (sect_len && (!ab_len || !ba_len)) {
+    // one sentence is part of the other one
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
         return 100;
     }
 
+    std::basic_string<CharT> diff_ab_joined = string_utils::join(diff_ab);
+    std::basic_string<CharT> diff_ba_joined = string_utils::join(diff_ba);
+
+    std::size_t ab_len = diff_ab_joined.length();
+    std::size_t ba_len = diff_ba_joined.length();
+    std::size_t sect_len = string_utils::joined_size(intersect);
+
     // string length sect+ab <-> sect and sect+ba <-> sect
-    std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
-    std::size_t sect_ba_lensum = sect_len + !!sect_len + ba_len;
+    std::size_t sect_ab_len = sect_len + !!sect_len + ab_len;
+    std::size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
     // TODO: use len_ratio as constant time evaluation to skip this
     std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
-    double result = 1.0 - static_cast<double>(sect_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+    double result = 1.0 - static_cast<double>(sect_distance) / static_cast<double>(sect_ab_len + sect_ba_len);
 
     // exit early since the other ratios are 0
-    if (!sect_len) {
+    if (intersect.empty()) {
         return utils::result_cutoff(result * 100, score_cutoff);
     }
 
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
-    // would exit early after removing the prefix sect, so the distance can be directly calculated
-    std::size_t sect_ab_distance = !!sect_len + ab_len;
-    std::size_t sect_ba_distance = !!sect_len + ba_len;
+    // since only sect is similar in them the distance can be calculated based on the length difference
+    std::size_t sect_ab_distance = sect_ab_len - sect_len;
+    std::size_t sect_ba_distance = sect_ba_len - sect_len;
 
     result = std::max({ result,
-        1.0 - static_cast<double>(sect_ab_distance) / static_cast<double>(sect_len + sect_ab_lensum),
-        1.0 - static_cast<double>(sect_ba_distance) / static_cast<double>(sect_len + sect_ba_lensum) });
+        1.0 - static_cast<double>(sect_ab_distance) / static_cast<double>(sect_len + sect_ab_len),
+        1.0 - static_cast<double>(sect_ba_distance) / static_cast<double>(sect_len + sect_ba_len) });
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
@@ -241,21 +241,20 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     std::sort(tokens_b.begin(), tokens_b.end());
 
     auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
-    auto intersection = decomposition.intersection;
-    auto difference_ab = decomposition.difference_ab;
-    auto difference_ba = decomposition.difference_ba;
+    auto intersect = decomposition.intersection;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-    std::basic_string<CharT> diff_ab_joined = string_utils::join(difference_ab);
-    std::basic_string<CharT> diff_ba_joined = string_utils::join(difference_ba);
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
+        return 100;
+    }
+
+    std::basic_string<CharT> diff_ab_joined = string_utils::join(diff_ab);
+    std::basic_string<CharT> diff_ba_joined = string_utils::join(diff_ba);
 
     std::size_t ab_len = diff_ab_joined.length();
     std::size_t ba_len = diff_ba_joined.length();
-    std::size_t sect_len = string_utils::joined_size(intersection);
-
-    // exit early since this will always result in a ratio of 1
-    if (sect_len && (!ab_len || !ba_len)) {
-        return 100;
-    }
+    std::size_t sect_len = string_utils::joined_size(intersect);
 
     double result = levenshtein::normalized_weighted_distance(
         string_utils::join(tokens_a),
@@ -266,9 +265,10 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
     std::size_t sect_ba_lensum = sect_len + !!sect_len + ba_len;
 
-    // esitimate levenshtein distance by counting uncommon characters
-    std::size_t distance = string_utils::count_uncommon_chars(diff_ab_joined, diff_ba_joined);
-    double lev_estimate = 1.0 - static_cast<double>(distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+    // TODO: find uncommon chars in the two sequences to exit early in many cases in linear time (same for tokens_a <-> tokens_b)
+    // ^ thats not correct since diff stuff erases duplicates
+    std::size_t uncommon_char_distance = string_utils::count_uncommon_chars(diff_ab, diff_ba);
+    double lev_estimate = 1.0 - static_cast<double>(uncommon_char_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
 
     if (lev_estimate*100 >= score_cutoff) {
         std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
@@ -394,6 +394,7 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
         : static_cast<double>(len_b) / static_cast<double>(len_a);
 
     double sratio = ratio(s1, s2, score_cutoff);
+
     // increase the score_cutoff by a small step so it might be able to exit early
     score_cutoff = std::max(score_cutoff, sratio + 0.00001);
 

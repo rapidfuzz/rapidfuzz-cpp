@@ -34,6 +34,9 @@ Affix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2
 template<typename Sentence1, typename Sentence2>
 std::size_t count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2);
 
+template<typename Sentence1, typename Sentence2>
+std::size_t count_uncommon_chars(const std::vector<Sentence1> &s1, const std::vector<Sentence2> &s2);
+
 template<typename CharT>
 void lower_case(std::basic_string<CharT>& s);
 

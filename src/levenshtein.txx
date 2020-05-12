@@ -178,36 +178,38 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sent
     std::size_t sentence2_len = sentence2.length();
     std::size_t lensum = sentence1_len + sentence2_len;
 
-    std::size_t cutoff_distance = static_cast<double>(lensum) * (1.0 - min_ratio);
 
+    if (!utils::is_zero(min_ratio)) {
+        std::size_t cutoff_distance = static_cast<double>(lensum) * (1.0 - min_ratio);
 
-    // constant time calculation to find a string ratio based on the string length
-    // so it can exit early without running any levenshtein calculations
-    std::size_t length_distance = (sentence1_len > sentence2_len)
-        ? sentence1_len - sentence2_len
-        : sentence2_len - sentence1_len;
+        // constant time calculation to find a string ratio based on the string length
+        // so it can exit early without running any levenshtein calculations
+        std::size_t length_distance = (sentence1_len > sentence2_len)
+            ? sentence1_len - sentence2_len
+            : sentence2_len - sentence1_len;
 
-    if (length_distance > cutoff_distance) {
-        return 0.0;
-    }
+        if (length_distance > cutoff_distance) {
+            return 0.0;
+        }
 
-    // remove common prefix + suffix in constant time
-    string_utils::remove_common_affix(sentence1, sentence2);
+        // remove common prefix + suffix in constant time
+        string_utils::remove_common_affix(sentence1, sentence2);
 
-    if (sentence1.empty()) {
-        double ratio = 1.0 - static_cast<double>(sentence2.length()) / static_cast<double>(lensum);
-        return utils::result_cutoff(ratio, min_ratio);
-    }
+        if (sentence1.empty()) {
+            double ratio = 1.0 - static_cast<double>(sentence2.length()) / static_cast<double>(lensum);
+            return utils::result_cutoff(ratio, min_ratio);
+        }
 
-    if (sentence2.empty()) {
-        double ratio = 1.0 - static_cast<double>(sentence1.length()) / static_cast<double>(lensum);
-        return utils::result_cutoff(ratio, min_ratio);
-    }
+        if (sentence2.empty()) {
+            double ratio = 1.0 - static_cast<double>(sentence1.length()) / static_cast<double>(lensum);
+            return utils::result_cutoff(ratio, min_ratio);
+        }
 
-   // find uncommon chars in the two sequences to exit early in many cases in linear time
-   std::size_t uncommon_char_distance = string_utils::count_uncommon_chars(s1, s2);
-    if (uncommon_char_distance > cutoff_distance) {
-        return 0.0;
+        // find uncommon chars in the two sequences to exit early in many cases in linear time
+        std::size_t uncommon_char_distance = string_utils::count_uncommon_chars(s1, s2);
+        if (uncommon_char_distance > cutoff_distance) {
+            return 0.0;
+        }
     }
 
     // calculate the levenshtein distance in quadratic time
