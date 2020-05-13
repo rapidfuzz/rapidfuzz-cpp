@@ -45,7 +45,7 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
     auto s2_view = utils::to_string_view(s2);
 
     if (s1_view.empty() || s2_view.empty()) {
-        return 0;
+        return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
     }
 
     // when both strings have the same length the is only one possible alignment
@@ -388,7 +388,7 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
         return 0;
     }
 
-    const double UNBASE_SCALE = 0.95;
+    constexpr double UNBASE_SCALE = 0.95;
 
     std::size_t len_a = s1.length();
     std::size_t len_b = s2.length();
@@ -396,23 +396,28 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
         ? static_cast<double>(len_a) / static_cast<double>(len_b)
         : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-    double sratio = ratio(s1, s2, score_cutoff);
-
-    // increase the score_cutoff by a small step so it might be able to exit early
-    score_cutoff = std::max(score_cutoff, sratio + 0.00001);
-
     if (len_ratio < 1.5) {
-        return std::max(sratio, token_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE);
+        // ratio and token_sort ratio are not required so token_set_ratio / partial_token_set_ratio is enough
+        if (!utils::is_zero(score_cutoff) && utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))) {
+            return token_set_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE;
+        }
+
+        return std::max(
+            // do not pass score_cutoff to ratio so it does not recheck the character counts
+            utils::result_cutoff(ratio(s1, s2), score_cutoff),
+            token_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE);
     }
 
-    double partial_scale = (len_ratio < 8.0) ? 0.9 : 0.6;
+    percent end_ratio = ratio(s1, s2, score_cutoff);
 
-    score_cutoff /= partial_scale;
-    sratio = std::max(sratio, partial_ratio(s1, s2, score_cutoff) * partial_scale);
+    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
 
     // increase the score_cutoff by a small step so it might be able to exit early
-    score_cutoff = std::max(score_cutoff, sratio + 0.00001) / UNBASE_SCALE;
-    return std::max(sratio, partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * partial_scale);
+    score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / PARTIAL_SCALE;
+    end_ratio = std::max(end_ratio, partial_ratio(s1, s2, score_cutoff) * PARTIAL_SCALE);
+
+    score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+    return std::max(end_ratio, partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
 }
 
 } /* rapidfuzz */

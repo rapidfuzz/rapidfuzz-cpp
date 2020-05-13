@@ -31,11 +31,16 @@ std::basic_string<CharT> join(const string_view_vec<CharT>& sentence);
 template<typename CharT1, typename CharT2>
 Affix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
-template<typename Sentence1, typename Sentence2>
-std::size_t count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2);
+template<typename Sentence>
+std::array<unsigned int, 32> char_freq(const Sentence &str);
+
+template<typename Sentence>
+std::array<unsigned int, 32> char_freq(const std::vector<Sentence> &str);
+
+std::array<unsigned int, 32> char_freq(const std::array<unsigned int, 32> &freq);
 
 template<typename Sentence1, typename Sentence2>
-std::size_t count_uncommon_chars(const std::vector<Sentence1> &s1, const std::vector<Sentence2> &s2);
+std::size_t count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2);
 
 template<typename CharT>
 void lower_case(std::basic_string<CharT>& s);

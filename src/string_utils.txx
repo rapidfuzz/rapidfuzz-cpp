@@ -115,64 +115,48 @@ Affix string_utils::remove_common_affix(basic_string_view<CharT1>& a, basic_stri
     };
 }
 
-template<typename Sentence1, typename Sentence2>
-std::size_t string_utils::count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2) 
-{
-    // with %32 the results for a <-> A are equal
-    std::array<unsigned int, 32> char_freq1{};
-    std::array<unsigned int, 32> char_freq2{};
-
-    std::size_t count = 0;
-
-    for (const auto& ch : s1) char_freq1[ch%32]++;
-
-    for (const auto& ch : s2) char_freq2[ch%32]++;
-
-    for (std::size_t i = 0; i < 32; i++) {
-        auto count1 = char_freq1[i];
-        auto count2 = char_freq2[i];
-        count += count1 > count2 ? count1 - count2 : count2 - count1;
-    }
-
-    return count;
+template<typename Sentence>
+std::array<unsigned int, 32> string_utils::char_freq(const Sentence &str) {
+    std::array<unsigned int, 32> char_freq{};
+    for (const auto& ch : str) char_freq[ch%32]++;
+    return char_freq;
 }
 
-template<typename Sentence1, typename Sentence2>
-std::size_t string_utils::count_uncommon_chars(const std::vector<Sentence1> &s1, const std::vector<Sentence2> &s2)
-{
-    // with %32 the results for a <-> A are equal
-    std::array<unsigned int, 32> char_freq1{};
-    std::array<unsigned int, 32> char_freq2{};
-
-    std::size_t count = 0;
-
-    for (const auto& word : s1) {
+template<typename Sentence>
+std::array<unsigned int, 32> string_utils::char_freq(const std::vector<Sentence> &str) {
+    std::array<unsigned int, 32> char_freq{};
+    for (const auto& word : str) {
         for (const auto& ch : word) {
-            char_freq1[ch%32]++;
+            char_freq[ch%32]++;
         }
-    }
-
-    for (const auto& word : s2) {
-        for (const auto& ch : word) {
-            char_freq2[ch%32]++;
-        }
-    }
-
-    for (std::size_t i = 0; i < 32; i++) {
-        auto count1 = char_freq1[i];
-        auto count2 = char_freq2[i];
-        count += count1 > count2 ? count1 - count2 : count2 - count1;
     }
 
     // count whitespaces between words
-    if (s1.size() > s2.size()) {
-        std::size_t s1_whitespaces = s1.size() - static_cast<std::size_t>(s1.size() != 0);
-        std::size_t s2_whitespaces = s2.size() - static_cast<std::size_t>(s2.size() != 0);
-        count +=  s1_whitespaces - s2_whitespaces;
-    } else if (s2.size() > s1.size()) {
-        std::size_t s1_whitespaces = s1.size() - static_cast<std::size_t>(s1.size() != 0);
-        std::size_t s2_whitespaces = s2.size() - static_cast<std::size_t>(s2.size() != 0);
-        count +=  s2_whitespaces - s1_whitespaces;
+    if (str.size() > 1) {
+        char_freq[0] += str.size() - 1;
+    }
+
+    return char_freq;
+}
+
+std::array<unsigned int, 32> string_utils::char_freq(const std::array<unsigned int, 32> &freq)
+{
+    return freq;
+}
+
+template<typename Sentence1, typename Sentence2>
+std::size_t string_utils::count_uncommon_chars(const Sentence1 &s1, const Sentence2 &s2)
+{
+    // with %32 the results for a <-> A are equal
+    std::array<unsigned int, 32> char_freq1 = char_freq(s1);
+    std::array<unsigned int, 32> char_freq2 = char_freq(s2);
+
+    std::size_t count = 0;
+
+    for (std::size_t i = 0; i < 32; i++) {
+        auto count1 = char_freq1[i];
+        auto count2 = char_freq2[i];
+        count += count1 > count2 ? count1 - count2 : count2 - count1;
     }
 
     return count;
