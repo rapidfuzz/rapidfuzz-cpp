@@ -15,10 +15,7 @@
 
 namespace rapidfuzz {
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::ratio(const Sentence1 &s1, const Sentence2 &s2, const percent score_cutoff)
 {
     double result = levenshtein::normalized_weighted_distance(
@@ -29,10 +26,7 @@ percent fuzz::ratio(const Sentence1 &s1, const Sentence2 &s2, const percent scor
 }
 
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent score_cutoff)
 {
     using std::get;
@@ -76,7 +70,7 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
         std::size_t long_start = (get<1>(block) > get<0>(block)) ? get<1>(block) - get<0>(block): 0;
         auto long_substr = s2_view.substr(long_start, short_len);
 
-        double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
+        double ls_ratio = utils::result_cutoff(ratio(s1_view, long_substr), score_cutoff);
 
         if (ls_ratio > 99.5) {
             return 100;
@@ -90,10 +84,7 @@ percent fuzz::partial_ratio(const Sentence1 &s1, const Sentence2 &s2, percent sc
     return max_ratio;
 }
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -112,10 +103,7 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
     ) * 100;
 }
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -133,11 +121,7 @@ percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
         score_cutoff);
 }
 
-
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -170,9 +154,18 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
     std::size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     std::size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    // TODO: use len_ratio as constant time evaluation to skip this
-    std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
-    double result = 1.0 - static_cast<double>(sect_distance) / static_cast<double>(sect_ab_len + sect_ba_len);
+    auto lev_filter = levenshtein::detail::quick_lev_filter(
+        basic_string_view<CharT>(diff_ab_joined),
+        basic_string_view<CharT>(diff_ba_joined),
+        score_cutoff / 100);
+
+    double result = 0;
+    if (lev_filter.not_zero) {
+        std::size_t dist =  levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
+        double ratio = 1.0 - static_cast<double>(dist) / static_cast<double>(sect_ab_len + sect_ba_len);
+        
+        result = utils::result_cutoff(ratio, score_cutoff / 100);
+    }
 
     // exit early since the other ratios are 0
     if (intersect.empty()) {
@@ -190,11 +183,7 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
-
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -225,10 +214,7 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, 
     return partial_ratio(string_utils::join(difference_ab), string_utils::join(difference_ba), score_cutoff);
 }
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -265,19 +251,16 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
     std::size_t sect_ba_lensum = sect_len + !!sect_len + ba_len;
 
-    // TODO: find uncommon chars in the two sequences to exit early in many cases in linear time (same for tokens_a <-> tokens_b)
-    // ^ thats not correct since diff stuff erases duplicates
-    double lev_estimate = 0;
-    if (score_cutoff) {
-        std::size_t uncommon_char_distance = string_utils::count_uncommon_chars(diff_ab, diff_ba);
-        lev_estimate = 1.0 - static_cast<double>(uncommon_char_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
-    }
+    auto lev_filter = levenshtein::detail::quick_lev_filter(
+        basic_string_view<CharT>(diff_ab_joined),
+        basic_string_view<CharT>(diff_ba_joined),
+        score_cutoff / 100);
 
-    if (lev_estimate*100 >= score_cutoff) {
-        std::size_t sect_distance = levenshtein::weighted_distance(diff_ab_joined, diff_ba_joined);
-        result = std::max(
-            result,
-            1.0 - static_cast<double>(sect_distance) / static_cast<double>(sect_ab_lensum + sect_ba_lensum));
+    if (lev_filter.not_zero) {
+        std::size_t dist =  levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
+        double ratio = 1.0 - static_cast<double>(dist) / static_cast<double>(sect_ab_lensum + sect_ba_lensum);
+        
+        result = std::max(result, utils::result_cutoff(ratio, score_cutoff / 100));
     }
 
     // exit early since the other ratios are 0
@@ -298,10 +281,7 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -343,10 +323,7 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
         partial_ratio(string_utils::join(difference_ab), string_utils::join(difference_ba), score_cutoff));
 }
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (utils::is_zero(length_ratio(s1, s2, score_cutoff))) {
@@ -360,10 +337,7 @@ percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent 
 }
 
 
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     std::size_t s1_len = s1.length();
@@ -377,11 +351,7 @@ percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent sco
     return utils::result_cutoff(result * 100, score_cutoff);
 }
 
-
-template<
-    typename Sentence1, typename Sentence2,
-	typename CharT
->
+template<typename Sentence1, typename Sentence2, typename CharT>
 percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) {
@@ -390,22 +360,30 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
 
     constexpr double UNBASE_SCALE = 0.95;
 
-    std::size_t len_a = s1.length();
-    std::size_t len_b = s2.length();
+    auto s1_view = utils::to_string_view(s1);
+    auto s2_view = utils::to_string_view(s2);
+
+    std::size_t len_a = s1_view.length();
+    std::size_t len_b = s2_view.length();
     double len_ratio = (len_a > len_b)
         ? static_cast<double>(len_a) / static_cast<double>(len_b)
         : static_cast<double>(len_b) / static_cast<double>(len_a);
 
     if (len_ratio < 1.5) {
+        auto lev_filter = levenshtein::detail::quick_lev_filter(s1_view, s2_view, score_cutoff / 100);
+        
         // ratio and token_sort ratio are not required so token_set_ratio / partial_token_set_ratio is enough
-        if (!utils::is_zero(score_cutoff) && utils::is_zero(quick_lev_ratio(s1, s2, score_cutoff))) {
+        if (!lev_filter.not_zero) {
             return token_set_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE;
         }
 
-        return std::max(
-            // do not pass score_cutoff to ratio so it does not recheck the character counts
-            utils::result_cutoff(ratio(s1, s2), score_cutoff),
-            token_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE);
+        std::size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
+        percent end_ratio = utils::result_cutoff(
+            100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(s1_view.length(), s2_view.length()),
+            score_cutoff);
+
+        score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+        return std::max(end_ratio, token_ratio(s1_view, s2_view, score_cutoff) * UNBASE_SCALE);
     }
 
     percent end_ratio = ratio(s1, s2, score_cutoff);
