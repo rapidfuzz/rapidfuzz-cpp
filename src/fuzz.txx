@@ -379,7 +379,7 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
 
         std::size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
         percent end_ratio = utils::result_cutoff(
-            100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(s1_view.length(), s2_view.length()),
+            100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(s1_view.length() + s2_view.length()),
             score_cutoff);
 
         score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
