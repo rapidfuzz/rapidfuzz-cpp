@@ -106,9 +106,11 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * @endcode
  *
  * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type> and has the same `char_type` as Sentence2
+ * boost::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type> and has the same `char_type` as Sentence2
  * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type> and has the same `char_type` as Sentence1
+ * boost::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type> and has the same `char_type` as Sentence1
  * @tparam Iterable This can be any Iterable of Sentence2 that can be iterated
  * with range based for loops like e.g. vector, list or set
  *
@@ -222,9 +224,11 @@ extract(const Sentence1& query, const Iterable& choices,
  * @endcode
  *
  * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type> and has the same `char_type` as Sentence2
+ * boost::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type> and has the same `char_type` as Sentence2
  * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type> and has the same `char_type` as Sentence1
+ * boost::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type> and has the same `char_type` as Sentence1
  * @tparam Iterable This can be any Iterable of Sentence2 that can be iterated
  * with range based for loops like e.g. vector, list or set
  *
