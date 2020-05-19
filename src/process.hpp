@@ -13,14 +13,13 @@
 #include <vector>
 
 namespace rapidfuzz {
+namespace process {
 
 /**
- * @brief
- * @details
- *
- * @ingroup process
+ * @defgroup Process Process
+ * Processors to perform string matching on iterables
+ * @{
  */
-namespace process {
 
 /**
  * @brief
@@ -39,7 +38,7 @@ namespace process {
  * auto match = process::extractOne(
  *   L"example",
  *   std::vector<std::wstring>{L"example", L"another example"},
- *   string_utils::default_process<std::wstring>,
+ *   utils::default_process<std::wstring>,
  *   fuzz::ratio<std::wstring, std::wstring>
  *   90);
  * @endcode
@@ -58,7 +57,7 @@ namespace process {
  * for the choices)
  * @param processor Optional argument to provide a processor callback, that is
  * used to preprocess all strings before comparing them. Defaults to
- * string_utils::default_process. (Has to accept one argument both the query and
+ * utils::default_process. (Has to accept one argument both the query and
  * each choice can be implicitly converted to and return a std::basic_string of
  * the same `char_type` as query and choices)
  * @param scorer Optional argument to provide a scorer callback, that is used to
@@ -76,7 +75,7 @@ namespace process {
 template <
     typename Sentence1, typename CharT = char_type<Sentence1>,
     typename Iterable, typename Sentence2 = inner_type<Iterable>,
-    typename ProcessorFunc = decltype(string_utils::default_process<CharT>),
+    typename ProcessorFunc = decltype(utils::default_process<CharT>),
     typename ScorerFunc = decltype(
         fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
     typename = std::enable_if_t<
@@ -87,7 +86,7 @@ template <
                        std::basic_string<CharT>, percent>>>
 boost::optional<std::pair<Sentence2, percent>>
 extractOne(const Sentence1& query, const Iterable& choices,
-           ProcessorFunc&& processor = string_utils::default_process<CharT>,
+           ProcessorFunc&& processor = utils::default_process<CharT>,
            ScorerFunc&& scorer =
                fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>,
            const percent score_cutoff = 0);
@@ -158,7 +157,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * auto matches = process::extract(
  *   L"example",
  *   std::vector<std::wstring>{L"Example", L"example", L"another example"},
- *   string_utils::default_process<wchar_t>,
+ *   utils::default_process<wchar_t>,
  *   fuzz::ratio<std::wstring, std::wstring>
  *   2,
  *   90);
@@ -178,7 +177,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * for the choices)
  * @param processor Optional argument to provide a processor callback, that is
  * used to preprocess all strings before comparing them. Defaults to
- * string_utils::default_process. (Has to accept one argument both the query and
+ * utils::default_process. (Has to accept one argument both the query and
  * each choice can be implicitly converted to and return a std::basic_string of
  * the same `char_type` as query and choices)
  * @param scorer Optional argument to provide a scorer callback, that is used to
@@ -195,7 +194,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
 template <
     typename Sentence1, typename CharT = char_type<Sentence1>,
     typename Iterable, typename Sentence2 = inner_type<Iterable>,
-    typename ProcessorFunc = decltype(string_utils::default_process<CharT>),
+    typename ProcessorFunc = decltype(utils::default_process<CharT>),
     typename ScorerFunc = decltype(
         fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
     typename = std::enable_if_t<
@@ -206,7 +205,7 @@ template <
                        std::basic_string<CharT>, percent>>>
 std::vector<std::pair<Sentence2, percent>>
 extract(const Sentence1& query, const Iterable& choices,
-        ProcessorFunc&& processor = string_utils::default_process<CharT>,
+        ProcessorFunc&& processor = utils::default_process<CharT>,
         ScorerFunc&& scorer =
             fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>,
         const std::size_t limit = 5, const percent score_cutoff = 0);
@@ -259,6 +258,8 @@ extract(const Sentence1& query, const Iterable& choices,
         boost::none_t processor,
         ScorerFunc&& scorer = fuzz::WRatio<Sentence1, Sentence2>,
         const std::size_t limit = 5, const percent score_cutoff = 0);
+
+/**@}*/
 
 } // namespace process
 } // namespace rapidfuzz

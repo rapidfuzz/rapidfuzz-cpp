@@ -12,7 +12,13 @@
 namespace rapidfuzz {
 namespace levenshtein {
 
-// This functions are ment for internal usage and not guaranteed to have a
+/**
+ * @defgroup Levenshtein Levenshtein
+ * Levenshtein functions
+ * @{
+ */
+
+// These functions are ment for internal usage only and not guaranteed to have a
 // stable interface
 namespace detail {
 
@@ -61,6 +67,8 @@ double normalized_distance(const Sentence1& s1, const Sentence2& s2,
 template <typename Sentence1, typename Sentence2>
 double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
                                     const double min_ratio = 0.0);
+
+/**@}*/
 
 } // namespace levenshtein
 } // namespace rapidfuzz

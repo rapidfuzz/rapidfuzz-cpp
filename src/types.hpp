@@ -28,4 +28,9 @@ template <typename CharT> struct DecomposedSet {
   {}
 };
 
+struct StringAffix {
+  std::size_t prefix_len;
+  std::size_t suffix_len;
+};
+
 } // namespace rapidfuzz

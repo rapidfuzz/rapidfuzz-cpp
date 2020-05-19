@@ -3,13 +3,18 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include "string_utils.hpp"
 #include "utils.hpp"
 
 #include <type_traits>
 
 namespace rapidfuzz {
 namespace fuzz {
+
+/**
+ * @defgroup Fuzz Fuzz
+ * A collection of string matching algorithms from FuzzyWuzzy
+ * @{
+ */
 
 /**
  * @brief calculates a simple ratio between two strings
@@ -25,11 +30,10 @@ namespace fuzz {
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -55,11 +59,10 @@ percent ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -87,11 +90,10 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -113,11 +115,10 @@ percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -147,11 +148,10 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -172,11 +172,10 @@ percent token_set_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -197,11 +196,10 @@ percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -223,11 +221,10 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -258,11 +255,10 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -292,11 +288,10 @@ percent length_ratio(const Sentence1& s1, const Sentence2& s2,
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -312,18 +307,17 @@ percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2,
  * @brief Calculates a weighted ratio based on the other ratio algorithms
  *
  * @details
- * TODO: add a detailed description
+ * @todo add a detailed description
  *
  * @tparam Sentence1 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence2
  * @tparam Sentence2 This is a string that can be explicitly converted to
  * std::basic_string<char_type> and has the same `char_type` as Sentence1
  *
- * @param query string we want to find
- * @param choices iterable of all strings the query should be compared with.
- *     The strings have to use the same char type used for the query, but do not
- * need the same type. (e.g. string literal as query and vector of std::string
- * for the choices)
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
  * @param score_cutoff Optional argument for a score threshold between 0% and
  * 100%. Matches with a lower score than this number will not be returned.
  * Defaults to 0.
@@ -334,6 +328,8 @@ template <typename Sentence1, typename Sentence2,
           typename CharT = char_type<Sentence1>>
 percent WRatio(const Sentence1& s1, const Sentence2& s2,
                percent score_cutoff = 0);
+
+/**@}*/
 
 } // namespace fuzz
 } // namespace rapidfuzz

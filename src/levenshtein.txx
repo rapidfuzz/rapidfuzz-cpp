@@ -2,7 +2,6 @@
 /* Copyright © 2020 Max Bachmann */
 
 #include "levenshtein.hpp"
-#include "string_utils.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -20,7 +19,7 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2)
     return distance(sentence2, sentence1);
   }
 
-  string_utils::remove_common_affix(sentence1, sentence2);
+  utils::remove_common_affix(sentence1, sentence2);
 
   if (sentence2.empty()) {
     return sentence1.length();
@@ -57,7 +56,7 @@ std::size_t levenshtein::weighted_distance(const Sentence1& s1,
     return weighted_distance(sentence2, sentence1);
   }
 
-  string_utils::remove_common_affix(sentence1, sentence2);
+  utils::remove_common_affix(sentence1, sentence2);
 
   if (sentence2.empty()) {
     return sentence1.length();
@@ -105,7 +104,7 @@ std::size_t levenshtein::generic_distance(const Sentence1& s1,
     return generic_distance(sentence2, sentence1, weights);
   }
 
-  string_utils::remove_common_affix(sentence1, sentence2);
+  utils::remove_common_affix(sentence1, sentence2);
 
   std::vector<std::size_t> cache(sentence1.size() + 1);
 
@@ -220,7 +219,7 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1,
   }
 
   // remove common prefix + suffix in constant time
-  string_utils::remove_common_affix(s1, s2);
+  utils::remove_common_affix(s1, s2);
 
   if (s1.empty()) {
     double ratio =
@@ -236,8 +235,7 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1,
 
   // find uncommon chars in the two sequences to exit early in many cases in
   // linear time
-  std::size_t uncommon_char_distance =
-      string_utils::count_uncommon_chars(s1, s2);
+  std::size_t uncommon_char_distance = utils::count_uncommon_chars(s1, s2);
   return {uncommon_char_distance <= cutoff_distance, s1, s2};
 }
 

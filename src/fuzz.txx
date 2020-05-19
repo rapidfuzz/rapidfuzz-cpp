@@ -94,13 +94,12 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
     return 0;
   }
 
-  string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
+  string_view_vec<CharT> tokens_a = utils::splitSV(s1);
   std::sort(tokens_a.begin(), tokens_a.end());
-  string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
+  string_view_vec<CharT> tokens_b = utils::splitSV(s2);
   std::sort(tokens_b.begin(), tokens_b.end());
 
-  return ratio(string_utils::join(tokens_a), string_utils::join(tokens_b),
-               score_cutoff);
+  return ratio(utils::join(tokens_a), utils::join(tokens_b), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT>
@@ -111,13 +110,13 @@ percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
     return 0;
   }
 
-  string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
+  string_view_vec<CharT> tokens_a = utils::splitSV(s1);
   std::sort(tokens_a.begin(), tokens_a.end());
-  string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
+  string_view_vec<CharT> tokens_b = utils::splitSV(s2);
   std::sort(tokens_b.begin(), tokens_b.end());
 
-  return fuzz::partial_ratio(string_utils::join(tokens_a),
-                             string_utils::join(tokens_b), score_cutoff);
+  return fuzz::partial_ratio(utils::join(tokens_a), utils::join(tokens_b),
+                             score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT>
@@ -128,9 +127,9 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2,
     return 0;
   }
 
-  string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
+  string_view_vec<CharT> tokens_a = utils::splitSV(s1);
   std::sort(tokens_a.begin(), tokens_a.end());
-  string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
+  string_view_vec<CharT> tokens_b = utils::splitSV(s2);
   std::sort(tokens_b.begin(), tokens_b.end());
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
@@ -143,12 +142,12 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2,
     return 100;
   }
 
-  std::basic_string<CharT> diff_ab_joined = string_utils::join(diff_ab);
-  std::basic_string<CharT> diff_ba_joined = string_utils::join(diff_ba);
+  std::basic_string<CharT> diff_ab_joined = utils::join(diff_ab);
+  std::basic_string<CharT> diff_ba_joined = utils::join(diff_ba);
 
   std::size_t ab_len = diff_ab_joined.length();
   std::size_t ba_len = diff_ba_joined.length();
-  std::size_t sect_len = string_utils::joined_size(intersect);
+  std::size_t sect_len = utils::joined_size(intersect);
 
   // string length sect+ab <-> sect and sect+ba <-> sect
   std::size_t sect_ab_len = sect_len + !!sect_len + ab_len;
@@ -195,9 +194,9 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
     return 0;
   }
 
-  string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
+  string_view_vec<CharT> tokens_a = utils::splitSV(s1);
   std::sort(tokens_a.begin(), tokens_a.end());
-  string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
+  string_view_vec<CharT> tokens_b = utils::splitSV(s2);
   std::sort(tokens_b.begin(), tokens_b.end());
 
   tokens_a.erase(std::unique(tokens_a.begin(), tokens_a.end()), tokens_a.end());
@@ -216,8 +215,8 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
     return 100;
   }
 
-  return partial_ratio(string_utils::join(difference_ab),
-                       string_utils::join(difference_ba), score_cutoff);
+  return partial_ratio(utils::join(difference_ab), utils::join(difference_ba),
+                       score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT>
@@ -228,9 +227,9 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2,
     return 0;
   }
 
-  string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
+  string_view_vec<CharT> tokens_a = utils::splitSV(s1);
   std::sort(tokens_a.begin(), tokens_a.end());
-  string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
+  string_view_vec<CharT> tokens_b = utils::splitSV(s2);
   std::sort(tokens_b.begin(), tokens_b.end());
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
@@ -242,16 +241,15 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2,
     return 100;
   }
 
-  std::basic_string<CharT> diff_ab_joined = string_utils::join(diff_ab);
-  std::basic_string<CharT> diff_ba_joined = string_utils::join(diff_ba);
+  std::basic_string<CharT> diff_ab_joined = utils::join(diff_ab);
+  std::basic_string<CharT> diff_ba_joined = utils::join(diff_ba);
 
   std::size_t ab_len = diff_ab_joined.length();
   std::size_t ba_len = diff_ba_joined.length();
-  std::size_t sect_len = string_utils::joined_size(intersect);
+  std::size_t sect_len = utils::joined_size(intersect);
 
   double result = levenshtein::normalized_weighted_distance(
-      string_utils::join(tokens_a), string_utils::join(tokens_b),
-      score_cutoff / 100);
+      utils::join(tokens_a), utils::join(tokens_b), score_cutoff / 100);
 
   // string length sect+ab <-> sect and sect+ba <-> sect
   std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
@@ -301,9 +299,9 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
     return 0;
   }
 
-  string_view_vec<CharT> tokens_a = string_utils::splitSV(s1);
+  string_view_vec<CharT> tokens_a = utils::splitSV(s1);
   std::sort(tokens_a.begin(), tokens_a.end());
-  string_view_vec<CharT> tokens_b = string_utils::splitSV(s2);
+  string_view_vec<CharT> tokens_b = utils::splitSV(s2);
   std::sort(tokens_b.begin(), tokens_b.end());
 
   auto unique_a = tokens_a;
@@ -324,8 +322,8 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
     return 100;
   }
 
-  percent result = partial_ratio(string_utils::join(tokens_a),
-                                 string_utils::join(tokens_b), score_cutoff);
+  percent result =
+      partial_ratio(utils::join(tokens_a), utils::join(tokens_b), score_cutoff);
   // do not calculate the same partial_ratio twice
   if (tokens_a.size() == unique_a.size() && tokens_b.size() == unique_b.size())
   {
@@ -333,9 +331,9 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
   }
 
   score_cutoff = std::max(score_cutoff, result);
-  return std::max(result, partial_ratio(string_utils::join(difference_ab),
-                                        string_utils::join(difference_ba),
-                                        score_cutoff));
+  return std::max(result,
+                  partial_ratio(utils::join(difference_ab),
+                                utils::join(difference_ba), score_cutoff));
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT>
@@ -345,7 +343,7 @@ percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2,
   if (utils::is_zero(length_ratio(s1, s2, score_cutoff))) {
     return 0;
   }
-  std::size_t distance = string_utils::count_uncommon_chars(s1, s2);
+  std::size_t distance = utils::count_uncommon_chars(s1, s2);
   std::size_t lensum = s1.length() + s2.length();
   percent result =
       1.0 - static_cast<double>(distance) / static_cast<double>(lensum);
