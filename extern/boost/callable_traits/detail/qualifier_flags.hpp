@@ -13,7 +13,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include <boost/callable_traits/detail/config.hpp>
 
 namespace boost { namespace callable_traits { namespace detail {
-    
+   
 //bit qualifier_flags used to signify cv/ref qualifiers
 using qualifier_flags = std::uint32_t;
 
@@ -37,7 +37,7 @@ using qualifier_flags = std::uint32_t;
 
 */
 
-// Flag representing the default qualifiers on a type 
+// Flag representing the default qualifiers on a type
 // or member function overload.
 constexpr qualifier_flags default_ = 0;
 

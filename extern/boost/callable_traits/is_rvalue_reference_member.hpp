@@ -64,7 +64,7 @@ constexpr bool is_rvalue_reference_member_v = //see below
 * none
 
 [heading Behavior]
-* `is_rvalue_reference_member<T>::value` is `true` when either: 
+* `is_rvalue_reference_member<T>::value` is `true` when either:
   * `T` is a function type with a '&&' member qualifier
   * `T` is a pointer to a member function with a '&&' member qualifiers
   * `T` is a function object with a non-overloaded `operator()`, where the `operator()` has a '&&' member qualifier

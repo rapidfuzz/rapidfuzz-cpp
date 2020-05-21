@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2014 Jean-Bernard Jansen
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -89,7 +89,7 @@ template <class T> class has_bracket_operator {
   typedef char has_op;
   struct hasnt_op { char t[2]; };  // Ensured to work on any platform
   template <typename C> static has_op matcher(decltype(sub_matcher<T>(&T::at)));
-  template <typename C> static hasnt_op matcher(...); 
+  template <typename C> static hasnt_op matcher(...);
  public:
   static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
 };
@@ -122,7 +122,7 @@ template <class T = std::string> class SequenceMatcher {
     set_seq2(b);
   }
 
-  void set_seq1(T const& a) { 
+  void set_seq1(T const& a) {
     a_ = a;
     matching_blocks_ = nullptr;
     opcodes_ = nullptr;
@@ -135,7 +135,7 @@ template <class T = std::string> class SequenceMatcher {
     matching_blocks_ = nullptr;
     opcodes_ = nullptr;
   }
-  
+ 
   double ratio() {
     size_t sum = 0;
     size_t length = a_.size()+b_.size();
@@ -143,8 +143,8 @@ template <class T = std::string> class SequenceMatcher {
     for(match_t  m : get_matching_blocks())
         sum+=std::get<2>(m);
     return 2.*sum/length;
-  } 
-  
+  }
+ 
   match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high) {
     using std::begin;
     using std::end;
@@ -153,7 +153,7 @@ template <class T = std::string> class SequenceMatcher {
     size_t best_i = a_low;
     size_t best_j = b_low;
     size_t best_size = 0;
-    
+   
     // Find longest junk free match
     {
       j2_values_to_erase_.clear();
@@ -171,7 +171,7 @@ template <class T = std::string> class SequenceMatcher {
             best_size = k;
           }
         }
-        
+       
         for(auto const& elem : j2_values_to_erase_) {
           j2len_[elem.first] = 0;
         }
@@ -184,13 +184,13 @@ template <class T = std::string> class SequenceMatcher {
         j2len_[elem.first] = 0;
       }
     }
-   
-    // Utility lambdas for factoring 
+  
+    // Utility lambdas for factoring
     auto low_bound_expand = [&best_i, &best_j, a_low, b_low, &best_size, this] (bool isjunk) {
       while (
-        best_i > a_low  
-        && best_j > b_low 
-        && this->a_[best_i-1] == this->b_[best_j-1] 
+        best_i > a_low 
+        && best_j > b_low
+        && this->a_[best_i-1] == this->b_[best_j-1]
         && isjunk == b2j_.count(b_[best_j-1])
       ) {
         --best_i; --best_j; ++best_size;
@@ -201,8 +201,8 @@ template <class T = std::string> class SequenceMatcher {
     // because modified betweent the calls
     auto high_bound_expand = [&best_i, &best_j, a_high, b_high, &best_size, this] (bool isjunk) {
       while (
-        (best_i+best_size) < a_high  
-        && (best_j+best_size) < b_high 
+        (best_i+best_size) < a_high 
+        && (best_j+best_size) < b_high
         && this->a_[best_i+best_size] == this->b_[best_j+best_size]
         && isjunk == b2j_.count(b_[best_j + best_size])
       ) {
@@ -227,7 +227,7 @@ template <class T = std::string> class SequenceMatcher {
 
     if (matching_blocks_)
       return *matching_blocks_;
-    
+   
     vector<tuple<size_t, size_t, size_t, size_t>> queue;
     vector<match_t> matching_blocks_pass1;
 
@@ -250,10 +250,10 @@ template <class T = std::string> class SequenceMatcher {
       }
     }
     std::sort(std::begin(matching_blocks_pass1), end(matching_blocks_pass1));
-    
+   
     matching_blocks_.reset(new match_list_t);
     matching_blocks_->reserve(matching_blocks_pass1.size());
-    
+   
     size_t i1, j1, k1;
     i1 = j1 = k1 = 0;
 
@@ -301,7 +301,7 @@ template <class T = std::string> class SequenceMatcher {
    *    << " b[" << j1 << ":" << j2 << " (" << b.substr(j1, j2-j1) << ")"
    *    << "\n";
    * }
-   *  
+   * 
    *  delete a[0:1] (q) b[0:0] ()
    *   equal a[1:3] (ab) b[0:2] (ab)
    * replace a[3:4] (x) b[2:3] (y)
@@ -365,11 +365,11 @@ template <class T = std::string> class SequenceMatcher {
 
   void chain_b() {
     size_t index=0;
-   
+  
     // Counting occurences
     b2j_.clear();
     for(hashable_type const& elem : b_) b2j_[elem].push_back(index++);
-        
+       
     // Purge junk elements
     junk_set_.clear();
     if (is_junk_) {
@@ -383,7 +383,7 @@ template <class T = std::string> class SequenceMatcher {
         }
       }
     }
-    
+   
     // Purge popular elements that are not junk
     popular_set_.clear();
     if (auto_junk_ && auto_junk_minsize_ <= b_.size()) {
@@ -416,10 +416,10 @@ template <class T> auto MakeSequenceMatcher(
   T const& a
   , T const& b
   , typename SequenceMatcher<T>::junk_function_type is_junk = nullptr
-  , bool auto_junk = true 
+  , bool auto_junk = true
 )
--> SequenceMatcher<T> 
-{ 
+-> SequenceMatcher<T>
+{
   return SequenceMatcher<T>(a, b, is_junk, auto_junk);
 }
 

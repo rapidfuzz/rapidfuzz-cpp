@@ -2,7 +2,7 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include <boost/utility/string_view.hpp>
+#include <nonstd/string_view.hpp>
 #include <vector>
 
 namespace rapidfuzz {
@@ -11,7 +11,7 @@ namespace rapidfuzz {
 using percent = double;
 
 template <typename CharT>
-using basic_string_view = boost::basic_string_view<CharT>;
+using basic_string_view = nonstd::basic_string_view<CharT>;
 
 template <typename CharT>
 using string_view_vec = std::vector<basic_string_view<CharT>>;

@@ -38,9 +38,9 @@ struct function<Return(Args...)
     BOOST_CLBL_TRTS_INCLUDE_TRANSACTION_SAFE
     BOOST_CLBL_TRTS_NOEXCEPT_SPEC>
  : default_callable_traits<dummy BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS> {
-     
-    static constexpr bool value = true;
     
+    static constexpr bool value = true;
+   
     using traits = function;
 
     using return_type = Return;
@@ -66,7 +66,7 @@ struct function<Return(Args...)
         BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS
         BOOST_CLBL_TRTS_INCLUDE_TRANSACTION_SAFE
         BOOST_CLBL_TRTS_NOEXCEPT_SPEC;
-    
+   
     using is_noexcept = BOOST_CLBL_TRTS_IS_NOEXCEPT;
 
     using remove_noexcept = Return(Args...)
@@ -90,11 +90,11 @@ struct function<Return(Args...)
         BOOST_CLBL_TRTS_NOEXCEPT_SPEC;
 
     using qualifiers = default_callable_traits<dummy BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS>;
-    
+   
     template<qualifier_flags Flags>
     using set_qualifiers = set_function_qualifiers<Flags, is_transaction_safe::value,
         is_noexcept::value, Return, Args...>;
-    
+   
     #ifdef BOOST_CLBL_TRTS_DISABLE_ABOMINABLE_FUNCTIONS
 
     using add_member_lvalue_reference = abominable_functions_not_supported_on_this_compiler;
@@ -118,26 +118,26 @@ struct function<Return(Args...)
     using add_member_cv = set_qualifiers<qualifiers::q_flags | cv_>;
 
     #endif // #ifdef BOOST_CLBL_TRTS_DISABLE_ABOMINABLE_FUNCTIONS
-    
+   
     using remove_member_reference = set_qualifiers<qualifiers::cv_flags>;
 
     using remove_member_const = set_qualifiers<
         qualifiers::ref_flags | remove_const_flag<qualifiers::cv_flags>::value>;
-        
+       
     using remove_member_volatile = set_qualifiers<
         qualifiers::ref_flags | remove_volatile_flag<qualifiers::cv_flags>::value>;
-        
+       
     using remove_member_cv = set_qualifiers<qualifiers::ref_flags>;
 
     template<typename U>
     using apply_member_pointer = add_member_pointer<type, U>;
-    
+   
     template<typename NewReturn>
     using apply_return = NewReturn(Args...)
         BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS
         BOOST_CLBL_TRTS_INCLUDE_TRANSACTION_SAFE
         BOOST_CLBL_TRTS_NOEXCEPT_SPEC;
-    
+   
     template<template<class...> class Container>
     using expand_args = Container<Args...>;
 
@@ -151,9 +151,9 @@ struct function<Return (Args..., ...)
     BOOST_CLBL_TRTS_INCLUDE_TRANSACTION_SAFE
     BOOST_CLBL_TRTS_NOEXCEPT_SPEC>
  : default_callable_traits<dummy BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS> {
-     
-    static constexpr bool value = true;
     
+    static constexpr bool value = true;
+   
     using has_varargs = std::true_type;
     using traits = function;
     using return_type = Return;
@@ -201,11 +201,11 @@ struct function<Return (Args..., ...)
         BOOST_CLBL_TRTS_NOEXCEPT_SPEC;
 
     using qualifiers = default_callable_traits<dummy BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS>;
-    
+   
     template<qualifier_flags Flags>
     using set_qualifiers = set_varargs_function_qualifiers<Flags, is_transaction_safe::value,
         is_noexcept::value, Return, Args...>;
-    
+   
     #ifdef BOOST_CLBL_TRTS_DISABLE_ABOMINABLE_FUNCTIONS
 
     using add_member_lvalue_reference = abominable_functions_not_supported_on_this_compiler;
@@ -218,43 +218,43 @@ struct function<Return (Args..., ...)
 
     using add_member_lvalue_reference = set_qualifiers<
         collapse_flags<qualifiers::q_flags, lref_>::value>;
-        
+       
     using add_member_rvalue_reference = set_qualifiers<
         collapse_flags<qualifiers::q_flags, rref_>::value>;
-        
+       
     using add_member_const = set_qualifiers<qualifiers::q_flags | const_>;
 
     using add_member_volatile = set_qualifiers<qualifiers::q_flags | volatile_>;
 
     using add_member_cv = set_qualifiers<qualifiers::q_flags | cv_>;
-    
+   
     #endif // #ifdef BOOST_CLBL_TRTS_DISABLE_ABOMINABLE_FUNCTIONS
 
     using remove_member_reference = set_qualifiers<qualifiers::cv_flags>;
 
     using remove_member_const = set_qualifiers<
         qualifiers::ref_flags | remove_const_flag<qualifiers::cv_flags>::value>;
-        
+       
     using remove_member_volatile = set_qualifiers<
         qualifiers::ref_flags | remove_volatile_flag<qualifiers::cv_flags>::value>;
-        
+       
     using remove_member_cv = set_qualifiers<qualifiers::ref_flags>;
-    
+   
     template<typename U>
     using apply_member_pointer =
         Return( BOOST_CLBL_TRTS_DEFAULT_VARARGS_CC U::*)(Args..., ...)
             BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS
             BOOST_CLBL_TRTS_INCLUDE_TRANSACTION_SAFE
             BOOST_CLBL_TRTS_NOEXCEPT_SPEC;
-        
+       
     template<typename NewReturn>
     using apply_return = NewReturn(Args..., ...)
         BOOST_CLBL_TRTS_INCLUDE_QUALIFIERS
         BOOST_CLBL_TRTS_INCLUDE_TRANSACTION_SAFE
         BOOST_CLBL_TRTS_NOEXCEPT_SPEC;
-    
+   
     template<template<class...> class Container>
     using expand_args = Container<Args...>;
-    
+   
     using is_member_pointer = std::false_type;
 };

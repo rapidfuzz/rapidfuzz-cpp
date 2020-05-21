@@ -65,7 +65,7 @@ constexpr bool is_volatile_member_v = //see below
 * none
 
 [heading Behavior]
-* `is_volatile_member<T>::value` is `true` when either: 
+* `is_volatile_member<T>::value` is `true` when either:
   * `T` is a function type with a `volatile` member qualifier
   * `T` is a pointer to a member function with a `volatile` member qualifier
   * `T` is a function object with a non-overloaded `operator()`, where the `operator()` has a `volatile` member qualifier
