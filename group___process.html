@@ -243,8 +243,8 @@ template&lt;typename Sentence1 , typename CharT  = char_type&lt;Sentence1&gt;, t
 <p>Find the best matches in a list of choices without any string preprocessing. </p>
 <div class="fragment"><div class="line"><span class="keyword">auto</span> matches = <a class="code" href="group___process.html#gafe44c5f975353c7bfa3e38a19eb57604">process::extract</a>(</div><div class="line">  L<span class="stringliteral">&quot;example&quot;</span>,</div><div class="line">  std::vector&lt;std::wstring&gt;{L<span class="stringliteral">&quot;example&quot;</span>, L<span class="stringliteral">&quot;another example&quot;</span>},</div><div class="line">  boost::none)</div></div><!-- fragment --><dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">Sentence1</td><td>This is a string that can be explicitly converted to boost::basic_string_view&lt;char_type&gt;, or provides data and len functions like std::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence2 </td></tr>
-    <tr><td class="paramname">Sentence2</td><td>This is a string that can be explicitly converted to boost::basic_string_view&lt;char_type&gt;, or provides data and len functions like std::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence1 </td></tr>
+    <tr><td class="paramname">Sentence1</td><td>This is a string that can be explicitly converted to std::basic_string_view&lt;char_type&gt;, or provides data and len functions like boost::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence2 </td></tr>
+    <tr><td class="paramname">Sentence2</td><td>This is a string that can be explicitly converted to std::basic_string_view&lt;char_type&gt;, or provides data and len functions like boost::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence1 </td></tr>
     <tr><td class="paramname">Iterable</td><td>This can be any Iterable of Sentence2 that can be iterated with range based for loops like e.g. vector, list or set</td></tr>
   </table>
   </dd>
@@ -386,8 +386,8 @@ template&lt;typename Sentence1 , typename CharT  = char_type&lt;Sentence1&gt;, t
 <p>Finds the best match in a list of choices by comparing them using the provided scorer functions without any string preprocessing. </p>
 <div class="fragment"><div class="line"><span class="keyword">auto</span> match = <a class="code" href="group___process.html#gaa285980785b5d424afeae44d906d9cd1">process::extractOne</a>(</div><div class="line">  L<span class="stringliteral">&quot;example&quot;</span>,</div><div class="line">  std::vector&lt;std::wstring&gt;{L<span class="stringliteral">&quot;example&quot;</span>, L<span class="stringliteral">&quot;another example&quot;</span>},</div><div class="line">  boost::none)</div></div><!-- fragment --><dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">Sentence1</td><td>This is a string that can be explicitly converted to boost::basic_string_view&lt;char_type&gt;, or provides data and len functions like std::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence2 </td></tr>
-    <tr><td class="paramname">Sentence2</td><td>This is a string that can be explicitly converted to boost::basic_string_view&lt;char_type&gt;, or provides data and len functions like std::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence1 </td></tr>
+    <tr><td class="paramname">Sentence1</td><td>This is a string that can be explicitly converted to std::basic_string_view&lt;char_type&gt;, or provides data and len functions like boost::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence2 </td></tr>
+    <tr><td class="paramname">Sentence2</td><td>This is a string that can be explicitly converted to std::basic_string_view&lt;char_type&gt;, or provides data and len functions like boost::basic_string_view&lt;char_type&gt; and has the same <code>char_type</code> as Sentence1 </td></tr>
     <tr><td class="paramname">Iterable</td><td>This can be any Iterable of Sentence2 that can be iterated with range based for loops like e.g. vector, list or set</td></tr>
   </table>
   </dd>
