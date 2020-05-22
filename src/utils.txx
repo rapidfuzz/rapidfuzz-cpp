@@ -8,12 +8,12 @@
 
 namespace rapidfuzz {
 
-template <typename CharT>
-DecomposedSet<CharT> utils::set_decomposition(string_view_vec<CharT> a,
-                                              string_view_vec<CharT> b)
+template <typename CharT1, typename CharT2>
+DecomposedSet<CharT1, CharT2, CharT1> utils::set_decomposition(string_view_vec<CharT1> a,
+                                       string_view_vec<CharT2> b)
 {
-  string_view_vec<CharT> intersection;
-  string_view_vec<CharT> difference_ab;
+  string_view_vec<CharT1> intersection;
+  string_view_vec<CharT1> difference_ab;
   a.erase(std::unique(a.begin(), a.end()), a.end());
   b.erase(std::unique(b.begin(), b.end()), b.end());
 
@@ -28,7 +28,7 @@ DecomposedSet<CharT> utils::set_decomposition(string_view_vec<CharT> a,
     }
   }
 
-  return DecomposedSet<CharT>{intersection, difference_ab, b};
+  return {difference_ab, b, intersection};
 }
 
 inline percent utils::result_cutoff(const double result,

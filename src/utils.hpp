@@ -17,9 +17,9 @@ namespace utils {
  * @{
  */
 
-template <typename CharT>
-DecomposedSet<CharT> set_decomposition(string_view_vec<CharT> a,
-                                       string_view_vec<CharT> b);
+template <typename CharT1, typename CharT2>
+DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(string_view_vec<CharT1> a,
+                                       string_view_vec<CharT2> b);
 
 percent result_cutoff(const double result, const percent score_cutoff);
 

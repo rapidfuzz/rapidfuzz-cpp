@@ -55,4 +55,26 @@ template <typename From, typename To>
 constexpr bool is_explicitly_convertible_v =
     is_explicitly_convertible<From, To>::value;
 
+
+// taken from
+// https://stackoverflow.com/questions/16803814/how-do-i-return-the-largest-type-in-a-list-of-types
+template <typename... Ts>
+struct largest_type;
+
+template <typename T>
+struct largest_type<T>
+{
+  using type = T;
+};
+
+template <typename T, typename U, typename... Ts>
+struct largest_type<T, U, Ts...>
+{
+  using type = typename largest_type<typename std::conditional<
+            (sizeof(U) <= sizeof(T)), T, U
+        >::type, Ts...
+    >::type;
+};
+
+
 } // namespace rapidfuzz
