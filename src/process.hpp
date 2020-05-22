@@ -7,12 +7,21 @@
 #include "type_traits.hpp"
 #include "utils.hpp"
 #include <boost/optional.hpp>
+#include <boost/callable_traits.hpp>
 #include <functional>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace rapidfuzz {
+
+using boost::callable_traits::is_invocable;
+
+// the version used by boost currently has a bug
+// https://github.com/boostorg/callable_traits/issues/184
+template <class Fn, class... ArgTypes>
+constexpr bool is_invocable_v = is_invocable<Fn, ArgTypes...>::value;
+
 namespace process {
 
 /**

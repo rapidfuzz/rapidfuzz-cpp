@@ -4,20 +4,12 @@
 #pragma once
 #include "types.hpp"
 
-#include <boost/callable_traits.hpp>
 #include <functional>
 #include <iterator>
 #include <type_traits>
 #include <utility>
 
 namespace rapidfuzz {
-
-using boost::callable_traits::is_invocable;
-
-// the version used by boost currently has a bug
-// https://github.com/boostorg/callable_traits/issues/184
-template <class Fn, class... ArgTypes>
-constexpr bool is_invocable_v = is_invocable<Fn, ArgTypes...>::value;
 
 namespace detail {
 template <typename T> auto inner_type(T const*) -> T;
