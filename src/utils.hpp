@@ -90,6 +90,9 @@ template <typename CharT> void replace_non_alnum(std::basic_string<CharT>& s);
 template <typename CharT>
 std::basic_string<CharT> default_process(std::basic_string<CharT> s);
 
+template <typename Sentence, typename CharT = char_type<Sentence>>
+std::basic_string<CharT> default_process(Sentence s);
+
 /**@}*/
 
 } // namespace utils

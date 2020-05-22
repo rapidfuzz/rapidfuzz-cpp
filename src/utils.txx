@@ -240,4 +240,9 @@ std::basic_string<CharT> utils::default_process(std::basic_string<CharT> s)
   return s;
 }
 
+template <typename Sentence, typename CharT>
+std::basic_string<CharT> utils::default_process(Sentence s) {
+  return default_process(std::basic_string<CharT>(s.data(), s.size()));
+}
+
 } // namespace rapidfuzz
