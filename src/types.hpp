@@ -21,7 +21,7 @@ struct DecomposedSet {
   string_view_vec<CharT1> difference_ab;
   string_view_vec<CharT2> difference_ba;
   string_view_vec<CharT3> intersection;
-  DecomposedSet(string_view_vec<CharT1> diff_ab, string_view_vec<CharT1> diff_ba,
+  DecomposedSet(string_view_vec<CharT1> diff_ab, string_view_vec<CharT2> diff_ba,
   string_view_vec<CharT3> intersect)
       : difference_ab(std::move(diff_ab)),
         difference_ba(std::move(diff_ba)),
