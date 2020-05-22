@@ -2,8 +2,8 @@ var group___fuzz =
 [
     [ "length_ratio", "group___fuzz.html#gaebcf866d3a8de017bd1e5fc5cef7bbd3", null ],
     [ "partial_ratio", "group___fuzz.html#gad7ddce96582796256e93479471098383", null ],
-    [ "partial_token_ratio", "group___fuzz.html#ga17601a3ac67ae1b10e50b32f6049f023", null ],
-    [ "partial_token_set_ratio", "group___fuzz.html#gae49d51832676d45545b129ccf4ac59eb", null ],
+    [ "partial_token_ratio", "group___fuzz.html#ga8db5903939aa659a84c1d05ed63e1d6f", null ],
+    [ "partial_token_set_ratio", "group___fuzz.html#gaf0475d99b70d9a55700d4e1641a55d5c", null ],
     [ "partial_token_sort_ratio", "group___fuzz.html#gaaae5cb1e83db2d160d81ff450b400c90", null ],
     [ "quick_lev_ratio", "group___fuzz.html#gafc2d1dbbecefb9cfcdd7f6d2e1c564ab", null ],
     [ "ratio", "group___fuzz.html#gaa83737f7d2f79f1edc77cfb4b6c6d4fe", null ],

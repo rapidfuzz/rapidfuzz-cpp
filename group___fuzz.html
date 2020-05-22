@@ -108,18 +108,18 @@ Functions</h2></td></tr>
 <tr class="memitem:gab4509d205ed86ea290724b7ee796effd"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#gab4509d205ed86ea290724b7ee796effd">rapidfuzz::fuzz::token_set_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, const percent score_cutoff=0)</td></tr>
 <tr class="memdesc:gab4509d205ed86ea290724b7ee796effd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares the words in the strings based on unique and common words between them using fuzz::ratio.  <a href="group___fuzz.html#gab4509d205ed86ea290724b7ee796effd">More...</a><br /></td></tr>
 <tr class="separator:gab4509d205ed86ea290724b7ee796effd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gae49d51832676d45545b129ccf4ac59eb"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename Sentence2 , typename CharT  = char_type&lt;Sentence1&gt;&gt; </td></tr>
-<tr class="memitem:gae49d51832676d45545b129ccf4ac59eb"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#gae49d51832676d45545b129ccf4ac59eb">rapidfuzz::fuzz::partial_token_set_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</td></tr>
-<tr class="memdesc:gae49d51832676d45545b129ccf4ac59eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares the words in the strings based on unique and common words between them using fuzz::partial_ratio.  <a href="group___fuzz.html#gae49d51832676d45545b129ccf4ac59eb">More...</a><br /></td></tr>
-<tr class="separator:gae49d51832676d45545b129ccf4ac59eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf0475d99b70d9a55700d4e1641a55d5c"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename CharT1  = char_type&lt;Sentence1&gt;, typename Sentence2 , typename CharT2  = char_type&lt;Sentence2&gt;&gt; </td></tr>
+<tr class="memitem:gaf0475d99b70d9a55700d4e1641a55d5c"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#gaf0475d99b70d9a55700d4e1641a55d5c">rapidfuzz::fuzz::partial_token_set_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</td></tr>
+<tr class="memdesc:gaf0475d99b70d9a55700d4e1641a55d5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares the words in the strings based on unique and common words between them using fuzz::partial_ratio.  <a href="group___fuzz.html#gaf0475d99b70d9a55700d4e1641a55d5c">More...</a><br /></td></tr>
+<tr class="separator:gaf0475d99b70d9a55700d4e1641a55d5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf6ce26eac6e74e05a6085d19491223bd"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename Sentence2 &gt; </td></tr>
 <tr class="memitem:gaf6ce26eac6e74e05a6085d19491223bd"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#gaf6ce26eac6e74e05a6085d19491223bd">rapidfuzz::fuzz::token_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</td></tr>
 <tr class="memdesc:gaf6ce26eac6e74e05a6085d19491223bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper method that returns the maximum of fuzz::token_set_ratio and fuzz::token_sort_ratio (faster than manually executing the two functions)  <a href="group___fuzz.html#gaf6ce26eac6e74e05a6085d19491223bd">More...</a><br /></td></tr>
 <tr class="separator:gaf6ce26eac6e74e05a6085d19491223bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga17601a3ac67ae1b10e50b32f6049f023"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename Sentence2 , typename CharT  = char_type&lt;Sentence1&gt;&gt; </td></tr>
-<tr class="memitem:ga17601a3ac67ae1b10e50b32f6049f023"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#ga17601a3ac67ae1b10e50b32f6049f023">rapidfuzz::fuzz::partial_token_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</td></tr>
-<tr class="memdesc:ga17601a3ac67ae1b10e50b32f6049f023"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper method that returns the maximum of fuzz::partial_token_set_ratio and fuzz::partial_token_sort_ratio (faster than manually executing the two functions)  <a href="group___fuzz.html#ga17601a3ac67ae1b10e50b32f6049f023">More...</a><br /></td></tr>
-<tr class="separator:ga17601a3ac67ae1b10e50b32f6049f023"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8db5903939aa659a84c1d05ed63e1d6f"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename CharT1  = char_type&lt;Sentence1&gt;, typename Sentence2 , typename CharT2  = char_type&lt;Sentence2&gt;&gt; </td></tr>
+<tr class="memitem:ga8db5903939aa659a84c1d05ed63e1d6f"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#ga8db5903939aa659a84c1d05ed63e1d6f">rapidfuzz::fuzz::partial_token_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</td></tr>
+<tr class="memdesc:ga8db5903939aa659a84c1d05ed63e1d6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper method that returns the maximum of fuzz::partial_token_set_ratio and fuzz::partial_token_sort_ratio (faster than manually executing the two functions)  <a href="group___fuzz.html#ga8db5903939aa659a84c1d05ed63e1d6f">More...</a><br /></td></tr>
+<tr class="separator:ga8db5903939aa659a84c1d05ed63e1d6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaebcf866d3a8de017bd1e5fc5cef7bbd3"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename Sentence2 &gt; </td></tr>
 <tr class="memitem:gaebcf866d3a8de017bd1e5fc5cef7bbd3"><td class="memTemplItemLeft" align="right" valign="top">percent&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group___fuzz.html#gaebcf866d3a8de017bd1e5fc5cef7bbd3">rapidfuzz::fuzz::length_ratio</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</td></tr>
 <tr class="memdesc:gaebcf866d3a8de017bd1e5fc5cef7bbd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates a quick estimation of fuzz::ratio by comparing the length of the two sentences. Guaranteed to be equal or higher than fuzz::ratio (internally used by fuzz::ratio already when providing it with a score_cutoff to speed up the matching)  <a href="group___fuzz.html#gaebcf866d3a8de017bd1e5fc5cef7bbd3">More...</a><br /></td></tr>
@@ -249,13 +249,13 @@ template&lt;typename Sentence1 , typename Sentence2 , typename CharT  = char_typ
 
 </div>
 </div>
-<a id="ga17601a3ac67ae1b10e50b32f6049f023"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga17601a3ac67ae1b10e50b32f6049f023">&#9670;&nbsp;</a></span>partial_token_ratio()</h2>
+<a id="ga8db5903939aa659a84c1d05ed63e1d6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8db5903939aa659a84c1d05ed63e1d6f">&#9670;&nbsp;</a></span>partial_token_ratio()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Sentence1 , typename Sentence2 , typename CharT  = char_type&lt;Sentence1&gt;&gt; </div>
+template&lt;typename Sentence1 , typename CharT1  = char_type&lt;Sentence1&gt;, typename Sentence2 , typename CharT2  = char_type&lt;Sentence2&gt;&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">percent rapidfuzz::fuzz::partial_token_ratio </td>
@@ -305,13 +305,13 @@ template&lt;typename Sentence1 , typename Sentence2 , typename CharT  = char_typ
 
 </div>
 </div>
-<a id="gae49d51832676d45545b129ccf4ac59eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gae49d51832676d45545b129ccf4ac59eb">&#9670;&nbsp;</a></span>partial_token_set_ratio()</h2>
+<a id="gaf0475d99b70d9a55700d4e1641a55d5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf0475d99b70d9a55700d4e1641a55d5c">&#9670;&nbsp;</a></span>partial_token_set_ratio()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename Sentence1 , typename Sentence2 , typename CharT  = char_type&lt;Sentence1&gt;&gt; </div>
+template&lt;typename Sentence1 , typename CharT1  = char_type&lt;Sentence1&gt;, typename Sentence2 , typename CharT2  = char_type&lt;Sentence2&gt;&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">percent rapidfuzz::fuzz::partial_token_set_ratio </td>
