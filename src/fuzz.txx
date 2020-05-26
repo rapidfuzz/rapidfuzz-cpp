@@ -4,6 +4,7 @@
 
 #include "fuzz.hpp"
 #include "levenshtein.hpp"
+#include "details/SentenceView.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -41,7 +42,7 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2,
     return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
   }
 
-  // when both strings have the same length the is only one possible alignment
+  // when both strings have the same length there is only one possible alignment
   if (s1_view.length() == s2_view.length()) {
     return ratio(s1_view, s2_view, score_cutoff);
   }
@@ -91,47 +92,34 @@ template <typename Sentence1, typename Sentence2>
 percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::splitSV(s1);
-  std::sort(tokens_a.begin(), tokens_a.end());
-  auto tokens_b = utils::splitSV(s2);
-  std::sort(tokens_b.begin(), tokens_b.end());
-
-  return ratio(utils::join(tokens_a), utils::join(tokens_b), score_cutoff);
+  return ratio(
+    SentenceView<char_type<Sentence1>>(s1).sorted_split().join(),
+    SentenceView<char_type<Sentence2>>(s2).sorted_split().join(),
+    score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                        percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::splitSV(s1);
-  std::sort(tokens_a.begin(), tokens_a.end());
-  auto tokens_b = utils::splitSV(s2);
-  std::sort(tokens_b.begin(), tokens_b.end());
-
-  return fuzz::partial_ratio(utils::join(tokens_a), utils::join(tokens_b),
-                             score_cutoff);
+  return partial_ratio(
+    SentenceView<char_type<Sentence1>>(s1).sorted_split().join(),
+    SentenceView<char_type<Sentence2>>(s2).sorted_split().join(),
+    score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2,
                               const percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::splitSV(s1);
-  std::sort(tokens_a.begin(), tokens_a.end());
-  auto tokens_b = utils::splitSV(s2);
-  std::sort(tokens_b.begin(), tokens_b.end());
+  auto tokens_a = SentenceView<char_type<Sentence1>>(s1).sorted_split();
+  auto tokens_b = SentenceView<char_type<Sentence2>>(s2).sorted_split();
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
@@ -143,12 +131,12 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2,
     return 100;
   }
 
-  auto diff_ab_joined = utils::join(diff_ab);
-  auto diff_ba_joined = utils::join(diff_ba);
+  auto diff_ab_joined = diff_ab.join();
+  auto diff_ba_joined = diff_ba.join();
 
   std::size_t ab_len = diff_ab_joined.length();
   std::size_t ba_len = diff_ba_joined.length();
-  std::size_t sect_len = utils::joined_size(intersect);
+  std::size_t sect_len = intersect.length();
 
   // string length sect+ab <-> sect and sect+ba <-> sect
   std::size_t sect_ab_len = sect_len + !!sect_len + ab_len;
@@ -191,47 +179,29 @@ template <typename Sentence1, typename Sentence2, typename CharT1, typename Char
 percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
                                       percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::splitSV(s1);
-  std::sort(tokens_a.begin(), tokens_a.end());
-  auto tokens_b = utils::splitSV(s2);
-  std::sort(tokens_b.begin(), tokens_b.end());
-
-  tokens_a.erase(std::unique(tokens_a.begin(), tokens_a.end()), tokens_a.end());
-  tokens_b.erase(std::unique(tokens_b.begin(), tokens_b.end()), tokens_b.end());
-
-  string_view_vec<CharT1> difference_ab;
-  std::set_difference(tokens_a.begin(), tokens_a.end(), tokens_b.begin(),
-                      tokens_b.end(), std::back_inserter(difference_ab));
-
-  string_view_vec<CharT2> difference_ba;
-  std::set_difference(tokens_b.begin(), tokens_b.end(), tokens_a.begin(),
-                      tokens_a.end(), std::back_inserter(difference_ba));
+  auto decomposition = utils::set_decomposition(
+    SentenceView<char_type<Sentence1>>(s1).sorted_split(),
+    SentenceView<char_type<Sentence2>>(s2).sorted_split());
 
   // exit early when there is a common word in both sequences
-  if (difference_ab.size() < tokens_a.size()) {
-    return 100;
-  }
+  if (!decomposition.intersection.empty()) return 100;
 
-  return partial_ratio(utils::join(difference_ab), utils::join(difference_ba),
-                       score_cutoff);
+  return partial_ratio(
+    decomposition.difference_ab.join(),
+    decomposition.difference_ab.join(),
+    score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2,
                           percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::splitSV(s1);
-  std::sort(tokens_a.begin(), tokens_a.end());
-  auto tokens_b = utils::splitSV(s2);
-  std::sort(tokens_b.begin(), tokens_b.end());
+  auto tokens_a = SentenceView<char_type<Sentence1>>(s1).sorted_split();
+  auto tokens_b = SentenceView<char_type<Sentence2>>(s2).sorted_split();
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
@@ -242,15 +212,15 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2,
     return 100;
   }
 
-  auto diff_ab_joined = utils::join(diff_ab);
-  auto diff_ba_joined = utils::join(diff_ba);
+  auto diff_ab_joined = diff_ab.join();
+  auto diff_ba_joined = diff_ba.join();
 
   std::size_t ab_len = diff_ab_joined.length();
   std::size_t ba_len = diff_ba_joined.length();
-  std::size_t sect_len = utils::joined_size(intersect);
+  std::size_t sect_len = intersect.length();
 
   double result = levenshtein::normalized_weighted_distance(
-      utils::join(tokens_a), utils::join(tokens_b), score_cutoff / 100);
+      tokens_a.join(), tokens_b.join(), score_cutoff / 100);
 
   // string length sect+ab <-> sect and sect+ba <-> sect
   std::size_t sect_ab_lensum = sect_len + !!sect_len + ab_len;
@@ -296,45 +266,31 @@ template <typename Sentence1, typename Sentence2, typename CharT1, typename Char
 percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
                                   percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::splitSV(s1);
-  std::sort(tokens_a.begin(), tokens_a.end());
-  auto tokens_b = utils::splitSV(s2);
-  std::sort(tokens_b.begin(), tokens_b.end());
+  auto tokens_a = SentenceView<char_type<Sentence1>>(s1).sorted_split();
+  auto tokens_b = SentenceView<char_type<Sentence2>>(s2).sorted_split();
 
-  auto unique_a = tokens_a;
-  auto unique_b = tokens_b;
-  unique_a.erase(std::unique(unique_a.begin(), unique_a.end()), unique_a.end());
-  unique_b.erase(std::unique(unique_b.begin(), unique_b.end()), unique_b.end());
-
-  string_view_vec<CharT1> difference_ab;
-  std::set_difference(unique_a.begin(), unique_a.end(), unique_b.begin(),
-                      unique_b.end(), std::back_inserter(difference_ab));
-
-  string_view_vec<CharT2> difference_ba;
-  std::set_difference(unique_b.begin(), unique_b.end(), unique_a.begin(),
-                      unique_a.end(), std::back_inserter(difference_ba));
+  auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
 
   // exit early when there is a common word in both sequences
-  if (difference_ab.size() < unique_a.size()) {
-    return 100;
-  }
+  if (!decomposition.intersection.empty()) return 100;
 
-  percent result =
-      partial_ratio(utils::join(tokens_a), utils::join(tokens_b), score_cutoff);
+  auto diff_ab = decomposition.difference_ab;
+  auto diff_ba = decomposition.difference_ba;
+
+  percent result = partial_ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
+
   // do not calculate the same partial_ratio twice
-  if (tokens_a.size() == unique_a.size() && tokens_b.size() == unique_b.size())
+  if (tokens_a.word_count() == diff_ab.word_count()
+      && tokens_b.word_count() == diff_ba.word_count())
   {
     return result;
   }
 
   score_cutoff = std::max(score_cutoff, result);
   return std::max(result,
-                  partial_ratio(utils::join(difference_ab),
-                                utils::join(difference_ba), score_cutoff));
+                  partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
 }
 
 template <typename Sentence1, typename Sentence2>

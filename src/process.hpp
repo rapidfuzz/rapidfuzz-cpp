@@ -4,7 +4,7 @@
 
 #pragma once
 #include "fuzz.hpp"
-#include "type_traits.hpp"
+#include "details/type_traits.hpp"
 #include "utils.hpp"
 #include <boost/optional.hpp>
 #include <boost/callable_traits.hpp>

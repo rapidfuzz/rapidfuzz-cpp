@@ -2,13 +2,30 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include "type_traits.hpp"
-#include "types.hpp"
+#include "details/type_traits.hpp"
+#include "details/types.hpp"
+#include "details/SplittedSentenceView.hpp"
+#include "details/SentenceView.hpp"
 #include <cmath>
 #include <tuple>
 #include <vector>
 
+
 namespace rapidfuzz {
+
+template <typename CharT1, typename CharT2, typename CharT3>
+struct DecomposedSet {
+  SplittedSentenceView<CharT1> difference_ab;
+  SplittedSentenceView<CharT2> difference_ba;
+  SplittedSentenceView<CharT3> intersection;
+  DecomposedSet(SplittedSentenceView<CharT1> diff_ab, SplittedSentenceView<CharT2> diff_ba,
+  SplittedSentenceView<CharT3> intersect)
+      : difference_ab(std::move(diff_ab)),
+        difference_ba(std::move(diff_ba)),
+        intersection(std::move(intersect))
+  {}
+};
+
 namespace utils {
 
 /**
@@ -18,8 +35,8 @@ namespace utils {
  */
 
 template <typename CharT1, typename CharT2>
-DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(string_view_vec<CharT1> a,
-                                       string_view_vec<CharT2> b);
+DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
+                                       SplittedSentenceView<CharT2> b);
 
 percent result_cutoff(const double result, const percent score_cutoff);
 
