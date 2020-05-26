@@ -34,6 +34,11 @@ namespace utils {
  * @{
  */
 
+percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff=0) {
+  percent ratio = 100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum);
+  return result_cutoff(ratio, score_cutoff);
+}
+
 template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                        SplittedSentenceView<CharT2> b);

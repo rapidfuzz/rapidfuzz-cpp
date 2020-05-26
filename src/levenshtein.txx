@@ -154,14 +154,14 @@ double levenshtein::normalized_distance(const Sentence1& s1,
                                  ? sentence1_len - sentence2_len
                                  : sentence2_len - sentence1_len;
 
-  double len_ratio = 1.0 - static_cast<double>(min_distance) / max_len;
+  double len_ratio = utils::norm_distance(min_distance, max_len) / 100.0;
   if (len_ratio < min_ratio) {
     return 0.0;
   }
 
   std::size_t dist = distance(sentence1, sentence2);
 
-  double ratio = 1.0 - static_cast<double>(dist) / max_len;
+  double ratio = utils::norm_distance(dist, max_len) / 100.0;
   return (ratio >= min_ratio) ? ratio : 0.0;
 }
 
@@ -189,7 +189,7 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1,
 
   // calculate the levenshtein distance in quadratic time
   std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
-  double ratio = 1.0 - static_cast<double>(dist) / static_cast<double>(lensum);
+  double ratio = utils::norm_distance(dist, lensum) / 100.0;
   return utils::result_cutoff(ratio, min_ratio);
 }
 
@@ -222,14 +222,12 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1,
   utils::remove_common_affix(s1, s2);
 
   if (s1.empty()) {
-    double ratio =
-        1.0 - static_cast<double>(s2.length()) / static_cast<double>(lensum);
+    double ratio = utils::norm_distance(s2.length(), lensum) / 100.0;
     return {ratio >= min_ratio, s1, s2};
   }
 
   if (s2.empty()) {
-    double ratio =
-        1.0 - static_cast<double>(s1.length()) / static_cast<double>(lensum);
+    double ratio = utils::norm_distance(s1.length(), lensum) / 100.0;
     return {ratio >= min_ratio, s1, s2};
   }
 
