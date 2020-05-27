@@ -2,22 +2,22 @@
 #pragma once
 #include "SplittedSentenceView.hpp"
 
-
 namespace rapidfuzz {
 
-template<typename CharT>
-class SentenceView {
+template <typename CharT> class SentenceView {
 public:
-  SentenceView(basic_string_view<CharT> sentence)
-    : m_sentence(std::move(sentence)) {}
+  SentenceView(basic_string_view<CharT> sentence) : m_sentence(std::move(sentence))
+  {}
 
-  SplittedSentenceView<CharT> sorted_split() const {
-	  auto result = split();
-	  result.sort();
-	  return result;
+  SplittedSentenceView<CharT> sorted_split() const
+  {
+    auto result = split();
+    result.sort();
+    return result;
   }
-  
-  SplittedSentenceView<CharT> split() const {
+
+  SplittedSentenceView<CharT> split() const
+  {
     string_view_vec<CharT> splitted;
     auto first = m_sentence.data();
     auto second = m_sentence.data();
@@ -37,30 +37,33 @@ public:
     return SplittedSentenceView<CharT>(splitted);
   }
 
-  std::size_t size() const {
+  std::size_t size() const
+  {
     return m_sentence.size();
   }
 
-  std::size_t length() const {
+  std::size_t length() const
+  {
     return size();
   }
 
-  bool empty() const {
-	return m_sentence.empty();
+  bool empty() const
+  {
+    return m_sentence.empty();
   }
 
-  typename basic_string_view<CharT>::const_iterator
-  begin() const {
-	  return m_sentence.begin();
+  typename basic_string_view<CharT>::const_iterator begin() const
+  {
+    return m_sentence.begin();
   }
 
-  typename basic_string_view<CharT>::const_iterator
-  end() const {
-	  return m_sentence.end();
+  typename basic_string_view<CharT>::const_iterator end() const
+  {
+    return m_sentence.end();
   }
 
 private:
   basic_string_view<CharT> m_sentence;
 };
 
-}
+} // namespace rapidfuzz

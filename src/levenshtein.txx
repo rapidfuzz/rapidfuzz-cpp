@@ -46,8 +46,7 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2)
 }
 
 template <typename Sentence1, typename Sentence2>
-std::size_t levenshtein::weighted_distance(const Sentence1& s1,
-                                           const Sentence2& s2)
+std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2& s2)
 {
   auto sentence1 = utils::to_string_view(s1);
   auto sentence2 = utils::to_string_view(s2);
@@ -92,8 +91,7 @@ std::size_t levenshtein::weighted_distance(const Sentence1& s1,
 }
 
 template <typename Sentence1, typename Sentence2>
-std::size_t levenshtein::generic_distance(const Sentence1& s1,
-                                          const Sentence2& s2,
+std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& s2,
                                           WeightTable weights)
 {
   auto sentence1 = utils::to_string_view(s1);
@@ -120,8 +118,7 @@ std::size_t levenshtein::generic_distance(const Sentence1& s1,
 
     for (const auto& char1 : sentence1) {
       if (char1 != char2) {
-        temp = std::min({*cache_iter + weights.delete_cost,
-                         *(cache_iter + 1) + weights.insert_cost,
+        temp = std::min({*cache_iter + weights.delete_cost, *(cache_iter + 1) + weights.insert_cost,
                          temp + weights.replace_cost});
       }
       ++cache_iter;
@@ -133,8 +130,7 @@ std::size_t levenshtein::generic_distance(const Sentence1& s1,
 }
 
 template <typename Sentence1, typename Sentence2>
-double levenshtein::normalized_distance(const Sentence1& s1,
-                                        const Sentence2& s2,
+double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2,
                                         const double min_ratio)
 {
   auto sentence1 = utils::to_string_view(s1);
@@ -150,9 +146,8 @@ double levenshtein::normalized_distance(const Sentence1& s1,
 
   // constant time calculation to find a string ratio based on the string length
   // so it can exit early without running any levenshtein calculations
-  std::size_t min_distance = (sentence1_len > sentence2_len)
-                                 ? sentence1_len - sentence2_len
-                                 : sentence2_len - sentence1_len;
+  std::size_t min_distance = (sentence1_len > sentence2_len) ? sentence1_len - sentence2_len
+                                                             : sentence2_len - sentence1_len;
 
   double len_ratio = utils::norm_distance(min_distance, max_len) / 100.0;
   if (len_ratio < min_ratio) {
@@ -166,8 +161,7 @@ double levenshtein::normalized_distance(const Sentence1& s1,
 }
 
 template <typename Sentence1, typename Sentence2>
-double levenshtein::normalized_weighted_distance(const Sentence1& s1,
-                                                 const Sentence2& s2,
+double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
                                                  const double min_ratio)
 {
   auto sentence1 = utils::to_string_view(s1);
@@ -195,8 +189,7 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1,
 
 template <typename CharT1, typename CharT2>
 levenshtein::detail::LevFilter<CharT1, CharT2>
-levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1,
-                                      basic_string_view<CharT2> s2,
+levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
                                       const double min_ratio)
 {
   if (utils::is_zero(min_ratio)) {
@@ -211,8 +204,7 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1,
 
   // constant time calculation to find a string ratio based on the string length
   // so it can exit early without running any levenshtein calculations
-  std::size_t length_distance =
-      (s1_len > s2_len) ? s1_len - s2_len : s2_len - s1_len;
+  std::size_t length_distance = (s1_len > s2_len) ? s1_len - s2_len : s2_len - s1_len;
 
   if (length_distance > cutoff_distance) {
     return {false, s1, s2};

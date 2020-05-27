@@ -83,23 +83,23 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   return max_ratio;
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
 
-  return ratio(SentenceView<char_type<Sentence1>>(s1).sorted_split().join(),
-               SentenceView<char_type<Sentence2>>(s2).sorted_split().join(), score_cutoff);
+  return ratio(SentenceView<CharT1>(s1).sorted_split().join(),
+               SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                        percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
 
-  return partial_ratio(SentenceView<char_type<Sentence1>>(s1).sorted_split().join(),
-                       SentenceView<char_type<Sentence2>>(s2).sorted_split().join(), score_cutoff);
+  return partial_ratio(SentenceView<CharT1>(s1).sorted_split().join(),
+                       SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -164,9 +164,8 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
 {
   if (score_cutoff > 100) return 0;
 
-  auto decomposition =
-      utils::set_decomposition(SentenceView<char_type<Sentence1>>(s1).sorted_split(),
-                               SentenceView<char_type<Sentence2>>(s2).sorted_split());
+  auto decomposition = utils::set_decomposition(SentenceView<CharT1>(s1).sorted_split(),
+                                                SentenceView<CharT2>(s2).sorted_split());
 
   // exit early when there is a common word in both sequences
   if (!decomposition.intersection.empty()) return 100;
@@ -284,9 +283,7 @@ percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent sco
 template <typename Sentence1, typename Sentence2>
 percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+  if (score_cutoff > 100) return 0;
 
   constexpr double UNBASE_SCALE = 0.95;
 
@@ -308,8 +305,7 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
     }
 
     size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
-    percent end_ratio =
-        utils::norm_distance(dist, s1_view.length() + s2_view.length(), score_cutoff);
+    percent end_ratio = utils::norm_distance(dist, len_a + len_b, score_cutoff);
 
     score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
     return std::max(end_ratio, token_ratio(s1_view, s2_view, score_cutoff) * UNBASE_SCALE);
