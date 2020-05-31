@@ -38,32 +38,20 @@ DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<Cha
 
 percent result_cutoff(const double result, const percent score_cutoff);
 
-percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0)
-{
-  percent ratio = 100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum);
-  return result_cutoff(ratio, score_cutoff);
-}
+percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
 
-template <typename T> static bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
-{
-  return std::fabs(a) <= tolerance;
-}
+template <typename T>
+bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
     typename = std::enable_if_t<is_explicitly_convertible_v<Sentence, basic_string_view<CharT>>>>
-basic_string_view<CharT> to_string_view(const Sentence& str)
-{
-  return basic_string_view<CharT>(str);
-}
+basic_string_view<CharT> to_string_view(const Sentence& str);
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
     typename = std::enable_if_t<!is_explicitly_convertible_v<Sentence, basic_string_view<CharT>>>>
-basic_string_view<CharT> to_string_view(Sentence str)
-{
-  return basic_string_view<CharT>(str.data(), str.size());
-}
+basic_string_view<CharT> to_string_view(Sentence str);
 
 template <typename CharT1, typename CharT2>
 StringAffix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);

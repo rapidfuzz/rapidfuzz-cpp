@@ -53,6 +53,30 @@ inline percent utils::result_cutoff(const double result, const percent score_cut
   return (result >= score_cutoff) ? result : 0;
 }
 
+percent utils::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
+{
+  percent ratio = 100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum);
+  return result_cutoff(ratio, score_cutoff);
+}
+
+template <typename T>
+bool utils::is_zero(T a, T tolerance)
+{
+  return std::fabs(a) <= tolerance;
+}
+
+template <typename Sentence, typename CharT = char_type<Sentence>, typename>
+basic_string_view<CharT> utils::to_string_view(const Sentence& str)
+{
+  return basic_string_view<CharT>(str);
+}
+
+template <typename Sentence, typename CharT = char_type<Sentence>, typename>
+basic_string_view<CharT> utils::to_string_view(Sentence str)
+{
+  return basic_string_view<CharT>(str.data(), str.size());
+}
+
 /**
  * Finds the longest common prefix between two ranges
  */
