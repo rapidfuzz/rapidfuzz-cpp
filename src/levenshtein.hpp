@@ -22,7 +22,8 @@ namespace levenshtein {
 // stable interface
 namespace detail {
 
-template <typename CharT1, typename CharT2> struct LevFilter {
+template <typename CharT1, typename CharT2>
+struct LevFilter {
   bool not_zero;
   basic_string_view<CharT1> s1_view;
   basic_string_view<CharT2> s2_view;

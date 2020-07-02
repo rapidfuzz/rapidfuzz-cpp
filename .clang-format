@@ -5,6 +5,7 @@ AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Custom
+AlwaysBreakTemplateDeclarations: true
 BraceWrapping:
   SplitEmptyFunction: false
   AfterCaseLabel: true

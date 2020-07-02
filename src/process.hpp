@@ -7,8 +7,8 @@
 #include "fuzz.hpp"
 #include "utils.hpp"
 #include <boost/callable_traits.hpp>
-#include <nonstd/optional.hpp>
 #include <functional>
+#include <nonstd/optional.hpp>
 #include <string>
 #include <utility>
 #include <vector>

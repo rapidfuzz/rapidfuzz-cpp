@@ -4,7 +4,8 @@
 
 namespace rapidfuzz {
 
-template <typename CharT> class SplittedSentenceView {
+template <typename CharT>
+class SplittedSentenceView {
 public:
   class const_iterator {
   public:
@@ -45,7 +46,7 @@ public:
   }
 
   std::basic_string<CharT> join() const;
-  
+
   void sort()
   {
     std::sort(m_sentence.begin(), m_sentence.end());
@@ -111,14 +112,16 @@ const CharT& SplittedSentenceView<CharT>::const_iterator::operator*() const
   return (*words_iter)[word_pos];
 }
 
-template <typename CharT> std::size_t SplittedSentenceView<CharT>::dedupe()
+template <typename CharT>
+std::size_t SplittedSentenceView<CharT>::dedupe()
 {
   std::size_t old_word_count = word_count();
   m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
   return old_word_count - word_count();
 }
 
-template <typename CharT> std::size_t SplittedSentenceView<CharT>::size() const
+template <typename CharT>
+std::size_t SplittedSentenceView<CharT>::size() const
 {
   if (m_sentence.empty()) return 0;
 
@@ -131,7 +134,8 @@ template <typename CharT> std::size_t SplittedSentenceView<CharT>::size() const
   return result;
 }
 
-template <typename CharT> std::basic_string<CharT> SplittedSentenceView<CharT>::join() const
+template <typename CharT>
+std::basic_string<CharT> SplittedSentenceView<CharT>::join() const
 {
   if (m_sentence.empty()) {
     return std::basic_string<CharT>();

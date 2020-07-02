@@ -120,11 +120,14 @@ StringAffix utils::remove_common_affix(basic_string_view<CharT1>& a, basic_strin
   return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
 }
 
-template <typename Sentence> std::array<unsigned int, 32> utils::char_freq(const Sentence& str)
+template <typename Sentence>
+std::array<unsigned int, 32> utils::char_freq(const Sentence& str)
 {
+  // with %32 the results for a <-> A are equal
   std::array<unsigned int, 32> char_freq{};
-  for (const auto& ch : str)
+  for (const auto& ch : str) {
     char_freq[ch % 32]++;
+  }
   return char_freq;
 }
 
@@ -154,9 +157,8 @@ std::array<unsigned int, 32> utils::char_freq(const std::array<unsigned int, 32>
 template <typename Sentence1, typename Sentence2>
 std::size_t utils::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2)
 {
-  // with %32 the results for a <-> A are equal
-  std::array<unsigned int, 32> char_freq1 = char_freq(s1);
-  std::array<unsigned int, 32> char_freq2 = char_freq(s2);
+  auto char_freq1 = char_freq(s1);
+  auto char_freq2 = char_freq(s2);
 
   std::size_t count = 0;
 
@@ -169,7 +171,8 @@ std::size_t utils::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2
   return count;
 }
 
-template <typename CharT> void utils::lower_case(std::basic_string<CharT>& s)
+template <typename CharT>
+void utils::lower_case(std::basic_string<CharT>& s)
 {
   // TODO: handle other characters like Ä <-> ä (maybe check how this is
   // implemented in cpython)
@@ -177,7 +180,8 @@ template <typename CharT> void utils::lower_case(std::basic_string<CharT>& s)
                  [](CharT ch) { return (ch >= 'A' && ch <= 'Z' ? ch + 32 : ch); });
 }
 
-template <typename CharT> void utils::replace_non_alnum(std::basic_string<CharT>& s)
+template <typename CharT>
+void utils::replace_non_alnum(std::basic_string<CharT>& s)
 {
   // replace punctuation, control control characters, whitespaces with
   // whitespaces
