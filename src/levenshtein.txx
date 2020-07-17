@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <iostream>
 
 namespace rapidfuzz {
 
@@ -175,29 +176,29 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sent
   std::size_t sentence2_len = sentence2.length();
   std::size_t lensum = sentence1_len + sentence2_len;
 
-  auto lev_filter = detail::quick_lev_filter(sentence1, sentence2, min_ratio);
+  /*auto lev_filter = detail::quick_lev_filter(sentence1, sentence2, min_ratio);
 
   if (!lev_filter.not_zero) {
     return 0.0;
   }
 
   // calculate the levenshtein distance in quadratic time
-  std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
+  std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view);*/
+  std::size_t dist = weighted_distance(sentence1, sentence2);
   double ratio = utils::norm_distance(dist, lensum) / 100.0;
   return utils::result_cutoff(ratio, min_ratio);
 }
 
-template <typename CharT1, typename CharT2>
-levenshtein::detail::LevFilter<CharT1, CharT2>
-levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                      const double min_ratio)
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+levenshtein::detail::LevFilter<Sentence1, Sentence2>
+levenshtein::detail::quick_lev_filter(Sentence1 s1, Sentence2 s2, const double min_ratio)
 {
   if (utils::is_zero(min_ratio)) {
     return {true, s1, s2};
   }
 
-  std::size_t s1_len = s1.length();
-  std::size_t s2_len = s2.length();
+  std::size_t s1_len = s1.size();
+  std::size_t s2_len = s2.size();
   std::size_t lensum = s1_len + s2_len;
 
   std::size_t cutoff_distance = static_cast<double>(lensum) * (1.0 - min_ratio);
@@ -214,12 +215,12 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1, basic_string
   utils::remove_common_affix(s1, s2);
 
   if (s1.empty()) {
-    double ratio = utils::norm_distance(s2.length(), lensum) / 100.0;
+    double ratio = utils::norm_distance(s2.size(), lensum) / 100.0;
     return {ratio >= min_ratio, s1, s2};
   }
 
   if (s2.empty()) {
-    double ratio = utils::norm_distance(s1.length(), lensum) / 100.0;
+    double ratio = utils::norm_distance(s1.size(), lensum) / 100.0;
     return {ratio >= min_ratio, s1, s2};
   }
 

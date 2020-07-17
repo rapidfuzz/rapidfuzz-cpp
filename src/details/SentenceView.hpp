@@ -8,6 +8,7 @@ namespace rapidfuzz {
 template <typename CharT>
 class SentenceView {
 public:
+  //TODO add constructor for different string views
   SentenceView(basic_string_view<CharT> sentence) : m_sentence(std::move(sentence))
   {}
 
@@ -29,6 +30,14 @@ public:
   typename basic_string_view<CharT>::const_iterator begin() const;
 
   typename basic_string_view<CharT>::const_iterator end() const;
+
+  void remove_prefix(std::size_t n) {
+    m_sentence.remove_prefix(n);
+  }
+
+  void remove_suffix(std::size_t n) {
+    m_sentence.remove_suffix(n);
+  }
 
 private:
   basic_string_view<CharT> m_sentence;

@@ -1,26 +1,33 @@
 #pragma once
 #include "types.hpp"
 #include <string>
+#include <limits>
 
 namespace rapidfuzz {
+
+template <typename CharT> class SplittedSentenceViewConstIter;
 
 template <typename CharT>
 class SplittedSentenceView {
 public:
-  class const_iterator {
+    friend class SplittedSentenceViewConstIter<CharT>;
+    typedef SplittedSentenceViewConstIter<CharT> const_iterator;
+
+  class const_reverse_iterator {
   public:
-    explicit const_iterator(typename string_view_vec<CharT>::const_iterator iter) : words_iter(iter)
+    explicit const_reverse_iterator(typename string_view_vec<CharT>::const_reverse_iterator iter) : words_iter(iter)
     {}
 
-    const_iterator operator++();
-    bool operator!=(const const_iterator& other) const;
+    const_reverse_iterator operator++();
+    bool operator!=(const const_reverse_iterator& other) const;
+    bool operator==(const const_reverse_iterator& other) const;
     const CharT& operator*() const;
 
   private:
     CharT whitespace{0x20};
     bool add_whitespace = false;
-    std::size_t word_pos = 0;
-    typename string_view_vec<CharT>::const_iterator words_iter;
+    std::size_t word_pos = 1;
+    typename string_view_vec<CharT>::const_reverse_iterator words_iter;
   };
 
 public:
@@ -28,9 +35,11 @@ public:
   {}
 
   std::size_t dedupe();
-  std::size_t size() const;
 
-  std::size_t length() const
+  // calculates size on first run O(N) with N being the word count
+  std::size_t size();
+
+  std::size_t length()
   {
     return size();
   }
@@ -70,85 +79,72 @@ public:
     return const_iterator(m_sentence.end());
   }
 
+  const_reverse_iterator rbegin() const
+  {
+    return crbegin();
+  }
+  const_reverse_iterator rend() const
+  {
+    return crend();
+  }
+
+  const_reverse_iterator crbegin() const
+  {
+    return const_reverse_iterator(m_sentence.rbegin());
+  }
+  const_reverse_iterator crend() const
+  {
+    return const_reverse_iterator(m_sentence.rend());
+  }
+
   string_view_vec<CharT> words() const
   {
     return m_sentence;
   }
 
+  void remove_prefix(std::size_t n);
+  void remove_suffix(std::size_t n);
+
 private:
   string_view_vec<CharT> m_sentence;
+  std::size_t m_size = std::numeric_limits<std::size_t>::max();
 };
 
 template <typename CharT>
-typename SplittedSentenceView<CharT>::const_iterator
-SplittedSentenceView<CharT>::const_iterator::operator++()
-{
-  if (word_pos == 0 && add_whitespace == true) {
-    add_whitespace = false;
-  }
-  else if (word_pos < words_iter->size()) {
-    ++word_pos;
-  }
-  else {
-    ++words_iter;
-    word_pos = 0;
-    add_whitespace = true;
-  }
-  return *this;
-}
+struct SplittedSentenceViewConstIter {
+  explicit SplittedSentenceViewConstIter(typename string_view_vec<CharT>::const_iterator iter)
+    : words_iter(iter)
+  {}
 
-template <typename CharT>
-bool SplittedSentenceView<CharT>::const_iterator::operator!=(const const_iterator& other) const
-{
-  return words_iter != other.words_iter;
-}
+  SplittedSentenceViewConstIter<CharT> operator++();
+  bool operator!=(const SplittedSentenceViewConstIter<CharT>& other) const;
+  bool operator==(const SplittedSentenceViewConstIter<CharT>& other) const;
+  const CharT& operator*();
 
-template <typename CharT>
-const CharT& SplittedSentenceView<CharT>::const_iterator::operator*() const
-{
-  if (add_whitespace == true) {
-    return whitespace;
-  }
-  return (*words_iter)[word_pos];
-}
+private:
+  CharT whitespace{0x20};
+  bool add_whitespace = false;
+  std::size_t word_pos = 1;
 
-template <typename CharT>
-std::size_t SplittedSentenceView<CharT>::dedupe()
-{
-  std::size_t old_word_count = word_count();
-  m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
-  return old_word_count - word_count();
-}
+  typename basic_string_view<CharT>::const_iterator letter_iter;
+  typename string_view_vec<CharT>::const_iterator words_iter;
+};
 
-template <typename CharT>
-std::size_t SplittedSentenceView<CharT>::size() const
-{
-  if (m_sentence.empty()) return 0;
-
-  // there is a whitespace between each word
-  std::size_t result = m_sentence.size() - 1;
-  for (const auto& word : m_sentence) {
-    result += word.size();
-  }
-
-  return result;
-}
-
-template <typename CharT>
-std::basic_string<CharT> SplittedSentenceView<CharT>::join() const
-{
-  if (m_sentence.empty()) {
-    return std::basic_string<CharT>();
-  }
-
-  auto sentence_iter = m_sentence.begin();
-  std::basic_string<CharT> joined{*sentence_iter};
-  const std::basic_string<CharT> whitespace{0x20};
-  ++sentence_iter;
-  for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
-    joined.append(whitespace).append(std::basic_string<CharT>{*sentence_iter});
-  }
-  return joined;
-}
 
 } // namespace rapidfuzz
+
+#include "SplittedSentenceView.txx"
+
+namespace std {
+    template<typename CharT>
+    class iterator_traits<rapidfuzz::SplittedSentenceViewConstIter<CharT>>
+    {
+    public:
+        //using difference_type = std::ptrdiff_t;
+        using size_type = std::size_t;
+        using value_type = CharT;
+        using pointer = CharT*;
+        //using reference = CharT&;
+        //using iterator_category = std::random_access_iterator_tag;
+    };
+}

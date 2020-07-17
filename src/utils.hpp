@@ -2,8 +2,8 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include "details/SentenceView.hpp"
 #include "details/SplittedSentenceView.hpp"
+#include "details/SentenceView.hpp"
 #include "details/type_traits.hpp"
 #include "details/types.hpp"
 #include <cmath>
@@ -51,11 +51,24 @@ basic_string_view<CharT> to_string_view(const Sentence& str);
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
-    typename = std::enable_if_t<!is_explicitly_convertible_v<Sentence, basic_string_view<CharT>>>>
+    typename = std::enable_if_t<
+      !is_explicitly_convertible_v<Sentence, basic_string_view<CharT>>
+    >
+>
 basic_string_view<CharT> to_string_view(Sentence str);
 
-template <typename CharT1, typename CharT2>
-StringAffix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
+template <typename T>
+SplittedSentenceView<T> to_string_view(SplittedSentenceView<T> str) {
+  return str;
+}
+
+template <typename T>
+SentenceView<T> to_string_view(SentenceView<T> str) {
+  return str;
+}
+
+template <typename Sentence1, typename Sentence2>
+StringAffix remove_common_affix(Sentence1& a, Sentence2& b);
 
 template <typename Sentence>
 std::array<unsigned int, 32> char_freq(const Sentence& str);

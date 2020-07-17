@@ -7,8 +7,8 @@ namespace Unicode {
  * checks whether unicode characters have the bidirectional
  * type 'WS', 'B' or 'S' or the category 'Zs'
  */
-template <typename T>
-bool is_space(const T ch)
+//template <typename T>
+bool is_space(const uint32_t ch)
 {
   switch (ch) {
   case 0x0009:

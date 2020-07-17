@@ -65,13 +65,14 @@ bool utils::is_zero(T a, T tolerance)
   return std::fabs(a) <= tolerance;
 }
 
-template <typename Sentence, typename CharT = char_type<Sentence>, typename>
+
+template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> utils::to_string_view(const Sentence& str)
 {
   return basic_string_view<CharT>(str);
 }
 
-template <typename Sentence, typename CharT = char_type<Sentence>, typename>
+template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> utils::to_string_view(Sentence str)
 {
   return basic_string_view<CharT>(str.data(), str.size());
@@ -81,17 +82,23 @@ basic_string_view<CharT> utils::to_string_view(Sentence str)
  * Finds the longest common prefix between two ranges
  */
 template <typename InputIterator1, typename InputIterator2>
-inline auto common_prefix_length(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
+inline std::size_t common_prefix_length(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
                                  InputIterator2 last2)
 {
-  return std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
+  std::size_t prefix = 0;
+  while(first1 != last1 && first2 != last2 && *first1 == *first2) {
+    ++prefix;
+    ++first1;
+    ++first2;
+  }
+  return prefix;
 }
 
 /**
  * Removes common prefix of two string views
  */
-template <typename CharT1, typename CharT2>
-std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+template <typename Sentence1, typename Sentence2>
+std::size_t remove_common_prefix(Sentence1& a, Sentence2& b)
 {
   auto prefix = common_prefix_length(a.begin(), a.end(), b.begin(), b.end());
   a.remove_prefix(prefix);
@@ -102,8 +109,8 @@ std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view
 /**
  * Removes common suffix of two string views
  */
-template <typename CharT1, typename CharT2>
-std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+template <typename Sentence1, typename Sentence2>
+std::size_t remove_common_suffix(Sentence1& a, Sentence2& b)
 {
   auto suffix = common_prefix_length(a.rbegin(), a.rend(), b.rbegin(), b.rend());
   a.remove_suffix(suffix);
@@ -114,8 +121,8 @@ std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view
 /**
  * Removes common affix of two string views
  */
-template <typename CharT1, typename CharT2>
-StringAffix utils::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+template <typename Sentence1, typename Sentence2>
+StringAffix utils::remove_common_affix(Sentence1& a, Sentence2& b)
 {
   return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
 }

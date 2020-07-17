@@ -36,6 +36,10 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   auto s1_view = utils::to_string_view(s1);
   auto s2_view = utils::to_string_view(s2);
 
+  if (s1_view.length() > s2_view.length()) {
+    return partial_ratio(s2_view, s1_view);
+  }
+
   if (s1_view.empty() || s2_view.empty()) {
     return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
   }
@@ -43,10 +47,6 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   // when both strings have the same length there is only one possible alignment
   if (s1_view.length() == s2_view.length()) {
     return ratio(s1_view, s2_view, score_cutoff);
-  }
-
-  if (s1_view.length() > s2_view.length()) {
-    std::swap(s1_view, s2_view);
   }
 
   size_t short_len = s1_view.length();
@@ -88,8 +88,8 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
 {
   if (score_cutoff > 100) return 0;
 
-  return ratio(SentenceView<CharT1>(s1).sorted_split().join(),
-               SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
+  return ratio(SentenceView<CharT1>(s1).sorted_split(),
+               SentenceView<CharT2>(s2).sorted_split(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
@@ -120,20 +120,15 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
     return 100;
   }
 
-  auto diff_ab_joined = diff_ab.join();
-  auto diff_ba_joined = diff_ba.join();
-
-  size_t ab_len = diff_ab_joined.length();
-  size_t ba_len = diff_ba_joined.length();
-  size_t sect_len = intersect.length();
+  size_t ab_len = diff_ab.size();
+  size_t ba_len = diff_ba.size();
+  size_t sect_len = intersect.size();
 
   // string length sect+ab <-> sect and sect+ba <-> sect
   size_t sect_ab_len = sect_len + !!sect_len + ab_len;
   size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto lev_filter = levenshtein::detail::quick_lev_filter(utils::to_string_view(diff_ab_joined),
-                                                          utils::to_string_view(diff_ba_joined),
-                                                          score_cutoff / 100);
+  auto lev_filter = levenshtein::detail::quick_lev_filter(diff_ab, diff_ba, score_cutoff / 100);
 
   percent result = 0;
   if (lev_filter.not_zero) {
@@ -191,22 +186,17 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
     return 100;
   }
 
-  auto diff_ab_joined = diff_ab.join();
-  auto diff_ba_joined = diff_ba.join();
+  size_t ab_len = diff_ab.size();
+  size_t ba_len = diff_ba.size();
+  size_t sect_len = intersect.size();
 
-  size_t ab_len = diff_ab_joined.length();
-  size_t ba_len = diff_ba_joined.length();
-  size_t sect_len = intersect.length();
-
-  percent result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
+  percent result = ratio(tokens_a, tokens_b, score_cutoff);
 
   // string length sect+ab <-> sect and sect+ba <-> sect
   size_t sect_ab_len = sect_len + !!sect_len + ab_len;
   size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto lev_filter = levenshtein::detail::quick_lev_filter(utils::to_string_view(diff_ab_joined),
-                                                          utils::to_string_view(diff_ba_joined),
-                                                          score_cutoff / 100);
+  auto lev_filter = levenshtein::detail::quick_lev_filter(diff_ab, diff_ba, score_cutoff / 100);
 
   if (lev_filter.not_zero) {
     size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);

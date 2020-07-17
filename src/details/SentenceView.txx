@@ -20,7 +20,7 @@ SplittedSentenceView<CharT> SentenceView<CharT>::split() const
   auto last = first + m_sentence.size();
 
   for (; second != last && first != last; first = second + 1) {
-    second = std::find_if(first, last, Unicode::is_space<CharT>);
+    second = std::find_if(first, last, Unicode::is_space);//Unicode::is_space<CharT>);
 
     if (first != second) {
       splitted.emplace_back(first, second - first);
