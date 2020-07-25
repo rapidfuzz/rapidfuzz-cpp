@@ -10,7 +10,7 @@
 namespace rapidfuzz {
 
 template <typename Sentence1, typename Sentence2>
-std::size_t distance(const Sentence1& s1, const Sentence2& s2, std::size_t max)
+std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2, std::size_t max)
 {
   auto sentence1 = utils::to_string_view(s1);
   auto sentence2 = utils::to_string_view(s2);
@@ -254,8 +254,7 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sent
   std::size_t cutoff_distance = static_cast<double>(lensum) * (1.0 - min_ratio);
 
   // calculate the levenshtein distance in quadratic time
-  std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view, 1);
-  // std::size_t dist = weighted_distance(sentence1, sentence2, cutoff_distance);
+  std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view, cutoff_distance);
   double ratio = utils::norm_distance(dist, lensum) / 100.0;
   return utils::result_cutoff(ratio, min_ratio);
 }
