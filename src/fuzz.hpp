@@ -41,8 +41,7 @@ namespace fuzz {
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2>
-percent ratio(const Sentence1& s1, const Sentence2& s2,
-              const percent score_cutoff = 0);
+percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
@@ -68,10 +67,8 @@ percent ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename CharT = char_type<Sentence1>>
-percent partial_ratio(const Sentence1& s1, const Sentence2& s2,
-                      percent score_cutoff = 0);
+template <typename Sentence1, typename Sentence2, typename CharT = char_type<Sentence1>>
+percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -99,9 +96,9 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
-percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
-                         percent score_cutoff = 0);
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -123,7 +120,8 @@ percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
 percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                  percent score_cutoff = 0);
 
@@ -156,8 +154,7 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2>
-percent token_set_ratio(const Sentence1& s1, const Sentence2& s2,
-                        const percent score_cutoff = 0);
+percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -178,10 +175,9 @@ percent token_set_ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename CharT1 = char_type<Sentence1>, typename CharT2 = char_type<Sentence2>>
-percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
-                                percent score_cutoff = 0);
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
@@ -203,8 +199,7 @@ percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2>
-percent token_ratio(const Sentence1& s1, const Sentence2& s2,
-                    percent score_cutoff = 0);
+percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Helper method that returns the maximum of
@@ -226,10 +221,9 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename CharT1 = char_type<Sentence1>, typename CharT2 = char_type<Sentence2>>
-percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
-                            percent score_cutoff = 0);
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Calculates a quick estimation of fuzz::ratio by comparing the length
@@ -261,8 +255,7 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2,
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2>
-percent length_ratio(const Sentence1& s1, const Sentence2& s2,
-                     percent score_cutoff = 0);
+percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Calculates a quick estimation of fuzz::ratio by counting uncommon
@@ -293,8 +286,7 @@ percent length_ratio(const Sentence1& s1, const Sentence2& s2,
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2>
-percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2,
-                        percent score_cutoff = 0);
+percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -318,8 +310,7 @@ percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2,
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2>
-percent WRatio(const Sentence1& s1, const Sentence2& s2,
-               percent score_cutoff = 0);
+percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**@}*/
 

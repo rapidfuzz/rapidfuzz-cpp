@@ -1,10 +1,11 @@
-ColumnLimit: 80
+ColumnLimit: 100
 AllowShortIfStatementsOnASingleLine: true
 PointerAlignment: Left
 AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Custom
+AlwaysBreakTemplateDeclarations: true
 BraceWrapping:
   SplitEmptyFunction: false
   AfterCaseLabel: true

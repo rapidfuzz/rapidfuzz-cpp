@@ -22,13 +22,13 @@ namespace levenshtein {
 // stable interface
 namespace detail {
 
-template <typename CharT1, typename CharT2> struct LevFilter {
+template <typename CharT1, typename CharT2>
+struct LevFilter {
   bool not_zero;
   basic_string_view<CharT1> s1_view;
   basic_string_view<CharT2> s2_view;
 
-  LevFilter(bool not_zero, basic_string_view<CharT1> s1_view,
-            basic_string_view<CharT2> s2_view)
+  LevFilter(bool not_zero, basic_string_view<CharT1> s1_view, basic_string_view<CharT2> s2_view)
       : not_zero(not_zero), s1_view(s1_view), s2_view(s2_view)
   {}
 };
@@ -39,8 +39,7 @@ LevFilter<CharT1, CharT2> quick_lev_filter(basic_string_view<CharT1> s1,
                                            const double min_ratio = 0);
 
 template <typename Sentence1, typename Sentence2>
-double normalized_weighted_impl(const Sentence1& s1, const Sentence2& s2,
-                                std::size_t lensum,
+double normalized_weighted_impl(const Sentence1& s1, const Sentence2& s2, std::size_t lensum,
                                 const double min_ratio = 0.0);
 } // namespace detail
 
@@ -51,18 +50,21 @@ struct WeightTable {
 };
 
 template <typename Sentence1, typename Sentence2>
-std::size_t distance(const Sentence1& s1, const Sentence2& s2);
+std::size_t distance(const Sentence1& s1, const Sentence2& s2,
+                     std::size_t max = std::numeric_limits<std::size_t>::max());
 
 template <typename Sentence1, typename Sentence2>
-std::size_t weighted_distance(const Sentence1& s1, const Sentence2& s2);
+std::size_t weighted_distance(const Sentence1& s1, const Sentence2& s2,
+                              std::size_t max = std::numeric_limits<std::size_t>::max());
 
+// TODO add max distance like it is done for distance/weighted_distance
 template <typename Sentence1, typename Sentence2>
 std::size_t generic_distance(const Sentence1& s1, const Sentence2& s2,
-                             WeightTable weights = {1, 1, 1});
+                             WeightTable weights = {1, 1, 1},
+                             std::size_t max = std::numeric_limits<std::size_t>::max());
 
 template <typename Sentence1, typename Sentence2>
-double normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                           const double min_ratio = 0.0);
+double normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
 
 template <typename Sentence1, typename Sentence2>
 double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
