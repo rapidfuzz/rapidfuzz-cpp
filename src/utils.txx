@@ -65,13 +65,13 @@ bool utils::is_zero(T a, T tolerance)
   return std::fabs(a) <= tolerance;
 }
 
-template <typename Sentence, typename CharT = char_type<Sentence>, typename>
+template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> utils::to_string_view(const Sentence& str)
 {
   return basic_string_view<CharT>(str);
 }
 
-template <typename Sentence, typename CharT = char_type<Sentence>, typename>
+template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> utils::to_string_view(Sentence str)
 {
   return basic_string_view<CharT>(str.data(), str.size());
