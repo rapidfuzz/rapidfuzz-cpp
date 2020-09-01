@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cmath>
 #include <difflib/difflib.h>
-#include <iostream>
 #include <iterator>
 #include <tuple>
 #include <vector>
@@ -54,7 +53,7 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   // TODO: This can be done based on the levenshtein distance aswell, which
   // should be faster
   // TODO: this should accept different char types
-  auto matcher = difflib::SequenceMatcher<basic_string_view<CharT>>(s1_view, s2_view);
+  auto matcher = difflib::SequenceMatcher<basic_string_view<CharT>>(s1_view, s2_view, nullptr, false);
   auto blocks = matcher.get_matching_blocks();
 
   // when there is a full match exit early
