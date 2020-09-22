@@ -169,7 +169,7 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
   // exit early when there is a common word in both sequences
   if (!decomposition.intersection.empty()) return 100;
 
-  return partial_ratio(decomposition.difference_ab.join(), decomposition.difference_ab.join(),
+  return partial_ratio(decomposition.difference_ab.join(), decomposition.difference_ba.join(),
                        score_cutoff);
 }
 
