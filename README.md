@@ -40,8 +40,46 @@ The Library is splitted across multiple repositories for the different supported
 - The Python version can be found at [maxbachmann/rapidfuzz](https://github.com/maxbachmann/rapidfuzz)
 
 
-## Installation
-As of now it it only possible to use the sources directly by adding them to your project. There will be a version on conan in the future.
+## Compilation
+
+RadidFuzz now support CMake.
+To build it you can do :
+
+    git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
+    cd rapidfuzz-cpp
+    mkdir build && cd build
+    cmake ..
+    cmake --build .
+    cmake --build . --target install
+
+RapidFuzz exports its targets to CMake. 
+You can easily integrate it in your CMake project with 3 options.
+
+1. include it as a subdirectory:
+Clone this repo (or make a copy) into your project source tree, lets say in `3rdparty/RapidFuzz`folder.
+Then, in your `CMakeLists.txt` use :
+
+    add_subdirectory(rapidfuzz-cpp)
+    add_executable(foo main.cpp)
+    target_link_libraries(foo rapidfuzz::rapidfuzz)  
+
+2. build it at configure time with FetchContent:
+    
+    FetchContent_Declare( 
+      rapidfuzz
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/rapidfuzz-cpp
+        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/rapidfuzz
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> "${CMAKE_OPT_ARGS}"
+    )
+    FetchContent_MakeAvailable(rapidfuzz)
+    add_executable(foo main.cpp)
+    target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
+
+3. use find_package(rapifuzz) if you install it already
+
+    find_package(rapidfuzz REQUIRED)
+    add_executable(foo main.cpp)
+    target_link_libraries(foo rapidfuzz::rapidfuzz)
 
 
 ## Usage
