@@ -23,25 +23,24 @@ set(HEADERS
 	src/details/unicode.hpp
 )
 
-add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES} ${HEADERS})
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+add_library(rapidfuzz SHARED ${SOURCES} ${HEADERS})
+set_target_properties(rapidfuzz PROPERTIES LINKER_LANGUAGE CXX)
 
 option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
-install(TARGETS ${CMAKE_PROJECT_NAME} 
-	EXPORT ${CMAKE_PROJECT_NAME}Targets
+install(TARGETS rapidfuzz
+	EXPORT rapidfuzzTargets
 	DESTINATION lib
 )
 
 install(FILES ${HEADERS} 
 	DESTINATION include/rapidfuzz)
 
-install(EXPORT ${CMAKE_PROJECT_NAME}Targets
-        FILE ${CMAKE_PROJECT_NAME}Targets.cmake
-        NAMESPACE ${CMAKE_PROJECT_NAME}::
-        DESTINATION lib/cmake/${CMAKE_PROJECT_NAME}
-         )
-# export(TARGETS ${CMAKE_PROJECT_NAME} FILE ${CMAKE_PROJECT_NAME}Targets.cmake)
+install(EXPORT rapidfuzzTargets
+        FILE rapidfuzzTargets.cmake
+        NAMESPACE rapidfuzz::
+        DESTINATION lib/cmake/rapidfuzz
+)
