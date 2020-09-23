@@ -26,7 +26,10 @@ set(HEADERS
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES} ${HEADERS})
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-add_subdirectory(test)
+option(BUILD_TESTS "Build unit tests" OFF)
+if(BUILD_TESTS)
+  add_subdirectory(test)
+endif()
 
 install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION lib)
 install(FILES ${HEADERS} DESTINATION include/rapidfuzz)
