@@ -45,3 +45,6 @@ install(EXPORT rapidfuzzTargets
         NAMESPACE rapidfuzz::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/rapidfuzz
 )
+
+# provide a namespaced alias for clients to 'link' against if RapidFuzz is included as a sub-project
+add_library(rapidfuzz::rapidfuzz ALIAS rapidfuzz)
