@@ -41,6 +41,7 @@ install(FILES ${HEADERS}
 	DESTINATION include/rapidfuzz)
 
 install(EXPORT rapidfuzzTargets
+	    FILE rapidfuzzConfig.cmake
         NAMESPACE rapidfuzz::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/rapidfuzz
 )
