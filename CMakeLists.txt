@@ -31,5 +31,17 @@ if(BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
-install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION lib)
-install(FILES ${HEADERS} DESTINATION include/rapidfuzz)
+install(TARGETS ${CMAKE_PROJECT_NAME} 
+	EXPORT ${CMAKE_PROJECT_NAME}Targets
+	DESTINATION lib
+)
+
+install(FILES ${HEADERS} 
+	DESTINATION include/rapidfuzz)
+
+install(EXPORT ${CMAKE_PROJECT_NAME}Targets
+        FILE ${CMAKE_PROJECT_NAME}Targets.cmake
+        NAMESPACE ${CMAKE_PROJECT_NAME}::
+        DESTINATION lib/cmake/${CMAKE_PROJECT_NAME}
+         )
+# export(TARGETS ${CMAKE_PROJECT_NAME} FILE ${CMAKE_PROJECT_NAME}Targets.cmake)
