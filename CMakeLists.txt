@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 project(rapidfuzz CXX)
 set(CMAKE_CXX_STANDARD 17)
+include(GNUInstallDirs)
 
 set(SOURCES
 	src/fuzz.txx
@@ -33,14 +34,13 @@ endif()
 
 install(TARGETS rapidfuzz
 	EXPORT rapidfuzzTargets
-	DESTINATION lib
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(FILES ${HEADERS} 
 	DESTINATION include/rapidfuzz)
 
 install(EXPORT rapidfuzzTargets
-        FILE rapidfuzzTargets.cmake
         NAMESPACE rapidfuzz::
-        DESTINATION lib/cmake/rapidfuzz
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/rapidfuzz
 )
