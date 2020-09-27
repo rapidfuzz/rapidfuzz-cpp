@@ -46,8 +46,9 @@ As of now it it only possible to use the sources directly by adding them to your
 
 ## Usage
 ```cpp
-#include "fuzz.hpp"
-#include "process.hpp"
+#include "rapidfuzz/fuzz.hpp"
+#include "rapidfuzz/process.hpp"
+#include "rapidfuzz/utils.hpp"
 ```
 
 ### Simple Ratio
@@ -60,55 +61,43 @@ double score = rapidfuzz::fuzz::ratio("this is a test", "this is a test!");
 
 ### Partial Ratio
 ```cpp
-using rapidfuzz::fuzz::partial_ratio;
-
 // score is 100
-double score = partial_ratio("this is a test", "this is a test!");
+double score = rapidfuzz::fuzz::partial_ratio("this is a test", "this is a test!");
 ```
 
 ### Token Sort Ratio
 ```cpp
-using rapidfuzz::fuzz::ratio;
-using rapidfuzz::fuzz::token_sort_ratio;
-
 // score is 90.90908813476562
-double score = ratio("fuzzy wuzzy was a bear", "wuzzy fuzzy was a bear")
+double score = rapidfuzz::fuzz::ratio("fuzzy wuzzy was a bear", "wuzzy fuzzy was a bear")
 
 // score is 100
-double score = token_sort_ratio("fuzzy wuzzy was a bear", "wuzzy fuzzy was a bear")
+double score = rapidfuzz::fuzz::token_sort_ratio("fuzzy wuzzy was a bear", "wuzzy fuzzy was a bear")
 ```
 
 ### Token Set Ratio
 ```cpp
-using rapidfuzz::fuzz::token_sort_ratio;
-using rapidfuzz::fuzz::token_set_ratio;
-
 // score is 83.8709716796875
-double score = token_sort_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
+double score = rapidfuzz::fuzz::token_sort_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
 
 // score is 100
-double score = token_set_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
+double score = rapidfuzz::fuzz::token_set_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
 ```
 
 ### Process
 ```cpp
-#include "process.hpp"
-using rapidfuzz::process::extract;
-using rapidfuzz::process::extractOne;
-
 // matches is a vector of std::pairs
 // [('new york jets', 100), ('new york giants', 78.57142639160156)]
-auto matches = extract(
+auto matches = rapidfuzz::process::extract(
   "new york jets",
   std::vector<std::string>{"Atlanta Falcons", "New York Jets", "New York Giants", "Dallas Cowboys"},
-  utils::default_process<char>,
-  fuzz::ratio<std::string, std::string>
+  rapidfuzz::utils::default_process<std::string>,
+  rapidfuzz::fuzz::ratio<std::string, std::string>,
   2);
 
 
 // matches is a boost::optional<std::pair>
 // ("dallas cowboys", 90)
-auto matches = extractOne(
+auto matches = rapidfuzz::process::extractOne(
   "cowboys",
   std::vector<std::string>{"Atlanta Falcons", "New York Jets", "New York Giants", "Dallas Cowboys"});
 ```
