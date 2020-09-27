@@ -2,13 +2,28 @@
 #pragma once
 #include "SplittedSentenceView.hpp"
 #include "unicode.hpp"
+#include "type_traits.hpp"
 
 namespace rapidfuzz {
 
 template <typename CharT>
 class SentenceView {
 public:
-  SentenceView(basic_string_view<CharT> sentence) : m_sentence(std::move(sentence))
+  template <
+      typename Sentence,
+      typename = enable_if_t<is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value>>
+  SentenceView(const Sentence& str) : m_sentence(basic_string_view<CharT>(str))
+  {}
+
+
+  template <
+    typename Sentence,
+    typename = enable_if_t<
+      !is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value
+      && has_member_data<Sentence>::value
+      && has_member_size<Sentence>::value
+    >>
+  SentenceView(Sentence str) : m_sentence(basic_string_view<CharT>(str.data(), str.size()))
   {}
 
   SplittedSentenceView<CharT> sorted_split() const;

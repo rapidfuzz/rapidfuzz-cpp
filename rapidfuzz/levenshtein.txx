@@ -135,19 +135,20 @@ std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2&
     jStart += (sentence1_pos > offset) ? 1 : 0;
     jEnd += (jEnd < sentence2.length()) ? 1 : 0;
 
-    for (std::size_t j = jStart; j < sentence2.length(); ++j) {
-      if (char1 == sentence2[j]) {
+    for (const auto& char2 : sentence2) {
+      if (char1 == char2) {
         result = current_cache;
       }
       else {
         ++result;
       }
-      current_cache = cache[j];
+      current_cache = *cache_iter;
       if (result > current_cache + 1) {
         result = current_cache + 1;
       }
 
-      cache[j] = result;
+      *cache_iter = result;
+      ++cache_iter;
     }
 
     if (haveMax && cache[sentence1_pos + len_diff] > max) {

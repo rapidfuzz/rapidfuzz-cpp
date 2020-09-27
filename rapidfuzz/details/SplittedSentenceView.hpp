@@ -1,6 +1,7 @@
 #pragma once
 #include "types.hpp"
 #include <string>
+#include <algorithm>
 
 namespace rapidfuzz {
 

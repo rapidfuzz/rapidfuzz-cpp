@@ -20,7 +20,7 @@ namespace boost { namespace callable_traits { namespace detail {
             static constexpr bool value = true;
             struct _ { using type = T; };
         };
-   
+    
         template<bool B, typename T>
         struct fail_if : T {
             static_assert(std::is_base_of<sfinae_error, T>::value,

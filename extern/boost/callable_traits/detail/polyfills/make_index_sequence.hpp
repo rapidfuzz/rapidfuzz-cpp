@@ -16,7 +16,7 @@ Distributed under the Boost Software License, Version 1.0.
 #define BOOST_CLBL_TRTS_MAKE_IX_SEQ(...) \
     ::boost::callable_traits::detail::make_index_sequence<__VA_ARGS__>
 
-namespace boost { namespace callable_traits { namespace detail {
+namespace boost { namespace callable_traits { namespace detail { 
 
 template<std::size_t...>
 struct index_sequence { using type = index_sequence; };
@@ -32,7 +32,7 @@ template<std::size_t N>
     struct make_index_sequence_t;
 
 template<std::size_t N>
-struct make_index_sequence_t : concat<
+struct make_index_sequence_t : concat< 
     typename make_index_sequence_t<N/2>::type,
     typename make_index_sequence_t<N - N/2>::type >::type {};
 

@@ -62,19 +62,19 @@ struct function_object : Base {
 
     template<typename...>
     using push_front = error_t;
-   
+    
     template<typename...>
     using push_back = error_t;
-   
+    
     template<std::size_t ElementCount>
     using pop_args_front = error_t;
 
     template<std::size_t ElementCount>
     using pop_args_back = error_t;
-   
+    
     template<std::size_t Index, typename... NewArgs>
     using insert_args = error_t;
-   
+    
     template<std::size_t Index, std::size_t Count>
     using remove_args = error_t;
 

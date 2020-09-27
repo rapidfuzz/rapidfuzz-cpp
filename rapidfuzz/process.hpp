@@ -6,21 +6,29 @@
 #include "details/type_traits.hpp"
 #include "fuzz.hpp"
 #include "utils.hpp"
-#include <boost/callable_traits.hpp>
+
 #include <functional>
 #include <nonstd/optional.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
+
+#if rapidfuzz_CPP17_OR_GREATER
+#include <type_traits>
+#else
+#include <boost/callable_traits.hpp>
+#endif
+
 namespace rapidfuzz {
 
-using boost::callable_traits::is_invocable;
-
-// the version used by boost currently has a bug
-// https://github.com/boostorg/callable_traits/issues/184
-template <class Fn, class... ArgTypes>
-constexpr bool is_invocable_v = is_invocable<Fn, ArgTypes...>::value;
+#if rapidfuzz_CPP17_OR_GREATER
+using std::is_invocable_v;
+using std::is_invocable_r_v;
+#else
+using boost::callable_traits::is_invocable_v;
+using boost::callable_traits::is_invocable_r_v;
+#endif
 
 namespace process {
 
@@ -87,10 +95,10 @@ template <
     typename ProcessorFunc = decltype(utils::default_process<CharT>),
     typename ScorerFunc =
         decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
-    typename = std::enable_if_t<
-        is_explicitly_convertible_v<Sentence1, std::basic_string<CharT>> &&
-        is_explicitly_convertible_v<Sentence2, std::basic_string<CharT>> &&
-        is_invocable_v<ProcessorFunc, std::basic_string<CharT>> &&
+    typename = enable_if_t<
+        //is_explicitly_convertible_v<Sentence1, std::basic_string<CharT>> &&
+        //is_explicitly_convertible_v<Sentence2, std::basic_string<CharT>> &&
+        is_invocable_r_v<std::basic_string<CharT>, ProcessorFunc, std::basic_string<CharT>> &&
         is_invocable_v<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>, percent>>>
 nonstd::optional<std::pair<Sentence2, percent>>
 extractOne(const Sentence1& query, const Iterable& choices,
@@ -141,7 +149,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
 template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
           typename Sentence2 = inner_type<Iterable>,
           typename ScorerFunc = decltype(fuzz::WRatio<Sentence1, Sentence2>),
-          typename = std::enable_if_t<is_invocable_v<ScorerFunc, Sentence1, Sentence2, percent>>>
+          typename = enable_if_t<is_invocable_v<ScorerFunc, Sentence1, Sentence2, percent>>>
 nonstd::optional<std::pair<Sentence2, percent>>
 extractOne(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t processor,
            ScorerFunc&& scorer = fuzz::WRatio<Sentence1, Sentence2>,
@@ -202,9 +210,9 @@ template <
     typename ProcessorFunc = decltype(utils::default_process<CharT>),
     typename ScorerFunc =
         decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
-    typename = std::enable_if_t<
-        is_explicitly_convertible_v<Sentence1, std::basic_string<CharT>> &&
-        is_explicitly_convertible_v<Sentence2, std::basic_string<CharT>> &&
+    typename = enable_if_t<
+        //is_explicitly_convertible_v<Sentence1, std::basic_string<CharT>> &&
+        //is_explicitly_convertible_v<Sentence2, std::basic_string<CharT>> &&
         is_invocable_v<ProcessorFunc, std::basic_string<CharT>> &&
         is_invocable_v<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>, percent>>>
 std::vector<std::pair<Sentence2, percent>>
@@ -254,7 +262,7 @@ extract(const Sentence1& query, const Iterable& choices,
 template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
           typename Sentence2 = inner_type<Iterable>,
           typename ScorerFunc = decltype(fuzz::WRatio<Sentence1, Sentence2>),
-          typename = std::enable_if_t<is_invocable_v<ScorerFunc, Sentence1, Sentence2, percent>>>
+          typename = enable_if_t<is_invocable_v<ScorerFunc, Sentence1, Sentence2, percent>>>
 std::vector<std::pair<Sentence2, percent>>
 extract(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t processor,
         ScorerFunc&& scorer = fuzz::WRatio<Sentence1, Sentence2>, const std::size_t limit = 5,

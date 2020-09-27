@@ -162,9 +162,9 @@ struct function<T&> : std::conditional<function<T>::value,
 
     template<typename NewReturn>
     using apply_return = typename base::template apply_return<NewReturn>&;
-   
+    
     using clear_args = typename base::clear_args&;
-   
+    
     template<typename... NewArgs>
     using push_front = typename base::template push_front<NewArgs...>&;
 

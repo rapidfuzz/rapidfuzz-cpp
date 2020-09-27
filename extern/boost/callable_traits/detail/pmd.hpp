@@ -22,10 +22,10 @@ struct pmd : default_callable_traits<T> {};
 
 template<typename D, typename T>
 struct pmd<D T::*> : default_callable_traits<> {
-       
+        
     static constexpr bool value = true;
 
-    using traits = pmd;  
+    using traits = pmd;   
     using class_type = T;
     using invoke_type = T const &;
     using type = D T::*;

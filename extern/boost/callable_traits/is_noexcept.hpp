@@ -61,7 +61,7 @@ constexpr bool is_noexcept_v = //see below
 * none
 *
 [heading Behavior]
-* `is_noexcept<T>::value` is `true` when either:
+* `is_noexcept<T>::value` is `true` when either: 
   * `T` is a function type, function pointer type, function reference type, or member function pointer type where the function has a `noexcept` specifier
   * `T` is a function object with a non-overloaded `operator()`, where the `operator()` has a `noexcept` specifier
 * On compilers that support variable templates, `is_noexcept_v<T>` is equivalent to `is_noexcept<T>::value`.
