@@ -15,9 +15,9 @@
 #define rapidfuzz_CPP17_OR_GREATER  ( rapidfuzz_CPLUSPLUS >= 201703L )
 
 // select usage of boost::optional or std::optional
-// to enforce the usage of boost usage for optional use
+// to enforce the usage of boost::optional use
 // #define rapidfuzz_USE_BOOST_OPTIONAL 
-// to enforce the usage of std usage for optional use
+// to enforce the usage of std::optional use
 // #define rapidfuzz_USE_STD_OPTIONAL
 #if defined(rapidfuzz_USE_BOOST_OPTIONAL)
   # define rapidfuzz_USES_STD_OPTIONAL  false

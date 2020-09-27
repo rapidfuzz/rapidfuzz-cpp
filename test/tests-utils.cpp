@@ -28,14 +28,6 @@ TEST_CASE("to_string_view")
 
     SECTION("test string literals as input")
     {
-        auto str_literal_tester = [](auto s) {
-			auto str_view = utils::to_string_view(s);
-            REQUIRE(s == str_view.data());
-		    REQUIRE(
-				std::char_traits<decltype(s)>::length(s)
-		         == str_view.size());
-		};
-
         auto str_view = utils::to_string_view(R0);
         REQUIRE(R0 == str_view.data());
 		REQUIRE(std::char_traits<char>::length(R0) == str_view.size());

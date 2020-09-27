@@ -15,7 +15,7 @@
 
 namespace rapidfuzz {
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
   double result = levenshtein::normalized_weighted_distance(
@@ -23,7 +23,7 @@ percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent scor
   return result * 100;
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT>
+template <typename Sentence1, typename Sentence2, typename CharT, typename>
 percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   using std::get;
@@ -82,7 +82,7 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   return max_ratio;
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2, typename>
 percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
@@ -91,7 +91,7 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
                SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2, typename>
 percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                        percent score_cutoff)
 {
@@ -101,7 +101,7 @@ percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                        SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
@@ -157,7 +157,7 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
   return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2, typename>
 percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
                                       percent score_cutoff)
 {
@@ -173,7 +173,7 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
                        score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
@@ -229,7 +229,7 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
   return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2, typename>
 percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
@@ -257,7 +257,7 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
   return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (utils::is_zero(length_ratio(s1, s2, score_cutoff))) {
@@ -268,7 +268,7 @@ percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent 
   return utils::norm_distance(distance, lensum, score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   size_t s1_len = s1.length();
@@ -279,7 +279,7 @@ percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent sco
   return utils::norm_distance(distance, lensum, score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;

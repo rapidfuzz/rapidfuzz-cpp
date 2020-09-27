@@ -78,8 +78,7 @@ template <
     typename Sentence, typename CharT = char_type<Sentence>,
     typename = enable_if_t<
       !is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value
-      && has_member_data<Sentence>::value
-      && has_member_size<Sentence>::value
+      && has_data_and_size<Sentence>::value
     >>
 basic_string_view<CharT> to_string_view(const Sentence& str);
 

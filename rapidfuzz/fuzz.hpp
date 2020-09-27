@@ -25,10 +25,10 @@ namespace fuzz {
  * double score = ratio("this is a test", "this is a test!")
  * @endcode
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -40,7 +40,8 @@ namespace fuzz {
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
@@ -52,10 +53,10 @@ percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cuto
  * double score = partial_ratio("this is a test", "this is a test!")
  * @endcode
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -67,7 +68,8 @@ percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cuto
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2, typename CharT = char_type<Sentence1>>
+template <typename Sentence1, typename Sentence2, typename CharT = char_type<Sentence1>,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -81,10 +83,10 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
  * bear")
  * @endcode
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -96,8 +98,9 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
+template <typename Sentence1, typename Sentence2,
+          typename CharT1 = char_type<Sentence1>, typename CharT2 = char_type<Sentence2>,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -105,10 +108,10 @@ percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score
  * between them
  *
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -120,8 +123,9 @@ percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
+template <typename Sentence1, typename Sentence2,
+          typename CharT1 = char_type<Sentence1>, typename CharT2 = char_type<Sentence2>,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                  percent score_cutoff = 0);
 
@@ -138,10 +142,10 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  * double score2 = token_set_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
  * @endcode
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -153,17 +157,18 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
  * @brief Compares the words in the strings based on unique and common words
  * between them using fuzz::partial_ratio
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -175,18 +180,19 @@ percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent 
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
+template <typename Sentence1, typename Sentence2,
+          typename CharT1 = char_type<Sentence1>, typename CharT2 = char_type<Sentence2>,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
  * fuzz::token_sort_ratio (faster than manually executing the two functions)
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -198,7 +204,8 @@ percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percen
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -206,10 +213,10 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
  * fuzz::partial_token_set_ratio and fuzz::partial_token_sort_ratio (faster than
  * manually executing the two functions)
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -221,8 +228,9 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
+template <typename Sentence1, typename Sentence2,
+          typename CharT1 = char_type<Sentence1>, typename CharT2 = char_type<Sentence2>,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -239,10 +247,10 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
  * the other string. The main purpose is to have a really quick ratio to remove
  * some very bad matches early on
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -254,7 +262,8 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -270,10 +279,10 @@ percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cut
  * levenshtein ratio of the two sentences with the letters in a sorted order and
  * is therefore always equal or higher than fuzz::ratio
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -285,7 +294,8 @@ percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cut
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -294,10 +304,10 @@ percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_
  * @details
  * @todo add a detailed description
  *
- * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
- * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string<char_type>
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
  * @param s1 string to compare with s2 (for type info check Template parameters
  * above)
@@ -309,7 +319,8 @@ percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**@}*/
