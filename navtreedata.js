@@ -1,13 +1,11 @@
 var NAVTREE =
 [
-  [ "RapidFuzz", "index.html", [
-    [ "Modules", "modules.html", "modules" ]
-  ] ]
+  [ "RapidFuzz", "index.html", ]
 ];
 
 var NAVTREEINDEX =
 [
-"group___fuzz.html"
+"index.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
