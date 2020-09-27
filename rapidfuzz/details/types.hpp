@@ -12,7 +12,7 @@
 #if rapidfuzz_USES_STD_STRING_VIEW
   #include <string_view>
 #else
-  #include <nonstd/string_view.hpp>
+  #include <boost/utility/string_view.hpp>
 #endif
 
 
@@ -28,7 +28,7 @@ using percent = double;
   using basic_string_view = std::basic_string_view<CharT>;
 #else
   template <typename CharT>
-  using basic_string_view = nonstd::basic_string_view<CharT>;
+  using basic_string_view = boost::basic_string_view<CharT>;
 #endif
 
 template <typename CharT>
