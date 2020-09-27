@@ -15,15 +15,6 @@ struct is_space_dispatch_tag<CharT,
   > : std::integral_constant<int, 1> {};
 
 /*
- * checks whether unicode characters have the bidirectional
- * type 'WS', 'B' or 'S' or the category 'Zs'
- */
-template <typename CharT>
-bool is_space(const CharT ch){
-    return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
-}
-
-/*
  * Implementation of is_space for char types that are at least 2 Byte in size
  */
 template <typename CharT>
@@ -84,6 +75,15 @@ bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
     return true;
   }
   return false;
+}
+
+/*
+ * checks whether unicode characters have the bidirectional
+ * type 'WS', 'B' or 'S' or the category 'Zs'
+ */
+template <typename CharT>
+bool is_space(const CharT ch){
+    return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
 }
 
 } // namespace Unicode

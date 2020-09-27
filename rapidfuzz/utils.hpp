@@ -125,6 +125,7 @@ void replace_non_alnum(std::basic_string<CharT>& s);
  *
  * @return returns the processed string
  */
+
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
     typename = enable_if_t<

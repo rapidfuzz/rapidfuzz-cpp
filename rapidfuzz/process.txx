@@ -82,7 +82,9 @@ process::extract(const Sentence1& query, const Iterable& choices, ProcessorFunc&
 
       auto insert_pos = std::upper_bound(
           results.begin(), results.end(), score,
-          [](percent new_score, auto const& t2) { return new_score > std::get<1>(t2); });
+          [](percent new_score, const std::pair<Sentence2, percent>& t2) {
+            return new_score > std::get<1>(t2);
+          });
 
       results.emplace(insert_pos, std::piecewise_construct, std::forward_as_tuple(choice),
                       std::forward_as_tuple(score));
@@ -119,7 +121,9 @@ process::extract(const Sentence1& query, const Iterable& choices, nonstd::nullop
 
       auto insert_pos = std::upper_bound(
           results.begin(), results.end(), score,
-          [](percent new_score, auto const& t2) { return new_score > std::get<1>(t2); });
+          [](percent new_score, const std::pair<Sentence2, percent>& t2) {
+            return new_score > std::get<1>(t2);
+          });
 
       results.emplace(insert_pos, std::piecewise_construct, std::forward_as_tuple(choice),
                       std::forward_as_tuple(score));

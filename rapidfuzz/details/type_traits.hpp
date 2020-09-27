@@ -101,7 +101,7 @@ struct has_member_##member                                                      
 {                                                                                            \
 private:                                                                                     \
     using yes = std::true_type;                                                              \
-	  using no = std::false_type;                                                              \
+    using no = std::false_type;                                                              \
                                                                                              \
     struct Fallback { int member; };                                                         \
     struct Derived : T, Fallback { };                                                        \
