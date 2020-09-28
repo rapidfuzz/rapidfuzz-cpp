@@ -2,15 +2,14 @@
 /* Copyright © 2020 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
-#include "details/SentenceView.hpp"
 #include "fuzz.hpp"
+#include "details/SentenceView.hpp"
+#include "details/matching_blocks.hpp"
 #include "levenshtein.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <difflib/difflib.h>
 #include <iterator>
-#include <tuple>
 #include <vector>
 
 namespace rapidfuzz {
@@ -26,8 +25,6 @@ percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent scor
 template <typename Sentence1, typename Sentence2, typename CharT, typename>
 percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  using std::get;
-
   if (score_cutoff > 100) {
     return 0;
   }
@@ -50,22 +47,19 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
 
   size_t short_len = s1_view.length();
 
-  // TODO: This can be done based on the levenshtein distance aswell, which
-  // should be faster
-  // TODO: this should accept different char types
-  auto matcher = difflib::SequenceMatcher<basic_string_view<CharT>>(s1_view, s2_view, nullptr, false);
-  auto blocks = matcher.get_matching_blocks();
+
+  auto blocks = get_matching_blocks(s1_view, s2_view);
 
   // when there is a full match exit early
   for (const auto& block : blocks) {
-    if (get<2>(block) == short_len) {
+    if (block.length == short_len) {
       return 100;
     }
   }
 
   double max_ratio = 0;
   for (const auto& block : blocks) {
-    size_t long_start = (get<1>(block) > get<0>(block)) ? get<1>(block) - get<0>(block) : 0;
+    size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
     auto long_substr = s2_view.substr(long_start, short_len);
 
     double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
