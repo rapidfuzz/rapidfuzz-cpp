@@ -15,8 +15,12 @@
 #define rapidfuzz_CPP17_OR_GREATER (rapidfuzz_CPLUSPLUS >= 201703L)
 
 // select usage of boost::string_view or std::string_view
-#if rapidfuzz_CPP17_OR_GREATER && defined(__has_include) && __has_include(<string_view>)
+#if rapidfuzz_CPP17_OR_GREATER && defined(__has_include)
+#if __has_include(<string_view>)
 #define rapidfuzz_USES_STD_STRING_VIEW true
+#else
+#define rapidfuzz_USES_STD_STRING_VIEW false
+#endif
 #else
 #define rapidfuzz_USES_STD_STRING_VIEW false
 #endif

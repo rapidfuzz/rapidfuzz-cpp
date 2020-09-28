@@ -252,7 +252,7 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sent
     return 0.0;
   }
 
-  std::size_t cutoff_distance = static_cast<double>(lensum) * (1.0 - min_ratio);
+  std::size_t cutoff_distance = static_cast<std::size_t>(static_cast<double>(lensum) * (1.0 - min_ratio));
 
   // calculate the levenshtein distance in quadratic time
   std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view, cutoff_distance);
@@ -273,7 +273,7 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1, basic_string
   std::size_t s2_len = s2.length();
   std::size_t lensum = s1_len + s2_len;
 
-  std::size_t cutoff_distance = static_cast<double>(lensum) * (1.0 - min_ratio);
+  std::size_t cutoff_distance = static_cast<std::size_t>(static_cast<double>(lensum) * (1.0 - min_ratio));
 
   // constant time calculation to find a string ratio based on the string length
   // so it can exit early without running any levenshtein calculations
