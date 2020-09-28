@@ -22,7 +22,7 @@ percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent scor
   return result * 100;
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT, typename>
+template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) {
@@ -42,7 +42,7 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   }
 
   if (s1_view.length() > s2_view.length()) {
-    std::swap(s1_view, s2_view);
+    return partial_ratio(s2_view, s1_view, score_cutoff);
   }
 
   size_t short_len = s1_view.length();

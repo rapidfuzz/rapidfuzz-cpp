@@ -68,7 +68,7 @@ percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cuto
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2, typename CharT = char_type<Sentence1>,
+template <typename Sentence1, typename Sentence2,
           typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
