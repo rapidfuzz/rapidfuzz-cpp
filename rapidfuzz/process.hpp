@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-
 #if rapidfuzz_CPP17_OR_GREATER
 #include <type_traits>
 #else
@@ -86,20 +85,20 @@ namespace process {
  * Defaults to 0.
  *
  * @return Optional pair of the best match. When there is no match with a score
- * >= score_cutoff boost::none is returned (using boost::optional to keep
- * supporting C++14)
+ * >= score_cutoff nonstd::nullopt is returned (using nonstd::optional to keep
+ * supporting C++11)
  */
-template <
-    typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-    typename Sentence2 = inner_type<Iterable>,
-    typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
-    typename ScorerFunc =
-        decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
-    typename = enable_if_t<satisfies_all<
-        is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
-        is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
-        is_invocable_r<std::basic_string<CharT>, ProcessorFunc, std::basic_string<CharT>>,
-        is_invocable<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>, percent>>::value>>
+template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
+          typename Sentence2 = inner_type<Iterable>,
+          typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
+          typename ScorerFunc =
+              decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
+          typename = enable_if_t<satisfies_all<
+              is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
+              is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
+              is_invocable_r<std::basic_string<CharT>, ProcessorFunc, std::basic_string<CharT>>,
+              is_invocable<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>,
+                           percent>>::value>>
 nonstd::optional<std::pair<Sentence2, percent>>
 extractOne(const Sentence1& query, const Iterable& choices,
            ProcessorFunc&& processor = utils::default_process<std::basic_string<CharT>>,
@@ -116,14 +115,14 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * auto match = process::extractOne(
  *   L"example",
  *   std::vector<std::wstring>{L"example", L"another example"},
- *   boost::none)
+ *   nonstd::nullopt)
  * @endcode
  *
  * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type>, or provides data and size methods like
  * boost::basic_string_view<char_type> and has the same `char_type` as Sentence2
  * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type>, or provides data and size methods like
  * boost::basic_string_view<char_type> and has the same `char_type` as Sentence1
  * @tparam Iterable This can be any Iterable of Sentence2 that can be iterated
  * with range based for loops like e.g. vector, list or set
@@ -133,7 +132,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
  *     The strings have to use the same char type used for the query, but do not
  * need the same type. (e.g. string literal as query and vector of std::string
  * for the choices)
- * @param processor This overload is selected by passing boost::none for the
+ * @param processor This overload is selected by passing nonstd::nullopt for the
  * processor. The Strings are therefore not preprocessed
  * @param scorer Optional argument to provide a scorer callback, that is used to
  * calculate the matching ratio between two strings. Defaults to fuzz::WRatio.
@@ -143,8 +142,8 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * Defaults to 0.
  *
  * @return Optional pair of the best match. When there is no match with a score
- * >= score_cutoff boost::none is returned (using boost::optional to keep
- * supporting C++14)
+ * >= score_cutoff nonstd::nullopt is returned (using nonstd::optional to keep
+ * supporting C++11)
  */
 template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
           typename Sentence2 = inner_type<Iterable>,
@@ -204,17 +203,17 @@ extractOne(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t pr
  *
  * @return returns a list of the best matches that have a score >= score_cutoff.
  */
-template <
-    typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-    typename Sentence2 = inner_type<Iterable>,
-    typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
-    typename ScorerFunc =
-        decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
-    typename = enable_if_t<satisfies_all<
-        is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
-        is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
-        is_invocable<ProcessorFunc, std::basic_string<CharT>>,
-        is_invocable<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>, percent>>::value>>
+template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
+          typename Sentence2 = inner_type<Iterable>,
+          typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
+          typename ScorerFunc =
+              decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
+          typename = enable_if_t<
+              satisfies_all<is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
+                            is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
+                            is_invocable<ProcessorFunc, std::basic_string<CharT>>,
+                            is_invocable<ScorerFunc, std::basic_string<CharT>,
+                                         std::basic_string<CharT>, percent>>::value>>
 std::vector<std::pair<Sentence2, percent>>
 extract(const Sentence1& query, const Iterable& choices,
         ProcessorFunc&& processor = utils::default_process<CharT>,
@@ -230,14 +229,14 @@ extract(const Sentence1& query, const Iterable& choices,
  * auto matches = process::extract(
  *   L"example",
  *   std::vector<std::wstring>{L"example", L"another example"},
- *   boost::none)
+ *   nonstd::nullopt)
  * @endcode
  *
  * @tparam Sentence1 This is a string that can be explicitly converted to
- * std::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type>, or provides data and size methods like
  * boost::basic_string_view<char_type> and has the same `char_type` as Sentence2
  * @tparam Sentence2 This is a string that can be explicitly converted to
- * std::basic_string_view<char_type>, or provides data and len functions like
+ * std::basic_string_view<char_type>, or provides data and size methods like
  * boost::basic_string_view<char_type> and has the same `char_type` as Sentence1
  * @tparam Iterable This can be any Iterable of Sentence2 that can be iterated
  * with range based for loops like e.g. vector, list or set
@@ -247,7 +246,7 @@ extract(const Sentence1& query, const Iterable& choices,
  *     The strings have to use the same char type used for the query, but do not
  * need the same type. (e.g. string literal as query and vector of std::string
  * for the choices)
- * @param processor This overload is selected by passing boost::none for the
+ * @param processor This overload is selected by passing nonstd::nullopt for the
  * processor. The Strings are therefore not preprocessed
  * @param scorer Optional argument to provide a scorer callback, that is used to
  * calculate the matching ratio between two strings. Defaults to fuzz::WRatio.
