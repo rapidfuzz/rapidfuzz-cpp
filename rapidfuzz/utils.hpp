@@ -51,9 +51,9 @@ bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
  * basic_string_view<char_type>
  * @tparam CharT This is the char_type of Sentence
  *
- * @param str string that should be converted to string_view (for type info check Template parameters
- * above)
- * 
+ * @param str string that should be converted to string_view (for type info check Template
+ * parameters above)
+ *
  * @return basic_string_view<CharT> of str
  */
 template <
@@ -61,27 +61,24 @@ template <
     typename = enable_if_t<is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value>>
 basic_string_view<CharT> to_string_view(Sentence&& str);
 
-
 /**
  * @brief Get a string view to the object passed as parameter
  *
  * @tparam Sentence This is a string that can not be explicitly converted to
- * basic_string_view<char_type>, but stores a sequence in a similar way (e.g. boost::string_view or std::vector)
+ * basic_string_view<char_type>, but stores a sequence in a similar way (e.g. boost::string_view or
+ * std::vector)
  * @tparam CharT This is the char_type of Sentence
  *
- * @param str container that should be converted to string_view (for type info check Template parameters
- * above)
- * 
+ * @param str container that should be converted to string_view (for type info check Template
+ * parameters above)
+ *
  * @return basic_string_view<CharT> of str
  */
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<
-      !is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value
-      && has_data_and_size<Sentence>::value
-    >>
+    typename = enable_if_t<!is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value &&
+                           has_data_and_size<Sentence>::value>>
 basic_string_view<CharT> to_string_view(const Sentence& str);
-
 
 /**
  * @brief Finds the first mismatching pair of elements from two ranges:
@@ -93,9 +90,9 @@ basic_string_view<CharT> to_string_view(const Sentence& str);
  *
  * @return std::pair with iterators to the first two non-equal elements.
  */
-template<typename InputIterator1, typename InputIterator2>
-std::pair<InputIterator1, InputIterator2>
-mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, InputIterator2 last2);
+template <typename InputIterator1, typename InputIterator2>
+std::pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1, InputIterator1 last1,
+                                                   InputIterator2 first2, InputIterator2 last2);
 
 template <typename CharT1, typename CharT2>
 StringAffix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
@@ -128,18 +125,13 @@ void replace_non_alnum(std::basic_string<CharT>& s);
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<
-      is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value
-    >>
+    typename = enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
 std::basic_string<CharT> default_process(Sentence&& s);
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<
-      !is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value
-      && has_member_data<Sentence>::value
-      && has_member_size<Sentence>::value
-    >>
+    typename = enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
+                           has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> default_process(Sentence s);
 
 /**@}*/

@@ -2,9 +2,9 @@
 /* Copyright © 2020 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
-#include "fuzz.hpp"
 #include "details/SentenceView.hpp"
 #include "details/matching_blocks.hpp"
+#include "fuzz.hpp"
 #include "levenshtein.hpp"
 
 #include <algorithm>
@@ -46,7 +46,6 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   }
 
   size_t short_len = s1_view.length();
-
 
   auto blocks = get_matching_blocks(s1_view, s2_view);
 

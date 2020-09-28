@@ -5,14 +5,12 @@
 namespace rapidfuzz {
 namespace Unicode {
 
-template<typename, typename = void>
-struct is_space_dispatch_tag :
-  std::integral_constant<int, 0> {};
+template <typename, typename = void>
+struct is_space_dispatch_tag : std::integral_constant<int, 0> {};
 
-template<typename CharT>
-struct is_space_dispatch_tag<CharT, 
-  typename std::enable_if<sizeof(CharT) == 1>::type
-  > : std::integral_constant<int, 1> {};
+template <typename CharT>
+struct is_space_dispatch_tag<CharT, typename std::enable_if<sizeof(CharT) == 1>::type>
+    : std::integral_constant<int, 1> {};
 
 /*
  * Implementation of is_space for char types that are at least 2 Byte in size
@@ -82,8 +80,9 @@ bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
  * type 'WS', 'B' or 'S' or the category 'Zs'
  */
 template <typename CharT>
-bool is_space(const CharT ch){
-    return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
+bool is_space(const CharT ch)
+{
+  return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
 }
 
 } // namespace Unicode

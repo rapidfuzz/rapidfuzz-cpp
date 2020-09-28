@@ -1,8 +1,8 @@
 
 #pragma once
 #include "SplittedSentenceView.hpp"
-#include "unicode.hpp"
 #include "type_traits.hpp"
+#include "unicode.hpp"
 
 namespace rapidfuzz {
 
@@ -15,14 +15,10 @@ public:
   SentenceView(const Sentence& str) : m_sentence(basic_string_view<CharT>(str))
   {}
 
-
-  template <
-    typename Sentence,
-    typename = enable_if_t<
-      !is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value
-      && has_member_data<Sentence>::value
-      && has_member_size<Sentence>::value
-    >>
+  template <typename Sentence,
+            typename =
+                enable_if_t<!is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value &&
+                            has_data_and_size<Sentence>::value>>
   SentenceView(Sentence str) : m_sentence(basic_string_view<CharT>(str.data(), str.size()))
   {}
 

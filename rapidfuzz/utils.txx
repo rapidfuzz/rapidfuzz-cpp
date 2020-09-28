@@ -77,16 +77,15 @@ basic_string_view<CharT> utils::to_string_view(const Sentence& str)
   return basic_string_view<CharT>(str.data(), str.size());
 }
 
-template<typename InputIterator1, typename InputIterator2>
+template <typename InputIterator1, typename InputIterator2>
 std::pair<InputIterator1, InputIterator2>
-utils::mismatch(InputIterator1 first1, InputIterator1 last1,
-	       InputIterator2 first2, InputIterator2 last2)
+utils::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
+                InputIterator2 last2)
 {
-  while (first1 != last1 && first2 != last2 && *first1 == *first2)
-	{
-	  ++first1;
-	  ++first2;
-	}
+  while (first1 != last1 && first2 != last2 && *first1 == *first2) {
+    ++first1;
+    ++first2;
+  }
   return std::pair<InputIterator1, InputIterator2>(first1, first2);
 }
 
@@ -96,7 +95,8 @@ utils::mismatch(InputIterator1 first1, InputIterator1 last1,
 template <typename CharT1, typename CharT2>
 std::size_t utils::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  auto prefix = std::distance(a.begin(), utils::mismatch(a.begin(), a.end(), b.begin(), b.end()).first);
+  auto prefix =
+      std::distance(a.begin(), utils::mismatch(a.begin(), a.end(), b.begin(), b.end()).first);
   a.remove_prefix(prefix);
   b.remove_prefix(prefix);
   return prefix;
@@ -108,7 +108,8 @@ std::size_t utils::remove_common_prefix(basic_string_view<CharT1>& a, basic_stri
 template <typename CharT1, typename CharT2>
 std::size_t utils::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  auto suffix = std::distance(a.rbegin(), utils::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first);
+  auto suffix =
+      std::distance(a.rbegin(), utils::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first);
   a.remove_suffix(suffix);
   b.remove_suffix(suffix);
   return suffix;
@@ -175,10 +176,12 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
 
   // only remove SPACE since all other space characters are already replaced
   // with SPACE
-  str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](const CharT& ch) { return ch != ' '; }));
+  str.erase(str.begin(),
+            std::find_if(str.begin(), str.end(), [](const CharT& ch) { return ch != ' '; }));
 
-  str.erase(std::find_if(str.rbegin(), str.rend(), [](const CharT& ch) { return ch != ' '; }).base(),
-          str.end());
+  str.erase(
+      std::find_if(str.rbegin(), str.rend(), [](const CharT& ch) { return ch != ' '; }).base(),
+      str.end());
 
   lower_case(str);
   return str;

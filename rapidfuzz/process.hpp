@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-
 #if rapidfuzz_CPP17_OR_GREATER
 #include <type_traits>
 #else
@@ -89,17 +88,17 @@ namespace process {
  * >= score_cutoff boost::none is returned (using boost::optional to keep
  * supporting C++14)
  */
-template <
-    typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-    typename Sentence2 = inner_type<Iterable>,
-    typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
-    typename ScorerFunc =
-        decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
-    typename = enable_if_t<satisfies_all<
-        is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
-        is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
-        is_invocable_r<std::basic_string<CharT>, ProcessorFunc, std::basic_string<CharT>>,
-        is_invocable<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>, percent>>::value>>
+template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
+          typename Sentence2 = inner_type<Iterable>,
+          typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
+          typename ScorerFunc =
+              decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
+          typename = enable_if_t<satisfies_all<
+              is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
+              is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
+              is_invocable_r<std::basic_string<CharT>, ProcessorFunc, std::basic_string<CharT>>,
+              is_invocable<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>,
+                           percent>>::value>>
 nonstd::optional<std::pair<Sentence2, percent>>
 extractOne(const Sentence1& query, const Iterable& choices,
            ProcessorFunc&& processor = utils::default_process<std::basic_string<CharT>>,
@@ -204,17 +203,17 @@ extractOne(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t pr
  *
  * @return returns a list of the best matches that have a score >= score_cutoff.
  */
-template <
-    typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-    typename Sentence2 = inner_type<Iterable>,
-    typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
-    typename ScorerFunc =
-        decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
-    typename = enable_if_t<satisfies_all<
-        is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
-        is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
-        is_invocable<ProcessorFunc, std::basic_string<CharT>>,
-        is_invocable<ScorerFunc, std::basic_string<CharT>, std::basic_string<CharT>, percent>>::value>>
+template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
+          typename Sentence2 = inner_type<Iterable>,
+          typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
+          typename ScorerFunc =
+              decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
+          typename = enable_if_t<
+              satisfies_all<is_explicitly_convertible<Sentence1, std::basic_string<CharT>>,
+                            is_explicitly_convertible<Sentence2, std::basic_string<CharT>>,
+                            is_invocable<ProcessorFunc, std::basic_string<CharT>>,
+                            is_invocable<ScorerFunc, std::basic_string<CharT>,
+                                         std::basic_string<CharT>, percent>>::value>>
 std::vector<std::pair<Sentence2, percent>>
 extract(const Sentence1& query, const Iterable& choices,
         ProcessorFunc&& processor = utils::default_process<CharT>,
