@@ -8,9 +8,9 @@
 #include <vector>
 
 #if rapidfuzz_USES_STD_STRING_VIEW
-#include <string_view>
+#  include <string_view>
 #else
-#include <boost/utility/string_view.hpp>
+#  include <boost/utility/string_view.hpp>
 #endif
 
 namespace rapidfuzz {

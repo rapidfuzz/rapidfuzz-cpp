@@ -15,8 +15,7 @@ process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFu
   auto processed_query = processor(utils::to_string(query));
 
   for (const auto& choice : choices) {
-    percent score =
-        scorer(processed_query, processor(utils::to_string(choice)), best_score);
+    percent score = scorer(processed_query, processor(utils::to_string(choice)), best_score);
 
     if (score > best_score) {
       match_found = true;

@@ -14,9 +14,9 @@
 #include <vector>
 
 #if rapidfuzz_CPP17_OR_GREATER
-#include <type_traits>
+#  include <type_traits>
 #else
-#include <boost/callable_traits.hpp>
+#  include <boost/callable_traits.hpp>
 #endif
 
 namespace rapidfuzz {

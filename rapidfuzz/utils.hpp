@@ -80,12 +80,10 @@ template <
                            has_data_and_size<Sentence>::value>>
 basic_string_view<CharT> to_string_view(const Sentence& str);
 
-
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
     typename = enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
 std::basic_string<CharT> to_string(Sentence&& str);
-
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
