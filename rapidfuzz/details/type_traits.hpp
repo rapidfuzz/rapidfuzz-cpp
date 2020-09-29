@@ -134,4 +134,11 @@ using is_convertible_to_string_view =
 template <typename... Sentence>
 using are_convertible_to_string_view = satisfies_all<is_convertible_to_string_view<Sentence>...>;
 
+template <typename Sentence, typename CharT = char_type<Sentence>>
+using is_convertible_to_string =
+    satisfies_any<is_explicitly_convertible<Sentence, std::basic_string<CharT>>,
+                  has_data_and_size<Sentence>>;
+
+template <typename... Sentence>
+using are_convertible_to_string = satisfies_all<is_convertible_to_string<Sentence>...>;
 } // namespace rapidfuzz

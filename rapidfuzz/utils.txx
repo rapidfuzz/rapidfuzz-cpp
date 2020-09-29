@@ -77,6 +77,18 @@ basic_string_view<CharT> utils::to_string_view(const Sentence& str)
   return basic_string_view<CharT>(str.data(), str.size());
 }
 
+template <typename Sentence, typename CharT, typename>
+std::basic_string<CharT> utils::to_string(Sentence&& str)
+{
+  return std::basic_string<CharT>(std::forward<Sentence>(str));
+}
+
+template <typename Sentence, typename CharT, typename>
+std::basic_string<CharT> utils::to_string(const Sentence& str)
+{
+  return std::basic_string<CharT>(str.data(), str.size());
+}
+
 template <typename InputIterator1, typename InputIterator2>
 std::pair<InputIterator1, InputIterator2>
 utils::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,

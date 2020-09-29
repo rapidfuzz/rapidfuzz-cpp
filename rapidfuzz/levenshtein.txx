@@ -9,7 +9,7 @@
 
 namespace rapidfuzz {
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2, std::size_t max)
 {
   auto sentence1 = utils::to_string_view(s1);
@@ -87,7 +87,7 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2, std:
   return (cache.back() <= max) ? cache.back() : std::numeric_limits<std::size_t>::max();
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2& s2,
                                            std::size_t max)
 {
@@ -161,7 +161,7 @@ std::size_t levenshtein::weighted_distance(const Sentence1& s1, const Sentence2&
   return (cache.back() <= max) ? cache.back() : std::numeric_limits<std::size_t>::max();
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& s2,
                                           WeightTable weights, std::size_t max)
 {
@@ -200,7 +200,7 @@ std::size_t levenshtein::generic_distance(const Sentence1& s1, const Sentence2& 
   return (cache.back() <= max) ? cache.back() : std::numeric_limits<std::size_t>::max();
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2,
                                         const double min_ratio)
 {
@@ -231,7 +231,7 @@ double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2
   return (ratio >= min_ratio) ? ratio : 0.0;
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename>
 double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
                                                  const double min_ratio)
 {

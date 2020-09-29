@@ -49,24 +49,29 @@ struct WeightTable {
   std::size_t replace_cost;
 };
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 std::size_t distance(const Sentence1& s1, const Sentence2& s2,
                      std::size_t max = std::numeric_limits<std::size_t>::max());
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 std::size_t weighted_distance(const Sentence1& s1, const Sentence2& s2,
                               std::size_t max = std::numeric_limits<std::size_t>::max());
 
 // TODO add max distance like it is done for distance/weighted_distance
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 std::size_t generic_distance(const Sentence1& s1, const Sentence2& s2,
                              WeightTable weights = {1, 1, 1},
                              std::size_t max = std::numeric_limits<std::size_t>::max());
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 double normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2,
+          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
 double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
                                     const double min_ratio = 0.0);
 

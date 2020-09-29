@@ -17,8 +17,7 @@ namespace rapidfuzz {
 template <typename Sentence1, typename Sentence2, typename>
 percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
-  double result = levenshtein::normalized_weighted_distance(
-      utils::to_string_view(s1), utils::to_string_view(s2), score_cutoff / 100);
+  double result = levenshtein::normalized_weighted_distance(s1, s2, score_cutoff / 100);
   return result * 100;
 }
 
