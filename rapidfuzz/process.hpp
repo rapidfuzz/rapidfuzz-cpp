@@ -90,7 +90,7 @@ namespace process {
  */
 template <
     typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-    typename Sentence2 = inner_type<Iterable>,
+    typename Sentence2 = typename Iterable::value_type,
     typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
     typename ScorerFunc =
         decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
@@ -146,7 +146,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * supporting C++11)
  */
 template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-          typename Sentence2 = inner_type<Iterable>,
+          typename Sentence2 = typename Iterable::value_type,
           typename ScorerFunc = decltype(fuzz::WRatio<Sentence1, Sentence2>),
           typename = enable_if_t<is_invocable<ScorerFunc, Sentence1, Sentence2, percent>::value>>
 nonstd::optional<std::pair<Sentence2, percent>>
@@ -205,7 +205,7 @@ extractOne(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t pr
  */
 template <
     typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-    typename Sentence2 = inner_type<Iterable>,
+    typename Sentence2 = typename Iterable::value_type,
     typename ProcessorFunc = decltype(utils::default_process<std::basic_string<CharT>>),
     typename ScorerFunc =
         decltype(fuzz::WRatio<std::basic_string<CharT>, std::basic_string<CharT>>),
@@ -259,7 +259,7 @@ extract(const Sentence1& query, const Iterable& choices,
  * @return returns a list of the best matches that have a score >= score_cutoff.
  */
 template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
-          typename Sentence2 = inner_type<Iterable>,
+          typename Sentence2 = typename Iterable::value_type,
           typename ScorerFunc = decltype(fuzz::WRatio<Sentence1, Sentence2>),
           typename = enable_if_t<is_invocable<ScorerFunc, Sentence1, Sentence2, percent>::value>>
 std::vector<std::pair<Sentence2, percent>>

@@ -40,8 +40,7 @@ namespace fuzz {
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
@@ -68,8 +67,7 @@ percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cuto
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -99,8 +97,7 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+          typename CharT2 = char_type<Sentence2>>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -124,8 +121,7 @@ percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+          typename CharT2 = char_type<Sentence2>>
 percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                  percent score_cutoff = 0);
 
@@ -157,8 +153,7 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
@@ -181,8 +176,7 @@ percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent 
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+          typename CharT2 = char_type<Sentence2>>
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -204,8 +198,7 @@ percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percen
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -229,8 +222,7 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+          typename CharT2 = char_type<Sentence2>>
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -262,8 +254,7 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -294,8 +285,7 @@ percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cut
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
@@ -319,8 +309,7 @@ percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2,
-          typename = enable_if_t<are_convertible_to_string_view<Sentence1, Sentence2>::value>>
+template <typename Sentence1, typename Sentence2>
 percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**@}*/

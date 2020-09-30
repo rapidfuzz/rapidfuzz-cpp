@@ -23,15 +23,12 @@ namespace detail {
 template <typename T>
 auto inner_type(T const*) -> T;
 
-template <typename T, typename U = typename T::const_iterator>
-auto inner_type(T const&) -> typename std::iterator_traits<U>::value_type;
+template <typename T>
+auto inner_type(T const&) -> typename T::value_type;
 } // namespace detail
 
 template <typename T>
-using inner_type = decltype(detail::inner_type(std::declval<T const&>()));
-
-template <typename T>
-using char_type = inner_type<T>;
+using char_type = decltype(detail::inner_type(std::declval<T const&>()));
 
 template <typename... Conds>
 struct satisfies_all : std::true_type {};
@@ -125,14 +122,6 @@ GENERATE_HAS_MEMBER(size) // Creates 'has_member_size'
 
 template <typename Sentence>
 using has_data_and_size = satisfies_all<has_member_data<Sentence>, has_member_size<Sentence>>;
-
-template <typename Sentence, typename CharT = char_type<Sentence>>
-using is_convertible_to_string_view =
-    satisfies_any<is_explicitly_convertible<Sentence, basic_string_view<CharT>>,
-                  has_data_and_size<Sentence>>;
-
-template <typename... Sentence>
-using are_convertible_to_string_view = satisfies_all<is_convertible_to_string_view<Sentence>...>;
 
 template <typename Sentence, typename CharT = char_type<Sentence>>
 using is_convertible_to_string =
