@@ -35,11 +35,6 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
     return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
   }
 
-  // when both strings have the same length there is only one possible alignment
-  if (s1_view.length() == s2_view.length()) {
-    return ratio(s1_view, s2_view, score_cutoff);
-  }
-
   if (s1_view.length() > s2_view.length()) {
     return partial_ratio(s2_view, s1_view, score_cutoff);
   }
