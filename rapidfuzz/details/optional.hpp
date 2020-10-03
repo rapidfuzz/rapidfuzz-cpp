@@ -89,7 +89,7 @@
 
 #include <utility>
 
-namespace nonstd {
+namespace rapidfuzz {
 
 using std::in_place;
 using std::in_place_type;
@@ -106,13 +106,13 @@ using std::in_place_index_t;
 #define nonstd_lite_in_place_type( T)    std::in_place_type_t<T>{}
 #define nonstd_lite_in_place_index(K)    std::in_place_index_t<K>{}
 
-} // namespace nonstd
+} // namespace rapidfuzz
 
 #else // optional_CPP17_OR_GREATER
 
 #include <cstddef>
 
-namespace nonstd {
+namespace rapidfuzz {
 namespace detail {
 
 template< class T >
@@ -151,15 +151,15 @@ inline in_place_t in_place_index( detail::in_place_index_tag<K> /*unused*/ = det
 
 // mimic templated typedef:
 
-#define nonstd_lite_in_place_t(      T)  nonstd::in_place_t(&)( nonstd::detail::in_place_type_tag<T>  )
-#define nonstd_lite_in_place_type_t( T)  nonstd::in_place_t(&)( nonstd::detail::in_place_type_tag<T>  )
-#define nonstd_lite_in_place_index_t(K)  nonstd::in_place_t(&)( nonstd::detail::in_place_index_tag<K> )
+#define nonstd_lite_in_place_t(      T)  rapidfuzz::in_place_t(&)( rapidfuzz::detail::in_place_type_tag<T>  )
+#define nonstd_lite_in_place_type_t( T)  rapidfuzz::in_place_t(&)( rapidfuzz::detail::in_place_type_tag<T>  )
+#define nonstd_lite_in_place_index_t(K)  rapidfuzz::in_place_t(&)( rapidfuzz::detail::in_place_index_tag<K> )
 
-#define nonstd_lite_in_place(      T)    nonstd::in_place_type<T>
-#define nonstd_lite_in_place_type( T)    nonstd::in_place_type<T>
-#define nonstd_lite_in_place_index(K)    nonstd::in_place_index<K>
+#define nonstd_lite_in_place(      T)    rapidfuzz::in_place_type<T>
+#define nonstd_lite_in_place_type( T)    rapidfuzz::in_place_type<T>
+#define nonstd_lite_in_place_index(K)    rapidfuzz::in_place_index<K>
 
-} // namespace nonstd
+} // namespace rapidfuzz
 
 #endif // optional_CPP17_OR_GREATER
 #endif // nonstd_lite_HAVE_IN_PLACE_TYPES
@@ -172,7 +172,7 @@ inline in_place_t in_place_index( detail::in_place_index_tag<K> /*unused*/ = det
 
 #include <optional>
 
-namespace nonstd {
+namespace rapidfuzz {
 
     using std::optional;
     using std::bad_optional_access;
@@ -415,7 +415,7 @@ namespace nonstd {
 // optional:
 //
 
-namespace nonstd { namespace optional_lite {
+namespace rapidfuzz { namespace optional_lite {
 
 namespace std11 {
 
@@ -1680,7 +1680,7 @@ using optional_lite::bad_optional_access;
 
 using optional_lite::make_optional;
 
-} // namespace nonstd
+} // namespace rapidfuzz
 
 #if optional_CPP11_OR_GREATER
 
@@ -1689,10 +1689,10 @@ using optional_lite::make_optional;
 namespace std {
 
 template< class T >
-struct hash< nonstd::optional<T> >
+struct hash< rapidfuzz::optional<T> >
 {
 public:
-    std::size_t operator()( nonstd::optional<T> const & v ) const optional_noexcept
+    std::size_t operator()( rapidfuzz::optional<T> const & v ) const optional_noexcept
     {
         return bool( v ) ? std::hash<T>{}( *v ) : 0;
     }

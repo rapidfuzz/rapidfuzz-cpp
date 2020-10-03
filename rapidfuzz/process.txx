@@ -3,8 +3,8 @@
 namespace rapidfuzz {
 
 template <typename Sentence1, typename CharT, typename Iterable, typename Sentence2,
-          typename ProcessorFunc, typename ScorerFunc, typename>
-nonstd::optional<std::pair<Sentence2, percent>>
+          typename ProcessorFunc, typename ScorerFunc>
+optional<std::pair<Sentence2, percent>>
 process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFunc&& processor,
                     ScorerFunc&& scorer, const percent score_cutoff)
 {
@@ -25,16 +25,16 @@ process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFu
   }
 
   if (!match_found) {
-    return nonstd::nullopt;
+    return nullopt;
   }
 
   return std::make_pair(best_match, best_score);
 }
 
 template <typename Sentence1, typename CharT, typename Iterable, typename Sentence2,
-          typename ScorerFunc, typename>
-nonstd::optional<std::pair<Sentence2, percent>>
-process::extractOne(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t,
+          typename ScorerFunc>
+optional<std::pair<Sentence2, percent>>
+process::extractOne(const Sentence1& query, const Iterable& choices, nullopt_t,
                     ScorerFunc&& scorer, const percent score_cutoff)
 {
   bool match_found = false;
@@ -51,14 +51,14 @@ process::extractOne(const Sentence1& query, const Iterable& choices, nonstd::nul
   }
 
   if (!match_found) {
-    return nonstd::nullopt;
+    return nullopt;
   }
 
   return std::make_pair(best_match, best_score);
 }
 
 template <typename Sentence1, typename CharT, typename Iterable, typename Sentence2,
-          typename ProcessorFunc, typename ScorerFunc, typename>
+          typename ProcessorFunc, typename ScorerFunc>
 std::vector<std::pair<Sentence2, percent>>
 process::extract(const Sentence1& query, const Iterable& choices, ProcessorFunc&& processor,
                  ScorerFunc&& scorer, const std::size_t limit, const percent score_cutoff)
@@ -100,9 +100,9 @@ process::extract(const Sentence1& query, const Iterable& choices, ProcessorFunc&
 }
 
 template <typename Sentence1, typename CharT, typename Iterable, typename Sentence2,
-          typename ScorerFunc, typename>
+          typename ScorerFunc>
 std::vector<std::pair<Sentence2, percent>>
-process::extract(const Sentence1& query, const Iterable& choices, nonstd::nullopt_t,
+process::extract(const Sentence1& query, const Iterable& choices, nullopt_t,
                  ScorerFunc&& scorer, const std::size_t limit, const percent score_cutoff)
 {
   std::vector<std::pair<Sentence2, percent>> results;
