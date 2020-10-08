@@ -130,4 +130,46 @@ using is_convertible_to_string =
 
 template <typename... Sentence>
 using are_convertible_to_string = satisfies_all<is_convertible_to_string<Sentence>...>;
+
+// This trait checks if a given type is a standard collection of hashable types
+// SFINAE ftw
+template <class T> class is_hashable_sequence {
+  is_hashable_sequence() = delete;
+  typedef char hashable;
+  struct not_hashable { char t[2]; };  // Ensured to work on any platform
+  template <typename C> static hashable matcher(decltype(&std::hash<typename C::value_type>::operator()));
+  template <typename C> static not_hashable matcher(...);
+
+ public:
+  static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(hashable));
+};
+
+template <class T> class is_standard_iterable {
+  is_standard_iterable () = delete;
+  typedef char iterable;
+  struct not_iterable { char t[2]; };  // Ensured to work on any platform
+  template <typename C> static iterable matcher(typename C::const_iterator*);
+  template <typename C> static not_iterable matcher(...);
+
+ public:
+  static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(iterable));
+};
+
+
+template <typename C> void* sub_matcher(typename C::value_type const& (C::*)(size_t) const);
+
+// TODO: Not a real SFINAE, because of the ambiguity between
+// value_type const& operator[](size_t) const;
+// and value_type& operator[](size_t);
+// Not really important
+template <class T> class has_bracket_operator {
+  has_bracket_operator () = delete;
+  typedef char has_op;
+  struct hasnt_op { char t[2]; };  // Ensured to work on any platform
+  template <typename C> static has_op matcher(decltype(sub_matcher<T>(&T::at)));
+  template <typename C> static hasnt_op matcher(...); 
+ public:
+  static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
+};
+
 } // namespace rapidfuzz
