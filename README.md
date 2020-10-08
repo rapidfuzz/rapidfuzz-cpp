@@ -95,7 +95,7 @@ auto matches = rapidfuzz::process::extract(
   2);
 
 
-// matches is a boost::optional<std::pair>
+// matches is a rapidfuzz::optional<std::pair>
 // ("dallas cowboys", 90)
 auto matches = rapidfuzz::process::extractOne(
   "cowboys",
