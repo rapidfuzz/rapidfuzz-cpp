@@ -66,23 +66,6 @@ struct is_explicitly_convertible {
   static bool const value = test<From, To>(0);
 };
 
-// taken from
-// https://stackoverflow.com/questions/16803814/how-do-i-return-the-largest-type-in-a-list-of-types
-template <typename... Ts>
-struct largest_type;
-
-template <typename T>
-struct largest_type<T> {
-  using type = T;
-};
-
-template <typename T, typename U, typename... Ts>
-struct largest_type<T, U, Ts...> {
-  using type =
-      typename largest_type<typename std::conditional<(sizeof(U) <= sizeof(T)), T, U>::type,
-                            Ts...>::type;
-};
-
 #define GENERATE_HAS_MEMBER(member)                                                                \
                                                                                                    \
   template <typename T>                                                                            \
@@ -122,14 +105,6 @@ GENERATE_HAS_MEMBER(size) // Creates 'has_member_size'
 
 template <typename Sentence>
 using has_data_and_size = satisfies_all<has_member_data<Sentence>, has_member_size<Sentence>>;
-
-template <typename Sentence, typename CharT = char_type<Sentence>>
-using is_convertible_to_string =
-    satisfies_any<is_explicitly_convertible<Sentence, std::basic_string<CharT>>,
-                  has_data_and_size<Sentence>>;
-
-template <typename... Sentence>
-using are_convertible_to_string = satisfies_all<is_convertible_to_string<Sentence>...>;
 
 // This trait checks if a given type is a standard collection of hashable types
 // SFINAE ftw
