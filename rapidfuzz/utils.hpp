@@ -118,7 +118,7 @@ std::size_t count_uncommon_chars(const Sentence1& s1, const Sentence2& s2);
 
 
 template <typename Sentence, typename CharT = char_type<Sentence>>
-SplittedSentenceView<CharT> sorted_split(Sentence sentence);
+SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
 
 template <typename CharT>
