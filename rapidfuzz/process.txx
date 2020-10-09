@@ -8,6 +8,9 @@ optional<std::pair<Sentence2, percent>>
 process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFunc&& processor,
                     ScorerFunc&& scorer, const percent score_cutoff)
 {
+  static_assert(std::is_same<CharT, char_type<Sentence2>>::value,
+    "When a processor is used query and choices have to use the same char type");
+
   bool match_found = false;
   percent best_score = score_cutoff;
   Sentence2 best_match;
@@ -31,8 +34,7 @@ process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFu
   return std::make_pair(best_match, best_score);
 }
 
-template <typename Sentence1, typename CharT, typename Iterable, typename Sentence2,
-          typename ScorerFunc>
+template <typename Sentence1, typename Iterable, typename Sentence2, typename ScorerFunc>
 optional<std::pair<Sentence2, percent>>
 process::extractOne(const Sentence1& query, const Iterable& choices, nullopt_t,
                     ScorerFunc&& scorer, const percent score_cutoff)
@@ -63,6 +65,9 @@ std::vector<std::pair<Sentence2, percent>>
 process::extract(const Sentence1& query, const Iterable& choices, ProcessorFunc&& processor,
                  ScorerFunc&& scorer, const std::size_t limit, const percent score_cutoff)
 {
+  static_assert(std::is_same<CharT, char_type<Sentence2>>::value,
+    "When a processor is used query and choices have to use the same char type");
+
   std::vector<std::pair<Sentence2, percent>> results;
   results.reserve(limit);
   // minimal score thats still in the result
@@ -99,8 +104,7 @@ process::extract(const Sentence1& query, const Iterable& choices, ProcessorFunc&
   return results;
 }
 
-template <typename Sentence1, typename CharT, typename Iterable, typename Sentence2,
-          typename ScorerFunc>
+template <typename Sentence1, typename Iterable, typename Sentence2, typename ScorerFunc>
 std::vector<std::pair<Sentence2, percent>>
 process::extract(const Sentence1& query, const Iterable& choices, nullopt_t,
                  ScorerFunc&& scorer, const std::size_t limit, const percent score_cutoff)

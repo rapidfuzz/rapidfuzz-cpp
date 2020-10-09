@@ -219,4 +219,4 @@ match_list_t get_matching_blocks(Sentence1 s1, Sentence2 s2) {
     return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
 }
 
-}
+} /* namespace rapidfuzz */

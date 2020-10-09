@@ -125,7 +125,7 @@ extractOne(const Sentence1& query, const Iterable& choices,
  * >= score_cutoff rapidfuzz::nullopt is returned (using rapidfuzz::optional to keep
  * supporting C++11 which behavse similar to std::optional in C++17)
  */
-template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
+template <typename Sentence1, typename Iterable,
           typename Sentence2 = typename Iterable::value_type,
           typename ScorerFunc = decltype(fuzz::WRatio<Sentence1, Sentence2>)>
 optional<std::pair<Sentence2, percent>>
@@ -232,7 +232,7 @@ extract(const Sentence1& query, const Iterable& choices,
  *
  * @return returns a list of the best matches that have a score >= score_cutoff.
  */
-template <typename Sentence1, typename CharT = char_type<Sentence1>, typename Iterable,
+template <typename Sentence1, typename Iterable,
           typename Sentence2 = typename Iterable::value_type,
           typename ScorerFunc = decltype(fuzz::WRatio<Sentence1, Sentence2>)>
 std::vector<std::pair<Sentence2, percent>>

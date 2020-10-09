@@ -142,5 +142,4 @@ template <class T> class has_bracket_operator {
   static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
 };
 
-
 } // namespace rapidfuzz
