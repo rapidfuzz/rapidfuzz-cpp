@@ -8,23 +8,6 @@ namespace rapidfuzz {
 template <typename CharT>
 class SplittedSentenceView {
 public:
-  class const_iterator {
-  public:
-    explicit const_iterator(typename string_view_vec<CharT>::const_iterator iter) : words_iter(iter)
-    {}
-
-    const_iterator operator++();
-    bool operator!=(const const_iterator& other) const;
-    const CharT& operator*() const;
-
-  private:
-    CharT whitespace{0x20};
-    bool add_whitespace = false;
-    std::size_t word_pos = 0;
-    typename string_view_vec<CharT>::const_iterator words_iter;
-  };
-
-public:
   SplittedSentenceView(string_view_vec<CharT> sentence) : m_sentence(std::move(sentence))
   {}
 
@@ -48,29 +31,6 @@ public:
 
   std::basic_string<CharT> join() const;
 
-  void sort()
-  {
-    std::sort(m_sentence.begin(), m_sentence.end());
-  }
-
-  const_iterator begin() const
-  {
-    return cbegin();
-  }
-  const_iterator end() const
-  {
-    return cend();
-  }
-
-  const_iterator cbegin() const
-  {
-    return const_iterator(m_sentence.begin());
-  }
-  const_iterator cend() const
-  {
-    return const_iterator(m_sentence.end());
-  }
-
   string_view_vec<CharT> words() const
   {
     return m_sentence;
@@ -80,38 +40,6 @@ private:
   string_view_vec<CharT> m_sentence;
 };
 
-template <typename CharT>
-typename SplittedSentenceView<CharT>::const_iterator
-SplittedSentenceView<CharT>::const_iterator::operator++()
-{
-  if (word_pos == 0 && add_whitespace == true) {
-    add_whitespace = false;
-  }
-  else if (word_pos < words_iter->size()) {
-    ++word_pos;
-  }
-  else {
-    ++words_iter;
-    word_pos = 0;
-    add_whitespace = true;
-  }
-  return *this;
-}
-
-template <typename CharT>
-bool SplittedSentenceView<CharT>::const_iterator::operator!=(const const_iterator& other) const
-{
-  return words_iter != other.words_iter;
-}
-
-template <typename CharT>
-const CharT& SplittedSentenceView<CharT>::const_iterator::operator*() const
-{
-  if (add_whitespace == true) {
-    return whitespace;
-  }
-  return (*words_iter)[word_pos];
-}
 
 template <typename CharT>
 std::size_t SplittedSentenceView<CharT>::dedupe()

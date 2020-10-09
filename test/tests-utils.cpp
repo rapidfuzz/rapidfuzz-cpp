@@ -1,15 +1,9 @@
 #include "../rapidfuzz/utils.hpp"
 #include "../rapidfuzz/fuzz.hpp"
-#include "../rapidfuzz/details/constants.hpp"
-
+#include "../rapidfuzz/details/string_view.hpp"
 
 #include <string>
-#include <boost/utility/string_view.hpp>
 #include <vector>
-
-#if rapidfuzz_CPP17_OR_GREATER
-#include <string_view>
-#endif
 
 #include "catch2/catch.hpp"
 
@@ -79,26 +73,10 @@ TEST_CASE("to_string_view")
 		REQUIRE(vec_int.size() == int_view.size());
     }
 
-#if rapidfuzz_CPP17_OR_GREATER
-    SECTION("test std::string_view as input")
+    SECTION("test rapidfuzz::string_view as input")
     {
-        const std::string_view view_str = str;
-		const std::wstring_view view_wstr = wstr;
-
-		auto str_view = utils::to_string_view(view_str);
-        REQUIRE(view_str.data() == str_view.data());
-		REQUIRE(view_str.size() == str_view.size());
-
-		auto wstr_view = utils::to_string_view(view_wstr);
-        REQUIRE(view_wstr.data() == wstr_view.data());
-		REQUIRE(view_wstr.size() == wstr_view.size());
-    }
-#endif
-
-    SECTION("test boost::string_view as input")
-    {
-        const boost::string_view view_str = str;
-		const boost::wstring_view view_wstr = wstr;
+        const rapidfuzz::string_view view_str = str;
+		const rapidfuzz::wstring_view view_wstr = wstr;
 
 		auto str_view = utils::to_string_view(view_str);
         REQUIRE(view_str.data() == str_view.data());

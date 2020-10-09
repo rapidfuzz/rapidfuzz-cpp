@@ -11,13 +11,8 @@
 
 namespace rapidfuzz {
 
-#if rapidfuzz_CPP14_OR_GREATER
-template <bool B, class T = void>
-using enable_if_t = std::enable_if_t<B, T>;
-#else
 template <bool B, class T = void>
 using enable_if_t = typename std::enable_if<B, T>::type;
-#endif
 
 namespace detail {
 template <typename T>

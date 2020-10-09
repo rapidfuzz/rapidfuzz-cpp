@@ -10,12 +10,12 @@ namespace levenshtein = rapidfuzz::levenshtein;
 
 TEST_CASE("levenshtein works with string_views", "[string_view]")
 {
-  boost::string_view test = "aaaa";
-  boost::string_view no_suffix = "aaa";
-  boost::string_view no_suffix2 = "aaab";
-  boost::string_view swapped1 = "abaa";
-  boost::string_view swapped2 = "baaa";
-  boost::string_view replace_all = "bbbb";
+  rapidfuzz::string_view test = "aaaa";
+  rapidfuzz::string_view no_suffix = "aaa";
+  rapidfuzz::string_view no_suffix2 = "aaab";
+  rapidfuzz::string_view swapped1 = "abaa";
+  rapidfuzz::string_view swapped2 = "baaa";
+  rapidfuzz::string_view replace_all = "bbbb";
 
   SECTION("weighted levenshtein calculates correct distances")
   {

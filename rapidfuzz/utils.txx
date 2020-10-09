@@ -6,6 +6,8 @@
 #include <cctype>
 #include <cwctype>
 
+#include "details/unicode.hpp"
+
 namespace rapidfuzz {
 
 template <typename CharT1, typename CharT2>
@@ -154,6 +156,28 @@ std::size_t utils::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2
   }
 
   return count;
+}
+
+template <typename Sentence, typename CharT>
+SplittedSentenceView<CharT> utils::sorted_split(Sentence&& sentence)
+{
+  auto s = to_string_view(std::forward<Sentence>(sentence));
+  string_view_vec<CharT> splitted;
+  auto first = s.data();
+  auto second = s.data();
+  auto last = first + s.size();
+
+  for (; second != last && first != last; first = second + 1) {
+    second = std::find_if(first, last, Unicode::is_space<CharT>);
+
+    if (first != second) {
+      splitted.emplace_back(first, second - first);
+    }
+  }
+
+  std::sort(splitted.begin(), splitted.end());
+
+  return SplittedSentenceView<CharT>(splitted);
 }
 
 template <typename CharT>

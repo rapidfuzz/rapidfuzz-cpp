@@ -2,7 +2,6 @@
 /* Copyright © 2020 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
-#include "details/SentenceView.hpp"
 #include "details/matching_blocks.hpp"
 #include "fuzz.hpp"
 #include "levenshtein.hpp"
@@ -74,8 +73,8 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
 {
   if (score_cutoff > 100) return 0;
 
-  return ratio(SentenceView<CharT1>(s1).sorted_split().join(),
-               SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
+  return ratio(utils::sorted_split(s1).join(),
+               utils::sorted_split(s2).join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
@@ -84,8 +83,8 @@ percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
 {
   if (score_cutoff > 100) return 0;
 
-  return partial_ratio(SentenceView<CharT1>(s1).sorted_split().join(),
-                       SentenceView<CharT2>(s2).sorted_split().join(), score_cutoff);
+  return partial_ratio(utils::sorted_split(s1).join(),
+                       utils::sorted_split(s2).join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -93,8 +92,8 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
 {
   if (score_cutoff > 100) return 0;
 
-  auto tokens_a = SentenceView<char_type<Sentence1>>(s1).sorted_split();
-  auto tokens_b = SentenceView<char_type<Sentence2>>(s2).sorted_split();
+  auto tokens_a = utils::sorted_split(s1);
+  auto tokens_b = utils::sorted_split(s2);
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
@@ -150,8 +149,8 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
 {
   if (score_cutoff > 100) return 0;
 
-  auto decomposition = utils::set_decomposition(SentenceView<CharT1>(s1).sorted_split(),
-                                                SentenceView<CharT2>(s2).sorted_split());
+  auto decomposition = utils::set_decomposition(utils::sorted_split(s1),
+                                                utils::sorted_split(s2));
 
   // exit early when there is a common word in both sequences
   if (!decomposition.intersection.empty()) return 100;
@@ -165,8 +164,8 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
 {
   if (score_cutoff > 100) return 0;
 
-  auto tokens_a = SentenceView<char_type<Sentence1>>(s1).sorted_split();
-  auto tokens_b = SentenceView<char_type<Sentence2>>(s2).sorted_split();
+  auto tokens_a = utils::sorted_split(s1);
+  auto tokens_b = utils::sorted_split(s2);
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
@@ -221,8 +220,8 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
 {
   if (score_cutoff > 100) return 0;
 
-  auto tokens_a = SentenceView<char_type<Sentence1>>(s1).sorted_split();
-  auto tokens_b = SentenceView<char_type<Sentence2>>(s2).sorted_split();
+  auto tokens_a = utils::sorted_split(s1);
+  auto tokens_b = utils::sorted_split(s2);
 
   auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
 

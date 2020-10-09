@@ -2,7 +2,6 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include "details/SentenceView.hpp"
 #include "details/SplittedSentenceView.hpp"
 #include "details/type_traits.hpp"
 #include "details/types.hpp"
@@ -116,6 +115,11 @@ std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view
 
 template <typename Sentence1, typename Sentence2>
 std::size_t count_uncommon_chars(const Sentence1& s1, const Sentence2& s2);
+
+
+template <typename Sentence, typename CharT = char_type<Sentence>>
+SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
+
 
 template <typename CharT>
 void lower_case(std::basic_string<CharT>& s);

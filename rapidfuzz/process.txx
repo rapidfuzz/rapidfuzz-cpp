@@ -34,8 +34,7 @@ process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFu
   return std::make_pair(best_match, best_score);
 }
 
-template <typename Sentence1, typename Iterable, typename Sentence2,
-          typename ScorerFunc>
+template <typename Sentence1, typename Iterable, typename Sentence2, typename ScorerFunc>
 optional<std::pair<Sentence2, percent>>
 process::extractOne(const Sentence1& query, const Iterable& choices, nullopt_t,
                     ScorerFunc&& scorer, const percent score_cutoff)
