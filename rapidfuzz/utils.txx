@@ -159,9 +159,9 @@ std::size_t utils::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename Sentence, typename CharT>
-SplittedSentenceView<CharT> utils::sorted_split(Sentence sentence)
+SplittedSentenceView<CharT> utils::sorted_split(Sentence&& sentence)
 {
-  auto s = to_string_view(sentence);
+  auto s = to_string_view(std::forward<Sentence>(sentence));
   string_view_vec<CharT> splitted;
   auto first = s.data();
   auto second = s.data();
