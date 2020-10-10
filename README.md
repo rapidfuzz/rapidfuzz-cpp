@@ -1,4 +1,4 @@
-<h1 align="center">
+  <h1 align="center">
 <img src="https://raw.githubusercontent.com/maxbachmann/rapidfuzz/master/docs/img/RapidFuzz.svg?sanitize=true" alt="RapidFuzz" width="400">
 </h1>
 <h4 align="center">Rapid fuzzy string matching in C++ using the Levenshtein Distance</h4>
@@ -81,6 +81,12 @@ Then, in your `CMakeLists.txt` use :
     add_executable(foo main.cpp)
     target_link_libraries(foo rapidfuzz::rapidfuzz)
 
+## CMake option 
+
+There are 3 CMake options available :
+`BUILD_TESTS` : to build test (default OFF)
+`BUILD_STATIC` : to build a static library (default ON)
+`BUILD_SHARED` : to build a shared library (default ON), which produce the target `rapidfuzz::rapidfuzz-static`
 
 ## Usage
 ```cpp
