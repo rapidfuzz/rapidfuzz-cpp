@@ -54,7 +54,7 @@ if(BUILD_SHARED)
 endif()
 
 if(BUILD_STATIC)
-  add_library(rapidfuzz-static ${SOURCES} ${HEADERS})
+  add_library(rapidfuzz-static OBJECT ${SOURCES} ${HEADERS})
   set_rapidfuzz_properties(rapidfuzz-static)
 endif()
 
