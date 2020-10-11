@@ -33,6 +33,7 @@ add_library(rapidfuzz INTERFACE)
 add_library(rapidfuzz::rapidfuzz ALIAS rapidfuzz)
 
 set_target_properties(rapidfuzz PROPERTIES PUBLIC_HEADER "${HEADERS}")
+target_compile_features(rapidfuzz INTERFACE cxx_std_11)
 
 target_include_directories(rapidfuzz INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
                                                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
