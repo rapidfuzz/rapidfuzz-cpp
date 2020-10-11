@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-#include "../src/levenshtein.hpp"
+#include <rapidfuzz/levenshtein.hpp>
 
 namespace levenshtein = rapidfuzz::levenshtein;
 
