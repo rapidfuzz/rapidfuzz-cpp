@@ -1,8 +1,14 @@
 find_package(Catch2 REQUIRED)
 
-add_executable(fuzzy_tests tests-main.cpp tests-levenshtein.cpp)
-target_link_libraries(fuzzy_tests ${PROJECT_NAME})
-target_link_libraries(fuzzy_tests Catch2::Catch2)
-target_include_directories(fuzzy_tests PUBLIC ${CMAKE_SOURCE_DIR}/extern/)
-target_include_directories(fuzzy_tests  PRIVATE ${Boost_INCLUDE_DIRS})
-add_test(NAME tests COMMAND fuzzy_tests)
+enable_testing()
+
+function(rapidfuzz_add_test NAME SOURCE)
+	add_executable(test_${NAME} tests-main.cpp ${SOURCE})
+	target_link_libraries(test_${NAME} ${PROJECT_NAME})
+	target_link_libraries(test_${NAME} Catch2::Catch2)
+	add_test(NAME ${NAME} COMMAND test_${NAME})
+endfunction()  
+
+rapidfuzz_add_test(fuzz tests-fuzz.cpp)
+rapidfuzz_add_test(levenshtein tests-levenshtein.cpp)
+rapidfuzz_add_test(utils tests-utils.cpp)
