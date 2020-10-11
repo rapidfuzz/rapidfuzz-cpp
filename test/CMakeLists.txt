@@ -1,4 +1,3 @@
-find_package(Boost REQUIRED)
 find_package(Catch2 REQUIRED)
 
 add_executable(fuzzy_tests tests-main.cpp tests-levenshtein.cpp)
