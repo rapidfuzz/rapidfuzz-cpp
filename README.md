@@ -75,7 +75,7 @@ Then, in your `CMakeLists.txt` use :
     add_executable(foo main.cpp)
     target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
 
-3. use find_package(rapifuzz) if you install it already
+3. use find_package(rapidfuzz) if you already have it installed
 
     find_package(rapidfuzz REQUIRED)
     add_executable(foo main.cpp)
