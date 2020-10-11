@@ -1,8 +1,9 @@
 #include <benchmark/benchmark.h>
-#include "../src/process.hpp"
+#include <rapidfuzz/process.hpp>
 #include <string>
 #include <vector>
 
+using namespace rapidfuzz;
 static void BM_ProcessExtract1(benchmark::State &state) {
   std::wstring a = L"aaaaa";
   std::vector<std::wstring> b(1000, L"aaaaa");

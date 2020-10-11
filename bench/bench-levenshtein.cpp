@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
-#include "../rapidfuzz/levenshtein.hpp"
-#include "../rapidfuzz/details/string_view.hpp"
+#include <rapidfuzz/levenshtein.hpp>
+#include <rapidfuzz/details/string_view.hpp>
 #include <string>
 #include <vector>
 

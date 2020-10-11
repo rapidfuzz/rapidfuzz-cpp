@@ -1,5 +1,5 @@
 #include <benchmark/benchmark.h>
-#include "../src/fuzz.hpp"
+#include <rapidfuzz/fuzz.hpp>
 #include <string>
 #include <vector>
 

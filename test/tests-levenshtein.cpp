@@ -1,10 +1,10 @@
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 #include <algorithm>
 #include <boost/utility/string_view.hpp>
 #include <string_view>
 #include <vector>
 
-#include "../src/levenshtein.hpp"
+#include <rapidfuzz/levenshtein.hpp>
 
 namespace levenshtein = rapidfuzz::levenshtein;
 
