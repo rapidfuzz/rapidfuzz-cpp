@@ -83,10 +83,9 @@ Then, in your `CMakeLists.txt` use :
 
 ## CMake option 
 
-There are 3 CMake options available :
+There are CMake options available :
 `BUILD_TESTS` : to build test (default OFF)
-`BUILD_STATIC` : to build a static library (default ON)
-`BUILD_SHARED` : to build a shared library (default ON), which produce the target `rapidfuzz::rapidfuzz-static`
+`BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires Google Benchmark)
 
 ## Usage
 ```cpp

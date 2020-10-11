@@ -4,6 +4,7 @@ project(rapidfuzz CXX)
 include(GNUInstallDirs)
 
 option(BUILD_TESTS "Build unit tests" OFF)
+option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 
 set(SOURCES
 	rapidfuzz/fuzz.txx
@@ -43,4 +44,8 @@ install(TARGETS rapidfuzz
 
 if(BUILD_TESTS)
   add_subdirectory(test)
+endif()
+
+if(BUILD_BENCHMARKS)
+  add_subdirectory(bench)
 endif()
