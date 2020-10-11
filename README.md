@@ -102,9 +102,9 @@ It will be downloaded each time you run CMake in a blank folder.
 
 There are CMake options available:
 
-`BUILD_TESTS` : to build test (default OFF and requires [Catch2](https://github.com/catchorg/Catch2))
+1. `BUILD_TESTS` : to build test (default OFF and requires [Catch2](https://github.com/catchorg/Catch2))
 
-`BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires [Google Benchmark](https://github.com/google/benchmark))
+2. `BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires [Google Benchmark](https://github.com/google/benchmark))
 
 ## Usage
 ```cpp
