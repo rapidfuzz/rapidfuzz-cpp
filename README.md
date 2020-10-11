@@ -45,34 +45,36 @@ The Library is splitted across multiple repositories for the different supported
 There are severals ways to integrate `rapidfuzz` in your CMake project.
 
 ### By Installing it
+```bash
+git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
+cd rapidfuzz-cpp
+mkdir build && cd build
+cmake ..
+cmake --build .
+cmake --build . --target install
+```
 
-    git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
-    cd rapidfuzz-cpp
-    mkdir build && cd build
-    cmake ..
-    cmake --build .
-    cmake --build . --target install
-
-Then in your CMakeLists.txt : 
-
-    find_package(rapidfuzz REQUIRED)
-    add_executable(foo main.cpp)
-    target_link_libraries(foo rapidfuzz::rapidfuzz)
+Then in your CMakeLists.txt: 
+```cmake
+find_package(rapidfuzz REQUIRED)
+add_executable(foo main.cpp)
+target_link_libraries(foo rapidfuzz::rapidfuzz)
+```
 
 ### Add this repository as a submodule
-
-    git submodule add https://github.com/maxbachmann/rapidfuzz-cpp.git 3rdparty/RapidFuzz
-
+```bash
+git submodule add https://github.com/maxbachmann/rapidfuzz-cpp.git 3rdparty/RapidFuzz
+```
 Then you can either:
 
 1. include it as a subdirectory
-
+    ```cmake
     add_subdirectory(3rdparty/RapidFuzz)
     add_executable(foo main.cpp)
-    target_link_libraries(foo rapidfuzz::rapidfuzz)  
-
+    target_link_libraries(foo rapidfuzz::rapidfuzz)
+    ```
 2. build it at configure time with `FetchContent`
-    
+    ```cmake
     FetchContent_Declare( 
       rapidfuzz
       SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/RapidFuzz
@@ -82,25 +84,27 @@ Then you can either:
     FetchContent_MakeAvailable(rapidfuzz)
     add_executable(foo main.cpp)
     target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
-
+    ```
 ### Download it at configure time
 
 If you don't want to add `rapidfuzz-cpp` as a submodule, you can also download it with `FetchContent`:
-
-    FetchContent_Declare(rapidfuzz
-      GIT_REPOSITORY https://github.com/maxbachmann/rapidfuzz-cpp.git
-      GIT_TAG master)
-    FetchContent_MakeAvailable(rapidfuzz)
-    add_executable(foo main.cpp)
-    target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
-
+```cmake
+FetchContent_Declare(rapidfuzz
+  GIT_REPOSITORY https://github.com/maxbachmann/rapidfuzz-cpp.git
+  GIT_TAG master)
+FetchContent_MakeAvailable(rapidfuzz)
+add_executable(foo main.cpp)
+target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
+```
 It will be downloaded each time you run CMake in a blank folder.   
 
 ## CMake option 
 
-There are CMake options available :
-`BUILD_TESTS` : to build test (default OFF)
-`BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires Google Benchmark)
+There are CMake options available:
+
+`BUILD_TESTS` : to build test (default OFF and requires [Catch2](https://github.com/catchorg/Catch2))
+
+`BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires [Google Benchmark](https://github.com/google/benchmark))
 
 ## Usage
 ```cpp
