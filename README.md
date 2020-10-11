@@ -40,10 +40,11 @@ The Library is splitted across multiple repositories for the different supported
 - The Python version can be found at [maxbachmann/rapidfuzz](https://github.com/maxbachmann/rapidfuzz)
 
 
-## Compilation
+## CMake Integration
 
-RapidFuzz now supports CMake.
-To build it you can do :
+There are severals ways to integrate `rapidfuzz` in your CMake project.
+
+### By Installing it
 
     git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
     cd rapidfuzz-cpp
@@ -52,34 +53,48 @@ To build it you can do :
     cmake --build .
     cmake --build . --target install
 
-RapidFuzz exports its targets to CMake. 
-You can easily integrate it in your CMake project with 3 options.
+Then in your CMakeLists.txt : 
 
-1. include it as a subdirectory:
-Clone this repo (or make a copy) into your project source tree, lets say in `3rdparty/RapidFuzz`folder.
-Then, in your `CMakeLists.txt` use :
+    find_package(rapidfuzz REQUIRED)
+    add_executable(foo main.cpp)
+    target_link_libraries(foo rapidfuzz::rapidfuzz)
 
-    add_subdirectory(rapidfuzz-cpp)
+### Add this repository as a submodule
+
+    git submodule add https://github.com/maxbachmann/rapidfuzz-cpp.git 3rdparty/RapidFuzz
+
+Then you can either:
+
+1. include it as a subdirectory
+
+    add_subdirectory(3rdparty/RapidFuzz)
     add_executable(foo main.cpp)
     target_link_libraries(foo rapidfuzz::rapidfuzz)  
 
-2. build it at configure time with FetchContent:
+2. build it at configure time with `FetchContent`
     
     FetchContent_Declare( 
       rapidfuzz
-        SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/rapidfuzz-cpp
-        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/rapidfuzz
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> "${CMAKE_OPT_ARGS}"
+      SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/RapidFuzz
+      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/rapidfuzz
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> "${CMAKE_OPT_ARGS}"
     )
     FetchContent_MakeAvailable(rapidfuzz)
     add_executable(foo main.cpp)
     target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
 
-3. use find_package(rapidfuzz) if you already have it installed
+### Download it at configure time
 
-    find_package(rapidfuzz REQUIRED)
+If you don't want to add `rapidfuzz-cpp` as a submodule, you can also download it with `FetchContent`:
+
+    FetchContent_Declare(rapidfuzz
+      GIT_REPOSITORY https://github.com/maxbachmann/rapidfuzz-cpp.git
+      GIT_TAG master)
+    FetchContent_MakeAvailable(rapidfuzz)
     add_executable(foo main.cpp)
-    target_link_libraries(foo rapidfuzz::rapidfuzz)
+    target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
+
+It will be downloaded each time you run CMake in a blank folder.   
 
 ## CMake option 
 
