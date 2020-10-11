@@ -21,6 +21,9 @@ set(HEADERS
 	rapidfuzz/details/type_traits.hpp
 	rapidfuzz/details/types.hpp
 	rapidfuzz/details/unicode.hpp
+	rapidfuzz/details/matching_blocks.hpp
+	rapidfuzz/details/string_view.hpp
+	rapidfuzz/details/optional.hpp
 )
 
 add_library(rapidfuzz INTERFACE)
