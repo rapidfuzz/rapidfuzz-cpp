@@ -42,7 +42,7 @@ The Library is splitted across multiple repositories for the different supported
 
 ## Compilation
 
-RadidFuzz now support CMake.
+RapidFuzz now supports CMake.
 To build it you can do :
 
     git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
