@@ -1,11 +1,11 @@
-#include "../rapidfuzz/utils.hpp"
-#include "../rapidfuzz/fuzz.hpp"
-#include "../rapidfuzz/details/string_view.hpp"
+#include <rapidfuzz/utils.hpp>
+#include <rapidfuzz/fuzz.hpp>
+#include <rapidfuzz/details/string_view.hpp>
 
 #include <string>
 #include <vector>
 
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
 namespace utils = rapidfuzz::utils;
 

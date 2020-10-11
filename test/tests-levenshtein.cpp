@@ -1,4 +1,4 @@
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 #include <algorithm>
 #include <boost/utility/string_view.hpp>
 #include <string_view>

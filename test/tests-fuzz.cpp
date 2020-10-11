@@ -1,7 +1,7 @@
-#include "../rapidfuzz/utils.hpp"
-#include "../rapidfuzz/fuzz.hpp"
+#include <rapidfuzz/utils.hpp>
+#include <rapidfuzz/fuzz.hpp>
 
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
 namespace fuzz = rapidfuzz::fuzz;
 namespace utils = rapidfuzz::utils;
