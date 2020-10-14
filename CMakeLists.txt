@@ -39,8 +39,11 @@ target_include_directories(rapidfuzz INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURREN
                                                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
 
 install(TARGETS rapidfuzz
-        EXPORT  rapidfuzz
-        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/rapidfuzz"
+  EXPORT  rapidfuzz
+)
+
+install(DIRECTORY rapidfuzz
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 if(BUILD_TESTS)
