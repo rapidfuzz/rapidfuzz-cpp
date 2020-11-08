@@ -309,4 +309,10 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
                   partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
 }
 
+template <typename Sentence1, typename Sentence2>
+percent fuzz::QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+  return ratio(s1, s2, score_cutoff);
+}
+
 } // namespace rapidfuzz
