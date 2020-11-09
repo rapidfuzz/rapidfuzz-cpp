@@ -49,7 +49,7 @@ There are severals ways to integrate `rapidfuzz` in your CMake project.
 git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
 cd rapidfuzz-cpp
 mkdir build && cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build .
 cmake --build . --target install
 ```
