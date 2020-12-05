@@ -47,7 +47,8 @@ struct is_explicitly_convertible {
   static void f(T);
 
   template <typename F, typename T>
-  static constexpr auto test(int) -> decltype(f(static_cast<T>(std::declval<F>())), true)
+  static constexpr auto test(int /*unused*/)
+    -> decltype(f(static_cast<T>(std::declval<F>())), true)
   {
     return true;
   }
@@ -105,7 +106,7 @@ using has_data_and_size = satisfies_all<has_member_data<Sentence>, has_member_si
 // SFINAE ftw
 template <class T> class is_hashable_sequence {
   is_hashable_sequence() = delete;
-  typedef char hashable;
+  using hashable = char;
   struct not_hashable { char t[2]; };  // Ensured to work on any platform
   template <typename C> static hashable matcher(decltype(&std::hash<typename C::value_type>::operator()));
   template <typename C> static not_hashable matcher(...);
@@ -116,7 +117,7 @@ template <class T> class is_hashable_sequence {
 
 template <class T> class is_standard_iterable {
   is_standard_iterable () = delete;
-  typedef char iterable;
+  using iterable = char;
   struct not_iterable { char t[2]; };  // Ensured to work on any platform
   template <typename C> static iterable matcher(typename C::const_iterator*);
   template <typename C> static not_iterable matcher(...);
@@ -134,7 +135,7 @@ template <typename C> void* sub_matcher(typename C::value_type const& (C::*)(siz
 // Not really important
 template <class T> class has_bracket_operator {
   has_bracket_operator () = delete;
-  typedef char has_op;
+  using has_op = char;
   struct hasnt_op { char t[2]; };  // Ensured to work on any platform
   template <typename C> static has_op matcher(decltype(sub_matcher<T>(&T::at)));
   template <typename C> static hasnt_op matcher(...); 

@@ -163,9 +163,9 @@ SplittedSentenceView<CharT> utils::sorted_split(Sentence&& sentence)
 {
   auto s = to_string_view(std::forward<Sentence>(sentence));
   string_view_vec<CharT> splitted;
-  auto first = s.data();
-  auto second = s.data();
-  auto last = first + s.size();
+  const auto* first = s.data();
+  const auto* second = s.data();
+  const auto* last = first + s.size();
 
   for (; second != last && first != last; first = second + 1) {
     second = std::find_if(first, last, Unicode::is_space<CharT>);
@@ -180,46 +180,41 @@ SplittedSentenceView<CharT> utils::sorted_split(Sentence&& sentence)
   return SplittedSentenceView<CharT>(splitted);
 }
 
-template <typename CharT>
-void utils::lower_case(std::basic_string<CharT>& s)
-{
-  // TODO: handle other characters like Ä <-> ä (maybe check how this is
-  // implemented in cpython)
-  std::transform(s.begin(), s.end(), s.begin(),
-                 [](CharT ch) { return (ch >= 'A' && ch <= 'Z' ? ch + 32 : ch); });
-}
-
-template <typename CharT>
-void utils::replace_non_alnum(std::basic_string<CharT>& s)
-{
-  // replace punctuation, control control characters, whitespaces with
-  // whitespaces
-  std::replace_if(
-      s.begin(), s.end(),
-      [](CharT ch) {
-        int ascii = static_cast<int>(ch);
-        return ascii <= '/' || (ascii >= ':' && ascii <= '@') || (ascii >= '[' && ascii <= '`') ||
-               (ascii >= '{' && ascii <= 0x7F) /* DEL */;
-      },
-      static_cast<CharT>(' '));
-}
-
 template <typename Sentence, typename CharT, typename>
 std::basic_string<CharT> utils::default_process(Sentence&& s)
 {
-  std::basic_string<CharT> str(std::forward<Sentence>(s));
-  replace_non_alnum(str);
+  /* mapping converting
+   * - non alphanumeric characters to whitespace (32)
+   * - A-Z to a-z
+   */
+  static const int ascii_mapping[128] = {
+    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
+    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
+    32, 32, 32, 32, 32, 32, 32, 32,
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    32, 32, 32, 32, 32, 32, 32,
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    32, 32, 32, 32, 32, 32,
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    32,  32,  32,  32,  32};
 
-  // only remove SPACE since all other space characters are already replaced
-  // with SPACE
+
+  std::basic_string<CharT> str(std::forward<Sentence>(s));
+
+  std::transform(str.begin(), str.end(), str.begin(),
+                 [](CharT ch2) {
+    int ch = static_cast<int>(ch2);
+    return (ch < 128) ? ascii_mapping[ch] : ch; });
+
   str.erase(str.begin(),
-            std::find_if(str.begin(), str.end(), [](const CharT& ch) { return ch != ' '; }));
+            std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
 
   str.erase(
       std::find_if(str.rbegin(), str.rend(), [](const CharT& ch) { return ch != ' '; }).base(),
       str.end());
 
-  lower_case(str);
   return str;
 }
 

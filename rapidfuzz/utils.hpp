@@ -121,15 +121,13 @@ template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
 
-template <typename CharT>
-void lower_case(std::basic_string<CharT>& s);
-
-template <typename CharT>
-void replace_non_alnum(std::basic_string<CharT>& s);
-
 /**
  * @brief removes any non alphanumeric characters, trim whitespaces from
- * beginning/end and lowercase the string
+ * beginning/end and lowercase the string. Currently this only supports
+ * Ascii. Characters outside of the ascii spec are not changed. This
+ * will be changed in the future to support full unicode. In case this has
+ * has a noticable effect on the performance an additional `ascii_default_process`
+ * function will be provided, that keeps this behaviour
  *
  * @tparam CharT char type of the string
  *
