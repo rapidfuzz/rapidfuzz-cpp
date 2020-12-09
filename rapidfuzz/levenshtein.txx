@@ -33,7 +33,8 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2, std:
   if (len_diff > max) {
     return std::numeric_limits<std::size_t>::max();
   }
-  else if (max > sentence2.length()) {
+
+  if (max > sentence2.length()) {
     max = sentence2.length();
   }
 
@@ -252,8 +253,7 @@ double levenshtein::normalized_weighted_distance(const Sentence1& s1, const Sent
     return 0.0;
   }
 
-  std::size_t cutoff_distance =
-      static_cast<std::size_t>(static_cast<double>(lensum) * (1.0 - min_ratio));
+  auto cutoff_distance = static_cast<std::size_t>(static_cast<double>(lensum) * (1.0 - min_ratio));
 
   // calculate the levenshtein distance in quadratic time
   std::size_t dist = weighted_distance(lev_filter.s1_view, lev_filter.s2_view, cutoff_distance);
@@ -274,8 +274,7 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1, basic_string
   std::size_t s2_len = s2.length();
   std::size_t lensum = s1_len + s2_len;
 
-  std::size_t cutoff_distance =
-      static_cast<std::size_t>(static_cast<double>(lensum) * (1.0 - min_ratio));
+  auto cutoff_distance = static_cast<std::size_t>(static_cast<double>(lensum) * (1.0 - min_ratio));
 
   // constant time calculation to find a string ratio based on the string length
   // so it can exit early without running any levenshtein calculations
@@ -302,6 +301,28 @@ levenshtein::detail::quick_lev_filter(basic_string_view<CharT1> s1, basic_string
   // linear time
   std::size_t uncommon_char_distance = utils::count_uncommon_chars(s1, s2);
   return {uncommon_char_distance <= cutoff_distance, s1, s2};
+}
+
+template <typename Sentence1, typename Sentence2>
+std::size_t levenshtein::hamming(const Sentence1& s1, const Sentence2& s2)
+{
+  auto sentence1 = utils::to_string_view(s1);
+  auto sentence2 = utils::to_string_view(s2);
+
+  // Swapping the strings so the first string is shorter
+  if (sentence1.size() != sentence2.size()) {
+    throw std::invalid_argument("s1 and s2 are not the same length.");
+  }
+
+  std::size_t hamm = 0;
+
+  for (std::size_t i = 0; i < sentence1.length(); i++) {
+      if (sentence1[i] != sentence2[i]) {
+          hamm++;
+      }
+  }
+
+  return hamm;
 }
 
 } // namespace rapidfuzz

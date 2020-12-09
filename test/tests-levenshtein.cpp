@@ -39,3 +39,24 @@ TEST_CASE("levenshtein works with string_views", "[string_view]")
             0.0);
   }
 };
+
+TEST_CASE("hamming", "[string_view]")
+{
+  rapidfuzz::string_view test = "aaaa";
+  rapidfuzz::string_view diff_a = "abaa";
+  rapidfuzz::string_view diff_b = "aaba";
+  rapidfuzz::string_view diff_len = "aaaaa";
+
+  SECTION("hamming calculates correct distances")
+  {
+    REQUIRE(levenshtein::hamming(test, test) == 0);
+    REQUIRE(levenshtein::hamming(test, diff_a) == 1);
+    REQUIRE(levenshtein::hamming(test, diff_b) == 1);
+    REQUIRE(levenshtein::hamming(diff_a, diff_b) == 2);
+  }
+
+  SECTION("hamming raises exception for different lengths")
+  {
+    REQUIRE_THROWS_AS(levenshtein::hamming(test, diff_len), std::invalid_argument);
+  }
+};

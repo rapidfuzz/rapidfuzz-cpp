@@ -36,11 +36,11 @@ struct LevFilter {
 template <typename CharT1, typename CharT2>
 LevFilter<CharT1, CharT2> quick_lev_filter(basic_string_view<CharT1> s1,
                                            basic_string_view<CharT2> s2,
-                                           const double min_ratio = 0);
+                                           double min_ratio = 0);
 
 template <typename Sentence1, typename Sentence2>
 double normalized_weighted_impl(const Sentence1& s1, const Sentence2& s2, std::size_t lensum,
-                                const double min_ratio = 0.0);
+                                double min_ratio = 0.0);
 } // namespace detail
 
 struct WeightTable {
@@ -64,11 +64,14 @@ std::size_t generic_distance(const Sentence1& s1, const Sentence2& s2,
                              std::size_t max = std::numeric_limits<std::size_t>::max());
 
 template <typename Sentence1, typename Sentence2>
-double normalized_distance(const Sentence1& s1, const Sentence2& s2, const double min_ratio = 0.0);
+double normalized_distance(const Sentence1& s1, const Sentence2& s2, double min_ratio = 0.0);
 
 template <typename Sentence1, typename Sentence2>
 double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
-                                    const double min_ratio = 0.0);
+                                    double min_ratio = 0.0);
+
+template <typename Sentence1, typename Sentence2>
+std::size_t hamming(const Sentence1& s1, const Sentence2& s2);
 
 /**@}*/
 
