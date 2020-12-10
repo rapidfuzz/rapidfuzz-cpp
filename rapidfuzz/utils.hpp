@@ -36,12 +36,12 @@ template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                                         SplittedSentenceView<CharT2> b);
 
-percent result_cutoff(const double result, const percent score_cutoff);
+constexpr percent result_cutoff(const double result, const percent score_cutoff);
 
-percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
+constexpr percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
 
 template <typename T>
-bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
+constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
 
 /**
  * @brief Get a string view to the object passed as parameter

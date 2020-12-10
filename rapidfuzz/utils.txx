@@ -50,19 +50,21 @@ DecomposedSet<CharT1, CharT2, CharT1> utils::set_decomposition(SplittedSentenceV
   return {difference_ab, difference_ba, intersection};
 }
 
-inline percent utils::result_cutoff(const double result, const percent score_cutoff)
+constexpr percent utils::result_cutoff(const double result, const percent score_cutoff)
 {
   return (result >= score_cutoff) ? result : 0;
 }
 
-percent utils::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
+constexpr percent utils::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
 {
-  percent ratio = 100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum);
-  return result_cutoff(ratio, score_cutoff);
+  return result_cutoff(
+    100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum),
+    score_cutoff
+  );
 }
 
 template <typename T>
-bool utils::is_zero(T a, T tolerance)
+constexpr bool utils::is_zero(T a, T tolerance)
 {
   return std::fabs(a) <= tolerance;
 }
