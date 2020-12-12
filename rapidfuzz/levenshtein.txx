@@ -309,7 +309,6 @@ std::size_t levenshtein::hamming(const Sentence1& s1, const Sentence2& s2)
   auto sentence1 = utils::to_string_view(s1);
   auto sentence2 = utils::to_string_view(s2);
 
-  // Swapping the strings so the first string is shorter
   if (sentence1.size() != sentence2.size()) {
     throw std::invalid_argument("s1 and s2 are not the same length.");
   }
@@ -323,6 +322,16 @@ std::size_t levenshtein::hamming(const Sentence1& s1, const Sentence2& s2)
   }
 
   return hamm;
+}
+
+template <typename Sentence1, typename Sentence2>
+double levenshtein::normalized_hamming(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+{
+  auto sentence1 = utils::to_string_view(s1);
+  auto sentence2 = utils::to_string_view(s2);
+  return utils::norm_distance(
+    hamming(sentence1, sentence2), sentence1.size(), score_cutoff
+  );
 }
 
 } // namespace rapidfuzz

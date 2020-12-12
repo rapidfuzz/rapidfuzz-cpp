@@ -73,6 +73,9 @@ double normalized_weighted_distance(const Sentence1& s1, const Sentence2& s2,
 template <typename Sentence1, typename Sentence2>
 std::size_t hamming(const Sentence1& s1, const Sentence2& s2);
 
+template <typename Sentence1, typename Sentence2>
+double normalized_hamming(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
+
 /**@}*/
 
 } // namespace levenshtein
