@@ -21,6 +21,29 @@ percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent scor
 }
 
 template <typename Sentence1, typename Sentence2>
+percent fuzz::quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+  if (utils::is_zero(real_quick_ratio(s1, s2, score_cutoff))) {
+    return 0;
+  }
+
+  size_t distance = utils::count_uncommon_chars(s1, s2);
+  size_t lensum = s1.length() + s2.length();
+  return utils::norm_distance(distance, lensum, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+percent fuzz::real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+  size_t s1_len = s1.length();
+  size_t s2_len = s2.length();
+  size_t distance = (s1_len > s2_len) ? s1_len - s2_len : s2_len - s1_len;
+
+  size_t lensum = s1_len + s2_len;
+  return utils::norm_distance(distance, lensum, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
 percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) {
@@ -241,28 +264,6 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
 
   score_cutoff = std::max(score_cutoff, result);
   return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
-}
-
-template <typename Sentence1, typename Sentence2>
-percent fuzz::quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
-{
-  if (utils::is_zero(length_ratio(s1, s2, score_cutoff))) {
-    return 0;
-  }
-  size_t distance = utils::count_uncommon_chars(s1, s2);
-  size_t lensum = s1.length() + s2.length();
-  return utils::norm_distance(distance, lensum, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-percent fuzz::length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
-{
-  size_t s1_len = s1.length();
-  size_t s2_len = s2.length();
-  size_t distance = (s1_len > s2_len) ? s1_len - s2_len : s2_len - s1_len;
-
-  size_t lensum = s1_len + s2_len;
-  return utils::norm_distance(distance, lensum, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>

@@ -44,6 +44,69 @@ template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
 /**
+ * @brief Calculates a quick upper bound on fuzz::ratio by counting uncommon
+ * letters between the two sentences. Guaranteed to be equal or higher than
+ * fuzz::ratio. (internally used by fuzz::ratio already when providing it with a
+ * score_cutoff to speed up the matching)
+ *
+ * @details
+ * Since it only counts the uncommon characters it runs in linear time (O(N)),
+ * while most other algorithms use a weighted levenshtein distance and therefore
+ * have a quadratic runtime (O(N*M)). The result is equal to the weighted
+ * levenshtein ratio of the two sentences with the letters in a sorted order and
+ * is therefore always equal or higher than fuzz::ratio
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2>
+percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+/**
+ * @brief Calculates a quick upper bound on fuzz::ratio by comparing the length
+ * of the two sentences. Guaranteed to be equal or higher than fuzz::ratio
+ * (internally used by fuzz::ratio already when providing it with a score_cutoff
+ * to speed up the matching)
+ *
+ * @details
+ * Since it only compares the known lengths of the strings it runs in constant
+ * time (O(1)), while most other algorithms use a weighted levenshtein distance
+ * and therefore have a quadratic runtime (O(N*M)). It returns the same result
+ * as the weighted levenshtein ratio for two strings where one string is part of
+ * the other string. The main purpose is to have a really quick ratio to remove
+ * some very bad matches early on
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2>
+percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+/**
  * @brief calculates the fuzz::ratio of the optimal string alignment
  *
  * @details
@@ -224,69 +287,6 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-/**
- * @brief Calculates a quick estimation of fuzz::ratio by comparing the length
- * of the two sentences. Guaranteed to be equal or higher than fuzz::ratio
- * (internally used by fuzz::ratio already when providing it with a score_cutoff
- * to speed up the matching)
- *
- * @details
- * Since it only compares the known lengths of the strings it runs in constant
- * time (O(1)), while most other algorithms use a weighted levenshtein distance
- * and therefore have a quadratic runtime (O(N*M)). It returns the same result
- * as the weighted levenshtein ratio for two strings where one string is part of
- * the other string. The main purpose is to have a really quick ratio to remove
- * some very bad matches early on
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent length_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-/**
- * @brief Calculates a quick estimation of fuzz::ratio by counting uncommon
- * letters between the two sentences. Guaranteed to be equal or higher than
- * fuzz::ratio. (internally used by fuzz::ratio already when providing it with a
- * score_cutoff to speed up the matching)
- *
- * @details
- * Since it only counts the uncommon characters it runs in linear time (O(N)),
- * while most other algorithms use a weighted levenshtein distance and therefore
- * have a quadratic runtime (O(N*M)). The result is equal to the weighted
- * levenshtein ratio of the two sentences with the letters in a sorted order and
- * is therefore always equal or higher than fuzz::ratio
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent quick_lev_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
