@@ -6,10 +6,65 @@
 #include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <array>
+#include <limits.h>
+#include <iostream>
+
 
 namespace rapidfuzz {
 
+static const uint64_t bitparallel_distance_masks[64] = {
+    0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,
+    0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,
+    0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,
+    0x0000000000001fff, 0x0000000000003fff, 0x0000000000007fff, 0x000000000000ffff,
+    0x000000000001ffff, 0x000000000003ffff, 0x000000000007ffff, 0x00000000000fffff,
+    0x00000000001fffff, 0x00000000003fffff, 0x00000000007fffff, 0x0000000000ffffff,
+    0x0000000001ffffff, 0x0000000003ffffff, 0x0000000007ffffff, 0x000000000fffffff,
+    0x000000001fffffff, 0x000000003fffffff, 0x000000007fffffff, 0x00000000ffffffff,
+    0x00000001ffffffff, 0x00000003ffffffff, 0x00000007ffffffff, 0x0000000fffffffff,
+    0x0000001fffffffff, 0x0000003fffffffff, 0x0000007fffffffff, 0x000000ffffffffff,
+    0x000001ffffffffff, 0x000003ffffffffff, 0x000007ffffffffff, 0x00000fffffffffff,
+    0x00001fffffffffff, 0x00003fffffffffff, 0x00007fffffffffff, 0x0000ffffffffffff,
+    0x0001ffffffffffff, 0x0003ffffffffffff, 0x0007ffffffffffff, 0x000fffffffffffff,
+    0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,
+    0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,
+    0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
+};
+
 template <typename Sentence1, typename Sentence2>
+std::size_t levenshtein::detail::bitparallel_distance(const Sentence1& sentence1, const Sentence2& sentence2)
+{
+  if (sentence1.size() > 64 || sentence2.size() > 64) {
+    return std::numeric_limits<std::size_t>::max();
+  }
+  std::array<uint64_t, 256> posbits;
+
+  for (int i=0; i < sentence1.size(); i++){
+    posbits[(unsigned int)sentence1[i]] |= 0x1ull << i;
+  }
+
+  std::size_t dist = sentence1.size();
+  uint64_t mask = 0x1ull << (sentence1.size() - 1);
+  uint64_t VP   = bitparallel_distance_masks[sentence1.size() - 1];
+  uint64_t VN   = 0;
+
+  for (const auto& char2 : sentence2) {
+    uint64_t y = posbits[(unsigned int)char2];
+    uint64_t X  = y | VN;
+    uint64_t D0 = ((VP + (X & VP)) ^ VP) | X;
+    uint64_t HN = VP & D0;
+    uint64_t HP = VN | ~(VP|D0);
+    X  = (HP << 1) | 1;
+    VN =  X & D0;
+    VP = (HN << 1) | ~(X | D0);
+    if (HP & mask) { dist++; }
+    if (HN & mask) { dist--; }
+  }
+  return dist;
+}
+
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2, std::size_t max)
 {
   auto sentence1 = utils::to_string_view(s1);
@@ -32,6 +87,17 @@ std::size_t levenshtein::distance(const Sentence1& s1, const Sentence2& s2, std:
 
   if (len_diff > max) {
     return std::numeric_limits<std::size_t>::max();
+  }
+
+  // use bitparallel implementation when possible which has linear runtime
+  if (sizeof(CharT1) == 1 && sizeof(CharT2) == 1) {
+    if (sentence1.size() <= 64) {
+      std::size_t dist = detail::bitparallel_distance(sentence1, sentence2);
+      return (dist > max) ? std::numeric_limits<std::size_t>::max() : dist;
+    } else if (sentence2.size() <= 64) {
+      std::size_t dist = detail::bitparallel_distance(sentence2, sentence1);
+      return (dist > max) ? std::numeric_limits<std::size_t>::max() : dist;
+    }
   }
 
   if (max > sentence2.length()) {
@@ -226,8 +292,7 @@ double levenshtein::normalized_distance(const Sentence1& s1, const Sentence2& s2
     return 0.0;
   }
 
-  std::size_t dist = distance(sentence1, sentence2);
-
+  std::size_t dist = distance(sentence1, sentence2);;
   double ratio = utils::norm_distance(dist, max_len) / 100.0;
   return (ratio >= min_ratio) ? ratio : 0.0;
 }

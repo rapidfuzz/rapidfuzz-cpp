@@ -41,6 +41,10 @@ LevFilter<CharT1, CharT2> quick_lev_filter(basic_string_view<CharT1> s1,
 template <typename Sentence1, typename Sentence2>
 double normalized_weighted_impl(const Sentence1& s1, const Sentence2& s2, std::size_t lensum,
                                 double min_ratio = 0.0);
+
+template <typename Sentence1, typename Sentence2>
+std::size_t bitparallel_distance(const Sentence1& sentence1, const Sentence2& sentence2);
+
 } // namespace detail
 
 struct WeightTable {
@@ -49,7 +53,8 @@ struct WeightTable {
   std::size_t replace_cost;
 };
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
 std::size_t distance(const Sentence1& s1, const Sentence2& s2,
                      std::size_t max = std::numeric_limits<std::size_t>::max());
 
