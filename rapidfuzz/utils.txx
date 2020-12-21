@@ -63,6 +63,13 @@ constexpr percent utils::norm_distance(std::size_t dist, std::size_t lensum, per
   );
 }
 
+constexpr std::size_t utils::score_cutoff_to_distance(percent score_cutoff, std::size_t lensum)
+{
+  return static_cast<std::size_t>(
+    std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100))
+  );
+}
+
 template <typename T>
 constexpr bool utils::is_zero(T a, T tolerance)
 {

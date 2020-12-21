@@ -8,14 +8,13 @@ option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 
 set(SOURCES
 	rapidfuzz/fuzz.txx
-	rapidfuzz/levenshtein.txx
 	rapidfuzz/process.txx
 	rapidfuzz/utils.txx
 )
 
 set(HEADERS
 	rapidfuzz/fuzz.hpp
-	rapidfuzz/levenshtein.hpp
+	rapidfuzz/string_metric.hpp
 	rapidfuzz/process.hpp
 	rapidfuzz/utils.hpp
 	rapidfuzz/details/SplittedSentenceView.hpp
@@ -25,6 +24,9 @@ set(HEADERS
 	rapidfuzz/details/matching_blocks.hpp
 	rapidfuzz/details/string_view.hpp
 	rapidfuzz/details/optional.hpp
+	rapidfuzz/details/string_metrics/levenshtein_impl.hpp
+	rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp
+	rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp
 )
 
 add_library(rapidfuzz INTERFACE)

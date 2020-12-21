@@ -21,4 +21,10 @@ struct StringAffix {
   std::size_t suffix_len;
 };
 
+struct LevenshteinWeightTable {
+  std::size_t insert_cost;
+  std::size_t delete_cost;
+  std::size_t replace_cost;
+};
+
 } // namespace rapidfuzz

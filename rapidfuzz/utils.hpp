@@ -40,6 +40,8 @@ constexpr percent result_cutoff(const double result, const percent score_cutoff)
 
 constexpr percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
 
+constexpr std::size_t score_cutoff_to_distance(percent score_cutoff, std::size_t lensum);
+
 template <typename T>
 constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
 

@@ -4,7 +4,7 @@
 
 #include "details/matching_blocks.hpp"
 #include "fuzz.hpp"
-#include "levenshtein.hpp"
+#include "string_metric.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -16,8 +16,7 @@ namespace rapidfuzz {
 template <typename Sentence1, typename Sentence2>
 percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
-  double result = levenshtein::normalized_weighted_distance(s1, s2, score_cutoff / 100);
-  return result * 100;
+  return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -139,13 +138,10 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
   size_t sect_ab_len = sect_len + !!sect_len + ab_len;
   size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto lev_filter = levenshtein::detail::quick_lev_filter(utils::to_string_view(diff_ab_joined),
-                                                          utils::to_string_view(diff_ba_joined),
-                                                          score_cutoff / 100);
-
   percent result = 0;
-  if (lev_filter.not_zero) {
-    size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
+  auto cutoff_distance = utils::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+  size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+  if (dist != (std::size_t)-1) {
     result = utils::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
   }
 
@@ -212,12 +208,9 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
   size_t sect_ab_len = sect_len + !!sect_len + ab_len;
   size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto lev_filter = levenshtein::detail::quick_lev_filter(utils::to_string_view(diff_ab_joined),
-                                                          utils::to_string_view(diff_ba_joined),
-                                                          score_cutoff / 100);
-
-  if (lev_filter.not_zero) {
-    size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
+  auto cutoff_distance = utils::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+  size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+  if (dist != (std::size_t)-1) {
     result = std::max(result, utils::norm_distance(dist, 2 * sect_ba_len, score_cutoff));
   }
 
@@ -281,23 +274,13 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
   double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
                                      : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-  if (len_ratio < 1.5) {
-    auto lev_filter = levenshtein::detail::quick_lev_filter(s1_view, s2_view, score_cutoff / 100);
-
-    // ratio and token_sort ratio are not required so token_set_ratio /
-    // partial_token_set_ratio is enough
-    if (!lev_filter.not_zero) {
-      return token_set_ratio(s1, s2, score_cutoff / UNBASE_SCALE) * UNBASE_SCALE;
-    }
-
-    size_t dist = levenshtein::weighted_distance(lev_filter.s1_view, lev_filter.s2_view);
-    percent end_ratio = utils::norm_distance(dist, len_a + len_b, score_cutoff);
-
-    score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
-    return std::max(end_ratio, token_ratio(s1_view, s2_view, score_cutoff) * UNBASE_SCALE);
-  }
 
   percent end_ratio = ratio(s1, s2, score_cutoff);
+
+  if (len_ratio < 1.5) {
+    score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+    return std::max(end_ratio, token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE);
+  }
 
   const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
 
