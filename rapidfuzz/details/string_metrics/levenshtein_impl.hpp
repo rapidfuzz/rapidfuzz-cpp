@@ -132,7 +132,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
     if (s1.size() != s2.size()) {
       return -1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
   }
 
   // at least length difference insertions/deletions required
