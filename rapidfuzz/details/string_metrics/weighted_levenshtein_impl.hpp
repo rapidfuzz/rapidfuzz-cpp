@@ -17,6 +17,67 @@ namespace string_metric {
 namespace detail {
 
 template <typename CharT1, typename CharT2>
+std::size_t weighted_levenshtein_bitap(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+  uint64_t posbits[256] = {0};
+
+  for (std::size_t i = 0; i < s1.size(); i++){
+    posbits[(unsigned char)s1[i]] |= 0x1ull << i;
+  }
+
+  uint64_t all_ones = ~0x0000000000000000;
+  uint64_t DHneg1 = all_ones;
+  uint64_t DHzero = 0;
+  uint64_t DHpos1 = 0;
+
+  //recursion
+  for (std::size_t i = 0; i < s2.size(); ++i)
+  {
+    uint64_t Matches = posbits[(unsigned char)s2[i]];
+    //Complement Matches
+    uint64_t NotMatches = ~Matches;
+
+    //Finding the vertical values. //Find 1s
+    uint64_t INITpos1s = DHneg1 & Matches;
+    uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^DHneg1) ^ INITpos1s);
+
+    //set RemainingDHneg1
+    uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
+    //combine 1s and Matches
+    uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+    //Find 0s
+    uint64_t INITzeros = (DHzero & DVpos1shiftorMatch) ;
+    uint64_t DVzeroshift = (((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1);
+
+    //Find -1s
+    uint64_t DVneg1shift = all_ones ^ (DVpos1shift | DVzeroshift);
+    DHzero &= NotMatches;
+    //combine 1s and Matches
+    uint64_t DHpos1orMatch = DHpos1| Matches;
+    //Find 0s
+    DHzero = ((DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero));
+    //Find 1s
+    DHpos1 = ((DVneg1shift & DHpos1orMatch) );
+    //Find -1s
+    DHneg1 = all_ones^(DHzero | DHpos1);
+  }
+  //find scores in last row
+  uint64_t add1 = DHzero;
+  uint64_t add2 = DHpos1;
+
+  std::size_t dist = s2.size();
+
+  for (std::size_t i = 0; i < s1.size(); i++)
+  {
+    uint64_t bitmask = 1ull << i;
+    dist -= ((add1 & bitmask) >> i) * 1 + ((add2 & bitmask) >> i) * 2 - 1;
+  }
+
+  return dist;
+}
+
+template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
   std::size_t len_diff = s1.size() - s2.size();
@@ -103,19 +164,17 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 
   // when both strings only hold characters < 256 and the short strings has less
   // then 65 elements BitPAl algorithm can be used
-  // TODO
-  /*if (sizeof(CharT1) == 1 && sizeof(CharT2) == 1) {
+  if (sizeof(CharT1) == 1 && sizeof(CharT2) == 1) {
     if (s2.size() < 65) {
-      std::size_t dist = levenshtein_bitpal(s1, s2);
+      std::size_t dist = weighted_levenshtein_bitap(s1, s2);
       return (dist > max) ? -1 : dist;
     }
-  }*/
+  }
 
   // find uncommon chars in the two sequences to exit early in many cases in
   // linear time
-  // TODO after adding BitPal this might no longer be relevant,
-  // sind it only helps with the quadratic runtime of Wagner-Fischer
-  if (/*max < s1.size() + s2.size() && */utils::count_uncommon_chars(s1, s2) > max) {
+  // TODO test to replace more parts with extended bitpal
+  if ((max < s1.size() + s2.size()) && (utils::count_uncommon_chars(s1, s2) > max)) {
     return -1;
   }
 

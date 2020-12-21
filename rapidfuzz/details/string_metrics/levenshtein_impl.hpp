@@ -12,23 +12,78 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
+/*
+ * An encoded mbleven model table.
+ *
+ * Each 8-bit integer represents an edit sequence, with using two
+ * bits for a single operation.
+ *
+ *   01 = DELETE, 10 = INSERT, 11 = REPLACE
+ *
+ * For example, 13 is '1101' in binary notation, so it means
+ * DELETE + REPLACE.
+ */
+static constexpr std::array<uint8_t, 72> levenshtein_mbleven2018_matrix = {
+  3,   0,  0,  0,  0,  0,  0,  0,
+  1,   0,  0,  0,  0,  0,  0,  0,
+  15,  9,  6,  0,  0,  0,  0,  0,
+  13,  7,  0,  0,  0,  0,  0,  0,
+  5,   0,  0,  0,  0,  0,  0,  0,
+  63, 39, 45, 57, 54, 30, 27,  0,
+  61, 55, 31, 37, 25, 22,  0,  0,
+  53, 29, 23,  0,  0,  0,  0,  0,
+  21,  0,  0,  0,  0,  0,  0,  0,
+};
+
+#define MBLEVEN_MATRIX_GET(k, d) ((((k) + (k) * (k)) / 2 - 1) + (d)) * 8
+
+template <typename CharT1, typename CharT2>
+std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+{
+  int pos = MBLEVEN_MATRIX_GET(max, s1.size() - s2.size());
+  std::size_t dist = max + 1;
+
+  while (levenshtein_mbleven2018_matrix[pos]) {
+    uint8_t ops = levenshtein_mbleven2018_matrix[pos++];
+    std::size_t i = 0;
+    std::size_t j = 0;
+    std::size_t c = 0;
+    while (i < s1.size() && j < s2.size()) {
+      if (s1[i] != s2[j]) {
+        c++;
+        if (!ops) break;
+        if (ops & 1) i++;
+        if (ops & 2) j++;
+        ops >>= 2;
+      } else {
+        i++;
+        j++;
+      }
+    }
+    c += (s1.size() - i) + (s2.size() - j);
+    dist = std::min(dist, c);
+  }
+
+  return (dist > max) ? -1 : dist;
+}
+
 static constexpr std::array<uint64_t, 64> levenshtein_hyrroe2003_masks = {
-    0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,
-    0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,
-    0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,
-    0x0000000000001fff, 0x0000000000003fff, 0x0000000000007fff, 0x000000000000ffff,
-    0x000000000001ffff, 0x000000000003ffff, 0x000000000007ffff, 0x00000000000fffff,
-    0x00000000001fffff, 0x00000000003fffff, 0x00000000007fffff, 0x0000000000ffffff,
-    0x0000000001ffffff, 0x0000000003ffffff, 0x0000000007ffffff, 0x000000000fffffff,
-    0x000000001fffffff, 0x000000003fffffff, 0x000000007fffffff, 0x00000000ffffffff,
-    0x00000001ffffffff, 0x00000003ffffffff, 0x00000007ffffffff, 0x0000000fffffffff,
-    0x0000001fffffffff, 0x0000003fffffffff, 0x0000007fffffffff, 0x000000ffffffffff,
-    0x000001ffffffffff, 0x000003ffffffffff, 0x000007ffffffffff, 0x00000fffffffffff,
-    0x00001fffffffffff, 0x00003fffffffffff, 0x00007fffffffffff, 0x0000ffffffffffff,
-    0x0001ffffffffffff, 0x0003ffffffffffff, 0x0007ffffffffffff, 0x000fffffffffffff,
-    0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,
-    0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,
-    0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
+  0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,
+  0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,
+  0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,
+  0x0000000000001fff, 0x0000000000003fff, 0x0000000000007fff, 0x000000000000ffff,
+  0x000000000001ffff, 0x000000000003ffff, 0x000000000007ffff, 0x00000000000fffff,
+  0x00000000001fffff, 0x00000000003fffff, 0x00000000007fffff, 0x0000000000ffffff,
+  0x0000000001ffffff, 0x0000000003ffffff, 0x0000000007ffffff, 0x000000000fffffff,
+  0x000000001fffffff, 0x000000003fffffff, 0x000000007fffffff, 0x00000000ffffffff,
+  0x00000001ffffffff, 0x00000003ffffffff, 0x00000007ffffffff, 0x0000000fffffffff,
+  0x0000001fffffffff, 0x0000003fffffffff, 0x0000007fffffffff, 0x000000ffffffffff,
+  0x000001ffffffffff, 0x000003ffffffffff, 0x000007ffffffffff, 0x00000fffffffffff,
+  0x00001fffffffffff, 0x00003fffffffffff, 0x00007fffffffffff, 0x0000ffffffffffff,
+  0x0001ffffffffffff, 0x0003ffffffffffff, 0x0007ffffffffffff, 0x000fffffffffffff,
+  0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,
+  0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,
+  0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
 };
 
 template <typename CharT1, typename CharT2>
@@ -136,8 +191,12 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   }
 
   // at least length difference insertions/deletions required
-  if (s1.size() - s2.size() > max) {
+  if (max < s1.size() - s2.size()) {
     return -1;
+  }
+
+  if (max < 4) {
+    return levenshtein_mbleven2018(s1, s2, max);
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
