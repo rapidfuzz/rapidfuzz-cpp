@@ -10,6 +10,8 @@
 #include <limits>
 
 
+#include <iostream>
+
 namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
@@ -92,7 +94,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   utils::remove_common_affix(s1, s2);
 
   if (s2.empty()) {
-    return (s2.size() > max) ? -1 : s2.size();
+    return (s1.size() > max) ? -1 : s1.size();
   }
 
   if (s1.size() - s2.size() > max) {
@@ -113,12 +115,13 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   // linear time
   // TODO after adding BitPal this might no longer be relevant,
   // sind it only helps with the quadratic runtime of Wagner-Fischer
-  if (utils::count_uncommon_chars(s1, s2) > max) {
+  if (/*max < s1.size() + s2.size() && */utils::count_uncommon_chars(s1, s2) > max) {
     return -1;
   }
 
   return weighted_levenshtein_wagner_fischer(s1, s2, max);
 }
+
 
 template <typename CharT1, typename CharT2>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, const double score_cutoff)
