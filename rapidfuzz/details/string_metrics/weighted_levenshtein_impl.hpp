@@ -124,7 +124,7 @@ template <typename CharT1, typename CharT2>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, const double score_cutoff)
 {
   if (s1.empty() || s2.empty()) {
-    return s1.empty() && s2.empty();
+    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
   }
 
   std::size_t lensum = s1.size() + s2.size();
