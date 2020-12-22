@@ -16,6 +16,80 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
+/*
+ * An encoded mbleven model table.
+ *
+ * Each 8-bit integer represents an edit sequence, with using two
+ * bits for a single operation.
+ *
+ * Each Row of 8 integers represent all possible combinations
+ * of edit sequences for a gived maximum edit distance and length
+ * difference between the two strings, that is below the maximum
+ * edit distance
+ *
+ *   01 = DELETE, 10 = INSERT, 11 = SUBSTITUTE
+ *
+ * For example, 3F -> 0b111111 means three substitutions
+ */
+static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][8] = {
+  /* max edit distance 1 */
+  {0}, /* case does not occur */              /* len_diff 0 */
+  {0x01},                                     /* len_diff 1 */
+  /* max edit distance 2 */
+  {0x03, 0x09, 0x06},                         /* len_diff 0 */
+  {0x01},                                     /* len_diff 1 */
+  {0x05},                                     /* len_diff 2 */
+  /* max edit distance 3 */
+  {0x03, 0x09, 0x06},                         /* len_diff 0 */
+  {0x25, 0x19, 0x16, 0x0D, 0x07},             /* len_diff 1 */
+  {0x05},                                     /* len_diff 2 */
+  {0x15},                                     /* len_diff 3 */
+  /* max edit distance 4 */
+  {0x0F, 0x39, 0x36, 0x1E, 0x1B, 0x2D, 0x27}, /* len_diff 0 */
+  {0x0D, 0x07, 0x19, 0x16, 0x25},             /* len_diff 1 */
+  {0x35, 0x1D, 0x17},                         /* len_diff 2 */
+  {0x15},                                     /* len_diff 3 */
+  {0x55},                                     /* len_diff 4 */
+};
+
+template <typename CharT1, typename CharT2>
+std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+{
+  std::size_t len_diff = s1.size() - s2.size();
+  auto possible_ops = weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
+  std::size_t dist = max + 1;
+
+  for (int pos = 0; possible_ops[pos] != 0; ++pos) {
+    uint8_t ops = possible_ops[pos];
+    std::size_t s1_pos = 0;
+    std::size_t s2_pos = 0;
+    std::size_t cur_dist = 0;
+    while (s1_pos < s1.size() && s2_pos < s2.size()) {
+      if (s1[s1_pos] != s2[s2_pos]) {
+        // substitutions have a weight of 2
+        if (ops & 0x3 == 3) {
+          cur_dist += 2;
+        } else {
+          cur_dist++;
+        }
+
+        if (!ops) break;
+        if (ops & 1) s1_pos++;
+        if (ops & 2) s2_pos++;
+        ops >>= 2;
+      } else {
+        s1_pos++;
+        s2_pos++;
+      }
+    }
+    cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
+    dist = std::min(dist, cur_dist);
+  }
+
+  return (dist > max) ? -1 : dist;
+}
+
+
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitap(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
@@ -145,6 +219,14 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
     return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
   }
 
+  // when the strings have a similar length each difference causes
+  // at least a edit distance of 2, so a direct comparision is sufficient
+  if (max == 1) {
+    if (s1.size() == s2.size()) {
+      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    }
+  }
+
   // at least length difference insertions/deletions required
   if (s1.size() - s2.size() > max) {
     return -1;
@@ -160,6 +242,10 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 
   if (s1.size() - s2.size() > max) {
     return -1;
+  }
+
+  if (max < 5) {
+    return weighted_levenshtein_mbleven2018(s1, s2, max);
   }
 
   // when both strings only hold characters < 256 and the short strings has less

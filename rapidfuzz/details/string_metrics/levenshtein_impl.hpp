@@ -18,50 +18,56 @@ namespace detail {
  * Each 8-bit integer represents an edit sequence, with using two
  * bits for a single operation.
  *
- *   01 = DELETE, 10 = INSERT, 11 = REPLACE
+ * Each Row of 8 integers represent all possible combinations
+ * of edit sequences for a gived maximum edit distance and length
+ * difference between the two strings, that is below the maximum
+ * edit distance
  *
- * For example, 13 is '1101' in binary notation, so it means
- * DELETE + REPLACE.
+ *   01 = DELETE, 10 = INSERT, 11 = SUBSTITUTE
+ *
+ * For example, 3F -> 0b111111 means three substitutions
  */
-static constexpr std::array<uint8_t, 72> levenshtein_mbleven2018_matrix = {
-  3,   0,  0,  0,  0,  0,  0,  0,
-  1,   0,  0,  0,  0,  0,  0,  0,
-  15,  9,  6,  0,  0,  0,  0,  0,
-  13,  7,  0,  0,  0,  0,  0,  0,
-  5,   0,  0,  0,  0,  0,  0,  0,
-  63, 39, 45, 57, 54, 30, 27,  0,
-  61, 55, 31, 37, 25, 22,  0,  0,
-  53, 29, 23,  0,  0,  0,  0,  0,
-  21,  0,  0,  0,  0,  0,  0,  0,
+static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
+  /* max edit distance 1 */
+  {0x03},                                     /* len_diff 0 */
+  {0x01},                                     /* len_diff 1 */
+  /* max edit distance 2 */
+  {0x0F, 0x09, 0x06},                         /* len_diff 0 */
+  {0x0D, 0x07},                               /* len_diff 1 */
+  {0x05},                                     /* len_diff 2 */
+  /* max edit distance 3 */
+  {0x3F, 0x27, 0x2D, 0x39, 0x36, 0x1E, 0x1B}, /* len_diff 0 */
+  {0x3D, 0x37, 0x1F, 0x25, 0x19, 0x16},       /* len_diff 1 */
+  {0x35, 0x1D, 0x17},                         /* len_diff 2 */
+  {0x15},                                     /* len_diff 3 */
 };
-
-#define MBLEVEN_MATRIX_GET(k, d) ((((k) + (k) * (k)) / 2 - 1) + (d)) * 8
 
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
-  int pos = MBLEVEN_MATRIX_GET(max, s1.size() - s2.size());
+  std::size_t len_diff = s1.size() - s2.size();
+  auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
   std::size_t dist = max + 1;
 
-  while (levenshtein_mbleven2018_matrix[pos]) {
-    uint8_t ops = levenshtein_mbleven2018_matrix[pos++];
-    std::size_t i = 0;
-    std::size_t j = 0;
-    std::size_t c = 0;
-    while (i < s1.size() && j < s2.size()) {
-      if (s1[i] != s2[j]) {
-        c++;
+  for (int pos = 0; possible_ops[pos] != 0; ++pos) {
+    uint8_t ops = possible_ops[pos];
+    std::size_t s1_pos = 0;
+    std::size_t s2_pos = 0;
+    std::size_t cur_dist = 0;
+    while (s1_pos < s1.size() && s2_pos < s2.size()) {
+      if (s1[s1_pos] != s2[s2_pos]) {
+        cur_dist++;
         if (!ops) break;
-        if (ops & 1) i++;
-        if (ops & 2) j++;
+        if (ops & 1) s1_pos++;
+        if (ops & 2) s2_pos++;
         ops >>= 2;
       } else {
-        i++;
-        j++;
+        s1_pos++;
+        s2_pos++;
       }
     }
-    c += (s1.size() - i) + (s2.size() - j);
-    dist = std::min(dist, c);
+    cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
+    dist = std::min(dist, cur_dist);
   }
 
   return (dist > max) ? -1 : dist;
@@ -191,12 +197,8 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   }
 
   // at least length difference insertions/deletions required
-  if (max < s1.size() - s2.size()) {
+  if (s1.size() - s2.size() > max) {
     return -1;
-  }
-
-  if (max < 4) {
-    return levenshtein_mbleven2018(s1, s2, max);
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -209,6 +211,10 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
 
   if (s1.size() - s2.size() > max) {
     return -1;
+  }
+
+  if (max < 4) {
+    return levenshtein_mbleven2018(s1, s2, max);
   }
 
   // when both strings only hold characters < 256 and the short strings has less
