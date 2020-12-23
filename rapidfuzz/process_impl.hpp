@@ -1,4 +1,6 @@
-#include "process.hpp"
+/* SPDX-License-Identifier: MIT */
+/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2011 Adam Cohen */
 
 namespace rapidfuzz {
 

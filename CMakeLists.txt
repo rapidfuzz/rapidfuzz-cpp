@@ -6,17 +6,14 @@ include(GNUInstallDirs)
 option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 
-set(SOURCES
-	rapidfuzz/fuzz.txx
-	rapidfuzz/process.txx
-	rapidfuzz/utils.txx
-)
-
 set(HEADERS
 	rapidfuzz/fuzz.hpp
+	rapidfuzz/fuzz_impl.hpp
 	rapidfuzz/string_metric.hpp
 	rapidfuzz/process.hpp
+	rapidfuzz/process_impl.hpp
 	rapidfuzz/utils.hpp
+	rapidfuzz/utils_impl.hpp
 	rapidfuzz/details/SplittedSentenceView.hpp
 	rapidfuzz/details/type_traits.hpp
 	rapidfuzz/details/types.hpp

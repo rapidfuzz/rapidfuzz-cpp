@@ -341,4 +341,4 @@ percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 
 } // namespace fuzz
 } // namespace rapidfuzz
 
-#include "fuzz.txx"
+#include "fuzz_impl.hpp"

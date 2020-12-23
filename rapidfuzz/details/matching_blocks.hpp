@@ -25,9 +25,9 @@
 
 #include "type_traits.hpp"
 
-#include <unordered_map>
+//#include <unordered_map>
+#include "robinhood.h"
 #include <algorithm>
-#include <unordered_set>
 #include <tuple>
 #include <algorithm>
 #include <memory>
@@ -204,7 +204,7 @@ class SequenceMatcher {
   Sentence2 b_;
 
  private:
-  std::unordered_map<value_type, std::vector<size_t>> b2j_;
+  robin_hood::unordered_map<value_type, std::vector<size_t>> b2j_;
 
   // Cache to avoid reallocations
   std::vector<size_t> j2len_;

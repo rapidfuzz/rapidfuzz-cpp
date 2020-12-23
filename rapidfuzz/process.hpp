@@ -245,4 +245,4 @@ extract(const Sentence1& query, const Iterable& choices, nullopt_t processor,
 } // namespace process
 } // namespace rapidfuzz
 
-#include "process.txx"
+#include "process_impl.hpp"

@@ -3,7 +3,6 @@
 /* Copyright © 2011 Adam Cohen */
 
 #include "details/matching_blocks.hpp"
-#include "fuzz.hpp"
 #include "string_metric.hpp"
 
 #include <algorithm>

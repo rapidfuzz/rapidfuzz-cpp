@@ -154,4 +154,4 @@ std::basic_string<CharT> default_process(Sentence s);
 } // namespace utils
 } // namespace rapidfuzz
 
-#include "utils.txx"
+#include "utils_impl.hpp"
