@@ -416,11 +416,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   utils::remove_common_affix(s1, s2);
 
   if (s2.empty()) {
-    return (s1.size() > max) ? -1 : s1.size();
-  }
-
-  if (s1.size() - s2.size() > max) {
-    return -1;
+    return s1.size();
   }
 
   if (max < 5) {
