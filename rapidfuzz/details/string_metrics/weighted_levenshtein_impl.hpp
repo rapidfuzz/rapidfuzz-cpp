@@ -105,19 +105,15 @@ template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
   std::size_t words = std::ceil(s2.size() / 64.0);
-  uint64_t* DHpos1 = (uint64_t*)calloc(words, sizeof(uint64_t));
-  uint64_t* DHzero = (uint64_t*)calloc(words, sizeof(uint64_t));
-  uint64_t* DHneg1 = (uint64_t*)malloc(words * sizeof(uint64_t));
+  std::vector<uint64_t> DHpos1(words);
+  std::vector<uint64_t> DHzero(words);
+  std::vector<uint64_t> DHneg1(words, ~(0x1ull << 63));
 
-  //intialize top row (penalty for initial gap)
-  for (int i = 0; i < words; ++i){
-    DHneg1[i] = ~(0x1ull << 63);
-  }
-
-  uint64_t* matchvec[256];
-  uint64_t* matchvecmem = (uint64_t *) calloc(words*256, sizeof(uint64_t));
+  // create matrix
+  std::array<uint64_t*, 256> matchvec;
+  std::vector<uint64_t> matchvecmem(words * 256);
   for (int i = 0 ; i < 256; ++i) {
-    matchvec[i] = &matchvecmem[i*words];
+    matchvec[i] = &matchvecmem[i * words];
   }
 
   uint64_t bitmask = 0x1ull;
@@ -208,14 +204,67 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
       add2 >>= 1;
     }
   }
-  
-  free(DHpos1);
-  free(DHzero);
-  free(DHneg1);
-    
-  free(matchvecmem);
+
   return dist;
 }
+
+template <std::size_t size1, std::size_t size2>
+struct blockmap_entry;
+
+template <std::size_t size1, std::size_t size2>
+struct blockmap_entry {
+  std::array<uint32_t, 128> m_key;
+  std::array<uint64_t, 128> m_val;
+
+  blockmap_entry()
+    : m_key(), m_val() {}
+
+  template <typename CharT>
+  void insert(CharT ch, int pos) {
+    uint8_t hash = ch % 128;
+    uint32_t key = ch | 0x80000000U;
+
+    // overflow starts search at 0 again.
+    // Since a maximum of 64 elements is in here m_key[hash] will be false
+    // after a maximum of 64 checks
+    while (m_key[hash] && m_key[hash] != key) {
+      if (hash == 127) hash = 0;
+      else hash++;
+    }
+
+    m_key[hash] = key;
+    m_val[hash] |= 1 << pos;
+  }
+
+  template <typename CharT>
+  uint64_t get(CharT ch) {
+    uint8_t hash = ch % 128;
+    uint32_t key = ch | 0x80000000U;
+
+    while (m_key[hash] && m_key[hash] != key) {
+      if (hash == 127) hash = 0;
+      else hash++;
+    }
+
+    return (m_key[hash] == key) ? m_val[hash] : 0;
+  }
+};
+
+template <>
+struct blockmap_entry<1, 1> {
+  std::array<uint64_t, 256> m_val;
+
+  blockmap_entry()
+    : m_val() {}
+
+  void insert(char ch, int pos) {
+    m_val[ch] |= 1 << pos;
+  }
+
+  uint64_t get(char ch) {
+    return m_val[ch];
+  }
+};
 
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
@@ -224,10 +273,10 @@ std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_stri
     return weighted_levenshtein_bitpal_blockwise(s1, s2);
   }
 
-  uint64_t posbits[256] = {0};
+  blockmap_entry<sizeof(CharT1), sizeof(CharT2)> block;
 
   for (std::size_t i = 0; i < s2.size(); i++){
-    posbits[(unsigned char)s2[i]] |= 0x1ull << i;
+    block.insert(s2[i], i);
   }
 
   uint64_t DHneg1 = ~0x0ull;
@@ -237,7 +286,7 @@ std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_stri
   //recursion
   for (std::size_t i = 0; i < s1.size(); ++i)
   {
-    uint64_t Matches = posbits[(unsigned char)s1[i]];
+    uint64_t Matches = block.get(s1[i]);
     //Complement Matches
     uint64_t NotMatches = ~Matches;
 
@@ -380,7 +429,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 
   // when both strings only hold characters < 256 the BitPAl algorithm can be used
   // (bitparallel Levenshtein implementation)
-  if (sizeof(CharT1) == 1 && sizeof(CharT2) == 1) {
+  if ((sizeof(CharT1) == 1 && sizeof(CharT2) == 1) || s2.size() < 65) {
     std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
     return (dist > max) ? -1 : dist;
   }
