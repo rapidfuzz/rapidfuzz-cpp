@@ -136,7 +136,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
     uint64_t INITzerosprevbit = 0;
     
     uint64_t* matchv = matchvec[ch1];
-    for (int word = 0; word < words; ++word){
+    for (std::size_t word = 0; word < words; ++word){
       uint64_t DHpos1temp = DHpos1[word];
       uint64_t DHzerotemp = DHzero[word];
       uint64_t DHneg1temp = DHneg1[word];
@@ -190,13 +190,13 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
   //find scores in last row
   std::size_t dist = s1.size();
 
-  for (int word = 0; word < words; ++word){
+  for (std::size_t word = 0; word < words; ++word){
     uint64_t DHpos1temp = DHpos1[word];
     uint64_t DHzerotemp = DHzero[word];
     uint64_t add1 = DHzerotemp;
     uint64_t add2 = DHpos1temp;
     
-    for (int i = word * 63; i < (word + 1) * 63 && i < s2.size(); ++i)
+    for (std::size_t i = word * 63; i < (word + 1) * 63 && i < s2.size(); ++i)
     {
       dist -= (add1 & 0x1) * 1 + (add2 & 0x1) * 2 - 1;
       add1 >>= 1;
