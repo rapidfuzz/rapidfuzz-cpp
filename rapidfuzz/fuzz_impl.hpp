@@ -41,7 +41,7 @@ percent fuzz::real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent
   return common::norm_distance(distance, lensum, score_cutoff);
 }
 
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) {
@@ -57,6 +57,21 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
 
   if (s1_view.length() > s2_view.length()) {
     return partial_ratio(s2_view, s1_view, score_cutoff);
+  }
+
+  if (s1_view.length() == s2_view.length()) {
+    // when both strings use the same start address, length and share a common
+    // character size, they are guaranteed to be similar
+    // this can occur e.g. for string literals
+    // Especially in Python this occurs often, since similar strings are often
+    // stored only once to save memory
+    if ((sizeof(CharT1) == sizeof(CharT2)) && s1_view.data() == s2_view.data()) {
+      return 100;
+    }
+
+    if (std::equal(s1_view.begin(), s1_view.end(), s2_view.begin())) {
+      return 100;
+    }
   }
 
   size_t short_len = s1_view.length();

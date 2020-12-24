@@ -130,7 +130,8 @@ percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename Sentence1, typename Sentence2>
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 /**
