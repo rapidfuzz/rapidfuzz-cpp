@@ -9,9 +9,6 @@
 #include <array>
 #include <limits>
 
-
-#include <iostream>
-
 namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
@@ -64,6 +61,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
     std::size_t s1_pos = 0;
     std::size_t s2_pos = 0;
     std::size_t cur_dist = 0;
+
     while (s1_pos < s1.size() && s2_pos < s2.size()) {
       if (s1[s1_pos] != s2[s2_pos]) {
         // substitutions have a weight of 2
@@ -82,6 +80,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
         s2_pos++;
       }
     }
+
     cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
     dist = std::min(dist, cur_dist);
   }
@@ -208,64 +207,6 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
   return dist;
 }
 
-template <std::size_t size1, std::size_t size2>
-struct blockmap_entry;
-
-template <std::size_t size1, std::size_t size2>
-struct blockmap_entry {
-  std::array<uint32_t, 128> m_key;
-  std::array<uint64_t, 128> m_val;
-
-  blockmap_entry()
-    : m_key(), m_val() {}
-
-  template <typename CharT>
-  void insert(CharT ch, int pos) {
-    uint8_t hash = ch % 128;
-    uint32_t key = ch | 0x80000000U;
-
-    // overflow starts search at 0 again.
-    // Since a maximum of 64 elements is in here m_key[hash] will be false
-    // after a maximum of 64 checks
-    while (m_key[hash] && m_key[hash] != key) {
-      if (hash == 127) hash = 0;
-      else hash++;
-    }
-
-    m_key[hash] = key;
-    m_val[hash] |= 1 << pos;
-  }
-
-  template <typename CharT>
-  uint64_t get(CharT ch) {
-    uint8_t hash = ch % 128;
-    uint32_t key = ch | 0x80000000U;
-
-    while (m_key[hash] && m_key[hash] != key) {
-      if (hash == 127) hash = 0;
-      else hash++;
-    }
-
-    return (m_key[hash] == key) ? m_val[hash] : 0;
-  }
-};
-
-template <>
-struct blockmap_entry<1, 1> {
-  std::array<uint64_t, 256> m_val;
-
-  blockmap_entry()
-    : m_val() {}
-
-  void insert(char ch, int pos) {
-    m_val[ch] |= 1 << pos;
-  }
-
-  uint64_t get(char ch) {
-    return m_val[ch];
-  }
-};
-
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
@@ -273,7 +214,7 @@ std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_stri
     return weighted_levenshtein_bitpal_blockwise(s1, s2);
   }
 
-  blockmap_entry<sizeof(CharT1), sizeof(CharT2)> block;
+  common::blockmap_entry<sizeof(CharT1), sizeof(CharT2)> block;
 
   for (std::size_t i = 0; i < s2.size(); i++){
     block.insert(s2[i], i);
