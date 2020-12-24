@@ -8,6 +8,7 @@
 #include <cmath>
 #include <tuple>
 #include <vector>
+#include <array>
 
 namespace rapidfuzz {
 
