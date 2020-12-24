@@ -146,12 +146,13 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
   percent result = 0;
   auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
   size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+
   if (dist != (std::size_t)-1) {
     result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
   }
 
   // exit early since the other ratios are 0
-  if (intersect.empty()) {
+  if (!sect_len) {
     return result;
   }
 
@@ -216,7 +217,7 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
   auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
   size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
   if (dist != (std::size_t)-1) {
-    result = std::max(result, common::norm_distance(dist, 2 * sect_ba_len, score_cutoff));
+    result = std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
   }
 
   // exit early since the other ratios are 0

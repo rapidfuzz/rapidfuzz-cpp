@@ -58,7 +58,7 @@ constexpr percent common::result_cutoff(const double result, const percent score
 constexpr percent common::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
 {
   return result_cutoff(
-    100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum),
+    (lensum > 0) ? (100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0,
     score_cutoff
   );
 }
