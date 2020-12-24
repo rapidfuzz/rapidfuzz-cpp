@@ -122,6 +122,64 @@ std::size_t count_uncommon_chars(const Sentence1& s1, const Sentence2& s2);
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
+template <std::size_t size1, std::size_t size2>
+struct blockmap_entry;
+
+template <std::size_t size1, std::size_t size2>
+struct blockmap_entry {
+  std::array<uint32_t, 128> m_key;
+  std::array<uint64_t, 128> m_val;
+
+  blockmap_entry()
+    : m_key(), m_val() {}
+
+  template <typename CharT>
+  void insert(CharT ch, int pos) {
+    uint8_t hash = ch % 128;
+    uint32_t key = ch | 0x80000000U;
+
+    // overflow starts search at 0 again.
+    // Since a maximum of 64 elements is in here m_key[hash] will be false
+    // after a maximum of 64 checks
+    while (m_key[hash] && m_key[hash] != key) {
+      if (hash == 127) hash = 0;
+      else hash++;
+    }
+
+    m_key[hash] = key;
+    m_val[hash] |= 1 << pos;
+  }
+
+  template <typename CharT>
+  uint64_t get(CharT ch) {
+    uint8_t hash = ch % 128;
+    uint32_t key = ch | 0x80000000U;
+
+    while (m_key[hash] && m_key[hash] != key) {
+      if (hash == 127) hash = 0;
+      else hash++;
+    }
+
+    return (m_key[hash] == key) ? m_val[hash] : 0;
+  }
+};
+
+template <>
+struct blockmap_entry<1, 1> {
+  std::array<uint64_t, 256> m_val;
+
+  blockmap_entry()
+    : m_val() {}
+
+  void insert(char ch, int pos) {
+    m_val[ch] |= 1 << pos;
+  }
+
+  uint64_t get(char ch) {
+    return m_val[ch];
+  }
+};
+
 /**@}*/
 
 } // namespace common
