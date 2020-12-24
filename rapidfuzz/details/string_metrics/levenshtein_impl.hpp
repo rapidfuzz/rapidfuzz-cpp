@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2020 Max Bachmann */
 
-#include "rapidfuzz/utils.hpp"
+#include "rapidfuzz/details/common.hpp"
 #include <numeric>
 #include <algorithm>
 #include <array>
@@ -203,7 +203,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
   // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  utils::remove_common_affix(s1, s2);
+  common::remove_common_affix(s1, s2);
 
   if (s2.empty()) {
     return s1.size();
@@ -236,11 +236,11 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
 
   std::size_t max_len = std::max(s1.size(), s2.size());
 
-  auto cutoff_distance = utils::score_cutoff_to_distance(score_cutoff, max_len);
+  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_len);
 
   std::size_t dist = levenshtein(s1, s2, cutoff_distance);
   return (dist != (std::size_t)-1)
-    ? utils::norm_distance(dist, max_len, score_cutoff)
+    ? common::norm_distance(dist, max_len, score_cutoff)
     : 0.0;
 }
 

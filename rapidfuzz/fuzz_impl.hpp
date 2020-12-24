@@ -21,13 +21,13 @@ percent fuzz::ratio(const Sentence1& s1, const Sentence2& s2, const percent scor
 template <typename Sentence1, typename Sentence2>
 percent fuzz::quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (utils::is_zero(real_quick_ratio(s1, s2, score_cutoff))) {
+  if (common::is_zero(real_quick_ratio(s1, s2, score_cutoff))) {
     return 0;
   }
 
-  size_t distance = utils::count_uncommon_chars(s1, s2);
+  size_t distance = common::count_uncommon_chars(s1, s2);
   size_t lensum = s1.length() + s2.length();
-  return utils::norm_distance(distance, lensum, score_cutoff);
+  return common::norm_distance(distance, lensum, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -38,7 +38,7 @@ percent fuzz::real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent
   size_t distance = (s1_len > s2_len) ? s1_len - s2_len : s2_len - s1_len;
 
   size_t lensum = s1_len + s2_len;
-  return utils::norm_distance(distance, lensum, score_cutoff);
+  return common::norm_distance(distance, lensum, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -48,8 +48,8 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
     return 0;
   }
 
-  auto s1_view = utils::to_string_view(s1);
-  auto s2_view = utils::to_string_view(s2);
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
 
   if (s1_view.empty() || s2_view.empty()) {
     return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
@@ -62,7 +62,8 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   size_t short_len = s1_view.length();
 
   auto blocks = get_matching_blocks(s1_view, s2_view);
-
+  //auto blocks = difflib::SequenceMatcher<decltype(s1_view), decltype(s2_view)>(s1_view, s2_view).get_matching_blocks();
+  //return 0;
   // when there is a full match exit early
   for (const auto& block : blocks) {
     if (block.length == short_len) {
@@ -94,8 +95,8 @@ percent fuzz::token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent
 {
   if (score_cutoff > 100) return 0;
 
-  return ratio(utils::sorted_split(s1).join(),
-               utils::sorted_split(s2).join(), score_cutoff);
+  return ratio(common::sorted_split(s1).join(),
+               common::sorted_split(s2).join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
@@ -104,8 +105,8 @@ percent fuzz::partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
 {
   if (score_cutoff > 100) return 0;
 
-  return partial_ratio(utils::sorted_split(s1).join(),
-                       utils::sorted_split(s2).join(), score_cutoff);
+  return partial_ratio(common::sorted_split(s1).join(),
+                       common::sorted_split(s2).join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -113,10 +114,10 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
 {
   if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::sorted_split(s1);
-  auto tokens_b = utils::sorted_split(s2);
+  auto tokens_a = common::sorted_split(s1);
+  auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
+  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
   auto diff_ab = decomposition.difference_ab;
   auto diff_ba = decomposition.difference_ba;
@@ -138,10 +139,10 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
   size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
   percent result = 0;
-  auto cutoff_distance = utils::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
   size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
   if (dist != (std::size_t)-1) {
-    result = utils::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
+    result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
   }
 
   // exit early since the other ratios are 0
@@ -153,10 +154,10 @@ percent fuzz::token_set_ratio(const Sentence1& s1, const Sentence2& s2, const pe
   // since only sect is similar in them the distance can be calculated based on
   // the length difference
   std::size_t sect_ab_dist = !!sect_len + ab_len;
-  percent sect_ab_ratio = utils::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+  percent sect_ab_ratio = common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
   std::size_t sect_ba_dist = !!sect_len + ba_len;
-  percent sect_ba_ratio = utils::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+  percent sect_ba_ratio = common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
   return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -167,8 +168,8 @@ percent fuzz::partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
 {
   if (score_cutoff > 100) return 0;
 
-  auto decomposition = utils::set_decomposition(utils::sorted_split(s1),
-                                                utils::sorted_split(s2));
+  auto decomposition = common::set_decomposition(common::sorted_split(s1),
+                                                common::sorted_split(s2));
 
   // exit early when there is a common word in both sequences
   if (!decomposition.intersection.empty()) return 100;
@@ -182,10 +183,10 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
 {
   if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::sorted_split(s1);
-  auto tokens_b = utils::sorted_split(s2);
+  auto tokens_a = common::sorted_split(s1);
+  auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
+  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
   auto diff_ab = decomposition.difference_ab;
   auto diff_ba = decomposition.difference_ba;
@@ -207,10 +208,10 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
   size_t sect_ab_len = sect_len + !!sect_len + ab_len;
   size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto cutoff_distance = utils::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
   size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
   if (dist != (std::size_t)-1) {
-    result = std::max(result, utils::norm_distance(dist, 2 * sect_ba_len, score_cutoff));
+    result = std::max(result, common::norm_distance(dist, 2 * sect_ba_len, score_cutoff));
   }
 
   // exit early since the other ratios are 0
@@ -222,10 +223,10 @@ percent fuzz::token_ratio(const Sentence1& s1, const Sentence2& s2, percent scor
   // since only sect is similar in them the distance can be calculated based on
   // the length difference
   std::size_t sect_ab_dist = !!sect_len + ab_len;
-  percent sect_ab_ratio = utils::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+  percent sect_ab_ratio = common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
   std::size_t sect_ba_dist = !!sect_len + ba_len;
-  percent sect_ba_ratio = utils::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+  percent sect_ba_ratio = common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
   return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -235,10 +236,10 @@ percent fuzz::partial_token_ratio(const Sentence1& s1, const Sentence2& s2, perc
 {
   if (score_cutoff > 100) return 0;
 
-  auto tokens_a = utils::sorted_split(s1);
-  auto tokens_b = utils::sorted_split(s2);
+  auto tokens_a = common::sorted_split(s1);
+  auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = utils::set_decomposition(tokens_a, tokens_b);
+  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
 
   // exit early when there is a common word in both sequences
   if (!decomposition.intersection.empty()) return 100;
@@ -265,8 +266,8 @@ percent fuzz::WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cut
 
   constexpr double UNBASE_SCALE = 0.95;
 
-  auto s1_view = utils::to_string_view(s1);
-  auto s2_view = utils::to_string_view(s2);
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
 
   size_t len_a = s1_view.length();
   size_t len_b = s2_view.length();

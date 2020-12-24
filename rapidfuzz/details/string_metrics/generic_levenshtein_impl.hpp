@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2020 Max Bachmann */
 
-#include "rapidfuzz/utils.hpp"
+#include "rapidfuzz/details/common.hpp"
 #include <numeric>
 #include <algorithm>
 #include <array>
@@ -53,7 +53,7 @@ std::size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
   // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  utils::remove_common_affix(s1, s2);
+  common::remove_common_affix(s1, s2);
 
   return generic_levenshtein_wagner_fischer(s1, s2, weights, max);
 }

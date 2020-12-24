@@ -17,10 +17,10 @@ process::extractOne(const Sentence1& query, const Iterable& choices, ProcessorFu
   percent best_score = score_cutoff;
   Sentence2 best_match;
 
-  auto processed_query = processor(utils::to_string(query));
+  auto processed_query = processor(common::to_string(query));
 
   for (const auto& choice : choices) {
-    percent score = scorer(processed_query, processor(utils::to_string(choice)), best_score);
+    percent score = scorer(processed_query, processor(common::to_string(choice)), best_score);
 
     if (score > best_score) {
       match_found = true;
@@ -75,13 +75,13 @@ process::extract(const Sentence1& query, const Iterable& choices, ProcessorFunc&
   // minimal score thats still in the result
   percent min_score = score_cutoff;
 
-  auto processed_query = processor(utils::to_string(query));
+  auto processed_query = processor(common::to_string(query));
   ;
 
   for (const auto& choice : choices) {
-    percent score = scorer(processed_query, processor(utils::to_string(choice)), min_score);
+    percent score = scorer(processed_query, processor(common::to_string(choice)), min_score);
 
-    if (!utils::is_zero(score)) {
+    if (!common::is_zero(score)) {
       if (results.size() > limit) {
         results.pop_back();
       }
@@ -119,7 +119,7 @@ process::extract(const Sentence1& query, const Iterable& choices, nullopt_t,
   for (const auto& choice : choices) {
     percent score = scorer(query, choice, min_score);
 
-    if (!utils::is_zero(score)) {
+    if (!common::is_zero(score)) {
       if (results.size() == limit) {
         results.pop_back();
       }

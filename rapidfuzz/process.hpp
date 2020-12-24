@@ -7,6 +7,7 @@
 #include "details/optional.hpp"
 #include "fuzz.hpp"
 #include "utils.hpp"
+#include "details/common.hpp"
 
 #include <functional>
 #include <string>

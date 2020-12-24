@@ -3,7 +3,7 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include "utils.hpp"
+#include "details/common.hpp"
 
 #include <type_traits>
 

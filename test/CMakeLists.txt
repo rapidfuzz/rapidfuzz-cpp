@@ -11,4 +11,4 @@ endfunction()
 
 rapidfuzz_add_test(fuzz tests-fuzz.cpp)
 rapidfuzz_add_test(levenshtein tests-levenshtein.cpp)
-rapidfuzz_add_test(utils tests-utils.cpp)
+rapidfuzz_add_test(utils tests-common.cpp)
