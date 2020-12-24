@@ -60,15 +60,6 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   }
 
   if (s1_view.length() == s2_view.length()) {
-    // when both strings use the same start address, length and share a common
-    // character size, they are guaranteed to be similar
-    // this can occur e.g. for string literals
-    // Especially in Python this occurs often, since similar strings are often
-    // stored only once to save memory
-    if ((sizeof(CharT1) == sizeof(CharT2)) && s1_view.data() == s2_view.data()) {
-      return 100;
-    }
-
     if (std::equal(s1_view.begin(), s1_view.end(), s2_view.begin())) {
       return 100;
     }
