@@ -62,8 +62,7 @@ percent fuzz::partial_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
   size_t short_len = s1_view.length();
 
   auto blocks = get_matching_blocks(s1_view, s2_view);
-  //auto blocks = difflib::SequenceMatcher<decltype(s1_view), decltype(s2_view)>(s1_view, s2_view).get_matching_blocks();
-  //return 0;
+
   // when there is a full match exit early
   for (const auto& block : blocks) {
     if (block.length == short_len) {
