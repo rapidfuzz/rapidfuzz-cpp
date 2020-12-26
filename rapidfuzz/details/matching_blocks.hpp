@@ -318,7 +318,7 @@ protected:
 
 private:
 // modified part start
-  common::blockmap_entry<sizeof(CharT1), sizeof(CharT2)> b2j_;
+  common::blockmap_entry<sizeof(CharT2)> b2j_;
 // modified part end
 
   // Cache to avoid reallocations

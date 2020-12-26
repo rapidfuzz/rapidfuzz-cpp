@@ -123,10 +123,10 @@ std::size_t count_uncommon_chars(const Sentence1& s1, const Sentence2& s2);
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
-template <std::size_t size1, std::size_t size2>
+template <std::size_t size>
 struct blockmap_entry;
 
-template <std::size_t size1, std::size_t size2>
+template <std::size_t size>
 struct blockmap_entry {
   std::array<uint32_t, 128> m_key;
   std::array<uint64_t, 128> m_val;
@@ -152,7 +152,7 @@ struct blockmap_entry {
   }
 
   template <typename CharT>
-  uint64_t get(CharT ch) {
+  uint64_t get(CharT ch) const {
     uint8_t hash = ch % 128;
     uint32_t key = ch | 0x80000000U;
 
@@ -166,7 +166,7 @@ struct blockmap_entry {
 };
 
 template <>
-struct blockmap_entry<1, 1> {
+struct blockmap_entry<1> {
   std::array<uint64_t, 256> m_val;
 
   blockmap_entry()
@@ -176,8 +176,13 @@ struct blockmap_entry<1, 1> {
     m_val[ch] |= 1 << pos;
   }
 
-  uint64_t get(char ch) {
-    return m_val[ch];
+  template<typename CharT>
+  uint64_t get(CharT ch) const {
+    if(sizeof(CharT) == 1)
+    {
+      return m_val[ch];
+    }
+    return (ch < 256) ? m_val[ch] : 0;
   }
 };
 
