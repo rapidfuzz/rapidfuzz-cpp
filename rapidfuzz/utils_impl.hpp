@@ -21,7 +21,7 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
    * `[ord(chr(x).lower()) if chr(x).isalnum() else 0x20 for x in range(256)]`
    * in Python
    */
-  static const int extended_ascii_mapping[128] = {
+  static const int extended_ascii_mapping[256] = {
     32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
     32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
     32, 32, 32, 32, 32, 32, 32, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 32, 32,
