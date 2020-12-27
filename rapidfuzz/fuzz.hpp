@@ -90,7 +90,23 @@ private:
 template <typename Sentence1, typename Sentence2>
 percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-// TODO class
+// todo add real implementation
+template<typename Sentence1>
+struct CachedQuickRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedQuickRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const {
+    return quick_ratio(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
 
 /**
  * @brief Calculates a quick upper bound on fuzz::ratio by comparing the length
@@ -124,7 +140,22 @@ percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 template <typename Sentence1, typename Sentence2>
 percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-// TODO class
+template<typename Sentence1>
+struct CachedRealQuickRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedRealQuickRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const {
+    return real_quick_ratio(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
 
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
@@ -154,7 +185,23 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-// TODO class
+// todo add real implementation
+template<typename Sentence1>
+struct CachedPartialRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedPartialRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const {
+    return partial_ratio(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -345,6 +392,24 @@ private:
 template <typename Sentence1, typename Sentence2>
 percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+// todo add real implementation
+template<typename Sentence1>
+struct CachedTokenRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedTokenRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const {
+    return token_ratio(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
+
 /**
  * @brief Helper method that returns the maximum of
  * fuzz::partial_token_set_ratio and fuzz::partial_token_sort_ratio (faster than
@@ -368,6 +433,24 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// todo add real implementation
+template<typename Sentence1>
+struct CachedPartialTokenRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedPartialTokenRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const {
+    return partial_token_ratio(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -393,6 +476,23 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
 template <typename Sentence1, typename Sentence2>
 percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+// todo add real implementation
+template<typename Sentence1>
+struct CachedWRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedWRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const {
+    return WRatio(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
 /**
  * @brief Calculates a quick ratio between two strings using fuzz.ratio
  *
@@ -416,6 +516,21 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 
  */
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+
+template<typename Sentence1>
+struct CachedQRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedQRatio(const Sentence1& s1);
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const;
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+};
 
 /**@}*/
 

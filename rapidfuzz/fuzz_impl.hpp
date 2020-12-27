@@ -45,10 +45,10 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, const percent score_cu
   return fuzz::ratio(s1_view, s2_view, score_cutoff);
 }
 
+
 /**********************************************
  *              quick_ratio
  *********************************************/
-
 
 template <typename Sentence1, typename Sentence2>
 percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
@@ -61,6 +61,7 @@ percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
   size_t lensum = s1.length() + s2.length();
   return common::norm_distance(distance, lensum, score_cutoff);
 }
+
 
 template <typename Sentence1, typename Sentence2>
 percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
@@ -465,6 +466,32 @@ percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
   return ratio(s1, s2, score_cutoff);
 }
+
+template<typename Sentence1>
+CachedQRatio<Sentence1>::CachedQRatio(const Sentence1& s1) {
+  s1_view = common::to_string_view(s1);
+
+  // todo handle longer strings aswell
+  if (s1_view.size() < 65) {
+    for (std::size_t i = 0; i < s1_view.size(); i++){
+      blockmap_s1.insert(s1_view[i], i);
+    }
+  }
+}
+
+template<typename Sentence1>
+template<typename Sentence2>
+double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, const percent score_cutoff) const {
+  auto s2_view = common::to_string_view(s2);
+
+  if (s1_view.size() < 65) {
+    return string_metric::detail::normalized_weighted_levenshtein(
+      s2_view, blockmap_s1, s1_view, score_cutoff);
+  }
+
+  return fuzz::ratio(s1_view, s2_view, score_cutoff);
+}
+
 
 } // namespace fuzz
 } // namespace rapidfuzz
