@@ -43,6 +43,22 @@ namespace fuzz {
 template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
+// TODO documentation
+template<typename Sentence1>
+struct CachedRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedRatio(const Sentence1& s1);
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const;
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+};
+
+
 /**
  * @brief Calculates a quick upper bound on fuzz::ratio by counting uncommon
  * letters between the two sentences. Guaranteed to be equal or higher than
@@ -73,6 +89,8 @@ percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cuto
  */
 template <typename Sentence1, typename Sentence2>
 percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// TODO class
 
 /**
  * @brief Calculates a quick upper bound on fuzz::ratio by comparing the length
@@ -106,6 +124,8 @@ percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 template <typename Sentence1, typename Sentence2>
 percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+// TODO class
+
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
  *
@@ -133,6 +153,8 @@ percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// TODO class
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -164,6 +186,22 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+// TODO documentation
+template<typename Sentence1>
+struct CachedTokenSortRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedTokenSortRatio(const Sentence1& s1);
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const;
+
+private:
+  std::basic_string<CharT1> s1_sorted;
+  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+};
+
+
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
  * between them
@@ -188,6 +226,20 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                  percent score_cutoff = 0);
+
+// TODO documentation
+template<typename Sentence1>
+struct CachedPartialTokenSortRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedPartialTokenSortRatio(const Sentence1& s1);
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const;
+
+private:
+  std::basic_string<CharT1> s1_sorted;
+};
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -220,6 +272,20 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
 template <typename Sentence1, typename Sentence2>
 percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff = 0);
 
+// TODO documentation
+template<typename Sentence1>
+struct CachedTokenSetRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedTokenSetRatio(const Sentence1& s1);
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const;
+
+private:
+  SplittedSentenceView<CharT1> s1_sorted_split;
+};
+
 /**
  * @brief Compares the words in the strings based on unique and common words
  * between them using fuzz::partial_ratio
@@ -242,6 +308,20 @@ percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent 
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// TODO documentation
+template<typename Sentence1>
+struct CachedPartialTokenSetRatio {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedPartialTokenSetRatio(const Sentence1& s1);
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, const percent score_cutoff = 0) const;
+
+private:
+  SplittedSentenceView<CharT1> s1_sorted_split;
+};
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
