@@ -42,7 +42,7 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, const percent score_cu
       s2_view, blockmap_s1, s1_view, score_cutoff);
   }
 
-  return ratio(s1_view, s2_view, score_cutoff);
+  return fuzz::ratio(s1_view, s2_view, score_cutoff);
 }
 
 /**********************************************
@@ -169,7 +169,7 @@ double CachedTokenSortRatio<Sentence1>::ratio(
       score_cutoff);
   }
 
-  return ratio(s1_sorted, s2_sorted, score_cutoff);
+  return fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
 }
 
 
