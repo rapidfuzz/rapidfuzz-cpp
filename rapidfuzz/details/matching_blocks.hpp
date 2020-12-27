@@ -68,6 +68,7 @@ class SequenceMatcher {
       for(size_t i = a_low; i < a_high; ++i) {
         j2_values_to_affect_.clear();
 
+        // todo reverse iteration
         for(size_t j = b_low; j < b_high; ++j) {
           if (b_[j] != a_[i]) {
             continue;
