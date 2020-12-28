@@ -409,7 +409,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
   }
 
   // to this first, since we can not remove any affix in encoded form
-  if (max > 5) {
+  if (max >= 5) {
     std::size_t dist = weighted_levenshtein_bitpal(s1, block, s2.size());
     return (dist > max) ? -1 : dist;
   }

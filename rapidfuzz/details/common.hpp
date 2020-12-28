@@ -148,7 +148,7 @@ struct blockmap_entry {
     }
 
     m_key[hash] = key;
-    m_val[hash] |= 1 << pos;
+    m_val[hash] |= 1ull << pos;
   }
 
   template <typename CharT>
@@ -173,7 +173,8 @@ struct blockmap_entry<1> {
     : m_val() {}
 
   void insert(char ch, int pos) {
-    m_val[ch] |= 1 << pos;
+    // todo add tests for this
+    m_val[ch] |= 1ull << pos;
   }
 
   template<typename CharT>
