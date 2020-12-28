@@ -64,35 +64,24 @@ class SequenceMatcher {
 
     // Find longest junk free match
     {
-      j2_values_to_erase_.clear();
       for(size_t i = a_low; i < a_high; ++i) {
-        j2_values_to_affect_.clear();
-
-        // todo reverse iteration
-        for(size_t j = b_low; j < b_high; ++j) {
+        for(size_t j = b_high - 1; j != b_low - 1; --j) {
           if (b_[j] != a_[i]) {
+            j2len_[j+1] = 0;
             continue;
           }
 
           size_t k = j2len_[j] + 1;
-          j2_values_to_affect_.emplace_back(j+1,k);
+          j2len_[j+1] = k;
           if (k > best_size) {
             best_i = i - k + 1;
             best_j = j - k + 1;
             best_size = k;
           }
         }
-
-        for(auto const& elem : j2_values_to_erase_) {
-          j2len_[elem.first] = 0;
-        }
-        for(auto const& elem : j2_values_to_affect_) {
-          j2len_[elem.first] = elem.second;
-        }
-        std::swap(j2_values_to_erase_, j2_values_to_affect_);
       }
-      for(auto const& elem : j2_values_to_erase_) {
-        j2len_[elem.first] = 0;
+      for(size_t j = b_low; j < b_high; ++j) {
+        j2len_[j+1] = 0;
       }
     }
 
@@ -166,8 +155,6 @@ protected:
 private:
   // Cache to avoid reallocations
   std::vector<size_t> j2len_;
-  std::vector<std::pair<size_t, size_t>> j2_values_to_affect_;
-  std::vector<std::pair<size_t, size_t>> j2_values_to_erase_;
 };
 
 }  // namespace difflib
