@@ -13,6 +13,11 @@
 namespace rapidfuzz {
 namespace fuzz {
 
+
+/**********************************************
+ *                  ratio
+ *********************************************/
+
 template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
@@ -47,32 +52,8 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
 
 
 /**********************************************
- *              quick_ratio
+ *              partial_ratio
  *********************************************/
-
-template <typename Sentence1, typename Sentence2>
-percent quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
-{
-  if (common::is_zero(real_quick_ratio(s1, s2, score_cutoff))) {
-    return 0;
-  }
-
-  size_t distance = common::count_uncommon_chars(s1, s2);
-  size_t lensum = s1.length() + s2.length();
-  return common::norm_distance(distance, lensum, score_cutoff);
-}
-
-
-template <typename Sentence1, typename Sentence2>
-percent real_quick_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
-{
-  size_t s1_len = s1.length();
-  size_t s2_len = s2.length();
-  size_t distance = (s1_len > s2_len) ? s1_len - s2_len : s2_len - s1_len;
-
-  size_t lensum = s1_len + s2_len;
-  return common::norm_distance(distance, lensum, score_cutoff);
-}
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
@@ -115,10 +96,6 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
     auto long_substr = s2_view.substr(long_start, short_len);
 
     double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
-
-    if (ls_ratio > 99.5) {
-      return 100;
-    }
 
     if (ls_ratio > max_ratio) {
       score_cutoff = max_ratio = ls_ratio;
@@ -477,6 +454,7 @@ double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cut
   return details::token_ratio(s1_sorted, tokens_s1, blockmap_s1_sorted, s2, score_cutoff);
 }
 
+
 /**********************************************
  *            partial_token_ratio
  *********************************************/
@@ -557,7 +535,7 @@ double CachedPartialTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent sc
 
 
 /**********************************************
- *                WRatio
+ *                  WRatio
  *********************************************/
 
 template <typename Sentence1, typename Sentence2>
@@ -693,7 +671,6 @@ double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 
   return fuzz::ratio(s1_view, s2_view, score_cutoff);
 }
-
 
 } // namespace fuzz
 } // namespace rapidfuzz
