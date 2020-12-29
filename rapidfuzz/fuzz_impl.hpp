@@ -369,10 +369,10 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 }
 
 namespace details {
-template <typename CharT1, typename Sentence2>
+template <typename CharT1, std::size_t size, typename Sentence2>
 percent token_ratio(
   const std::basic_string<CharT1>& s1_sorted, const SplittedSentenceView<CharT1>& tokens_s1,
-  const common::blockmap_entry<sizeof(CharT1)>& blockmap_s1_sorted,
+  const common::blockmap_entry<size>& blockmap_s1_sorted,
   const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
