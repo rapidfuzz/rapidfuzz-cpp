@@ -172,7 +172,7 @@ struct blockmap_entry<1> {
   blockmap_entry()
     : m_val() {}
 
-  void insert(char ch, int pos) {
+  void insert(unsigned char ch, int pos) {
     // todo add tests for this
     m_val[ch] |= 1ull << pos;
   }
@@ -181,7 +181,7 @@ struct blockmap_entry<1> {
   uint64_t get(CharT ch) const {
     if(sizeof(CharT) == 1)
     {
-      return m_val[ch];
+      return m_val[(unsigned char)ch];
     }
     return (ch < 256) ? m_val[ch] : 0;
   }
