@@ -94,6 +94,23 @@ double normalized_hamming(const Sentence1& s1, const Sentence2& s2, double score
   );
 }
 
+template<typename Sentence1>
+struct CachedNormalizedHamming {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedNormalizedHamming(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
+    return normalized_hamming(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
+
+
 /**@}*/
 
 } // namespace levenshtein
