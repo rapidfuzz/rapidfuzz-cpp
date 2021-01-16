@@ -276,56 +276,6 @@ std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_stri
   }
 
   return weighted_levenshtein_bitpal(s1, block, s2.size());
-
-  /*uint64_t DHneg1 = ~0x0ull;
-  uint64_t DHzero = 0;
-  uint64_t DHpos1 = 0;
-
-  //recursion
-  for (std::size_t i = 0; i < s1.size(); ++i)
-  {
-    uint64_t Matches = block.get(s1[i]);
-    //Complement Matches
-    uint64_t NotMatches = ~Matches;
-
-    //Finding the vertical values. //Find 1s
-    uint64_t INITpos1s = DHneg1 & Matches;
-    uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
-
-    //set RemainingDHneg1
-    uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
-    //combine 1s and Matches
-    uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-    //Find 0s
-    uint64_t INITzeros = (DHzero & DVpos1shiftorMatch) ;
-    uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
-
-    //Find -1s
-    uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-    DHzero &= NotMatches;
-    //combine 1s and Matches
-    uint64_t DHpos1orMatch = DHpos1| Matches;
-    //Find 0s
-    DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
-    //Find 1s
-    DHpos1 = (DVneg1shift & DHpos1orMatch);
-    //Find -1s
-    DHneg1 = ~(DHzero | DHpos1);
-  }
-  //find scores in last row
-  uint64_t add1 = DHzero;
-  uint64_t add2 = DHpos1;
-
-  std::size_t dist = s1.size();
-
-  for (std::size_t i = 0; i < s2.size(); i++)
-  {
-    uint64_t bitmask = 1ull << i;
-    dist -= ((add1 & bitmask) >> i) * 1 + ((add2 & bitmask) >> i) * 2 - 1;
-  }
-
-  return dist;*/
 }
 
 template <typename CharT1, typename CharT2>
