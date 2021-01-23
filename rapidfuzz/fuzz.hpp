@@ -63,6 +63,7 @@ private:
  * @brief calculates the fuzz::ratio of the optimal string alignment
  *
  * @details
+ * test @cite hyrro_2004 @cite wagner_fischer_1974
  * @code{.cpp}
  * // score is 100
  * double score = partial_ratio("this is a test", "this is a test!")
@@ -92,16 +93,14 @@ template<typename Sentence1>
 struct CachedPartialRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+  CachedPartialRatio(const Sentence1& s1);
 
   template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return partial_ratio(s1_view, s2, score_cutoff);
-  }
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
 };
 
 
@@ -188,6 +187,7 @@ struct CachedPartialTokenSortRatio {
 
 private:
   std::basic_string<CharT1> s1_sorted;
+  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 /**

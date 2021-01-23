@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "type_traits.hpp"
+#include "common.hpp"
 
 #include <unordered_map>
 #include <algorithm>
@@ -159,9 +159,65 @@ private:
 
 }  // namespace difflib
 
-template<typename Sentence1, typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, Sentence2 s2) {
-  return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
+
+template<typename Sentence1, std::size_t size,  typename Sentence2>
+std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
+  if (s1.size() > 64) {
+    return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
+  }
+
+  std::vector<rapidfuzz::MatchingBlock> matching_blocks;
+
+  std::uint64_t S = ~0x0ull;
+  std::vector<std::uint64_t> Vs;
+  Vs.reserve(s2.size());
+  Vs.resize(1);
+  for (std::size_t j = 0; j < s2.size(); ++j) {
+    uint64_t Matches = blockmap_s1.get(s2[j]);
+    uint64_t u = S & Matches;
+    S = (S + u) | (S - u);
+    Vs.push_back(S);
+  }
+
+  std::size_t pos_s1 = s1.size() - 1;
+  std::size_t pos_s2 = s2.size() - 1;
+
+  std::size_t length = 0;
+
+  while(pos_s1 != (std::size_t)-1 && pos_s2 != (std::size_t)-1) {
+    if (Vs[pos_s2] & (0x1ull << pos_s1)) {
+      if (length) {
+        matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
+        length = 0;
+      }
+      --pos_s1;
+    } else {
+      if (!(pos_s2 && ~Vs[pos_s2-1] & (0x1ull << pos_s1))) {
+        ++length;
+        --pos_s1;
+      } else {
+        if (length) {
+          matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
+          length = 0;
+        }
+      }
+      --pos_s2;
+    }
+  }
+  
+  if (length) {
+    matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
+  }
+
+  matching_blocks.emplace_back(s1.size(), s2.size(), 0);
+
+  return matching_blocks;
+}
+
+
+template<typename Sentence1, std::size_t size, typename Sentence2>
+std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
+  return longest_common_subsequence(s1, blockmap_s1, s2);
 }
 
 } /* namespace rapidfuzz */

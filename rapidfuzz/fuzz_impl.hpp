@@ -73,15 +73,86 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
     return partial_ratio(s2_view, s1_view, score_cutoff);
   }
 
-  if (s1_view.length() == s2_view.length()) {
-    if (std::equal(s1_view.begin(), s1_view.end(), s2_view.begin())) {
-      return 100;
+  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+
+  if (s1.size() < 65) {
+    for (std::size_t i = 0; i < s1_view.size(); i++){
+      blockmap_s1.insert(s1_view[i], i);
     }
   }
 
   size_t short_len = s1_view.length();
 
-  auto blocks = get_matching_blocks(s1_view, s2_view);
+  auto blocks = get_matching_blocks(s1_view, blockmap_s1, s2_view);
+
+  // when there is a full match exit early
+  for (const auto& block : blocks) {
+    if (block.length == short_len) {
+      return 100;
+    }
+  }
+
+  double max_ratio = 0;
+  if (s1_view.size() < 65) {
+    for (const auto& block : blocks) {
+      size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
+      auto long_substr = s2_view.substr(long_start, short_len);
+
+      double ls_ratio = string_metric::detail::normalized_weighted_levenshtein(
+        long_substr, blockmap_s1, s1_view, score_cutoff);
+
+      if (ls_ratio > max_ratio) {
+        score_cutoff = max_ratio = ls_ratio;
+      }
+    }
+  } else {
+    for (const auto& block : blocks) {
+      size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
+      auto long_substr = s2_view.substr(long_start, short_len);
+
+      double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
+
+      if (ls_ratio > max_ratio) {
+        score_cutoff = max_ratio = ls_ratio;
+      }
+    }
+  }
+
+  return max_ratio;
+}
+
+
+template<typename Sentence1>
+CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1) {
+  s1_view = common::to_string_view(s1);
+
+  // todo handle longer strings aswell
+  if (s1_view.size() < 65) {
+    for (std::size_t i = 0; i < s1_view.size(); i++){
+      blockmap_s1.insert(s1_view[i], i);
+    }
+  }
+}
+
+namespace details {
+
+template <typename Sentence1, std::size_t size, typename Sentence2>
+percent partial_ratio_map(const Sentence1& s1, const common::blockmap_entry<size>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
+{
+  if (score_cutoff > 100) {
+    return 0;
+  }
+
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
+
+  if (s1_view.empty() || s2_view.empty()) {
+    return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
+  }
+
+  size_t short_len = s1_view.length();
+
+  auto blocks = get_matching_blocks(s1_view, blockmap_s1, s2_view);
 
   // when there is a full match exit early
   for (const auto& block : blocks) {
@@ -95,7 +166,8 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
     size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
     auto long_substr = s2_view.substr(long_start, short_len);
 
-    double ls_ratio = ratio(s1_view, long_substr, score_cutoff);
+    double ls_ratio = string_metric::detail::normalized_weighted_levenshtein(
+      long_substr, blockmap_s1, s1_view, score_cutoff);
 
     if (ls_ratio > max_ratio) {
       score_cutoff = max_ratio = ls_ratio;
@@ -103,6 +175,19 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
   }
 
   return max_ratio;
+}
+} /* details */
+
+template<typename Sentence1>
+template<typename Sentence2>
+double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
+  auto s2_view = common::to_string_view(s2);
+
+  if (s1_view.size() > s2_view.size() || s1_view.size() > 64) {
+    return partial_ratio(s1_view, s2_view, score_cutoff);
+  }
+
+  return details::partial_ratio_map(s1_view, blockmap_s1, s2_view, score_cutoff);
 }
 
 
@@ -168,6 +253,13 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
 template<typename Sentence1>
 CachedPartialTokenSortRatio<Sentence1>::CachedPartialTokenSortRatio(const Sentence1& s1) {
   s1_sorted = common::sorted_split(s1).join();
+
+  // todo handle longer strings aswell
+  if (s1_sorted.size() < 65) {
+    for (std::size_t i = 0; i < s1_sorted.size(); i++){
+      blockmap_s1_sorted.insert(s1_sorted[i], i);
+    }
+  }
 }
 
 template<typename Sentence1>
@@ -177,8 +269,13 @@ double CachedPartialTokenSortRatio<Sentence1>::ratio(
 {
   if (score_cutoff > 100) return 0;
 
-  return partial_ratio(s1_sorted,
-    common::sorted_split(s2).join(), score_cutoff);
+  auto s2_sorted = common::sorted_split(s2).join();
+
+  if (s1_sorted.size() > s2_sorted.size() || s1_sorted.size() > 64) {
+    return partial_ratio(s1_sorted, s2_sorted, score_cutoff);
+  }
+
+  return details::partial_ratio_map(s1_sorted, blockmap_s1_sorted, s2_sorted, score_cutoff);
 }
 
 
@@ -628,7 +725,12 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 
   // increase the score_cutoff by a small step so it might be able to exit early
   score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / PARTIAL_SCALE;
-  end_ratio = std::max(end_ratio, partial_ratio(s1_view, s2_view, score_cutoff) * PARTIAL_SCALE);
+
+  if (s1_view.size() > s2_view.size() || s1_view.size() > 64) {
+    end_ratio = std::max(end_ratio, partial_ratio(s1_view, s2_view, score_cutoff) * PARTIAL_SCALE);
+  } else {
+    end_ratio = std::max(end_ratio, details::partial_ratio_map(s1_view, blockmap_s1, s2_view, score_cutoff) * PARTIAL_SCALE);
+  }
 
   score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
   auto r = details::partial_token_ratio(s1_sorted, tokens_s1, s2_view, score_cutoff);
