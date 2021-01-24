@@ -75,7 +75,7 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 
   common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
 
-  if (s1.size() < 65) {
+  if (s1_view.size() < 65) {
     for (std::size_t i = 0; i < s1_view.size(); i++){
       blockmap_s1.insert(s1_view[i], i);
     }
