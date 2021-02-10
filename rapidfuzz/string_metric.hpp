@@ -108,8 +108,8 @@ namespace string_metric {
  *     algorithm is ``O(N)``.
  *
  *   - If both strings only use extended Ascii a blockwise BitPAl algorithm is used.
- *     It calculated the Levenshtein distance in blocks of 64 characters and
- *     therefor has a time complexity of ``O(N*M/64)``
+ *     It calculated the Levenshtein distance in blocks of 63 characters and
+ *     therefor has a time complexity of ``O(N*M/63)``
  *
  *   - In all other cases the Levenshtein distance is calculated using
  *     Wagner-Fischer with Ukkonens optimization as described by @cite wagner_fischer_1974.
