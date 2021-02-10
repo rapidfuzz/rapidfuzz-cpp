@@ -103,10 +103,11 @@ constexpr T bit_check(T val, U bit)
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  std::size_t words = std::ceil(s2.size() / 64.0);
+  int wordsizem1 = sizeof(uint64_t) * 8 - 1;
+  std::size_t words = s2.size() / wordsizem1 + 1;
   std::vector<uint64_t> DHpos1(words);
   std::vector<uint64_t> DHzero(words);
-  std::vector<uint64_t> DHneg1(words, ~(0x1ull << 63));
+  std::vector<uint64_t> DHneg1(words, ~(0x1ull << wordsizem1));
 
   // create matrix
   std::array<uint64_t*, 256> matchvec;
@@ -117,11 +118,13 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
 
   uint64_t bitmask = 0x1ull;
   uint64_t w = 0;
+  int counter = 0;
   for (const auto& ch2 : s2) {
     matchvec[ch2][w] |= bitmask;
     bitmask <<= 1;
-    // on overflow fill next word
-    if (!bitmask) {
+    ++counter;
+    if (counter == wordsizem1) {
+      counter = 0;
       w++;
       bitmask = 0x1;
     }
@@ -148,23 +151,23 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
       //Find 1s
       uint64_t INITpos1s = DHneg1temp & Matches;
       uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-      uint64_t DVpos1shift = bit_clear((sum ^ DHneg1temp) ^ INITpos1s, 63);
-      OverFlow0 = bit_check(sum, 63);
+      uint64_t DVpos1shift = bit_clear((sum ^ DHneg1temp) ^ INITpos1s, wordsizem1);
+      OverFlow0 = bit_check(sum, wordsizem1);
       
       //set RemainingDHneg1
-      uint64_t RemainDHneg1 = bit_clear(DHneg1temp ^ INITpos1s, 63);
+      uint64_t RemainDHneg1 = bit_clear(DHneg1temp ^ INITpos1s, wordsizem1);
       //combine 1s and Matches
       uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
       
       //Find 0s
       uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch) ;
       uint64_t initval = ((INITzeros << 1) | INITzerosprevbit);
-      INITzerosprevbit = bit_check(initval, 63);
-      initval = bit_clear(initval, 63);
+      INITzerosprevbit = bit_check(initval, wordsizem1);
+      initval = bit_clear(initval, wordsizem1);
 
       sum = initval + RemainDHneg1 + OverFlow1;
       uint64_t DVzeroshift = sum ^ RemainDHneg1;
-      OverFlow1 = bit_check(sum, 63);
+      OverFlow1 = bit_check(sum, wordsizem1);
       //Find -1s
       uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
       
@@ -178,7 +181,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
       //Find 1s
       DHpos1temp = DVneg1shift & DHpos1orMatch;
       //Find -1s
-      DHneg1temp = bit_clear(~(DHzerotemp | DHpos1temp), 63);
+      DHneg1temp = bit_clear(~(DHzerotemp | DHpos1temp), wordsizem1);
 
       DHpos1[word] = DHpos1temp;
       DHzero[word] = DHzerotemp;
@@ -196,7 +199,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1, 
     uint64_t add1 = DHzerotemp;
     uint64_t add2 = DHpos1temp;
     
-    for (std::size_t i = word * 63; i < (word + 1) * 63 && i < s2.size(); ++i)
+    for (std::size_t i = word * wordsizem1; i < (word + 1) * wordsizem1 && i < s2.size(); ++i)
     {
       dist -= (add1 & 0x1) * 1 + (add2 & 0x1) * 2 - 1;
       add1 >>= 1;
