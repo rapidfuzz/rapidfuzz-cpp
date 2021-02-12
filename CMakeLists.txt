@@ -6,18 +6,14 @@ include(GNUInstallDirs)
 option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 
-set(SOURCES
-	rapidfuzz/fuzz.txx
-	rapidfuzz/levenshtein.txx
-	rapidfuzz/process.txx
-	rapidfuzz/utils.txx
-)
-
 set(HEADERS
 	rapidfuzz/fuzz.hpp
-	rapidfuzz/levenshtein.hpp
+	rapidfuzz/fuzz_impl.hpp
+	rapidfuzz/string_metric.hpp
 	rapidfuzz/process.hpp
+	rapidfuzz/process_impl.hpp
 	rapidfuzz/utils.hpp
+	rapidfuzz/utils_impl.hpp
 	rapidfuzz/details/SplittedSentenceView.hpp
 	rapidfuzz/details/type_traits.hpp
 	rapidfuzz/details/types.hpp
@@ -25,6 +21,11 @@ set(HEADERS
 	rapidfuzz/details/matching_blocks.hpp
 	rapidfuzz/details/string_view.hpp
 	rapidfuzz/details/optional.hpp
+	rapidfuzz/details/string_metrics/levenshtein_impl.hpp
+	rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp
+	rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp
+	rapidfuzz/details/common.hpp
+	rapidfuzz/details/common_impl.hpp
 )
 
 add_library(rapidfuzz INTERFACE)

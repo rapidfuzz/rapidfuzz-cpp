@@ -45,6 +45,7 @@ TEST_CASE("RatioTest")
     SECTION("testPartialRatio")
     {
         REQUIRE( 100 == fuzz::partial_ratio(s1, s1) );
+        REQUIRE( 100 != fuzz::ratio(s1, s3) );
         REQUIRE( 100 == fuzz::partial_ratio(s1, s3) );
     }
 

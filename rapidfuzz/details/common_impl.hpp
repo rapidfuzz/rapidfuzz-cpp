@@ -6,7 +6,7 @@
 #include <cctype>
 #include <cwctype>
 
-#include "details/unicode.hpp"
+#include "unicode.hpp"
 
 namespace rapidfuzz {
 
@@ -22,7 +22,7 @@ bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
 }
 
 template <typename CharT1, typename CharT2>
-DecomposedSet<CharT1, CharT2, CharT1> utils::set_decomposition(SplittedSentenceView<CharT1> a,
+DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentenceView<CharT1> a,
                                                                SplittedSentenceView<CharT2> b)
 {
   a.dedupe();
@@ -50,52 +50,59 @@ DecomposedSet<CharT1, CharT2, CharT1> utils::set_decomposition(SplittedSentenceV
   return {difference_ab, difference_ba, intersection};
 }
 
-constexpr percent utils::result_cutoff(const double result, const percent score_cutoff)
+constexpr percent common::result_cutoff(const double result, const percent score_cutoff)
 {
   return (result >= score_cutoff) ? result : 0;
 }
 
-constexpr percent utils::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
+constexpr percent common::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
 {
   return result_cutoff(
-    100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum),
+    (lensum > 0) ? (100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0,
     score_cutoff
   );
 }
 
+static inline std::size_t common::score_cutoff_to_distance(percent score_cutoff, std::size_t lensum)
+{
+  return static_cast<std::size_t>(
+    std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100))
+  );
+}
+
 template <typename T>
-constexpr bool utils::is_zero(T a, T tolerance)
+constexpr bool common::is_zero(T a, T tolerance)
 {
   return std::fabs(a) <= tolerance;
 }
 
 template <typename Sentence, typename CharT, typename>
-basic_string_view<CharT> utils::to_string_view(Sentence&& str)
+basic_string_view<CharT> common::to_string_view(Sentence&& str)
 {
   return basic_string_view<CharT>(std::forward<Sentence>(str));
 }
 
 template <typename Sentence, typename CharT, typename>
-basic_string_view<CharT> utils::to_string_view(const Sentence& str)
+basic_string_view<CharT> common::to_string_view(const Sentence& str)
 {
   return basic_string_view<CharT>(str.data(), str.size());
 }
 
 template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::to_string(Sentence&& str)
+std::basic_string<CharT> common::to_string(Sentence&& str)
 {
   return std::basic_string<CharT>(std::forward<Sentence>(str));
 }
 
 template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::to_string(const Sentence& str)
+std::basic_string<CharT> common::to_string(const Sentence& str)
 {
   return std::basic_string<CharT>(str.data(), str.size());
 }
 
 template <typename InputIterator1, typename InputIterator2>
 std::pair<InputIterator1, InputIterator2>
-utils::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
+common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
                 InputIterator2 last2)
 {
   while (first1 != last1 && first2 != last2 && *first1 == *first2) {
@@ -109,10 +116,10 @@ utils::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 firs
  * Removes common prefix of two string views
  */
 template <typename CharT1, typename CharT2>
-std::size_t utils::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
   auto prefix =
-      std::distance(a.begin(), utils::mismatch(a.begin(), a.end(), b.begin(), b.end()).first);
+      std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first);
   a.remove_prefix(prefix);
   b.remove_prefix(prefix);
   return prefix;
@@ -122,10 +129,10 @@ std::size_t utils::remove_common_prefix(basic_string_view<CharT1>& a, basic_stri
  * Removes common suffix of two string views
  */
 template <typename CharT1, typename CharT2>
-std::size_t utils::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
   auto suffix =
-      std::distance(a.rbegin(), utils::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first);
+      std::distance(a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first);
   a.remove_suffix(suffix);
   b.remove_suffix(suffix);
   return suffix;
@@ -135,13 +142,13 @@ std::size_t utils::remove_common_suffix(basic_string_view<CharT1>& a, basic_stri
  * Removes common affix of two string views
  */
 template <typename CharT1, typename CharT2>
-StringAffix utils::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
   return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
 }
 
 template <typename Sentence1, typename Sentence2>
-std::size_t utils::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2)
+std::size_t common::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2)
 {
   std::array<signed int, 32> char_freq{};
   for (const auto& ch : s1) {
@@ -161,7 +168,7 @@ std::size_t utils::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename Sentence, typename CharT>
-SplittedSentenceView<CharT> utils::sorted_split(Sentence&& sentence)
+SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
 {
   auto s = to_string_view(std::forward<Sentence>(sentence));
   string_view_vec<CharT> splitted;
@@ -180,50 +187,6 @@ SplittedSentenceView<CharT> utils::sorted_split(Sentence&& sentence)
   std::sort(splitted.begin(), splitted.end());
 
   return SplittedSentenceView<CharT>(splitted);
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence&& s)
-{
-  /* mapping converting
-   * - non alphanumeric characters to whitespace (32)
-   * - A-Z to a-z
-   */
-  static const int ascii_mapping[128] = {
-    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-    32, 32, 32, 32, 32, 32, 32, 32,
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    32, 32, 32, 32, 32, 32, 32,
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    32, 32, 32, 32, 32, 32,
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    32,  32,  32,  32,  32};
-
-
-  std::basic_string<CharT> str(std::forward<Sentence>(s));
-
-  std::transform(str.begin(), str.end(), str.begin(),
-                 [](CharT ch2) {
-    int ch = static_cast<int>(ch2);
-    return (ch < 128) ? ascii_mapping[ch] : ch; });
-
-  str.erase(str.begin(),
-            std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
-
-  str.erase(
-      std::find_if(str.rbegin(), str.rend(), [](const CharT& ch) { return ch != ' '; }).base(),
-      str.end());
-
-  return str;
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence s)
-{
-  return default_process(std::basic_string<CharT>(s.data(), s.size()));
 }
 
 } // namespace rapidfuzz
