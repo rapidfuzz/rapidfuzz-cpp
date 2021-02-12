@@ -107,15 +107,11 @@ namespace string_metric {
  *     support for UTF32 in this implementation. The time complexity of this
  *     algorithm is ``O(N)``.
  *
- *   - If both strings only use extended Ascii a blockwise BitPAl algorithm is used.
- *     It calculated the Levenshtein distance in blocks of 63 characters and
- *     therefor has a time complexity of ``O(N*M/63)``
- *
  *   - In all other cases the Levenshtein distance is calculated using
  *     Wagner-Fischer with Ukkonens optimization as described by @cite wagner_fischer_1974.
  *     The time complexity of this algorithm is ``O(N * M)``.
- *     This will be removed once UTF32 support is added to the blockwise BitPAl
- *     algorithm.
+ *     This can be replaced with a blockwise implementation of the BitPal algorithm
+ *     in the future.
  *
  * <b>Other weights:</b>
  *   The implementation for other weights is based on Wagner-Fischer.
