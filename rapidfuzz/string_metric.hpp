@@ -140,8 +140,6 @@ namespace string_metric {
  * @endcode
  *
  * It is possible to select different weights by passing a `weight` struct.
- * Internally s1 and s2 might be swapped, so insertion and deletion
- * cost should usually have the same value.
  * @code{.cpp}
  * // dist is 3
  * std::size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 2});
@@ -176,13 +174,6 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
  * @brief Calculates a normalized levenshtein distance using custom
  * costs for insertion, deletion and substitution.
  *
- * @details
- * The following weights are supported:
- * - weights = (1, 1, N)
- * with N >= 1
- *
- * further combinations might be supported in the future
- *
  * @tparam Sentence1 This is a string that can be converted to
  * basic_string_view<char_type>
  * @tparam Sentence2 This is a string that can be converted to
@@ -208,17 +199,22 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
  *
  * @remarks
  * @parblock
- * Depending on the provided weights the normalisation is performed in different
- * ways:
+ * The normalization of the Levenshtein distance is performed in the following way:
  *
- * <b>Insertion = 1, Deletion = 1, Substitution = 1:</b>
- *   \f$ratio = 100 \cdot \frac{distance(s1, s2)}{max(len(s1), len(s2))}\f$
+ * \f{align*}{
+ *   dist_{max} &= \begin{cases}
+ *     min(len(s1), len(s2)) \cdot sub,       & \text{if } sub \leq ins + del \\
+ *     len(s1) \cdot del + len(s2) \cdot ins, & \text{otherwise}
+ *   \end{cases}\\[10pt]
  *
- * <b>Insertion = 1, Deletion = 1, Substitution = 2:</b>
- *   \f$ratio = 100 \cdot \frac{distance(s1, s2)}{len(s1) + len(s2)}\f$
+ *   dist_{max} &= \begin{cases}
+ *     dist_{max} + (len(s1) - len(s2)) \cdot del, & \text{if } len(s1) > len(s2) \\
+ *     dist_{max} + (len(s2) - len(s1)) \cdot ins, & \text{if } len(s1) < len(s2) \\
+ *     dist_{max},                                 & \text{if } len(s1) = len(s2)
+ *   \end{cases}\\[10pt]
  *
- * Different weights are currently not supported, since the library has no algorithm
- * for normalization yet.
+ *   ratio &= 100 \cdot \frac{distance(s1, s2)}{dist_{max}}
+ * \f}
  * @endparblock
  *
  *
@@ -238,8 +234,6 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
  * @endcode
  *
  * It is possible to select different weights by passing a `weight` struct
- * Internally s1 and s2 might be swapped, so insertion and deletion
- * cost should usually have the same value.
  * @code{.cpp}
  * // ratio is 85.71428571428571
  * double ratio = normalized_levenshtein("lewenstein", "levenshtein", {1, 1, 2});
@@ -267,7 +261,7 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
     }
   }
 
-  throw std::invalid_argument("The provided weights are not supported");
+  return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
 }
 
 /**
