@@ -95,7 +95,7 @@ static constexpr std::array<uint64_t, 64> levenshtein_hyrroe2003_masks = {
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  std::array<uint64_t, 256> posbits;
+  std::array<uint64_t, 256> posbits{};
 
   for (std::size_t i = 0; i < s2.size(); i++){
     posbits[(unsigned char)s2[i]] |= (uint64_t)1 << i;

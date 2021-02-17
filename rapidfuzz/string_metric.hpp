@@ -80,7 +80,12 @@ namespace string_metric {
  *     Myers algorithm is described in @cite myers_1999.
  *
  *
- * <b>Insertion = 1, Deletion = 1, Substitution = 2:</b>
+ * <b>Insertion = 1, Deletion = 1, Substitution >= Insertion + Deletion:</b>
+ *   when Substitution >= Insertion + Deletion set
+ *   Substitution = Insertion + Deletion
+ *   since every substitution can be performed as Insertion + Deletion
+ *   so in this case treat Substitution as 2
+ *
  *   - if max is 0 the similarity can be calculated using a direct comparision,
  *     since no difference between the strings is allowed.  The time complexity of
  *     this algorithm is ``O(N)``.
@@ -154,8 +159,12 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
   if (weights.insert_cost == 1 && weights.delete_cost == 1) {
     if (weights.replace_cost == 1) {
       return detail::levenshtein(sentence1, sentence2, max);
-    }
-    else if (weights.replace_cost == 2) {
+    } else if (weights.replace_cost > 1) {
+      /*
+       * when replace_cost >= insert_cost + delete_cost set
+       * replace_cost = insert_cost + delete_cost
+       * since every substitution can be performed as insertion + deletion
+       */
       return detail::weighted_levenshtein(sentence1, sentence2, max);
     }
   }
@@ -168,12 +177,11 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
  * costs for insertion, deletion and substitution.
  *
  * @details
- * So far only the following combinations are supported:
- * - weights = (1, 1, 1)
- * - weights = (1, 1, 2)
+ * The following weights are supported:
+ * - weights = (1, 1, N)
+ * with N >= 1
  *
  * further combinations might be supported in the future
- *
  *
  * @tparam Sentence1 This is a string that can be converted to
  * basic_string_view<char_type>
@@ -249,8 +257,12 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
   if (weights.insert_cost == 1 && weights.delete_cost == 1) {
     if (weights.replace_cost == 1) {
       return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
-    }
-    else if (weights.replace_cost == 2) {
+    } else if (weights.replace_cost > 1) {
+      /*
+       * when replace_cost >= insert_cost + delete_cost set
+       * replace_cost = insert_cost + delete_cost
+       * since every substitution can be performed as insertion + deletion
+       */
       return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
     }
   }
