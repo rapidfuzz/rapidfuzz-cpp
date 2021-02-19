@@ -32,7 +32,6 @@
 #include <memory>
 #include <vector>
 
-
 namespace rapidfuzz {
 
 struct MatchingBlock {
@@ -162,16 +161,19 @@ private:
 
 template<typename Sentence1, std::size_t size,  typename Sentence2>
 std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
-  if (s1.size() > 64) {
+  //if (s1.size() > 64) {
     return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
-  }
+  //}
 
+#if 0
   std::vector<rapidfuzz::MatchingBlock> matching_blocks;
 
+  // Hyyrö, Heikki. (2004). A Note on Bit-Parallel Alignment Computation. 79-87.
+  // build LCS Matrix
   std::uint64_t S = ~0x0ull;
   std::vector<std::uint64_t> Vs;
   Vs.reserve(s2.size());
-  Vs.resize(1);
+
   for (std::size_t j = 0; j < s2.size(); ++j) {
     uint64_t Matches = blockmap_s1.get(s2[j]);
     uint64_t u = S & Matches;
@@ -212,6 +214,7 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
   matching_blocks.emplace_back(s1.size(), s2.size(), 0);
 
   return matching_blocks;
+#endif
 }
 
 
