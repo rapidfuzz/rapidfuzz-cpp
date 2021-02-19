@@ -73,53 +73,62 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
   return (dist > max) ? -1 : dist;
 }
 
-static constexpr std::array<uint64_t, 64> levenshtein_hyrroe2003_masks = {
-  0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,
-  0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,
-  0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,
-  0x0000000000001fff, 0x0000000000003fff, 0x0000000000007fff, 0x000000000000ffff,
-  0x000000000001ffff, 0x000000000003ffff, 0x000000000007ffff, 0x00000000000fffff,
-  0x00000000001fffff, 0x00000000003fffff, 0x00000000007fffff, 0x0000000000ffffff,
-  0x0000000001ffffff, 0x0000000003ffffff, 0x0000000007ffffff, 0x000000000fffffff,
-  0x000000001fffffff, 0x000000003fffffff, 0x000000007fffffff, 0x00000000ffffffff,
-  0x00000001ffffffff, 0x00000003ffffffff, 0x00000007ffffffff, 0x0000000fffffffff,
-  0x0000001fffffffff, 0x0000003fffffffff, 0x0000007fffffffff, 0x000000ffffffffff,
-  0x000001ffffffffff, 0x000003ffffffffff, 0x000007ffffffffff, 0x00000fffffffffff,
-  0x00001fffffffffff, 0x00003fffffffffff, 0x00007fffffffffff, 0x0000ffffffffffff,
-  0x0001ffffffffffff, 0x0003ffffffffffff, 0x0007ffffffffffff, 0x000fffffffffffff,
-  0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,
-  0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,
-  0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
-};
-
+/**
+ * @brief Bitparallel implementation of the Levenshtein distance.
+ *
+ * This implementation requires the first string to have a length <= 64.
+ * The algorithm used is described @cite hyrro_2002 and has a time complexity
+ * of O(N). Comments and variable names in the implementation follow the
+ * paper. This implementation is used internally when the strings are short enough
+ *
+ * @tparam CharT1 This is the char type of the first sentence
+ * @tparam CharT2 This is the char type of the second sentence
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ *
+ * @return returns the levenshtein distance between s1 and s2
+ */
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  std::array<uint64_t, 256> posbits{};
+/* Preprocessing */
+  /* pattern match vector with uint32_t support */
+  common::PatternMatchVector<sizeof(CharT1)> PM(s1);
 
-  for (std::size_t i = 0; i < s2.size(); i++){
-    posbits[(unsigned char)s2[i]] |= (uint64_t)1 << i;
+  /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+  uint64_t VP = (uint64_t)-1;
+  if (s1.size() < 64) {
+    VP += (uint64_t)1 << s1.size();
   }
 
-  std::size_t dist = s2.size();
-  uint64_t mask = (uint64_t)1 << (s2.size() - 1);
-  uint64_t VP   = levenshtein_hyrroe2003_masks[s2.size() - 1];
   uint64_t VN   = 0;
+  std::size_t currDist = s1.size();
+  /* mask used when computing D[m,j] in the paper 10^(m-1) */
+  uint64_t mask = (uint64_t)1 << (s1.size() - 1);
 
-  for (const auto& ch : s1) {
-    uint64_t y = posbits[(unsigned char)ch];
-    uint64_t X  = y | VN;
-    uint64_t D0 = ((VP + (X & VP)) ^ VP) | X;
-    uint64_t HN = VP & D0;
-    uint64_t HP = VN | ~(VP|D0);
-    X  = (HP << 1) | 1;
-    VN =  X & D0;
-    VP = (HN << 1) | ~(X | D0);
-    if (HP & mask) { dist++; }
-    if (HN & mask) { dist--; }
+/* Searching */
+  for (const auto& ch2 : s2) {
+    /* Step 1: Computing D0 */
+    uint64_t PM_j = PM.get(ch2);
+    uint64_t D0 = (((PM_j & VP) + VP) ^ VP) | PM_j | VN;
+
+    /* Step 2: Computing HP and HN */
+    uint64_t HP = VN | ~(D0 | VP);
+    uint64_t HN = D0 & VP;
+
+    /* Step 3: Computing the value D[m,j] */
+    if (HP & mask) { currDist++; }
+    if (HN & mask) { currDist--; }
+
+    /* Step 4: Computing Vp and VN */
+    VP = (HN << 1) | ~(D0 | (HP << 1));
+    VN =  (HP << 1) & D0;
   }
 
-  return dist;
+  return currDist;
 }
 
 template <typename CharT1, typename CharT2>
@@ -183,8 +192,10 @@ std::size_t levenshtein_wagner_fischer(basic_string_view<CharT1> s1, basic_strin
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
-  // Swapping the strings so the second string is shorter
-  if (s1.size() < s2.size()) {
+  /* Swapping the strings so the first string is shorter.
+   * Swapping has no effect on the score since Insertion and Deletion have the
+   * the same weight */
+  if (s1.size() > s2.size()) {
     return levenshtein(s2, s1, max);
   }
 
@@ -197,32 +208,31 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   }
 
   // at least length difference insertions/deletions required
-  if (s1.size() - s2.size() > max) {
+  if (s2.size() - s1.size() > max) {
     return -1;
   }
 
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
+  /* The Levenshtein distance between
+   * <prefix><string1><suffix> and <prefix><string2><suffix>
+   * is similar to the distance between <string1> and <string2>,
+   * so they can be removed in linear time */
   common::remove_common_affix(s1, s2);
 
-  if (s2.empty()) {
-    return s1.size();
+  if (s1.empty()) {
+    return s2.size();
   }
 
   if (max < 4) {
     return levenshtein_mbleven2018(s1, s2, max);
   }
 
-  // when both strings only hold characters < 256 and the short strings has less
-  // then 65 elements Hyyrös' algorithm can be used
-  if (sizeof(CharT1) == 1 && sizeof(CharT2) == 1) {
-    if (s2.size() < 65) {
-      std::size_t dist = levenshtein_hyrroe2003(s1, s2);
-      return (dist > max) ? -1 : dist;
-    }
+  /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
+  if (s2.size() < 65) {
+    std::size_t dist = levenshtein_hyrroe2003(s1, s2);
+    return (dist > max) ? -1 : dist;
   }
 
-  // replace this with myers algorithm in the future
+  /* replace this with myers algorithm in the future */
   return levenshtein_wagner_fischer(s1, s2, max);
 }
 
@@ -234,13 +244,15 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
     return 100.0 * static_cast<double>(s1.empty() && s2.empty());
   }
 
-  std::size_t max_len = std::max(s1.size(), s2.size());
+  /* calculate the maximum possible edit distance with
+   * Insertion/Deletion/Substitution = 1 */
+  std::size_t max_dist = std::max(s1.size(), s2.size());
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_len);
+  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
   std::size_t dist = levenshtein(s1, s2, cutoff_distance);
   return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, max_len, score_cutoff)
+    ? common::norm_distance(dist, max_dist, score_cutoff)
     : 0.0;
 }
 

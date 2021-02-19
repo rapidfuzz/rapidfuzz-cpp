@@ -124,15 +124,24 @@ template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
 template <std::size_t size>
-struct blockmap_entry;
+struct PatternMatchVector;
 
 template <std::size_t size>
-struct blockmap_entry {
+struct PatternMatchVector {
   std::array<uint32_t, 128> m_key;
   std::array<uint64_t, 128> m_val;
 
-  blockmap_entry()
+  PatternMatchVector()
     : m_key(), m_val() {}
+
+  template<typename CharT>
+  PatternMatchVector(basic_string_view<CharT> s)
+    : m_key(), m_val()
+  {
+    for (std::size_t i = 0; i < s.size(); i++){
+      insert(s[i], i);
+    }
+  }
 
   template <typename CharT>
   void insert(CharT ch, int pos) {
@@ -166,11 +175,20 @@ struct blockmap_entry {
 };
 
 template <>
-struct blockmap_entry<1> {
+struct PatternMatchVector<1> {
   std::array<uint64_t, 256> m_val;
 
-  blockmap_entry()
+  PatternMatchVector()
     : m_val() {}
+
+  template<typename CharT>
+  PatternMatchVector(basic_string_view<CharT> s)
+    : m_val()
+  {
+    for (std::size_t i = 0; i < s.size(); i++){
+      insert(s[i], i);
+    }
+  }
 
   void insert(unsigned char ch, int pos) {
     // todo add tests for this

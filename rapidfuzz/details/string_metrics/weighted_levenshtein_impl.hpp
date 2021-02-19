@@ -90,7 +90,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
 
 template <typename CharT1, std::size_t size>
 static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
-  const common::blockmap_entry<size>& block, std::size_t s2_len)
+  const common::PatternMatchVector<size>& block, std::size_t s2_len)
 {
   uint64_t DHneg1 = ~0x0ull;
   uint64_t DHzero = 0;
@@ -132,7 +132,7 @@ static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> 
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  common::blockmap_entry<sizeof(CharT2)> block;
+  common::PatternMatchVector<sizeof(CharT2)> block;
 
   for (std::size_t i = 0; i < s2.size(); i++){
     block.insert(s2[i], i);
@@ -196,7 +196,7 @@ std::size_t weighted_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, ba
 //TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2, std::size_t size>
 std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::blockmap_entry<size>& block, basic_string_view<CharT2> s2,
+  const common::PatternMatchVector<size>& block, basic_string_view<CharT2> s2,
   std::size_t max)
 {
   // when no differences are allowed a direct comparision is sufficient
@@ -306,7 +306,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 
 template <typename CharT1, typename CharT2, std::size_t size>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::blockmap_entry<size>& block, basic_string_view<CharT2> s2,
+  const common::PatternMatchVector<size>& block, basic_string_view<CharT2> s2,
   const double score_cutoff)
 {
   if (s1.empty() || s2.empty()) {

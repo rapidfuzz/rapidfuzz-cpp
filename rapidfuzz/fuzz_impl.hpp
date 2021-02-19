@@ -73,7 +73,7 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
     return partial_ratio(s2_view, s1_view, score_cutoff);
   }
 
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
 
   if (s1_view.size() < 65) {
     for (std::size_t i = 0; i < s1_view.size(); i++){
@@ -137,7 +137,7 @@ CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1) {
 namespace details {
 
 template <typename Sentence1, std::size_t size, typename Sentence2>
-percent partial_ratio_map(const Sentence1& s1, const common::blockmap_entry<size>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
+percent partial_ratio_map(const Sentence1& s1, const common::PatternMatchVector<size>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) {
     return 0;
@@ -469,7 +469,7 @@ namespace details {
 template <typename CharT1, std::size_t size, typename Sentence2>
 percent token_ratio(
   const std::basic_string<CharT1>& s1_sorted, const SplittedSentenceView<CharT1>& tokens_s1,
-  const common::blockmap_entry<size>& blockmap_s1_sorted,
+  const common::PatternMatchVector<size>& blockmap_s1_sorted,
   const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;

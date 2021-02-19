@@ -55,7 +55,7 @@ struct CachedRatio {
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
 };
 
 
@@ -100,7 +100,7 @@ struct CachedPartialRatio {
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
 };
 
 
@@ -146,7 +146,7 @@ struct CachedTokenSortRatio {
 
 private:
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 
@@ -187,7 +187,7 @@ struct CachedPartialTokenSortRatio {
 
 private:
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 /**
@@ -307,7 +307,7 @@ struct CachedTokenRatio {
 private:
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 
@@ -387,10 +387,10 @@ struct CachedWRatio {
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 /**
@@ -429,7 +429,7 @@ struct CachedQRatio {
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
 };
 
 /**@}*/
