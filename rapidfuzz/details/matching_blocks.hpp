@@ -162,10 +162,11 @@ private:
 
 template<typename Sentence1, std::size_t size,  typename Sentence2>
 std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<size>& blockmap_s1, Sentence2 s2) {
-  if (s1.size() > 64) {
-    return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
-  }
 
+ //if (s1.size() > 64) {
+    return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
+  //}
+/*
   std::vector<rapidfuzz::MatchingBlock> matching_blocks;
 
   std::uint64_t S = ~0x0ull;
@@ -211,7 +212,7 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
 
   matching_blocks.emplace_back(s1.size(), s2.size(), 0);
 
-  return matching_blocks;
+  return matching_blocks;*/
 }
 
 

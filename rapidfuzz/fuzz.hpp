@@ -43,6 +43,9 @@ namespace fuzz {
 template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename CharT1, typename CharT2>
+percent ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
+
 // TODO documentation
 template<typename Sentence1>
 struct CachedRatio {
@@ -87,6 +90,10 @@ private:
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+template <typename CharT1, typename CharT2>
+percent partial_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
+
 
 // todo add real implementation
 template<typename Sentence1>
@@ -134,6 +141,9 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename CharT1, typename CharT2>
+percent token_sort_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
+
 // TODO documentation
 template<typename Sentence1>
 struct CachedTokenSortRatio {
@@ -174,6 +184,9 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                  percent score_cutoff = 0);
+
+template <typename CharT1, typename CharT2>
+percent partial_token_sort_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
 
 // TODO documentation
 template<typename Sentence1>
@@ -221,6 +234,9 @@ private:
 template <typename Sentence1, typename Sentence2>
 percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename CharT1, typename CharT2>
+percent token_set_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
+
 // TODO documentation
 template<typename Sentence1>
 struct CachedTokenSetRatio {
@@ -258,6 +274,9 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename CharT1, typename CharT2>
+percent partial_token_set_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
+
 // TODO documentation
 template<typename Sentence1>
 struct CachedPartialTokenSetRatio {
@@ -293,6 +312,9 @@ private:
  */
 template <typename Sentence1, typename Sentence2>
 percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+template <typename CharT1, typename CharT2>
+percent token_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
 
 // todo add real implementation
 template<typename Sentence1>
@@ -335,6 +357,9 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename CharT1, typename CharT2>
+percent partial_token_ratio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
+
 // todo add real implementation
 template<typename Sentence1>
 struct CachedPartialTokenRatio {
@@ -374,6 +399,9 @@ private:
  */
 template <typename Sentence1, typename Sentence2>
 percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+template <typename CharT1, typename CharT2>
+percent WRatio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
 
 // todo add real implementation
 template<typename Sentence1>
@@ -417,6 +445,8 @@ private:
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename CharT1, typename CharT2>
+percent QRatio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff = 0);
 
 template<typename Sentence1>
 struct CachedQRatio {
