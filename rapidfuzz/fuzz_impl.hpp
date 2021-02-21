@@ -238,7 +238,7 @@ double CachedTokenSortRatio<Sentence1>::ratio(
   const Sentence2& s2, percent score_cutoff) const
 {
   if (score_cutoff > 100) return 0;
-  
+
   auto s2_sorted = common::sorted_split(s2).join();
 
   if (s1_sorted.size() < 65) {
@@ -723,7 +723,7 @@ percent WRatio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size
 }
 
 template<typename Sentence1>
-CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1) 
+CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
  : tokens_s1(common::sorted_split(s1))
 {
   s1_view = common::to_string_view(s1);

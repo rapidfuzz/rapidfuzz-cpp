@@ -7,7 +7,7 @@ function(rapidfuzz_add_test NAME SOURCE)
 	target_link_libraries(test_${NAME} ${PROJECT_NAME})
 	target_link_libraries(test_${NAME} Catch2::Catch2)
 	add_test(NAME ${NAME} COMMAND test_${NAME})
-endfunction()  
+endfunction()
 
 rapidfuzz_add_test(fuzz tests-fuzz.cpp)
 rapidfuzz_add_test(levenshtein tests-levenshtein.cpp)

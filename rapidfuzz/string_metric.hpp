@@ -72,12 +72,11 @@ namespace string_metric {
  *     parallel. The algorithm is described by [1]_. The time complexity of this
  *     algorithm is ``O(N)``.
  *
- *   - In all other cases the Levenshtein distance is calculated using
- *     Wagner-Fischer with Ukkonens optimization as described by @cite wagner_fischer_1974.
- *     The time complexity of this algorithm is ``O(N * M)``.
- *     In the future this should be replaced by Myers algorithm (with blocks),
- *     which performs the calculation in parallel aswell (64 characters at a time).
- *     Myers algorithm is described in @cite myers_1999.
+ *   - If the length of the shorter string is ≥ 64 after removing the common affix
+ *     a blockwise implementation of Myers' algorithm is used, which calculates
+ *     the Levenshtein distance in parallel (64 characters at a time).
+ *     The algorithm is described by [3]_. The time complexity of this
+ *     algorithm is ``O([N/64]M)``.
  *
  *
  * <b>Insertion = 1, Deletion = 1, Substitution >= Insertion + Deletion:</b>
@@ -280,11 +279,17 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
  *   string to compare with s2 (for type info check Template parameters above)
  * @param s2
  *   string to compare with s1 (for type info check Template parameters above)
+ * @param max
+ *   Maximum Hamming distance between s1 and s2, that is
+ *   considered as a result. If the distance is bigger than max,
+ *   -1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   which deactivates this behaviour.
  *
  * @return Hamming distance between s1 and s2
  */
 template <typename Sentence1, typename Sentence2>
-std::size_t hamming(const Sentence1& s1, const Sentence2& s2)
+std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
+                    std::size_t max = std::numeric_limits<std::size_t>::max())
 {
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
@@ -301,7 +306,7 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2)
       }
   }
 
-  return hamm;
+  return hamm > max ? (std::size_t)-1 : hamm;
 }
 
 /**
