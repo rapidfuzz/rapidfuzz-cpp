@@ -7,7 +7,6 @@
 #include <array>
 #include <limits>
 
-
 namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
@@ -104,7 +103,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
     VP += (uint64_t)1 << s1.size();
   }
 
-  uint64_t VN   = 0;
+  uint64_t VN = 0;
   std::size_t currDist = s1.size();
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
   uint64_t mask = (uint64_t)1 << (s1.size() - 1);
@@ -124,8 +123,13 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
     if (HN & mask) { currDist--; }
 
     /* Step 4: Computing Vp and VN */
-    VP = (HN << 1) | ~(D0 | (HP << 1));
-    VN =  (HP << 1) & D0;
+    /* taken from
+     * Hyyrö, Heikki. (2003). A Bit-Vector Algorithm for Computing
+     * Levenshtein and Damerau Edit Distances. Nord. J. Comput.. 10. 29-39. 
+     */
+    D0 >>= 1;
+    VP = HN | (D0 | HP);
+    VN = D0 & HP;
   }
 
   return currDist;
