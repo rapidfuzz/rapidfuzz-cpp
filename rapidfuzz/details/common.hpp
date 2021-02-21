@@ -218,7 +218,6 @@ struct BlockPatternMatchVector {
 
     for (std::size_t i = 0; i < s.size(); i++){
       auto* be = &m_val[i/64];
-      auto c = s[i];
       be->insert(s[i], i%64);
     }
   }
