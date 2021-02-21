@@ -112,7 +112,8 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
   for (const auto& ch2 : s2) {
     /* Step 1: Computing D0 */
     uint64_t PM_j = PM.get(ch2);
-    uint64_t D0 = (((PM_j & VP) + VP) ^ VP) | PM_j | VN;
+    uint64_t X = PM_j | VN;
+    uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
 
     /* Step 2: Computing HP and HN */
     uint64_t HP = VN | ~(D0 | VP);
@@ -123,13 +124,9 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
     if (HN & mask) { currDist--; }
 
     /* Step 4: Computing Vp and VN */
-    /* taken from
-     * Hyyrö, Heikki. (2003). A Bit-Vector Algorithm for Computing
-     * Levenshtein and Damerau Edit Distances. Nord. J. Comput.. 10. 29-39. 
-     */
-    D0 >>= 1;
-    VP = HN | (D0 | HP);
-    VN = D0 & HP;
+    X  = (HP << 1) | 1;
+    VP = (HN << 1) | ~(D0 | X);
+    VN =  X & D0;
   }
 
   return currDist;
@@ -139,6 +136,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
 #define BIT(i,n) (((i) >> (n)) & 1)
 #define FLIP(i,n) ((i) ^ ((uint64_t) 1 << (n)))
 
+/* this is mostly taken from https://github.com/fujimotos/polyleven */
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
