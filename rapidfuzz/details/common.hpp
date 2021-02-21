@@ -9,6 +9,7 @@
 #include <tuple>
 #include <vector>
 #include <array>
+#include <cstring>
 
 namespace rapidfuzz {
 
@@ -202,6 +203,36 @@ struct PatternMatchVector<1> {
       return m_val[(unsigned char)ch];
     }
     return (ch < 256) ? m_val[ch] : 0;
+  }
+};
+
+template <std::size_t size>
+struct BlockPatternMatchVector {
+  std::vector<PatternMatchVector<size>> m_val;
+
+  template<typename CharT>
+  BlockPatternMatchVector(basic_string_view<CharT> s)
+  {
+    std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
+    m_val.resize(nr);
+
+    for (std::size_t i = 0; i < s.size(); i++){
+      auto* be = &m_val[i/64];
+      auto c = s[i];
+      be->insert(s[i], i%64);
+    }
+  }
+
+  template<typename CharT>
+  void insert(std::size_t block, CharT ch, int pos) {
+    auto* be = &m_val[block];
+    be->insert(ch, pos);
+  }
+
+  template<typename CharT>
+  uint64_t get(std::size_t block, CharT ch) const {
+    auto* be = &m_val[block];
+    return be->get(ch);
   }
 };
 

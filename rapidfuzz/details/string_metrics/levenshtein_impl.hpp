@@ -135,6 +135,59 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
   return currDist;
 }
 
+#define CDIV(a,b) ((a) / (b) + ((a) % (b) > 0))
+#define BIT(i,n) (((i) >> (n)) & 1)
+#define FLIP(i,n) ((i) ^ ((uint64_t) 1 << (n)))
+
+template <typename CharT1, typename CharT2>
+std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+  common::BlockPatternMatchVector<sizeof(CharT2)> map(s1);
+  std::size_t hsize = CDIV(s2.size(), 64);
+  std::size_t vsize = CDIV(s1.size(), 64);
+  std::size_t Score = s1.size();
+
+  std::vector<uint64_t> Phc(hsize, (uint64_t)-1);
+  std::vector<uint64_t> Mhc(hsize, 0);
+  uint64_t Last = (uint64_t)1 << ((s1.size() - 1) % 64);
+
+  for (std::size_t b = 0; b < vsize; b++) {
+    uint64_t Mv = 0;
+    uint64_t Pv = (uint64_t) -1;
+    Score = s1.size();
+
+    for (std::size_t i = 0; i < s2.size(); i++) {
+      uint64_t Eq = map.get(b, s2[i]);
+
+      uint8_t Pb = BIT(Phc[i / 64], i % 64);
+      uint8_t Mb = BIT(Mhc[i / 64], i % 64);
+
+      uint64_t Xv = Eq | Mv;
+      uint64_t Xh = ((((Eq | Mb) & Pv) + Pv) ^ Pv) | Eq | Mb;
+
+      uint64_t Ph = Mv | ~ (Xh | Pv);
+      uint64_t Mh = Pv & Xh;
+
+      if (Ph & Last) Score++;
+      if (Mh & Last) Score--;
+
+      if ((Ph >> 63) ^ Pb)
+        Phc[i / 64] = FLIP(Phc[i / 64], i % 64);
+
+      if ((Mh >> 63) ^ Mb)
+        Mhc[i / 64] = FLIP(Mhc[i / 64], i % 64);
+
+      Ph = (Ph << 1) | Pb;
+      Mh = (Mh << 1) | Mb;
+
+      Pv = Mh | ~ (Xv | Ph);
+      Mv = Ph & Xv;
+    }
+  }
+
+  return Score;
+}
+
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_wagner_fischer(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
@@ -237,7 +290,8 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   }
 
   /* replace this with myers algorithm in the future */
-  return levenshtein_wagner_fischer(s1, s2, max);
+  std::size_t dist = levenshtein_myers1999_block(s1, s2);
+  return (dist > max) ? -1 : dist;
 }
 
 
