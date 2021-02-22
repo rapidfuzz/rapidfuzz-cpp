@@ -33,7 +33,7 @@
 #include <vector>
 
 namespace rapidfuzz {
-
+namespace detail {
 struct MatchingBlock {
   std::size_t spos;
   std::size_t dpos;
@@ -225,4 +225,5 @@ std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::blo
   return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
 }
 
+} /* namespace detail */
 } /* namespace rapidfuzz */
