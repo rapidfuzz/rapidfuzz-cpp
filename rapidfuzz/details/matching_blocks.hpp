@@ -158,14 +158,16 @@ private:
 
 }  // namespace difflib
 
-
+/* TODO this implementation is broken. The LCS part works fine, but extracting the longest sequences does not work
+ * properly
+ */
+#if 0
 template<typename Sentence1, std::size_t size,  typename Sentence2>
 std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
-  //if (s1.size() > 64) {
+  if (s1.size() > 64) {
     return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
-  //}
+  }
 
-#if 0
   std::vector<rapidfuzz::MatchingBlock> matching_blocks;
 
   // Hyyrö, Heikki. (2004). A Note on Bit-Parallel Alignment Computation. 79-87.
@@ -214,13 +216,13 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
   matching_blocks.emplace_back(s1.size(), s2.size(), 0);
 
   return matching_blocks;
-#endif
 }
+#endif
 
-
-template<typename Sentence1, std::size_t size, typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
-  return longest_common_subsequence(s1, blockmap_s1, s2);
+template<typename Sentence1, /*std::size_t size,*/ typename Sentence2>
+std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::blockmap_entry<size>& blockmap_s1,*/ Sentence2 s2) {
+  //return longest_common_subsequence(s1, blockmap_s1, s2);
+  return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
 }
 
 } /* namespace rapidfuzz */
