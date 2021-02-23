@@ -73,7 +73,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
   return (dist > max) ? -1 : dist;
 }
 
-static constexpr std::array<uint64_t, 64> levenshtein_hyrroe2003_masks = {
+static constexpr std::array<uint64_t, 64> levenshtein_hyrroe2003_masks = {{
   0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,
   0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,
   0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,
@@ -90,7 +90,7 @@ static constexpr std::array<uint64_t, 64> levenshtein_hyrroe2003_masks = {
   0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,
   0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,
   0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
-};
+}};
 
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
