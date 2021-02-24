@@ -138,7 +138,7 @@ template <class T> class has_bracket_operator {
   using has_op = char;
   struct hasnt_op { char t[2]; };  // Ensured to work on any platform
   template <typename C> static has_op matcher(decltype(sub_matcher<T>(&T::at)));
-  template <typename C> static hasnt_op matcher(...); 
+  template <typename C> static hasnt_op matcher(...);
  public:
   static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
 };

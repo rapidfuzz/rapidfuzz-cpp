@@ -208,7 +208,7 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
       --pos_s2;
     }
   }
-  
+
   if (length) {
     matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
   }

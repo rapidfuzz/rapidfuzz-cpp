@@ -572,7 +572,7 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 }
 
 template<typename Sentence1>
-CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1) 
+CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
  : tokens_s1(common::sorted_split(s1))
 {
   s1_view = common::to_string_view(s1);

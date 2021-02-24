@@ -54,7 +54,7 @@ cmake --build .
 cmake --build . --target install
 ```
 
-Then in your CMakeLists.txt: 
+Then in your CMakeLists.txt:
 ```cmake
 find_package(rapidfuzz REQUIRED)
 add_executable(foo main.cpp)
@@ -75,7 +75,7 @@ Then you can either:
     ```
 2. build it at configure time with `FetchContent`
     ```cmake
-    FetchContent_Declare( 
+    FetchContent_Declare(
       rapidfuzz
       SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/RapidFuzz
       PREFIX ${CMAKE_CURRENT_BINARY_DIR}/rapidfuzz
@@ -96,9 +96,9 @@ FetchContent_MakeAvailable(rapidfuzz)
 add_executable(foo main.cpp)
 target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
 ```
-It will be downloaded each time you run CMake in a blank folder.   
+It will be downloaded each time you run CMake in a blank folder.
 
-## CMake option 
+## CMake option
 
 There are CMake options available:
 
