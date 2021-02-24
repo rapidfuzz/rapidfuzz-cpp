@@ -93,14 +93,15 @@ template<typename Sentence1>
 struct CachedPartialRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialRatio(const Sentence1& s1);
+  CachedPartialRatio(const Sentence1& s1)
+    : cached_ratio(s1) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  CachedRatio<Sentence1> cached_ratio;
 };
 
 
@@ -139,14 +140,15 @@ template<typename Sentence1>
 struct CachedTokenSortRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedTokenSortRatio(const Sentence1& s1);
+  CachedTokenSortRatio(const Sentence1& s1)
+    : s1_sorted(common::sorted_split(s1).join()), cached_ratio(s1_sorted) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   std::basic_string<CharT1> s1_sorted;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
+  CachedRatio<Sentence1> cached_ratio;
 };
 
 
@@ -180,14 +182,15 @@ template<typename Sentence1>
 struct CachedPartialTokenSortRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialTokenSortRatio(const Sentence1& s1);
+  CachedPartialTokenSortRatio(const Sentence1& s1)
+   : s1_sorted(common::sorted_split(s1).join()), cached_partial_ratio(s1_sorted) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   std::basic_string<CharT1> s1_sorted;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
+  CachedPartialRatio<Sentence1> cached_partial_ratio;
 };
 
 /**
@@ -299,15 +302,17 @@ template<typename Sentence1>
 struct CachedTokenRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedTokenRatio(const Sentence1& s1);
+  CachedTokenRatio(const Sentence1& s1)
+    : s1_tokens(common::sorted_split(s1)), s1_sorted(s1_tokens.join()),
+      cached_ratio_s1_sorted(s1_sorted) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  SplittedSentenceView<CharT1> tokens_s1;
+  SplittedSentenceView<CharT1> s1_tokens;
   std::basic_string<CharT1> s1_sorted;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
+  CachedRatio<Sentence1> cached_ratio_s1_sorted;
 };
 
 
