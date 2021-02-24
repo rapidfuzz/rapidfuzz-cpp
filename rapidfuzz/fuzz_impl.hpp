@@ -570,12 +570,6 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
                   partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
 }
 
-template <typename CharT1, typename CharT2>
-percent WRatio(const CharT1* s1, std::size_t len_s1, const CharT2* s2, std::size_t len_s2, percent score_cutoff)
-{
-  return WRatio(basic_string_view<CharT1>(s1, len_s1), basic_string_view<CharT2>(s2, len_s2), score_cutoff);
-}
-
 template<typename Sentence1>
 CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
  : tokens_s1(common::sorted_split(s1))
