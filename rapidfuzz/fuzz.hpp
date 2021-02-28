@@ -48,7 +48,8 @@ template<typename Sentence1>
 struct CachedRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedRatio(const Sentence1& s1);
+  CachedRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
@@ -57,7 +58,6 @@ private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
   common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
 };
-
 
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
@@ -94,7 +94,7 @@ struct CachedPartialRatio {
   using CharT1 = char_type<Sentence1>;
 
   CachedPartialRatio(const Sentence1& s1)
-    : cached_ratio(s1) {}
+    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
@@ -134,7 +134,7 @@ private:
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
+// todo CachedRatio speed for equal strings vs original implementation
 // TODO documentation
 template<typename Sentence1>
 struct CachedTokenSortRatio {
@@ -391,6 +391,8 @@ struct CachedWRatio {
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
+// todo somehow implement this using other ratios with creating PatternMatchVector
+// multiple times
   rapidfuzz::basic_string_view<CharT1> s1_view;
   common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
@@ -426,14 +428,15 @@ template<typename Sentence1>
 struct CachedQRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedQRatio(const Sentence1& s1);
+  CachedQRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  CachedRatio<Sentence1> cached_ratio;
 };
 
 /**@}*/

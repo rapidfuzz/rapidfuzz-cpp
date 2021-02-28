@@ -140,7 +140,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_vi
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  common::BlockPatternMatchVector<sizeof(CharT2)> map(s1);
+  common::BlockPatternMatchVector<sizeof(CharT1)> map(s1);
   std::size_t hsize = CDIV(s2.size(), 64);
   std::size_t vsize = CDIV(s1.size(), 64);
   std::size_t Score = s1.size();
