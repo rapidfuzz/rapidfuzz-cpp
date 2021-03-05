@@ -210,9 +210,22 @@ template <std::size_t size>
 struct BlockPatternMatchVector {
   std::vector<PatternMatchVector<size>> m_val;
 
+  BlockPatternMatchVector() {}
+
   template<typename CharT>
   BlockPatternMatchVector(basic_string_view<CharT> s)
   {
+    insert(s);
+  }
+
+  template<typename CharT>
+  void insert(std::size_t block, CharT ch, int pos) {
+    auto* be = &m_val[block];
+    be->insert(ch, pos);
+  }
+
+  template<typename CharT>
+  void insert(basic_string_view<CharT> s) {
     std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
     m_val.resize(nr);
 
@@ -220,12 +233,6 @@ struct BlockPatternMatchVector {
       auto* be = &m_val[i/64];
       be->insert(s[i], i%64);
     }
-  }
-
-  template<typename CharT>
-  void insert(std::size_t block, CharT ch, int pos) {
-    auto* be = &m_val[block];
-    be->insert(ch, pos);
   }
 
   template<typename CharT>

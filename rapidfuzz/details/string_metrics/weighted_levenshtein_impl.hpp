@@ -129,74 +129,121 @@ static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> 
   return dist;
 }
 
-template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+template <typename T, typename U>
+constexpr T bit_clear(T val, U bit)
 {
-  common::PatternMatchVector<sizeof(CharT2)> block;
+  return val & ~(1ull << bit);
+}
 
-  for (std::size_t i = 0; i < s2.size(); i++){
-    block.insert(s2[i], i);
+template <typename T, typename U>
+constexpr T bit_check(T val, U bit)
+{
+  return (val >> bit) & 0x1;
+}
+
+template <typename CharT1, std::size_t size>
+std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
+  const common::BlockPatternMatchVector<size>& block, std::size_t s2_len)
+{
+  std::size_t words = block.m_val.size();
+  std::vector<uint64_t> DHpos1(words);
+  std::vector<uint64_t> DHzero(words);
+  std::vector<uint64_t> DHneg1(words, ~0x0ull);
+
+  //recursion
+  for (const auto& ch1 : s1)
+  {
+    //initialize OverFlow
+    uint64_t OverFlow0 = 0;
+    uint64_t OverFlow1 = 0;
+    uint64_t INITzerosprevbit = 0;
+
+    for (std::size_t word = 0; word < words; ++word){
+      uint64_t DHpos1temp = DHpos1[word];
+      uint64_t DHzerotemp = DHzero[word];
+      uint64_t DHneg1temp = DHneg1[word];
+      uint64_t Matches    = block.get(word, ch1);
+
+      //Complement Matches
+      uint64_t NotMatches = ~Matches;
+      //Finding the vertical values
+      //Find 1s
+      uint64_t INITpos1s = DHneg1temp & Matches;
+      uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
+      uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+      OverFlow0 = (sum < INITpos1s) || (sum < DHneg1temp) || (sum < OverFlow0);
+
+      //set RemainingDHneg1
+      uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+      //combine 1s and Matches
+      uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+      //Find 0s
+      uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+      uint64_t initval = INITzerosprevbit;
+      INITzerosprevbit = INITzeros >> 63;
+      initval = (INITzeros << 1) | initval;
+
+      sum = initval + RemainDHneg1 + OverFlow1;
+      uint64_t DVzeroshift = sum ^ RemainDHneg1;
+      OverFlow1 = (sum < initval) || (sum < RemainDHneg1) || (sum < OverFlow1);
+      //Find -1s
+      uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+
+      //Finding the horizontal values
+      //Remove matches from DH values except 1
+      DHzerotemp &= NotMatches;
+      //combine 1s and Matches
+      uint64_t DHpos1orMatch = DHpos1temp | Matches;
+      //Find 0s
+      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+      //Find 1s
+      DHpos1temp = DVneg1shift & DHpos1orMatch;
+      //Find -1s
+      DHneg1temp = ~(DHzerotemp | DHpos1temp);
+
+      DHpos1[word] = DHpos1temp;
+      DHzero[word] = DHzerotemp;
+      DHneg1[word] = DHneg1temp;
+
+    }
   }
 
-  return weighted_levenshtein_bitpal(s1, block, s2.size());
+  //find scores in last row
+  std::size_t dist = s1.size();
+
+  for (std::size_t word = 0; word < words; ++word){
+    uint64_t DHpos1temp = DHpos1[word];
+    uint64_t DHzerotemp = DHzero[word];
+    uint64_t add1 = DHzerotemp;
+    uint64_t add2 = DHpos1temp;
+
+    for (std::size_t i = word * 64; i < (word + 1) * 64 && i < s2_len; ++i)
+    {
+      dist -= (add1 & 0x1) * 1 + (add2 & 0x1) * 2 - 1;
+      add1 >>= 1;
+      add2 >>= 1;
+    }
+  }
+
+  return dist;
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  std::size_t len_diff = s1.size() - s2.size();
-  std::size_t max_shift = (max <= s1.size()) ? max : s1.size();
-
-  std::vector<std::size_t> cache(s1.size());
-  std::iota(cache.begin(), cache.begin() + max_shift, 1);
-  std::fill(cache.begin() + max_shift, cache.end(), max + 1);
-
-  const std::size_t offset = max_shift - len_diff;
-  const bool haveMax = max < (2 * s2.size() + len_diff);
-
-  std::size_t jStart = 0;
-  std::size_t jEnd = max_shift;
-
-  std::size_t s2_pos = 0;
-
-  for (const auto& char2 : s2) {
-    auto cache_iter = cache.begin();
-    std::size_t current_cache = s2_pos;
-    std::size_t result = s2_pos + 1;
-
-    jStart += (s2_pos > offset) ? 1 : 0;
-    jEnd += (jEnd < s1.size()) ? 1 : 0;
-
-    for (const auto& char1 : s1) {
-      if (char1 == char2) {
-        result = current_cache;
-      }
-      else {
-        ++result;
-      }
-      current_cache = *cache_iter;
-      if (result > current_cache + 1) {
-        result = current_cache + 1;
-      }
-
-      *cache_iter = result;
-      ++cache_iter;
-    }
-
-    if (haveMax && cache[s2_pos + len_diff] > max) {
-      return -1;
-    }
-
-    ++s2_pos;
+  if (s1.size() < 65) {
+    return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size());
+  } else {
+    return weighted_levenshtein_bitpal_blockwise(
+      s1, common::BlockPatternMatchVector<sizeof(CharT2)>(s2), s2.size());
   }
-
-  return (cache.back() <= max) ? cache.back() : -1;
 }
 
 //TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2, std::size_t size>
 std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::PatternMatchVector<size>& block, basic_string_view<CharT2> s2,
+  const common::BlockPatternMatchVector<size>& block, basic_string_view<CharT2> s2,
   std::size_t max)
 {
   // when no differences are allowed a direct comparision is sufficient
@@ -221,9 +268,15 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
     return -1;
   }
 
-  // to this first, since we can not remove any affix in encoded form
+  // do this first, since we can not remove any affix in encoded form
   if (max >= 5) {
-    std::size_t dist = weighted_levenshtein_bitpal(s1, block, s2.size());
+    std::size_t dist = 0;
+    if (s1.size() < 65) {
+      dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
+    } else {
+      dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
+    }
+
     return (dist > max) ? -1 : dist;
   }
 
@@ -288,25 +341,13 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
     return weighted_levenshtein_mbleven2018(s1, s2, max);
   }
 
-  // when the second string has less than 64 characters bitpal can be used
-  if (s2.size() < 65) {
-    std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
-    return (dist > max) ? -1 : dist;
-  }
-
-  // find uncommon chars in the two sequences to exit early in many cases in
-  // linear time
-  // TODO add blockwise BitPal implementation
-  if ((max < s1.size() + s2.size()) && (common::count_uncommon_chars(s1, s2) > max)) {
-    return -1;
-  }
-
-  return weighted_levenshtein_wagner_fischer(s1, s2, max);
+  std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
+  return (dist > max) ? -1 : dist;
 }
 
 template <typename CharT1, typename CharT2, std::size_t size>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::PatternMatchVector<size>& block, basic_string_view<CharT2> s2,
+  const common::BlockPatternMatchVector<size>& block, basic_string_view<CharT2> s2,
   const double score_cutoff)
 {
   if (s1.empty() || s2.empty()) {

@@ -153,16 +153,17 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
 
-  if (weights.insert_cost == 1 && weights.delete_cost == 1) {
-    if (weights.replace_cost == 1) {
-      return detail::levenshtein(sentence1, sentence2, max);
-    } else if (weights.replace_cost > 1) {
-      /*
-       * when replace_cost >= insert_cost + delete_cost set
-       * replace_cost = insert_cost + delete_cost
-       * since every substitution can be performed as insertion + deletion
-       */
-      return detail::weighted_levenshtein(sentence1, sentence2, max);
+  if (weights.insert_cost == weights.delete_cost) {
+    /* uniform Levenshtein multiplied with the common factor */
+    if (weights.insert_cost == weights.replace_cost) {
+      return detail::levenshtein(sentence1, sentence2, max) * weights.insert_cost;
+    }
+    /*
+     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+     * therefore this can be implemented as InDel distance multiplied with the common factor
+     */
+    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+      return detail::weighted_levenshtein(sentence1, sentence2, max) * weights.insert_cost;
     }
   }
 
@@ -247,21 +248,57 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
 
-  if (weights.insert_cost == 1 && weights.delete_cost == 1) {
-    if (weights.replace_cost == 1) {
+  if (weights.insert_cost == weights.delete_cost) {
+    /* uniform Levenshtein */
+    if (weights.insert_cost == weights.replace_cost) {
       return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
-    } else if (weights.replace_cost > 1) {
-      /*
-       * when replace_cost >= insert_cost + delete_cost set
-       * replace_cost = insert_cost + delete_cost
-       * since every substitution can be performed as insertion + deletion
-       */
+    }
+    /*
+     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+     * therefore this can be implemented as InDel distance
+     */
+    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
       return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
     }
   }
 
   return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
 }
+
+template<typename Sentence1>
+struct CachedNormalizedLevenshtein {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable weights = {1, 1, 1})
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+  {
+    auto s2_view = common::to_string_view(s2);
+
+    if (weights.insert_cost == weights.delete_cost) {
+      /* uniform Levenshtein */
+      if (weights.insert_cost == weights.replace_cost) {
+        return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+      }
+      /*
+       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+       * therefore this can be implemented as InDel distance
+       */
+      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+        return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+      }
+    }
+
+    return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  LevenshteinWeightTable weights;
+};
 
 /**
  * @brief Calculates the Hamming distance between two strings.

@@ -29,12 +29,8 @@ template<typename Sentence2>
 double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
   auto s2_view = common::to_string_view(s2);
 
-  if (s1_view.size() < 65) {
-    return string_metric::detail::normalized_weighted_levenshtein(
-      s2_view, blockmap_s1, s1_view, score_cutoff);
-  }
-
-  return fuzz::ratio(s1_view, s2_view, score_cutoff);
+  return string_metric::detail::normalized_weighted_levenshtein(
+    s2_view, blockmap_s1, s1_view, score_cutoff);
 }
 
 
@@ -129,7 +125,7 @@ percent partial_ratio_map(const Sentence1& s1, const CachedRatio<CachedSentence1
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename Sentence1, std::size_t size, typename Sentence2>
-percent partial_ratio_map(const Sentence1& s1, const common::PatternMatchVector<size>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
+percent partial_ratio_map(const Sentence1& s1, const common::BlockPatternMatchVector<size>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) {
     return 0;
@@ -499,7 +495,7 @@ percent token_ratio(
 template <typename CharT1, std::size_t size, typename Sentence2>
 percent token_ratio(
   const std::basic_string<CharT1>& s1_sorted, const SplittedSentenceView<CharT1>& tokens_s1,
-  const common::PatternMatchVector<size>& blockmap_s1_sorted,
+  const common::BlockPatternMatchVector<size>& blockmap_s1_sorted,
   const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;
@@ -693,17 +689,8 @@ CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
   s1_view = common::to_string_view(s1);
   s1_sorted = tokens_s1.join();
 
-  // todo handle longer strings aswell
-  if (s1_view.size() < 65) {
-    for (std::size_t i = 0; i < s1_view.size(); i++){
-      blockmap_s1.insert(s1_view[i], i);
-    }
-  }
-  if (s1_sorted.size() < 65) {
-    for (std::size_t i = 0; i <  s1_sorted.size(); i++){
-      blockmap_s1_sorted.insert(s1_sorted[i], i);
-    }
-  }
+  blockmap_s1.insert(s1_view);
+  blockmap_s1_sorted.insert(common::to_string_view(s1_sorted));
 }
 
 template<typename Sentence1>
