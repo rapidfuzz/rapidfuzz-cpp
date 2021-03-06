@@ -88,6 +88,37 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
   return (dist > max) ? -1 : dist;
 }
 
+/*
+ * count the number of bits set in a 64 bit integer
+ * The code uses wikipedia's 64-bit popcount implementation:
+ * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+ */
+static inline int popcount64(uint64_t x)
+{
+  const uint64_t m1  = 0x5555555555555555; //binary: 0101...
+  const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
+  const uint64_t m4  = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
+  const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+
+  x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
+  x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits 
+  x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits 
+  return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ... 
+}
+
+/*
+ * returns a 64 bit integer with the first n bits set to 1
+ */
+static inline uint64_t set_bits(int n)
+{
+  uint64_t result = (uint64_t)-1;
+  // shifting by 64 bits would be undefined behavior
+  if (n < 64) {
+    result += (uint64_t)1 << n;
+  }
+  return result;
+}
+
 template <typename CharT1, std::size_t size>
 static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
   const common::PatternMatchVector<size>& block, std::size_t s2_len)
@@ -96,38 +127,37 @@ static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> 
   uint64_t DHzero = 0;
   uint64_t DHpos1 = 0;
 
-  for (std::size_t i = 0; i < s1.size(); ++i)
+  for (auto ch2 : s1)
   {
-    uint64_t Matches = block.get(s1[i]);
-    uint64_t NotMatches = ~Matches;
+    const uint64_t Matches = block.get(ch2);
+    const uint64_t NotMatches = ~Matches;
 
-    uint64_t INITpos1s = DHneg1 & Matches;
-    uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
+    const uint64_t INITpos1s = DHneg1 & Matches;
+    const uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
 
-    uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
-    uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+    const uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
+    const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
 
-    uint64_t INITzeros = (DHzero & DVpos1shiftorMatch) ;
-    uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
+    const uint64_t INITzeros = (DHzero & DVpos1shiftorMatch) ;
+    const uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
 
-    uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+    const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
     DHzero &= NotMatches;
-    uint64_t DHpos1orMatch = DHpos1| Matches;
+    const uint64_t DHpos1orMatch = DHpos1| Matches;
     DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
     DHpos1 = (DVneg1shift & DHpos1orMatch);
     DHneg1 = ~(DHzero | DHpos1);
   }
 
-  std::size_t dist = s1.size();
+  std::size_t dist = s1.size() + s2_len;
+  uint64_t bitmask = set_bits(s2_len);
 
-  for (std::size_t i = 0; i < s2_len; i++)
-  {
-    uint64_t bitmask = 1ull << i;
-    dist -= ((DHzero & bitmask) >> i) * 1 + ((DHpos1 & bitmask) >> i) * 2 - 1;
-  }
+  dist -= popcount64(DHzero & bitmask);
+  dist -= popcount64(DHpos1 & bitmask) * 2;
 
   return dist;
 }
+
 
 template <typename T, typename U>
 constexpr T bit_clear(T val, U bit)
@@ -159,42 +189,44 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
     uint64_t INITzerosprevbit = 0;
 
     for (std::size_t word = 0; word < words; ++word){
-      uint64_t DHpos1temp = DHpos1[word];
-      uint64_t DHzerotemp = DHzero[word];
-      uint64_t DHneg1temp = DHneg1[word];
-      uint64_t Matches    = block.get(word, ch1);
+      uint64_t DHpos1temp    = DHpos1[word];
+      uint64_t DHzerotemp    = DHzero[word];
+      uint64_t DHneg1temp    = DHneg1[word];
+      const uint64_t Matches = block.get(word, ch1);
 
       //Complement Matches
-      uint64_t NotMatches = ~Matches;
+      const uint64_t NotMatches = ~Matches;
       //Finding the vertical values
       //Find 1s
-      uint64_t INITpos1s = DHneg1temp & Matches;
+      const uint64_t INITpos1s = DHneg1temp & Matches;
+
       uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-      uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
       OverFlow0 = (sum < INITpos1s) || (sum < DHneg1temp) || (sum < OverFlow0);
+      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
 
       //set RemainingDHneg1
-      uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
       //combine 1s and Matches
-      uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
 
       //Find 0s
-      uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
       uint64_t initval = INITzerosprevbit;
       INITzerosprevbit = INITzeros >> 63;
       initval = (INITzeros << 1) | initval;
 
       sum = initval + RemainDHneg1 + OverFlow1;
-      uint64_t DVzeroshift = sum ^ RemainDHneg1;
       OverFlow1 = (sum < initval) || (sum < RemainDHneg1) || (sum < OverFlow1);
+      const uint64_t DVzeroshift = sum ^ RemainDHneg1;
+      
       //Find -1s
-      uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
 
       //Finding the horizontal values
       //Remove matches from DH values except 1
       DHzerotemp &= NotMatches;
       //combine 1s and Matches
-      uint64_t DHpos1orMatch = DHpos1temp | Matches;
+      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
       //Find 0s
       DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
       //Find 1s
@@ -210,21 +242,17 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
   }
 
   //find scores in last row
-  std::size_t dist = s1.size();
+  std::size_t dist = s1.size() + s2_len;
 
-  for (std::size_t word = 0; word < words; ++word){
-    uint64_t DHpos1temp = DHpos1[word];
-    uint64_t DHzerotemp = DHzero[word];
-    uint64_t add1 = DHzerotemp;
-    uint64_t add2 = DHpos1temp;
-
-    for (std::size_t i = word * 64; i < (word + 1) * 64 && i < s2_len; ++i)
-    {
-      dist -= (add1 & 0x1) * 1 + (add2 & 0x1) * 2 - 1;
-      add1 >>= 1;
-      add2 >>= 1;
-    }
+  for (std::size_t word = 0; word < words-1; ++word)
+  {
+    dist -= popcount64(DHzero[word]);
+    dist -= popcount64(DHpos1[word]) * 2;
   }
+
+  uint64_t bitmask = set_bits(s2_len - (words - 1) * 64);
+  dist -= popcount64(DHzero.back() & bitmask);
+  dist -= popcount64(DHpos1.back() & bitmask) * 2;
 
   return dist;
 }
