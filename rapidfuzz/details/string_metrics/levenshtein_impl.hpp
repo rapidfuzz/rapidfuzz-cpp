@@ -118,7 +118,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
     /* Step 3: Computing the value D[m,j] */
     if (HP & mask) { currDist++; }
-    if (HN & mask) { currDist--; }
+    else if (HN & mask) { currDist--; }
 
     /* Step 4: Computing Vp and VN */
     X  = (HP << 1) | 1;
@@ -129,167 +129,76 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
   return currDist;
 }
 
-template <typename CharT1, typename CharT2>
-std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
-{
-/* Preprocessing */
-  /* pattern match vector with uint32_t support */
-  common::PatternMatchVector<sizeof(CharT1)> PM(s1);
-
-  /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-  uint64_t VP = (uint64_t)-1;
-  if (s1.size() < 64) {
-    VP += (uint64_t)1 << s1.size();
-  }
-
-  uint64_t VN = 0;
-  std::size_t currDist = s1.size();
-  /* mask used when computing D[m,j] in the paper 10^(m-1) */
-  const uint64_t mask = (uint64_t)1 << (s1.size() - 1);
-
-/* Searching */
-  for (const auto& ch2 : s2) {
-    /* Step 1: Computing D0 */
-    const uint64_t PM_j = PM.get(ch2);
-    uint64_t X = PM_j | VN;
-    const uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
-
-    /* Step 2: Computing HP and HN */
-    const uint64_t HP = VN | ~(D0 | VP);
-    const uint64_t HN = D0 & VP;
-
-    /* Step 3: Computing the value D[m,j] */
-    if (HP & mask) { currDist++; }
-    if (HN & mask) { currDist--; }
-
-    /* Step 4: Computing Vp and VN */
-    X  = (HP << 1) | 1;
-    VP = (HN << 1) | ~(D0 | X);
-    VN =  X & D0;
-  }
-
-  return currDist;
-}
-
-
-
-#define CDIV(a,b) ((a) / (b) + ((a) % (b) > 0))
-#define BIT(i,n) (((i) >> (n)) & 1)
-#define FLIP(i,n) ((i) ^ ((uint64_t) 1 << (n)))
-
-
-
-/* this is mostly taken from https://github.com/fujimotos/polyleven */
 template <typename CharT1, std::size_t size>
 std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-  const common::BlockPatternMatchVector<size>& map, std::size_t s1_len)
+  const common::BlockPatternMatchVector<size>& PM, std::size_t s1_len)
 {
-  std::size_t hsize = CDIV(s2.size(), 64);
-  std::size_t vsize = CDIV(s1_len, 64);
-  std::size_t Score = s1_len;
+  struct Vectors {
+    uint64_t Mv;
+    uint64_t Pv;
 
-  std::vector<uint64_t> Phc(hsize, (uint64_t)-1);
-  std::vector<uint64_t> Mhc(hsize, 0);
+    Vectors()
+      : Mv(0), Pv(~0x0ull) {}
+  };
+
+  const std::size_t words = PM.m_val.size();
+  std::size_t currDist = s1_len;
+  /*std::vector<uint64_t> Phc(words, (uint64_t)-1);
+  std::vector<uint64_t> Mhc(words, 0);*/
+  std::vector<Vectors> vecs(words);
   const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
-  const uint64_t LastWordSizeS2 = (s2.size() - 1) % 64;
 
-  for (std::size_t b = 0; b < vsize-1; b++) {
-    uint64_t Mv = 0;
-    uint64_t Pv = (uint64_t) -1;
+  for (std::size_t i = 0; i < s2.size(); i++) {
+    uint64_t Pb = 1;
+    uint64_t Mb = 0;
 
-    for (std::size_t i = 0; i < s2.size()-1; i++) {
-      const uint64_t Eq = map.get(b, s2[i]);
+    for (std::size_t word = 0; word < words - 1; word++) {
+      const uint64_t PM_j = PM.get(word, s2[i]);
+      const uint64_t Mv = vecs[word].Mv;
+      const uint64_t Pv = vecs[word].Pv;
 
-      const uint64_t Pb = BIT(Phc[i / 64], i % 64);
-      const uint64_t Mb = BIT(Mhc[i / 64], i % 64);
-
-      const uint64_t Xv = Eq | Mv;
-      const uint64_t Xh = ((((Eq | Mb) & Pv) + Pv) ^ Pv) | Eq | Mb;
+      const uint64_t Xv = PM_j | Mv;
+      const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
 
       uint64_t Ph = Mv | ~ (Xh | Pv);
       uint64_t Mh = Pv & Xh;
 
-      if ((Ph >> 63) ^ Pb)
-        Phc[i / 64] = FLIP(Phc[i / 64], i % 64);
+      const uint64_t PbTemp = Pb;
+      Pb = Ph >> 63;
+      Ph = (Ph << 1) | PbTemp;
+    
+      const uint64_t MbTemp = Mb;
+      Mb = Mh >> 63;
+      Mh = (Mh << 1) | MbTemp;
 
-      if ((Mh >> 63) ^ Mb)
-        Mhc[i / 64] = FLIP(Mhc[i / 64], i % 64);
-
-      Ph = (Ph << 1) | Pb;
-      Mh = (Mh << 1) | Mb;
-
-      Pv = Mh | ~ (Xv | Ph);
-      Mv = Ph & Xv;
+      vecs[word].Pv = Mh | ~ (Xv | Ph);
+      vecs[word].Mv = Ph & Xv;
     }
 
-    // manually unroll the loop iteration for the last char
-    // since it does not has to calculate some scores for the next iteration
+    // distance only has to be incremented/decremented in the last word
     {
-      const uint64_t Eq = map.get(b, s2[s2.size()-1]);
+      const uint64_t PM_j = PM.get(words - 1, s2[i]);
+      const uint64_t Mv = vecs[words - 1].Mv;
+      const uint64_t Pv = vecs[words - 1].Pv;
 
-      const uint64_t Pb = BIT(Phc[hsize - 1], LastWordSizeS2);
-      const uint64_t Mb = BIT(Mhc[hsize - 1], LastWordSizeS2);
-
-      const uint64_t Xh = ((((Eq | Mb) & Pv) + Pv) ^ Pv) | Eq | Mb;
-
-      const uint64_t Ph = Mv | ~ (Xh | Pv);
-      const uint64_t Mh = Pv & Xh;
-
-      if ((Ph >> 63) ^ Pb)
-        Phc[hsize - 1] = FLIP(Phc[hsize - 1], LastWordSizeS2);
-
-      if ((Mh >> 63) ^ Mb)
-        Mhc[hsize - 1] = FLIP(Mhc[hsize - 1], LastWordSizeS2);
-    }
-  }
-
-  // manually unroll the loop iteration for the last word
-  // since the score only has to be calculated in the last word
-  {
-    uint64_t Mv = 0;
-    uint64_t Pv = (uint64_t) -1;
-    Score = s1_len;
-
-    for (std::size_t i = 0; i < s2.size()-1; i++) {
-      const uint64_t Eq = map.get(vsize-1, s2[i]);
-
-      const uint64_t Pb = BIT(Phc[i / 64], i % 64);
-      const uint64_t Mb = BIT(Mhc[i / 64], i % 64);
-
-      const uint64_t Xv = Eq | Mv;
-      const uint64_t Xh = ((((Eq | Mb) & Pv) + Pv) ^ Pv) | Eq | Mb;
+      const uint64_t Xv = PM_j | Mv;
+      const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
 
       uint64_t Ph = Mv | ~ (Xh | Pv);
       uint64_t Mh = Pv & Xh;
 
-      if (Ph & Last) Score++;
-      if (Mh & Last) Score--;
+      if (Ph & Last) currDist++;
+      else if (Mh & Last) currDist--;
 
       Ph = (Ph << 1) | Pb;
       Mh = (Mh << 1) | Mb;
 
-      Pv = Mh | ~ (Xv | Ph);
-      Mv = Ph & Xv;
-    }
-
-    // manually unroll the loop iteration for the last char
-    // since it does not has to calculate some scores for the next iteration
-    {
-      const uint64_t Eq = map.get(vsize-1, s2.back());
-
-      const uint64_t Mb = BIT(Mhc.back(), LastWordSizeS2);
-
-      const uint64_t Xh = ((((Eq | Mb) & Pv) + Pv) ^ Pv) | Eq | Mb;
-
-      const uint64_t Ph = Mv | ~ (Xh | Pv);
-      const uint64_t Mh = Pv & Xh;
-
-      if (Ph & Last) Score++;
-      if (Mh & Last) Score--;
+      vecs[words - 1].Pv = Mh | ~ (Xv | Ph);
+      vecs[words - 1].Mv = Ph & Xv;
     }
   }
 
-  return Score;
+  return currDist;
 }
 
 template <typename CharT1, typename CharT2, std::size_t size>
