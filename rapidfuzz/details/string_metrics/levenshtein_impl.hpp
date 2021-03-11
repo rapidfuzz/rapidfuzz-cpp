@@ -91,56 +91,56 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename CharT1, std::size_t size>
-std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector<size>& PM,
+std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector<size>& pattern_match_map,
   std::size_t s1_len, std::size_t max)
 {
   /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-  uint64_t VP = (uint64_t)-1;
+  uint64_t vertical_positive = (uint64_t)-1;
   if (s1_len < 64) {
-    VP += (uint64_t)1 << s1_len;
+    vertical_positive += (uint64_t)1 << s1_len;
   }
 
-  uint64_t VN = 0;
-  std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s1_len - currDist;
+  uint64_t vertical_negative = 0;
+  std::size_t current_distance = s1_len;
+  std::size_t max_misses = max + s1_len - current_distance;
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
-  uint64_t mask = (uint64_t)1 << (s1_len - 1);
+  const auto distance_mask = (uint64_t)1 << (s1_len - 1);
 
 /* Searching */
   for (const auto& ch2 : s2) {
     /* Step 1: Computing D0 */
-    uint64_t PM_j = PM.get(ch2);
-    uint64_t X = PM_j | VN;
-    uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
+    const auto pattern_match = pattern_match_map.get(ch2);
+    auto X = pattern_match | vertical_negative;
+    const auto diagonal_zero = (((X & vertical_positive) + vertical_positive) ^ vertical_positive) | X;
 
     /* Step 2: Computing HP and HN */
-    uint64_t HP = VN | ~(D0 | VP);
-    uint64_t HN = D0 & VP;
+    const auto horizontal_positive = vertical_negative | ~(diagonal_zero | vertical_positive);
+    const auto horizontal_negative = diagonal_zero & vertical_positive;
 
     /* Step 3: Computing the value D[m,j] */
-    // modification: early exit using maxMisses
-    if (HP & mask) {
-      currDist++;
-      if (maxMisses < 2) {
+    // modification: early exit using max_misses
+    if (horizontal_positive & distance_mask) {
+      current_distance++;
+      if (max_misses < 2) {
         return -1;
       }
-      maxMisses -= 2;
-    } else if (HN & mask) {
-      currDist--;
+      max_misses -= 2;
+    } else if (horizontal_negative & distance_mask) {
+      current_distance--;
     } else {
-      if (maxMisses < 1) {
+      if (max_misses < 1) {
         return -1;
       }
-      --maxMisses;
+      --max_misses;
     }
 
-    /* Step 4: Computing Vp and VN */
-    X  = (HP << 1) | 1;
-    VP = (HN << 1) | ~(D0 | X);
-    VN =  X & D0;
+    /* Step 4: Computing VP and VN */
+    X  = (horizontal_positive << 1) | 1;
+    vertical_positive = (horizontal_negative << 1) | ~(diagonal_zero | X);
+    vertical_negative =  X & diagonal_zero;
   }
 
-  return currDist;
+  return current_distance;
 }
 
 template <typename CharT1, std::size_t size>
