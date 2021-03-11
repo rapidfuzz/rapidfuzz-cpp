@@ -92,7 +92,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  */
 template <typename CharT1, std::size_t size>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector<size>& PM,
-  std::size_t s1_len)
+  std::size_t s1_len, std::size_t max)
 {
   /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
   uint64_t VP = (uint64_t)-1;
@@ -102,6 +102,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
   uint64_t VN = 0;
   std::size_t currDist = s1_len;
+  std::size_t maxMisses = max + s1_len - currDist;
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
   uint64_t mask = (uint64_t)1 << (s1_len - 1);
 
@@ -117,8 +118,21 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
     uint64_t HN = D0 & VP;
 
     /* Step 3: Computing the value D[m,j] */
-    if (HP & mask) { currDist++; }
-    else if (HN & mask) { currDist--; }
+    // modification: early exit using maxMisses
+    if (HP & mask) {
+      currDist++;
+      if (maxMisses < 2) {
+        return -1;
+      }
+      maxMisses -= 2;
+    } else if (HN & mask) {
+      currDist--;
+    } else {
+      if (maxMisses < 1) {
+        return -1;
+      }
+      --maxMisses;
+    }
 
     /* Step 4: Computing Vp and VN */
     X  = (HP << 1) | 1;
@@ -131,7 +145,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
 template <typename CharT1, std::size_t size>
 std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-  const common::BlockPatternMatchVector<size>& PM, std::size_t s1_len)
+  const common::BlockPatternMatchVector<size>& PM, std::size_t s1_len, std::size_t max)
 {
   struct Vectors {
     uint64_t Mv;
@@ -143,8 +157,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 
   const std::size_t words = PM.m_val.size();
   std::size_t currDist = s1_len;
-  /*std::vector<uint64_t> Phc(words, (uint64_t)-1);
-  std::vector<uint64_t> Mhc(words, 0);*/
+  std::size_t maxMisses = max + s1_len - currDist;
   std::vector<Vectors> vecs(words);
   const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
@@ -187,8 +200,21 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
       uint64_t Ph = Mv | ~ (Xh | Pv);
       uint64_t Mh = Pv & Xh;
 
-      if (Ph & Last) currDist++;
-      else if (Mh & Last) currDist--;
+      // modification: early exit using maxMisses
+      if (Ph & Last) {
+        currDist++;
+        if (maxMisses < 2) {
+          return -1;
+        }
+        maxMisses -= 2;
+      } else if (Mh & Last) {
+        currDist--;
+      } else {
+        if (maxMisses < 1) {
+          return -1;
+        }
+        --maxMisses;
+      }
 
       Ph = (Ph << 1) | Pb;
       Mh = (Mh << 1) | Mb;
@@ -224,9 +250,9 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   if (max >= 4) {
     std::size_t dist = 0;
     if (s1.size() < 65) {
-      dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size());
+      dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
     } else {
-      dist = levenshtein_myers1999_block(s1, block, s2.size());
+      dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
     }
 
     return (dist > max) ? -1 : dist;
@@ -292,12 +318,12 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
   if (s2.size() < 65) {
     std::size_t dist = levenshtein_hyrroe2003(s1,
-      common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size());
+      common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size(), max);
     return (dist > max) ? -1 : dist;
   }
 
   std::size_t dist = levenshtein_myers1999_block(s1,
-    common::BlockPatternMatchVector<sizeof(CharT2)>(s2), s2.size());
+    common::BlockPatternMatchVector<sizeof(CharT2)>(s2), s2.size(), max);
 
   return (dist > max) ? -1 : dist;
 }
