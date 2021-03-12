@@ -63,7 +63,7 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 
   CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
 
-  auto blocks = detail::get_matching_blocks(s1_view, s2_view);
+  auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, s2_view);
 
   // when there is a full match exit early
   for (const auto& block : blocks) {
