@@ -444,4 +444,4 @@ private:
 } // namespace fuzz
 } // namespace rapidfuzz
 
-#include "fuzz_impl.hpp"
+#include <rapidfuzz/fuzz_impl.hpp>

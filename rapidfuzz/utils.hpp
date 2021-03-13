@@ -50,4 +50,4 @@ std::basic_string<CharT> default_process(Sentence s);
 } // namespace utils
 } // namespace rapidfuzz
 
-#include "utils_impl.hpp"
+#include <rapidfuzz/utils_impl.hpp>

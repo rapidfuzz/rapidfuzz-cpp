@@ -247,4 +247,4 @@ struct BlockPatternMatchVector {
 } // namespace common
 } // namespace rapidfuzz
 
-#include "common_impl.hpp"
+#include <rapidfuzz/details/common_impl.hpp>
