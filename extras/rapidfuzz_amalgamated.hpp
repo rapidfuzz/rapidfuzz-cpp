@@ -1,21 +1,15 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-03-13 15:00:20.019754
+//  Generated: 2021-03-13 15:40:43.423011
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
 //  ----------------------------------------------------------
 #ifndef RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 #define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
 
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
 
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
 
 
 #include <type_traits>
@@ -1649,9 +1643,7 @@ std::basic_string<CharT> SplittedSentenceView<CharT>::join() const
   return joined;
 }
 
-} // namespace rapidfuzz/* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
-
+} // namespace rapidfuzz
 
 #include <functional>
 #include <iterator>
@@ -1838,8 +1830,6 @@ std::basic_string<CharT> default_process(Sentence s);
 } // namespace utils
 } // namespace rapidfuzz
 
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
 
 #include <algorithm>
 #include <array>
@@ -1990,11 +1980,7 @@ std::basic_string<CharT> utils::default_process(Sentence s)
 }
 
 } // namespace rapidfuzz
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
 
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
 
 #include <cmath>
 #include <tuple>
@@ -2238,8 +2224,6 @@ struct BlockPatternMatchVector {
 } // namespace common
 } // namespace rapidfuzz
 
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
 
 #include <algorithm>
 #include <array>
@@ -2429,8 +2413,6 @@ SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
 }
 
 } // namespace rapidfuzz
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
 
 #include <numeric>
 #include <algorithm>
@@ -2802,8 +2784,6 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
 } // namespace detail
 } // namespace levenshtein
 } // namespace rapidfuzz
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
 
 
 #include <algorithm>
@@ -3326,8 +3306,6 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
 
 #include <numeric>
 #include <algorithm>
@@ -3832,9 +3810,6 @@ private:
 
 } // namespace levenshtein
 } // namespace rapidfuzz
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
-/* Copyright © 2011 Adam Cohen */
 
 
 #include <type_traits>
@@ -4276,9 +4251,6 @@ private:
 } // namespace fuzz
 } // namespace rapidfuzz
 
-/* SPDX-License-Identifier: MIT */
-/* Copyright © 2021 Max Bachmann */
-/* Copyright © 2011 Adam Cohen */
 
 // The MIT License (MIT)
 //
