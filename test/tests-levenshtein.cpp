@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <algorithm>
 #include <boost/utility/string_view.hpp>
 #include <string_view>
@@ -30,11 +31,11 @@ TEST_CASE("levenshtein works with string_views", "[string_view]")
   {
     REQUIRE(string_metric::normalized_levenshtein(test, test, {1, 1, 2}) == 100.0);
     REQUIRE(string_metric::normalized_levenshtein(test, no_suffix, {1, 1, 2}) ==
-            Approx(85.7).epsilon(0.01));
+            Catch::Approx(85.7).epsilon(0.01));
     REQUIRE(string_metric::normalized_levenshtein(swapped1, swapped2, {1, 1, 2}) ==
-            Approx(75.0).epsilon(0.01));
+            Catch::Approx(75.0).epsilon(0.01));
     REQUIRE(string_metric::normalized_levenshtein(test, no_suffix2, {1, 1, 2}) ==
-            Approx(75.0).epsilon(0.01));
+            Catch::Approx(75.0).epsilon(0.01));
     REQUIRE(string_metric::normalized_levenshtein(test, replace_all, {1, 1, 2}) ==
             0.0);
   }
