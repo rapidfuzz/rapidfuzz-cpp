@@ -55,6 +55,7 @@ namespace string_metric {
  * to improve the performance. Worst-case performance is ``O(m * n)``.
  *
  * <b>Insertion = Deletion = Substitution:</b>
+ *
  *    This is known as uniform Levenshtein distance and is the distance most commonly
  *    referred to as Levenshtein distance. The following implementation is used
  *    with a worst-case performance of ``O([N/64]M)``.
@@ -73,17 +74,18 @@ namespace string_metric {
  *
  *    - If the length of the shorter string is ≤ 64 after removing the common affix
  *      Hyyrös' algorithm is used, which calculates the Levenshtein distance in
- *      parallel. The algorithm is described by [1]_. The time complexity of this
+ *      parallel. The algorithm is described by @cite hyrro_2002. The time complexity of this
  *      algorithm is ``O(N)``.
  *
  *    - If the length of the shorter string is ≥ 64 after removing the common affix
  *      a blockwise implementation of Myers' algorithm is used, which calculates
  *      the Levenshtein distance in parallel (64 characters at a time).
- *      The algorithm is described by [3]_. The time complexity of this
+ *      The algorithm is described by @cite myers_1999. The time complexity of this
  *      algorithm is ``O([N/64]M)``.
  *
  *
  * <b>Insertion = Deletion, Substitution >= Insertion + Deletion:</b>
+ *
  *    Since every Substitution can be performed as Insertion + Deletion, this variant
  *    of the Levenshtein distance only uses Insertions and Deletions. Therefore this
  *    variant is often referred to as InDel-Distance.  The following implementation
@@ -111,17 +113,18 @@ namespace string_metric {
  *
  *    - If the length of the shorter string is ≤ 64 after removing the common affix
  *      the BitPAl algorithm is used, which calculates the Levenshtein distance in
- *      parallel. The algorithm is described by [4]_ and is extended with support
+ *      parallel. The algorithm is described by @cite bitpal_2014 and is extended with support
  *      for UTF32 in this implementation. The time complexity of this
  *      algorithm is ``O(N)``.
  *
  *    - If the length of the shorter string is ≥ 64 after removing the common affix
  *      a blockwise implementation of the BitPAl algorithm is used, which calculates
  *      the Levenshtein distance in parallel (64 characters at a time).
- *      The algorithm is described by [4]_. The time complexity of this
+ *      The algorithm is described by @cite bitpal_2014. The time complexity of this
  *      algorithm is ``O([N/64]M)``.
  *
  * <b>Other weights:</b>
+ *
  *   The implementation for other weights is based on Wagner-Fischer.
  *   It has a performance of ``O(N * M)`` and has a memory usage of ``O(N)``.
  *   Further details can be found in @cite wagner_fischer_1974.
@@ -206,6 +209,7 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
  * The normalization of the Levenshtein distance is performed in the following way:
  *
  * \f{align*}{
+ *   \\
  *   dist_{max} &= \begin{cases}
  *     min(len(s1), len(s2)) \cdot sub,       & \text{if } sub \leq ins + del \\
  *     len(s1) \cdot del + len(s2) \cdot ins, & \text{otherwise}
