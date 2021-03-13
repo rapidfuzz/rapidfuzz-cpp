@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2021 Max Bachmann */
 
 #pragma once
 #include "details/common.hpp"
@@ -54,68 +54,72 @@ namespace string_metric {
  * Depending on the input parameters different optimized implementation are used
  * to improve the performance. Worst-case performance is ``O(m * n)``.
  *
- * <b>Insertion = 1, Deletion = 1, Substitution = 1:</b>
- *   - if max is 0 the similarity can be calculated using a direct comparision,
- *     since no difference between the strings is allowed.  The time complexity of
- *     this algorithm is ``O(N)``.
+ * <b>Insertion = Deletion = Substitution:</b>
+ *    This is known as uniform Levenshtein distance and is the distance most commonly
+ *    referred to as Levenshtein distance. The following implementation is used
+ *    with a worst-case performance of ``O([N/64]M)``.
  *
- *   - A common prefix/suffix of the two compared strings does not affect
- *     the Levenshtein distance, so the affix is removed before calculating the
- *     similarity.
+ *    - if max is 0 the similarity can be calculated using a direct comparision,
+ *      since no difference between the strings is allowed.  The time complexity of
+ *      this algorithm is ``O(N)``.
  *
- *   - If max is ≤ 3 the mbleven algorithm is used. This algorithm
- *     checks all possible edit operations that are possible under
- *     the threshold `max`. The time complexity of this algorithm is ``O(N)``.
+ *    - A common prefix/suffix of the two compared strings does not affect
+ *      the Levenshtein distance, so the affix is removed before calculating the
+ *      similarity.
  *
- *   - If the length of the shorter string is ≤ 64 after removing the common affix
- *     Hyyrös' algorithm is used, which calculates the Levenshtein distance in
- *     parallel. The algorithm is described by [1]_. The time complexity of this
- *     algorithm is ``O(N)``.
+ *    - If max is ≤ 3 the mbleven algorithm is used. This algorithm
+ *      checks all possible edit operations that are possible under
+ *      the threshold `max`. The time complexity of this algorithm is ``O(N)``.
  *
- *   - If the length of the shorter string is ≥ 64 after removing the common affix
- *     a blockwise implementation of Myers' algorithm is used, which calculates
- *     the Levenshtein distance in parallel (64 characters at a time).
- *     The algorithm is described by [3]_. The time complexity of this
- *     algorithm is ``O([N/64]M)``.
+ *    - If the length of the shorter string is ≤ 64 after removing the common affix
+ *      Hyyrös' algorithm is used, which calculates the Levenshtein distance in
+ *      parallel. The algorithm is described by [1]_. The time complexity of this
+ *      algorithm is ``O(N)``.
+ *
+ *    - If the length of the shorter string is ≥ 64 after removing the common affix
+ *      a blockwise implementation of Myers' algorithm is used, which calculates
+ *      the Levenshtein distance in parallel (64 characters at a time).
+ *      The algorithm is described by [3]_. The time complexity of this
+ *      algorithm is ``O([N/64]M)``.
  *
  *
- * <b>Insertion = 1, Deletion = 1, Substitution >= Insertion + Deletion:</b>
- *   when Substitution >= Insertion + Deletion set
- *   Substitution = Insertion + Deletion
- *   since every substitution can be performed as Insertion + Deletion
- *   so in this case treat Substitution as 2
+ * <b>Insertion = Deletion, Substitution >= Insertion + Deletion:</b>
+ *    Since every Substitution can be performed as Insertion + Deletion, this variant
+ *    of the Levenshtein distance only uses Insertions and Deletions. Therefore this
+ *    variant is often referred to as InDel-Distance.  The following implementation
+ *    is used with a worst-case performance of ``O([N/64]M)``.
  *
- *   - if max is 0 the similarity can be calculated using a direct comparision,
- *     since no difference between the strings is allowed.  The time complexity of
- *     this algorithm is ``O(N)``.
+ *    - if max is 0 the similarity can be calculated using a direct comparision,
+ *      since no difference between the strings is allowed.  The time complexity of
+ *      this algorithm is ``O(N)``.
  *
- *   - if max is 1 and the two strings have a similar length, the similarity can be
- *     calculated using a direct comparision aswell, since a substitution would cause
- *     a edit distance higher than max. The time complexity of this algorithm
- *     is ``O(N)``.
+ *    - if max is 1 and the two strings have a similar length, the similarity can be
+ *      calculated using a direct comparision aswell, since a substitution would cause
+ *      a edit distance higher than max. The time complexity of this algorithm
+ *      is ``O(N)``.
  *
- *   - A common prefix/suffix of the two compared strings does not affect
- *     the Levenshtein distance, so the affix is removed before calculating the
- *     similarity.
+ *    - A common prefix/suffix of the two compared strings does not affect
+ *      the Levenshtein distance, so the affix is removed before calculating the
+ *      similarity.
  *
- *   - If max is ≤ 4 the mbleven algorithm is used. This algorithm
- *     checks all possible edit operations that are possible under
- *     the threshold `max`. As a difference to the normal Levenshtein distance this
- *     algorithm can even be used up to a threshold of 4 here, since the higher weight
- *     of substitutions decreases the amount of possible edit operations.
- *     The time complexity of this algorithm is ``O(N)``.
+ *    - If max is ≤ 4 the mbleven algorithm is used. This algorithm
+ *      checks all possible edit operations that are possible under
+ *      the threshold `max`. As a difference to the normal Levenshtein distance this
+ *      algorithm can even be used up to a threshold of 4 here, since the higher weight
+ *      of substitutions decreases the amount of possible edit operations.
+ *      The time complexity of this algorithm is ``O(N)``.
  *
- *   - If the length of the shorter string is ≤ 64 after removing the common affix
- *     the BitPAl algorithm is used, which calculates the Levenshtein distance in
- *     parallel. The algorithm is described by @cite bitpal_2014 and is extended with
- *     support for UTF32 in this implementation. The time complexity of this
- *     algorithm is ``O(N)``.
+ *    - If the length of the shorter string is ≤ 64 after removing the common affix
+ *      the BitPAl algorithm is used, which calculates the Levenshtein distance in
+ *      parallel. The algorithm is described by [4]_ and is extended with support
+ *      for UTF32 in this implementation. The time complexity of this
+ *      algorithm is ``O(N)``.
  *
- *   - In all other cases the Levenshtein distance is calculated using
- *     Wagner-Fischer with Ukkonens optimization as described by @cite wagner_fischer_1974.
- *     The time complexity of this algorithm is ``O(N * M)``.
- *     This can be replaced with a blockwise implementation of the BitPal algorithm
- *     in the future.
+ *    - If the length of the shorter string is ≥ 64 after removing the common affix
+ *      a blockwise implementation of the BitPAl algorithm is used, which calculates
+ *      the Levenshtein distance in parallel (64 characters at a time).
+ *      The algorithm is described by [4]_. The time complexity of this
+ *      algorithm is ``O([N/64]M)``.
  *
  * <b>Other weights:</b>
  *   The implementation for other weights is based on Wagner-Fischer.
@@ -153,16 +157,17 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
 
-  if (weights.insert_cost == 1 && weights.delete_cost == 1) {
-    if (weights.replace_cost == 1) {
-      return detail::levenshtein(sentence1, sentence2, max);
-    } else if (weights.replace_cost > 1) {
-      /*
-       * when replace_cost >= insert_cost + delete_cost set
-       * replace_cost = insert_cost + delete_cost
-       * since every substitution can be performed as insertion + deletion
-       */
-      return detail::weighted_levenshtein(sentence1, sentence2, max);
+  if (weights.insert_cost == weights.delete_cost) {
+    /* uniform Levenshtein multiplied with the common factor */
+    if (weights.insert_cost == weights.replace_cost) {
+      return detail::levenshtein(sentence1, sentence2, max) * weights.insert_cost;
+    }
+    /*
+     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+     * therefore this can be implemented as InDel distance multiplied with the common factor
+     */
+    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+      return detail::weighted_levenshtein(sentence1, sentence2, max) * weights.insert_cost;
     }
   }
 
@@ -247,21 +252,57 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
 
-  if (weights.insert_cost == 1 && weights.delete_cost == 1) {
-    if (weights.replace_cost == 1) {
+  if (weights.insert_cost == weights.delete_cost) {
+    /* uniform Levenshtein */
+    if (weights.insert_cost == weights.replace_cost) {
       return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
-    } else if (weights.replace_cost > 1) {
-      /*
-       * when replace_cost >= insert_cost + delete_cost set
-       * replace_cost = insert_cost + delete_cost
-       * since every substitution can be performed as insertion + deletion
-       */
+    }
+    /*
+     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+     * therefore this can be implemented as InDel distance
+     */
+    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
       return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
     }
   }
 
   return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
 }
+
+template<typename Sentence1>
+struct CachedNormalizedLevenshtein {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable weights = {1, 1, 1})
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+  {
+    auto s2_view = common::to_string_view(s2);
+
+    if (weights.insert_cost == weights.delete_cost) {
+      /* uniform Levenshtein */
+      if (weights.insert_cost == weights.replace_cost) {
+        return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+      }
+      /*
+       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+       * therefore this can be implemented as InDel distance
+       */
+      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+        return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+      }
+    }
+
+    return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  LevenshteinWeightTable weights;
+};
 
 /**
  * @brief Calculates the Hamming distance between two strings.

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2021 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
@@ -56,7 +56,7 @@ struct CachedRatio {
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
 };
 
 /**
@@ -394,10 +394,10 @@ private:
 // todo somehow implement this using other ratios with creating PatternMatchVector
 // multiple times
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
-  common::PatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 /**
@@ -423,7 +423,6 @@ private:
  */
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
 
 template<typename Sentence1>
 struct CachedQRatio {
