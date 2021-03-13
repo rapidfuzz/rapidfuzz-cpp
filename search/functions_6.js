@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['qratio_33',['QRatio',['../group__Fuzz.html#ga016c8e39fbd80b750f8bf8916ab0eca1',1,'rapidfuzz::fuzz']]]
+  ['ratio_29',['ratio',['../group__Fuzz.html#ga28f2cfa40a0f19c23d85fee3d1750bcc',1,'rapidfuzz::fuzz']]]
 ];

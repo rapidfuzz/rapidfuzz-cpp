@@ -73,31 +73,32 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">/* Copyright © 2020 Max Bachmann */</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;details/SplittedSentenceView.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;details/type_traits.hpp&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;details/types.hpp&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;cmath&gt;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;tuple&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">namespace </span>rapidfuzz {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span>utils {</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">template</span> &lt;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT = char_type&lt;Sentence&gt;,</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keyword">typename</span> = enable_if_t&lt;is_explicitly_convertible&lt;Sentence, std::basic_string&lt;CharT&gt;&gt;::value&gt;&gt;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(Sentence&amp;&amp; s);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">template</span> &lt;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT = char_type&lt;Sentence&gt;,</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keyword">typename</span> = enable_if_t&lt;!is_explicitly_convertible&lt;Sentence, std::basic_string&lt;CharT&gt;&gt;::value &amp;&amp;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                           has_data_and_size&lt;Sentence&gt;::value&gt;&gt;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(Sentence s);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;} <span class="comment">// namespace utils</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#include &quot;utils_impl.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;rapidfuzz/details/SplittedSentenceView.hpp&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;rapidfuzz/details/type_traits.hpp&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;rapidfuzz/details/types.hpp&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;tuple&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span>rapidfuzz {</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">namespace </span>utils {</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">template</span> &lt;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT = char_type&lt;Sentence&gt;,</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">typename</span> = enable_if_t&lt;is_explicitly_convertible&lt;Sentence, std::basic_string&lt;CharT&gt;&gt;::value&gt;&gt;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(Sentence&amp;&amp; s);</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">template</span> &lt;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT = char_type&lt;Sentence&gt;,</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">typename</span> = enable_if_t&lt;!is_explicitly_convertible&lt;Sentence, std::basic_string&lt;CharT&gt;&gt;::value &amp;&amp;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                           has_data_and_size&lt;Sentence&gt;::value&gt;&gt;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(Sentence s);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;} <span class="comment">// namespace utils</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;} <span class="comment">// namespace rapidfuzz</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#include &lt;rapidfuzz/utils_impl.hpp&gt;</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="agroup__Utils_html_gac380da5bee37d107618195bab1619eac"><div class="ttname"><a href="group__Utils.html#gac380da5bee37d107618195bab1619eac">rapidfuzz::utils::default_process</a></div><div class="ttdeci">std::basic_string&lt; CharT &gt; default_process(Sentence &amp;&amp;s)</div><div class="ttdoc">removes any non alphanumeric characters, trim whitespaces from beginning/end and lowercase the string...</div><div class="ttdef"><b>Definition:</b> utils_impl.hpp:14</div></div>
 <!-- start footer part -->

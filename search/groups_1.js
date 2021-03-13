@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['process_40',['Process',['../group__Process.html',1,'']]]
+  ['string_5fmetric_35',['string_metric',['../group__string__metric.html',1,'']]]
 ];

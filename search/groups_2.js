@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['string_5fmetric_41',['string_metric',['../group__string__metric.html',1,'']]]
+  ['utils_36',['Utils',['../group__Utils.html',1,'']]]
 ];

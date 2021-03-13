@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['normalized_5fhamming_27',['normalized_hamming',['../group__string__metric.html#ga5020173430a1c0da3a9430a91f2de968',1,'rapidfuzz::string_metric']]],
-  ['normalized_5flevenshtein_28',['normalized_levenshtein',['../group__string__metric.html#ga1e0832143ca152475811d483880e3123',1,'rapidfuzz::string_metric']]]
+  ['partial_5fratio_24',['partial_ratio',['../group__Fuzz.html#gaac7adbb132288111571e42a19030cf1c',1,'rapidfuzz::fuzz']]],
+  ['partial_5ftoken_5fratio_25',['partial_token_ratio',['../group__Fuzz.html#ga8db5903939aa659a84c1d05ed63e1d6f',1,'rapidfuzz::fuzz']]],
+  ['partial_5ftoken_5fset_5fratio_26',['partial_token_set_ratio',['../group__Fuzz.html#gaf0475d99b70d9a55700d4e1641a55d5c',1,'rapidfuzz::fuzz']]],
+  ['partial_5ftoken_5fsort_5fratio_27',['partial_token_sort_ratio',['../group__Fuzz.html#ga511b5440c5ae3ae2a60beb44c0516c5b',1,'rapidfuzz::fuzz']]]
 ];

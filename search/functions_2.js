@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['hamming_25',['hamming',['../group__string__metric.html#gaaef6bbb6260afa72b541e79f6e74a9fc',1,'rapidfuzz::string_metric']]]
+  ['levenshtein_21',['levenshtein',['../group__string__metric.html#ga540eec35fe2e2b0efc65195bf5ab6a79',1,'rapidfuzz::string_metric']]]
 ];
