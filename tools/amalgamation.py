@@ -16,7 +16,7 @@ output_cpp = os.path.join(root_path, 'extras', 'rapidfuzz_amalgamated.cpp')
 # These are the copyright comments in each file, we want to ignore them
 def is_copyright_line(line):
     copyright_lines = [
-        '/* SPDX-License-Identifier: MIT'
+        '/* SPDX-License-Identifier: MIT',
         '/* Copyright '
     ]
 
