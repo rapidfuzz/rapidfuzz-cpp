@@ -211,8 +211,9 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       //Find 1s
       const uint64_t INITpos1s = DHneg1temp & Matches;
 
-      uint64_t sum = (INITpos1s + DHneg1temp);
-      OverFlow0 = (sum < INITpos1s) || (sum < DHneg1temp);
+      uint64_t sum = INITpos1s;
+      sum += DHneg1temp;
+      OverFlow0 = sum < DHneg1temp;
       const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
 
       //set RemainingDHneg1
@@ -225,8 +226,9 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       uint64_t initval = (INITzeros << 1);
       INITzerosprevbit = INITzeros >> 63;
 
-      initval += RemainDHneg1;
-      OverFlow1 = initval < RemainDHneg1;
+      sum = initval;
+      sum += RemainDHneg1;
+      OverFlow0 |= sum < RemainDHneg1;
       const uint64_t DVzeroshift = initval ^ RemainDHneg1;
 
       //Find -1s
@@ -249,7 +251,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       DH[0].DHneg1 = DHneg1temp;
     }
 
-    for (std::size_t word = 1; word < words-1; ++word) {
+    for (std::size_t word = 1; word < words - 1; ++word) {
       uint64_t DHpos1temp    = DH[word].DHpos1;
       uint64_t DHzerotemp    = DH[word].DHzero;
       uint64_t DHneg1temp    = DH[word].DHneg1;
@@ -262,8 +264,12 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       //Find 1s
       const uint64_t INITpos1s = DHneg1temp & Matches;
 
-      uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-      OverFlow0 = (sum < INITpos1s) || (sum < DHneg1temp) || (sum < OverFlow0);
+
+      uint64_t sum = INITpos1s;
+      sum += OverFlow0;
+      OverFlow0 = sum < OverFlow0;
+      sum += DHneg1temp;
+      OverFlow0 |= sum < DHneg1temp;
       const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
 
       //set RemainingDHneg1
@@ -277,8 +283,12 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       INITzerosprevbit = INITzeros >> 63;
       initval = (INITzeros << 1) | initval;
 
-      sum = initval + RemainDHneg1 + OverFlow1;
-      OverFlow1 = (sum < initval) || (sum < RemainDHneg1) || (sum < OverFlow1);
+
+      sum = initval;
+      sum += OverFlow1;
+      OverFlow1 = sum < OverFlow1;
+      sum += RemainDHneg1;
+      OverFlow0 |= sum < RemainDHneg1;
       const uint64_t DVzeroshift = sum ^ RemainDHneg1;
 
       //Find -1s
