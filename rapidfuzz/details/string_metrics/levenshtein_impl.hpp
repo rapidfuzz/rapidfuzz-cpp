@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2021 Max Bachmann */
 
-#include "rapidfuzz/details/common.hpp"
+#include <rapidfuzz/details/common.hpp>
 #include <numeric>
 #include <algorithm>
 #include <array>

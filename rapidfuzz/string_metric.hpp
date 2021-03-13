@@ -2,10 +2,10 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include "details/common.hpp"
-#include "details/string_metrics/levenshtein_impl.hpp"
-#include "details/string_metrics/weighted_levenshtein_impl.hpp"
-#include "details/string_metrics/generic_levenshtein_impl.hpp"
+#include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
+#include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
+#include <rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp>
 
 #include <cmath>
 #include <numeric>

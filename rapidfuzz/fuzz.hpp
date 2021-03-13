@@ -3,7 +3,7 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include "details/common.hpp"
+#include <rapidfuzz/details/common.hpp>
 
 #include <type_traits>
 

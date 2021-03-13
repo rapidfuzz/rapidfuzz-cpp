@@ -6,7 +6,7 @@
 #include <cctype>
 #include <cwctype>
 
-#include "unicode.hpp"
+#include <rapidfuzz/details/unicode.hpp>
 
 namespace rapidfuzz {
 
