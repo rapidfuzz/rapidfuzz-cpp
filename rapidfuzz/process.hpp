@@ -3,11 +3,11 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include "details/type_traits.hpp"
-#include "details/optional.hpp"
-#include "fuzz.hpp"
-#include "utils.hpp"
-#include "details/common.hpp"
+#include <rapidfuzz/details/type_traits.hpp>
+#include <rapidfuzz/details/optional.hpp>
+#include <rapidfuzz/fuzz.hpp>
+#include <rapidfuzz/utils.hpp>
+#include <rapidfuzz/details/common.hpp>
 
 #include <functional>
 #include <string>

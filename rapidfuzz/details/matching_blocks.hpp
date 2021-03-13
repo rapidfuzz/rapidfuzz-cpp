@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "common.hpp"
+#include <rapidfuzz/details/common.hpp>
 
 #include <unordered_map>
 #include <algorithm>

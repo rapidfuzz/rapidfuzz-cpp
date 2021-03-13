@@ -1,5 +1,5 @@
 #pragma once
-#include "types.hpp"
+#include <rapidfuzz/details/types.hpp>
 #include <algorithm>
 #include <string>
 

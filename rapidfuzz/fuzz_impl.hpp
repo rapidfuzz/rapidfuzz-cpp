@@ -2,8 +2,8 @@
 /* Copyright © 2021 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
-#include "details/matching_blocks.hpp"
-#include "string_metric.hpp"
+#include <rapidfuzz/details/matching_blocks.hpp>
+#include <rapidfuzz/string_metric.hpp>
 
 #include <algorithm>
 #include <cmath>

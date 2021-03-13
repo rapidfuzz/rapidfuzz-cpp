@@ -2,9 +2,10 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include "details/SplittedSentenceView.hpp"
-#include "details/type_traits.hpp"
-#include "details/types.hpp"
+#include <rapidfuzz/details/SplittedSentenceView.hpp>
+#include <rapidfuzz/details/type_traits.hpp>
+#include <rapidfuzz/details/types.hpp>
+
 #include <cmath>
 #include <tuple>
 #include <vector>
