@@ -2,7 +2,7 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include "types.hpp"
+#include <rapidfuzz/details/types.hpp>
 
 #include <functional>
 #include <iterator>

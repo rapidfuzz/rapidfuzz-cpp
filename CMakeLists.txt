@@ -10,8 +10,6 @@ set(HEADERS
 	rapidfuzz/fuzz.hpp
 	rapidfuzz/fuzz_impl.hpp
 	rapidfuzz/string_metric.hpp
-	rapidfuzz/process.hpp
-	rapidfuzz/process_impl.hpp
 	rapidfuzz/utils.hpp
 	rapidfuzz/utils_impl.hpp
 	rapidfuzz/details/SplittedSentenceView.hpp
@@ -20,7 +18,6 @@ set(HEADERS
 	rapidfuzz/details/unicode.hpp
 	rapidfuzz/details/matching_blocks.hpp
 	rapidfuzz/details/string_view.hpp
-	rapidfuzz/details/optional.hpp
 	rapidfuzz/details/string_metrics/levenshtein_impl.hpp
 	rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp
 	rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp
@@ -48,6 +45,7 @@ install(DIRECTORY rapidfuzz
 )
 
 if(BUILD_TESTS)
+  enable_testing()
   add_subdirectory(test)
 endif()
 

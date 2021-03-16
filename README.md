@@ -109,7 +109,6 @@ There are CMake options available:
 ## Usage
 ```cpp
 #include "rapidfuzz/fuzz.hpp"
-#include "rapidfuzz/process.hpp"
 #include "rapidfuzz/utils.hpp"
 ```
 
@@ -146,23 +145,101 @@ double score = rapidfuzz::fuzz::token_set_ratio("fuzzy was a bear", "fuzzy fuzzy
 ```
 
 ### Process
+In the Python implementation there is a module process, which is used to compare e.g. a string to a list of strings.
+In Python this both saves the time to implement those features yourself and can be a lot more efficient than repeated type
+conversions between Python and C++. Implementing a similar function in C++ using templates is not easily possible and probably slower than implementing them on your own. Thats why this section describes how users can implement those features with a couple lines of code using the C++ library. 
+
+### extract
+
+The following function compares a query string to all strings in a list of choices. It returns all
+elements with a similarity over score_cutoff. Generally make use of the cached implementations when comparing
+a string to multiple strings.
+
+
 ```cpp
-// matches is a vector of std::pairs
-// [('new york jets', 100), ('new york giants', 78.57142639160156)]
-auto matches = rapidfuzz::process::extract(
-  "new york jets",
-  std::vector<std::string>{"Atlanta Falcons", "New York Jets", "New York Giants", "Dallas Cowboys"},
-  rapidfuzz::utils::default_process<std::string>,
-  rapidfuzz::fuzz::ratio<std::string, std::string>,
-  2);
+template <typename Sentence1,
+          typename Iterable, typename Sentence2 = typename Iterable::value_type>
+std::vector<std::pair<Sentence2, percent>>
+extract(const Sentence1& query, const Iterable& choices, const percent score_cutoff = 0.0)
+{
+  std::vector<std::pair<Sentence2, percent>> results;
 
+  auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
 
-// matches is a rapidfuzz::optional<std::pair>
-// ("dallas cowboys", 90)
-auto matches = rapidfuzz::process::extractOne(
-  "cowboys",
-  std::vector<std::string>{"Atlanta Falcons", "New York Jets", "New York Giants", "Dallas Cowboys"});
+  for (const auto& choice : choices) {
+    double score = scorer.ratio(choice, score_cutoff);
+
+    if (score >= score_cutoff) {
+      results.emplace_back(choice, score);
+    }
+  }
+
+  return results;
+}
 ```
+
+### extractOne
+
+The following function compares a query string to all strings in a list of choices.
+
+```cpp
+template <typename Sentence1,
+          typename Iterable, typename Sentence2 = typename Iterable::value_type>
+std::optional<std::pair<Sentence2, percent>>
+extractOne(const Sentence1& query, const Iterable& choices, const percent score_cutoff = 0.0)
+{
+  bool match_found = false;
+  double best_score = score_cutoff;
+  Sentence2 best_match;
+
+  auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
+
+  for (const auto& choice : choices) {
+    double score = scorer.ratio(choice, best_score);
+
+    if (score >= best_score) {
+      match_found = true;
+      best_score = score;
+      best_match = choice;
+    }
+  }
+
+  if (!match_found) {
+    return nullopt;
+  }
+
+  return std::make_pair(best_match, best_score);
+}
+```
+
+### multithreading
+
+It is very simple to use those scorers e.g. with open OpenMP to achieve better performance.
+
+```cpp
+template <typename Sentence1,
+          typename Iterable, typename Sentence2 = typename Iterable::value_type>
+std::vector<std::pair<Sentence2, percent>>
+extract(const Sentence1& query, const Iterable& choices, const percent score_cutoff = 0.0)
+{
+  std::vector<std::pair<Sentence2, percent>> results(choices.size());
+
+  auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
+
+  #pragma omp parallel for
+  for (std::size_t i = 0; i < choices.size(); ++i) {
+    double score = scorer.ratio(choices[i], score_cutoff);
+    results[i] = std::make_pair(choices[i], score);
+  }
+
+  return results;
+}
+```
+
+Note that the scorers are not threadsafe and do not take ownership of the data you pass them.
+Internally they fully operate on string_views. This is especially important for the cached implementations,
+since it might be tempting to pass the first string to the constructor of the cached scorer and delete it afterwards.
+
 
 ## License
 RapidFuzz is licensed under the MIT license since I believe that everyone should be able to use it without being forced to adopt the GPL license. Thats why the library is based on an older version of fuzzywuzzy that was MIT licensed as well.

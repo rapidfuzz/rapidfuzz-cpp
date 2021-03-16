@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2021 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include "details/common.hpp"
+#include <rapidfuzz/details/common.hpp>
 
 #include <type_traits>
 
@@ -444,4 +444,4 @@ private:
 } // namespace fuzz
 } // namespace rapidfuzz
 
-#include "fuzz_impl.hpp"
+#include <rapidfuzz/fuzz_impl.hpp>

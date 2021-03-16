@@ -8,4 +8,3 @@ endfunction()
 
 rapidfuzz_add_benchmark(fuzz bench-fuzz.cpp)
 rapidfuzz_add_benchmark(levenshtein bench-levenshtein.cpp)
-rapidfuzz_add_benchmark(process bench-process.cpp)

@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2021 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
-#include "details/matching_blocks.hpp"
-#include "string_metric.hpp"
+#include <rapidfuzz/details/matching_blocks.hpp>
+#include <rapidfuzz/string_metric.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -178,28 +178,7 @@ double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_c
 
   return detail::partial_ratio_map(s1_view, cached_ratio, s2_view, score_cutoff);
 }
-/*
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedPartialRatio<Sentence1>::detail::ratio(
-  const CachedRatio<Sentence1>& cached_s1, const Sentence2& s2, percent score_cutoff)
-{
-  auto s2_view = common::to_string_view(s2);
 
-  if (s1_view.size() > s2_view.size() || s1_view.size() > 64) {
-    return partial_ratio(s1_view, s2_view, score_cutoff);
-  }
-
-  return detail::partial_ratio_map(s1_view, cached_ratio, s2_view, score_cutoff);
-}*/
-
-
-/*
-namespace detail {
-  template<typename Sentence2>
-  static double ratio(const CachedRatio<Sentence1>& cached_s1,  const Sentence2& s2, percent score_cutoff = 0);
-}
-*/
 /**********************************************
  *             token_sort_ratio
  *********************************************/
