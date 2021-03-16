@@ -102,7 +102,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
   uint64_t VN = 0;
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s1_len - currDist;
+  std::size_t maxMisses = max + s2.size() - currDist;
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
   uint64_t mask = (uint64_t)1 << (s1_len - 1);
 
@@ -157,7 +157,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 
   const std::size_t words = PM.m_val.size();
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s1_len - currDist;
+  std::size_t maxMisses = max + s2.size() - currDist;
   std::vector<Vectors> vecs(words);
   const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
@@ -249,7 +249,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   // do this first, since we can not remove any affix in encoded form
   if (max >= 4) {
     std::size_t dist = 0;
-    if (s1.size() < 65) {
+    if (s2.size() < 65) {
       dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
     } else {
       dist = levenshtein_myers1999_block(s1, block, s2.size(), max);

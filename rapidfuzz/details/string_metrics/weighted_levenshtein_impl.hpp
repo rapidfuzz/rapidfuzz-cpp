@@ -381,7 +381,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  if (s1.size() < 65) {
+  if (s2.size() < 65) {
     return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size());
   } else {
     return weighted_levenshtein_bitpal_blockwise(
@@ -420,7 +420,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
   // do this first, since we can not remove any affix in encoded form
   if (max >= 5) {
     std::size_t dist = 0;
-    if (s1.size() < 65) {
+    if (s2.size() < 65) {
       dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
     } else {
       dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
