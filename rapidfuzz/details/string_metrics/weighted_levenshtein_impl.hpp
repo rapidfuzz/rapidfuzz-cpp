@@ -150,7 +150,7 @@ static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> 
   }
 
   std::size_t dist = s1.size() + s2_len;
-  uint64_t bitmask = set_bits(s2_len);
+  uint64_t bitmask = set_bits(static_cast<int>(s2_len));
 
   dist -= popcount64(DHzero & bitmask);
   dist -= popcount64(DHpos1 & bitmask) * 2;
@@ -371,7 +371,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
     dist -= popcount64(DH[word].DHpos1) * 2;
   }
 
-  uint64_t bitmask = set_bits(s2_len - (words - 1) * 64);
+  uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
   dist -= popcount64(DH.back().DHzero & bitmask);
   dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
 
