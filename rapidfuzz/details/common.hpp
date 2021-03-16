@@ -140,7 +140,7 @@ struct PatternMatchVector {
     : m_key(), m_val()
   {
     for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], i);
+      insert(s[i], static_cast<int>(i));
     }
   }
 
@@ -187,7 +187,7 @@ struct PatternMatchVector<1> {
     : m_val()
   {
     for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], i);
+      insert(s[i], static_cast<int>(i));
     }
   }
 
@@ -231,7 +231,7 @@ struct BlockPatternMatchVector {
 
     for (std::size_t i = 0; i < s.size(); i++){
       auto* be = &m_val[i/64];
-      be->insert(s[i], i%64);
+      be->insert(s[i], static_cast<int>(i%64));
     }
   }
 
