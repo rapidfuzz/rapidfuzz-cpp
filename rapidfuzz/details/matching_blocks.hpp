@@ -29,7 +29,6 @@
 #include <algorithm>
 #include <tuple>
 #include <algorithm>
-#include <memory>
 #include <vector>
 
 namespace rapidfuzz {
@@ -64,20 +63,24 @@ class SequenceMatcher {
     // Find longest junk free match
     {
       for(size_t i = a_low; i < a_high; ++i) {
-        for(size_t j = b_high - 1; j != b_low - 1; --j) {
+        std::size_t last_cache = 0;
+        for(size_t j = b_low; j < b_high; ++j) {
           if (b_[j] != a_[i]) {
-            j2len_[j+1] = 0;
+            j2len_[j] = last_cache;
+            last_cache = 0;
             continue;
           }
 
           size_t k = j2len_[j] + 1;
-          j2len_[j+1] = k;
+          j2len_[j] = last_cache;
+          last_cache = k;
           if (k > best_size) {
             best_i = i - k + 1;
             best_j = j - k + 1;
             best_size = k;
           }
         }
+        j2len_[b_high-1] = last_cache;
       }
       for(size_t j = b_low; j < b_high; ++j) {
         j2len_[j+1] = 0;
