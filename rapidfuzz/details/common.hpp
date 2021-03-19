@@ -198,7 +198,9 @@ struct PatternMatchVector<1> {
 
   template<typename CharT>
   uint64_t get(CharT ch) const {
-    if(sizeof(CharT) == 1)
+    // prevent conditional expression is constant on MSVC
+    static constexpr bool is_byte = sizeof(CharT) == 1;
+    if(is_byte)
     {
       return m_val[(unsigned char)ch];
     }

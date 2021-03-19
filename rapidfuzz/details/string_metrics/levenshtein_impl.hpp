@@ -49,7 +49,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
   std::size_t dist = max + 1;
 
   for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    uint8_t ops = possible_ops[pos];
+    int ops = possible_ops[pos];
     std::size_t s1_pos = 0;
     std::size_t s2_pos = 0;
     std::size_t cur_dist = 0;
@@ -69,7 +69,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
     dist = std::min(dist, cur_dist);
   }
 
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 /**
@@ -122,14 +122,14 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
     if (HP & mask) {
       currDist++;
       if (maxMisses < 2) {
-        return -1;
+        return (std::size_t)-1;
       }
       maxMisses -= 2;
     } else if (HN & mask) {
       currDist--;
     } else {
       if (maxMisses < 1) {
-        return -1;
+        return (std::size_t)-1;
       }
       --maxMisses;
     }
@@ -204,14 +204,14 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
       if (Ph & Last) {
         currDist++;
         if (maxMisses < 2) {
-          return -1;
+          return (std::size_t)-1;
         }
         maxMisses -= 2;
       } else if (Mh & Last) {
         currDist--;
       } else {
         if (maxMisses < 1) {
-          return -1;
+          return (std::size_t)-1;
         }
         --maxMisses;
       }
@@ -235,15 +235,15 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // at least length difference insertions/deletions required
   std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
   if (len_diff > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   // do this first, since we can not remove any affix in encoded form
@@ -255,7 +255,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
       dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
     }
 
-    return (dist > max) ? -1 : dist;
+    return (dist > max) ? (std::size_t)-1 : dist;
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -291,14 +291,14 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // at least length difference insertions/deletions required
   if (s2.size() - s1.size() > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   /* The Levenshtein distance between
@@ -319,13 +319,13 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   if (s2.size() < 65) {
     std::size_t dist = levenshtein_hyrroe2003(s1,
       common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size(), max);
-    return (dist > max) ? -1 : dist;
+    return (dist > max) ? (std::size_t)-1 : dist;
   }
 
   std::size_t dist = levenshtein_myers1999_block(s1,
     common::BlockPatternMatchVector<sizeof(CharT2)>(s2), s2.size(), max);
 
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 

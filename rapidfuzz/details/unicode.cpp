@@ -44,7 +44,7 @@ typedef struct {
 
 static inline const _PyUnicode_TypeRecord * gettyperecord(uint32_t code)
 {
-    int index;
+    unsigned int index;
     if (code >= 0x110000)
         index = 0;
     else
@@ -70,15 +70,15 @@ uint32_t UnicodeDefaultProcess(uint32_t ch)
 
     if (ctype->flags & EXTENDED_CASE_MASK) {
         int index = ctype->lower & 0xFFFF;
-        int n = ctype->lower >> 24;
-        /*int i;
+        /*int n = ctype->lower >> 24;
+        int i;
         for (i = 0; i < n; i++)
             res[i] = _PyUnicode_ExtendedCase[index + i];*/
         /* for now ignore extended cases. The only exisiting
          * on is U+0130 anyways */
         return _PyUnicode_ExtendedCase[index];
     }
-    return ch + ctype->lower;
+    return ch + static_cast<uint32_t>(ctype->lower);
 }
 
 } // namespace Unicode

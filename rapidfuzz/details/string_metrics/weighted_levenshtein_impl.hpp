@@ -57,7 +57,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
   std::size_t dist = max + 1;
 
   for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    uint8_t ops = possible_ops[pos];
+    int ops = possible_ops[pos];
     std::size_t s1_pos = 0;
     std::size_t s2_pos = 0;
     std::size_t cur_dist = 0;
@@ -85,7 +85,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
     dist = std::min(dist, cur_dist);
   }
 
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 /*
@@ -93,7 +93,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
  * The code uses wikipedia's 64-bit popcount implementation:
  * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
  */
-static inline int popcount64(uint64_t x)
+static inline std::size_t popcount64(uint64_t x)
 {
   const uint64_t m1  = 0x5555555555555555; //binary: 0101...
   const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
@@ -103,7 +103,7 @@ static inline int popcount64(uint64_t x)
   x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
   x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
   x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-  return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+  return static_cast<std::size_t>((x * h01) >> 56);  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
 }
 
 /*
@@ -398,23 +398,23 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // when the strings have a similar length each difference causes
   // at least a edit distance of 2, so a direct comparision is sufficient
   if (max == 1) {
     if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
     }
   }
 
   // at least length difference insertions/deletions required
   std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
   if (len_diff > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   // do this first, since we can not remove any affix in encoded form
@@ -426,7 +426,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
       dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
     }
 
-    return (dist > max) ? -1 : dist;
+    return (dist > max) ? (std::size_t)-1 : dist;
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -460,22 +460,22 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // when the strings have a similar length each difference causes
   // at least a edit distance of 2, so a direct comparision is sufficient
   if (max == 1) {
     if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
     }
   }
 
   // at least length difference insertions/deletions required
   if (s1.size() - s2.size() > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -491,7 +491,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   }
 
   std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 template <typename CharT1, typename CharT2, std::size_t size>

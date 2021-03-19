@@ -10,8 +10,6 @@
 
 namespace rapidfuzz {
 
-//uint32_t UnicodeDefaultProcess(uint32_t ch);
-
 template <typename Sentence, typename CharT, typename>
 std::basic_string<CharT> utils::default_process(Sentence&& s)
 {
@@ -48,13 +46,13 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     std::transform(str.begin(), str.end(), str.begin(),
                    [](CharT ch2) {
       int ch = static_cast<int>(ch2);
-      return extended_ascii_mapping[ch];
+      return static_cast<CharT>(extended_ascii_mapping[ch]);
       });
   } else {
     std::transform(str.begin(), str.end(), str.begin(),
                  [](CharT ch2) {
       uint32_t ch = static_cast<uint32_t>(ch2);
-      return (ch < 256) ? extended_ascii_mapping[ch] : Unicode::UnicodeDefaultProcess(ch2);
+      return (ch < 256) ? static_cast<CharT>(extended_ascii_mapping[ch]) : static_cast<CharT>(Unicode::UnicodeDefaultProcess(ch2));
     });
   }
 
