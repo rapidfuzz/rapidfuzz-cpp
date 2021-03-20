@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <iostream>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -44,6 +45,10 @@ static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
+  if (s1.size() < s2.size()) {
+    return levenshtein_mbleven2018(s2, s1, max);
+  }
+
   std::size_t len_diff = s1.size() - s2.size();
   auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
   std::size_t dist = max + 1;
@@ -270,11 +275,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
     return s2.size();
   }
 
-  if (s1.size() > s2.size()) {
-    return levenshtein_mbleven2018(s1, s2, max);
-  } else {
-    return levenshtein_mbleven2018(s2, s1, max);
-  }
+  return levenshtein_mbleven2018(s1, s2, max);
 }
 
 
