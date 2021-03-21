@@ -40,10 +40,29 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
 
   std::basic_string<CharT> str(std::forward<Sentence>(s));
 
+// this requires sources to compiled, while the current version for C++ is header only
+// this will be added to the C++ version later on.
+#ifndef RAPIDFUZZ_PYTHON
   std::transform(str.begin(), str.end(), str.begin(),
                  [](CharT ch2) {
     int ch = static_cast<int>(ch2);
     return (ch < 256) ? extended_ascii_mapping[ch] : ch; });
+#else
+  // use direct mapping for extended Asciis
+  if (sizeof(CharT) == 1) {
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](CharT ch2) {
+      int ch = static_cast<int>(ch2);
+      return static_cast<CharT>(extended_ascii_mapping[ch]);
+      });
+  } else {
+    std::transform(str.begin(), str.end(), str.begin(),
+                 [](CharT ch2) {
+      uint32_t ch = static_cast<uint32_t>(ch2);
+      return (ch < 256) ? static_cast<CharT>(extended_ascii_mapping[ch]) : static_cast<CharT>(Unicode::UnicodeDefaultProcess(ch2));
+    });
+  }
+#endif
 
   str.erase(str.begin(),
             std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
