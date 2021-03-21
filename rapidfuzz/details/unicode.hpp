@@ -88,7 +88,7 @@ bool is_space(const CharT ch)
 
 // this requires sources to compiled, while the current version for C++ is header only
 // this will be added to the C++ version later on.
-#ifndef RAPIDFUZZ_PYTHON
+#ifdef RAPIDFUZZ_PYTHON
 uint32_t UnicodeDefaultProcess(uint32_t ch);
 #endif
 
