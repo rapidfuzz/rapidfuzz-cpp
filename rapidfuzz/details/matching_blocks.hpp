@@ -80,7 +80,6 @@ class SequenceMatcher {
             best_size = k;
           }
         }
-        j2len_[b_high-1] = last_cache;
       }
 
       // we never write to the first element
