@@ -86,5 +86,11 @@ bool is_space(const CharT ch)
   return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
 }
 
+// this requires sources to compiled, while the current version for C++ is header only
+// this will be added to the C++ version later on.
+#ifndef RAPIDFUZZ_PYTHON
+uint32_t UnicodeDefaultProcess(uint32_t ch);
+#endif
+
 } // namespace Unicode
 } // namespace rapidfuzz
