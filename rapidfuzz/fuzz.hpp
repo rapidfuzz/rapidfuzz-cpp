@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2021 Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include "details/common.hpp"
+#include <rapidfuzz/details/common.hpp>
 
 #include <type_traits>
 
@@ -48,16 +48,16 @@ template<typename Sentence1>
 struct CachedRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedRatio(const Sentence1& s1);
+  CachedRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
 };
-
 
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
@@ -93,14 +93,15 @@ template<typename Sentence1>
 struct CachedPartialRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialRatio(const Sentence1& s1);
+  CachedPartialRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  CachedRatio<Sentence1> cached_ratio;
 };
 
 
@@ -133,20 +134,21 @@ private:
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
+// todo CachedRatio speed for equal strings vs original implementation
 // TODO documentation
 template<typename Sentence1>
 struct CachedTokenSortRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedTokenSortRatio(const Sentence1& s1);
+  CachedTokenSortRatio(const Sentence1& s1)
+    : s1_sorted(common::sorted_split(s1).join()), cached_ratio(s1_sorted) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  CachedRatio<Sentence1> cached_ratio;
 };
 
 
@@ -180,14 +182,15 @@ template<typename Sentence1>
 struct CachedPartialTokenSortRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialTokenSortRatio(const Sentence1& s1);
+  CachedPartialTokenSortRatio(const Sentence1& s1)
+   : s1_sorted(common::sorted_split(s1).join()), cached_partial_ratio(s1_sorted) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  CachedPartialRatio<Sentence1> cached_partial_ratio;
 };
 
 /**
@@ -299,15 +302,17 @@ template<typename Sentence1>
 struct CachedTokenRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedTokenRatio(const Sentence1& s1);
+  CachedTokenRatio(const Sentence1& s1)
+    : s1_tokens(common::sorted_split(s1)), s1_sorted(s1_tokens.join()),
+      cached_ratio_s1_sorted(s1_sorted) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  SplittedSentenceView<CharT1> tokens_s1;
+  SplittedSentenceView<CharT1> s1_tokens;
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  CachedRatio<Sentence1> cached_ratio_s1_sorted;
 };
 
 
@@ -386,11 +391,13 @@ struct CachedWRatio {
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
+// todo somehow implement this using other ratios with creating PatternMatchVector
+// multiple times
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1_sorted;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
 };
 
 /**
@@ -417,19 +424,19 @@ private:
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-
 template<typename Sentence1>
 struct CachedQRatio {
   using CharT1 = char_type<Sentence1>;
 
-  CachedQRatio(const Sentence1& s1);
+  CachedQRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::blockmap_entry<sizeof(CharT1)> blockmap_s1;
+  CachedRatio<Sentence1> cached_ratio;
 };
 
 /**@}*/
@@ -437,4 +444,4 @@ private:
 } // namespace fuzz
 } // namespace rapidfuzz
 
-#include "fuzz_impl.hpp"
+#include <rapidfuzz/fuzz_impl.hpp>

@@ -23,18 +23,16 @@
 
 #pragma once
 
-#include "common.hpp"
+#include <rapidfuzz/details/common.hpp>
 
 #include <unordered_map>
 #include <algorithm>
 #include <tuple>
 #include <algorithm>
-#include <memory>
 #include <vector>
 
-
 namespace rapidfuzz {
-
+namespace detail {
 struct MatchingBlock {
   std::size_t spos;
   std::size_t dpos;
@@ -65,14 +63,17 @@ class SequenceMatcher {
     // Find longest junk free match
     {
       for(size_t i = a_low; i < a_high; ++i) {
-        for(size_t j = b_high - 1; j != b_low - 1; --j) {
+        std::size_t last_cache = 0;
+        for(size_t j = b_low; j < b_high; ++j) {
           if (b_[j] != a_[i]) {
-            j2len_[j+1] = 0;
+            j2len_[j] = last_cache;
+            last_cache = 0;
             continue;
           }
 
           size_t k = j2len_[j] + 1;
-          j2len_[j+1] = k;
+          j2len_[j] = last_cache;
+          last_cache = k;
           if (k > best_size) {
             best_i = i - k + 1;
             best_j = j - k + 1;
@@ -80,8 +81,10 @@ class SequenceMatcher {
           }
         }
       }
-      for(size_t j = b_low; j < b_high; ++j) {
-        j2len_[j+1] = 0;
+
+      // we never write to the first element
+      for(size_t j = b_low+1; j < b_high; ++j) {
+        j2len_[j] = 0;
       }
     }
 
@@ -159,19 +162,24 @@ private:
 
 }  // namespace difflib
 
-
+/* TODO this implementation is broken. The LCS part works fine, but extracting the longest sequences does not work
+ * properly
+ */
+#if 0
 template<typename Sentence1, std::size_t size,  typename Sentence2>
-std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
+std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<size>& blockmap_s1, Sentence2 s2) {
   if (s1.size() > 64) {
     return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
   }
 
   std::vector<rapidfuzz::MatchingBlock> matching_blocks;
 
+  // Hyyrö, Heikki. (2004). A Note on Bit-Parallel Alignment Computation. 79-87.
+  // build LCS Matrix
   std::uint64_t S = ~0x0ull;
   std::vector<std::uint64_t> Vs;
   Vs.reserve(s2.size());
-  Vs.resize(1);
+
   for (std::size_t j = 0; j < s2.size(); ++j) {
     uint64_t Matches = blockmap_s1.get(s2[j]);
     uint64_t u = S & Matches;
@@ -204,7 +212,7 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
       --pos_s2;
     }
   }
-  
+
   if (length) {
     matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
   }
@@ -213,11 +221,13 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
 
   return matching_blocks;
 }
+#endif
 
-
-template<typename Sentence1, std::size_t size, typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, const common::blockmap_entry<size>& blockmap_s1, Sentence2 s2) {
-  return longest_common_subsequence(s1, blockmap_s1, s2);
+template<typename Sentence1, /*std::size_t size,*/ typename Sentence2>
+std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<size>& blockmap_s1,*/ Sentence2 s2) {
+  //return longest_common_subsequence(s1, blockmap_s1, s2);
+  return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
 }
 
+} /* namespace detail */
 } /* namespace rapidfuzz */

@@ -1,14 +1,15 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include "SplittedSentenceView.hpp"
-#include "type_traits.hpp"
-#include "types.hpp"
+#include <rapidfuzz/details/SplittedSentenceView.hpp>
+#include <rapidfuzz/details/type_traits.hpp>
+#include <rapidfuzz/details/types.hpp>
 #include <cmath>
 #include <tuple>
 #include <vector>
 #include <array>
+#include <cstring>
 
 namespace rapidfuzz {
 
@@ -124,15 +125,24 @@ template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
 template <std::size_t size>
-struct blockmap_entry;
+struct PatternMatchVector;
 
 template <std::size_t size>
-struct blockmap_entry {
+struct PatternMatchVector {
   std::array<uint32_t, 128> m_key;
   std::array<uint64_t, 128> m_val;
 
-  blockmap_entry()
+  PatternMatchVector()
     : m_key(), m_val() {}
+
+  template<typename CharT>
+  PatternMatchVector(basic_string_view<CharT> s)
+    : m_key(), m_val()
+  {
+    for (std::size_t i = 0; i < s.size(); i++){
+      insert(s[i], static_cast<int>(i));
+    }
+  }
 
   template <typename CharT>
   void insert(CharT ch, int pos) {
@@ -166,11 +176,20 @@ struct blockmap_entry {
 };
 
 template <>
-struct blockmap_entry<1> {
+struct PatternMatchVector<1> {
   std::array<uint64_t, 256> m_val;
 
-  blockmap_entry()
+  PatternMatchVector()
     : m_val() {}
+
+  template<typename CharT>
+  PatternMatchVector(basic_string_view<CharT> s)
+    : m_val()
+  {
+    for (std::size_t i = 0; i < s.size(); i++){
+      insert(s[i], static_cast<int>(i));
+    }
+  }
 
   void insert(unsigned char ch, int pos) {
     // todo add tests for this
@@ -179,11 +198,49 @@ struct blockmap_entry<1> {
 
   template<typename CharT>
   uint64_t get(CharT ch) const {
-    if(sizeof(CharT) == 1)
+    // prevent conditional expression is constant on MSVC
+    static constexpr bool is_byte = sizeof(CharT) == 1;
+    if(is_byte)
     {
       return m_val[(unsigned char)ch];
     }
     return (ch < 256) ? m_val[ch] : 0;
+  }
+};
+
+template <std::size_t size>
+struct BlockPatternMatchVector {
+  std::vector<PatternMatchVector<size>> m_val;
+
+  BlockPatternMatchVector() {}
+
+  template<typename CharT>
+  BlockPatternMatchVector(basic_string_view<CharT> s)
+  {
+    insert(s);
+  }
+
+  template<typename CharT>
+  void insert(std::size_t block, CharT ch, int pos) {
+    auto* be = &m_val[block];
+    be->insert(ch, pos);
+  }
+
+  template<typename CharT>
+  void insert(basic_string_view<CharT> s) {
+    std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
+    m_val.resize(nr);
+
+    for (std::size_t i = 0; i < s.size(); i++){
+      auto* be = &m_val[i/64];
+      be->insert(s[i], static_cast<int>(i%64));
+    }
+  }
+
+  template<typename CharT>
+  uint64_t get(std::size_t block, CharT ch) const {
+    auto* be = &m_val[block];
+    return be->get(ch);
   }
 };
 
@@ -192,4 +249,4 @@ struct blockmap_entry<1> {
 } // namespace common
 } // namespace rapidfuzz
 
-#include "common_impl.hpp"
+#include <rapidfuzz/details/common_impl.hpp>

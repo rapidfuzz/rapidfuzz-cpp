@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "string_view.hpp"
+#include <rapidfuzz/details/string_view.hpp>
 
 namespace rapidfuzz {
 

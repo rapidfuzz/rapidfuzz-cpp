@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <cstdint>
 
 namespace rapidfuzz {
 namespace Unicode {
@@ -84,6 +85,8 @@ bool is_space(const CharT ch)
 {
   return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
 }
+
+uint32_t UnicodeDefaultProcess(uint32_t ch);
 
 } // namespace Unicode
 } // namespace rapidfuzz

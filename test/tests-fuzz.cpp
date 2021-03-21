@@ -1,7 +1,7 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include <rapidfuzz/utils.hpp>
 #include <rapidfuzz/fuzz.hpp>
-
-#include <catch2/catch.hpp>
 
 namespace fuzz = rapidfuzz::fuzz;
 namespace utils = rapidfuzz::utils;
@@ -50,7 +50,7 @@ TEST_CASE("RatioTest")
     }
 
     SECTION("testTokenSortRatio")
-    { 
+    {
         REQUIRE( 100 == fuzz::token_sort_ratio(s1, s1) );
         const std::string s92 = "metss new york hello";
         const std::string s0 = "metss new york hello";

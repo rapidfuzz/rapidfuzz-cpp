@@ -1,11 +1,11 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/fuzz.hpp>
 #include <rapidfuzz/details/string_view.hpp>
 
 #include <string>
 #include <vector>
-
-#include <catch2/catch.hpp>
 
 namespace common = rapidfuzz::common;
 

@@ -2,9 +2,10 @@
 /* Copyright © 2020 Max Bachmann */
 
 #pragma once
-#include "details/SplittedSentenceView.hpp"
-#include "details/type_traits.hpp"
-#include "details/types.hpp"
+#include <rapidfuzz/details/SplittedSentenceView.hpp>
+#include <rapidfuzz/details/type_traits.hpp>
+#include <rapidfuzz/details/types.hpp>
+
 #include <cmath>
 #include <tuple>
 #include <vector>
@@ -49,4 +50,4 @@ std::basic_string<CharT> default_process(Sentence s);
 } // namespace utils
 } // namespace rapidfuzz
 
-#include "utils_impl.hpp"
+#include <rapidfuzz/utils_impl.hpp>
