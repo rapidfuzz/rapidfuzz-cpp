@@ -38,7 +38,7 @@ std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, bas
     }
   }
 
-  return (cache.back() <= max) ? cache.back() : -1;
+  return (cache.back() <= max) ? cache.back() : (std::size_t)-1;
 }
 
 template <typename CharT1, typename CharT2>
@@ -49,12 +49,12 @@ std::size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<
   if (s1.size() >= s2.size()) {
     // at least length difference deletions required
     if ((s1.size() - s2.size()) * weights.delete_cost > max) {
-      return -1;
+      return (std::size_t)-1;
     }
   } else {
     // at least length difference insertions required
     if ((s2.size() - s1.size()) * weights.insert_cost > max) {
-      return -1;
+      return (std::size_t)-1;
     }
   }
 

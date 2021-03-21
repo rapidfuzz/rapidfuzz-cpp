@@ -118,8 +118,8 @@ common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 fir
 template <typename CharT1, typename CharT2>
 std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  auto prefix =
-      std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first);
+  std::size_t prefix =
+      static_cast<std::size_t>(std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
   a.remove_prefix(prefix);
   b.remove_prefix(prefix);
   return prefix;
@@ -131,8 +131,8 @@ std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_str
 template <typename CharT1, typename CharT2>
 std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  auto suffix =
-      std::distance(a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first);
+  std::size_t suffix =
+      static_cast<std::size_t>(std::distance(a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
   a.remove_suffix(suffix);
   b.remove_suffix(suffix);
   return suffix;
@@ -161,7 +161,7 @@ std::size_t common::count_uncommon_chars(const Sentence1& s1, const Sentence2& s
 
   std::size_t count = 0;
   for (const auto& freq : char_freq) {
-    count += std::abs(freq);
+    count += static_cast<std::size_t>(std::abs(freq));
   }
 
   return count;

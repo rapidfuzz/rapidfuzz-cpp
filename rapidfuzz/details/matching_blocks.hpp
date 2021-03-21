@@ -82,8 +82,10 @@ class SequenceMatcher {
         }
         j2len_[b_high-1] = last_cache;
       }
-      for(size_t j = b_low; j < b_high; ++j) {
-        j2len_[j+1] = 0;
+
+      // we never write to the first element
+      for(size_t j = b_low+1; j < b_high; ++j) {
+        j2len_[j] = 0;
       }
     }
 

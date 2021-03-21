@@ -38,7 +38,6 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253, 254, 255
   };
 
-
   std::basic_string<CharT> str(std::forward<Sentence>(s));
 
   std::transform(str.begin(), str.end(), str.begin(),
