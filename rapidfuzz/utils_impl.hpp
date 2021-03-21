@@ -63,7 +63,7 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     });
   }
 #endif
-  
+
   str.erase(str.begin(),
             std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
 
