@@ -123,6 +123,37 @@ static inline uint64_t set_bits(int n)
   return result;
 }
 
+/*
+ * count the number of bits set in a 64 bit integer
+ * The code uses wikipedia's 64-bit popcount implementation:
+ * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+ */
+static inline int popcount64(uint64_t x)
+{
+  const uint64_t m1  = 0x5555555555555555; //binary: 0101...
+  const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
+  const uint64_t m4  = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
+  const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+
+  x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
+  x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
+  x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
+  return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+}
+
+/*
+ * returns a 64 bit integer with the first n bits set to 1
+ */
+static inline uint64_t set_bits(int n)
+{
+  uint64_t result = (uint64_t)-1;
+  // shifting by 64 bits would be undefined behavior
+  if (n < 64) {
+    result += (uint64_t)1 << n;
+  }
+  return result;
+}
+
 template <typename CharT1, std::size_t size>
 static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
   const common::PatternMatchVector<size>& block, std::size_t s2_len)
@@ -365,7 +396,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       DH[words - 1].DHneg1 = DHneg1temp;
     }
   }
-
+  
   //find scores in last row
   std::size_t dist = s1.size() + s2_len;
 

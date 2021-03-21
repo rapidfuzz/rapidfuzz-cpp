@@ -273,7 +273,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   if (s1.empty()) {
     return s2.size();
   }
-
+ 
   return levenshtein_mbleven2018(s1, s2, max);
 }
 
