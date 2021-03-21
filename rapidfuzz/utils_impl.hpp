@@ -62,7 +62,8 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
       return (ch < 256) ? static_cast<CharT>(extended_ascii_mapping[ch]) : static_cast<CharT>(Unicode::UnicodeDefaultProcess(ch2));
     });
   }
-
+#endif
+  
   str.erase(str.begin(),
             std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
 
