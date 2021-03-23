@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-03-13 15:40:43.423011
+//  Generated: 2021-03-23 06:49:16.808756
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1838,6 +1838,7 @@ std::basic_string<CharT> default_process(Sentence s);
 
 
 #include <type_traits>
+#include <cstdint>
 
 namespace rapidfuzz {
 namespace Unicode {
@@ -1922,6 +1923,12 @@ bool is_space(const CharT ch)
   return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
 }
 
+// this requires sources to compiled, while the current version for C++ is header only
+// this will be added to the C++ version later on.
+#ifdef RAPIDFUZZ_PYTHON
+uint32_t UnicodeDefaultProcess(uint32_t ch);
+#endif
+
 } // namespace Unicode
 } // namespace rapidfuzz
 
@@ -1955,13 +1962,31 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253, 254, 255
   };
 
-
   std::basic_string<CharT> str(std::forward<Sentence>(s));
 
+// this requires sources to compiled, while the current version for C++ is header only
+// this will be added to the C++ version later on.
+#ifndef RAPIDFUZZ_PYTHON
   std::transform(str.begin(), str.end(), str.begin(),
                  [](CharT ch2) {
     int ch = static_cast<int>(ch2);
     return (ch < 256) ? extended_ascii_mapping[ch] : ch; });
+#else
+  // use direct mapping for extended Asciis
+  if (sizeof(CharT) == 1) {
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](CharT ch2) {
+      int ch = static_cast<int>(ch2);
+      return static_cast<CharT>(extended_ascii_mapping[ch]);
+      });
+  } else {
+    std::transform(str.begin(), str.end(), str.begin(),
+                 [](CharT ch2) {
+      uint32_t ch = static_cast<uint32_t>(ch2);
+      return (ch < 256) ? static_cast<CharT>(extended_ascii_mapping[ch]) : static_cast<CharT>(Unicode::UnicodeDefaultProcess(ch2));
+    });
+  }
+#endif
 
   str.erase(str.begin(),
             std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
@@ -2094,9 +2119,6 @@ std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view
 template <typename CharT1, typename CharT2>
 std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
-template <typename Sentence1, typename Sentence2>
-std::size_t count_uncommon_chars(const Sentence1& s1, const Sentence2& s2);
-
 
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
@@ -2117,7 +2139,7 @@ struct PatternMatchVector {
     : m_key(), m_val()
   {
     for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], i);
+      insert(s[i], static_cast<int>(i));
     }
   }
 
@@ -2164,7 +2186,7 @@ struct PatternMatchVector<1> {
     : m_val()
   {
     for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], i);
+      insert(s[i], static_cast<int>(i));
     }
   }
 
@@ -2175,7 +2197,9 @@ struct PatternMatchVector<1> {
 
   template<typename CharT>
   uint64_t get(CharT ch) const {
-    if(sizeof(CharT) == 1)
+    // prevent conditional expression is constant on MSVC
+    static constexpr bool is_byte = sizeof(CharT) == 1;
+    if(is_byte)
     {
       return m_val[(unsigned char)ch];
     }
@@ -2208,7 +2232,7 @@ struct BlockPatternMatchVector {
 
     for (std::size_t i = 0; i < s.size(); i++){
       auto* be = &m_val[i/64];
-      be->insert(s[i], i%64);
+      be->insert(s[i], static_cast<int>(i%64));
     }
   }
 
@@ -2341,8 +2365,8 @@ common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 fir
 template <typename CharT1, typename CharT2>
 std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  auto prefix =
-      std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first);
+  std::size_t prefix =
+      static_cast<std::size_t>(std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
   a.remove_prefix(prefix);
   b.remove_prefix(prefix);
   return prefix;
@@ -2354,8 +2378,8 @@ std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_str
 template <typename CharT1, typename CharT2>
 std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  auto suffix =
-      std::distance(a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first);
+  std::size_t suffix =
+      static_cast<std::size_t>(std::distance(a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
   a.remove_suffix(suffix);
   b.remove_suffix(suffix);
   return suffix;
@@ -2368,26 +2392,6 @@ template <typename CharT1, typename CharT2>
 StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
   return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
-}
-
-template <typename Sentence1, typename Sentence2>
-std::size_t common::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2)
-{
-  std::array<signed int, 32> char_freq{};
-  for (const auto& ch : s1) {
-    ++char_freq[ch % 32];
-  }
-
-  for (const auto& ch : s2) {
-    --char_freq[ch % 32];
-  }
-
-  std::size_t count = 0;
-  for (const auto& freq : char_freq) {
-    count += std::abs(freq);
-  }
-
-  return count;
 }
 
 template <typename Sentence, typename CharT>
@@ -2456,12 +2460,16 @@ static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
 template <typename CharT1, typename CharT2>
 std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
+  if (s1.size() < s2.size()) {
+    return levenshtein_mbleven2018(s2, s1, max);
+  }
+
   std::size_t len_diff = s1.size() - s2.size();
   auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
   std::size_t dist = max + 1;
 
   for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    uint8_t ops = possible_ops[pos];
+    int ops = possible_ops[pos];
     std::size_t s1_pos = 0;
     std::size_t s2_pos = 0;
     std::size_t cur_dist = 0;
@@ -2481,7 +2489,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
     dist = std::min(dist, cur_dist);
   }
 
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 /**
@@ -2514,7 +2522,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
   uint64_t VN = 0;
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s1_len - currDist;
+  std::size_t maxMisses = max + s2.size() - currDist;
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
   uint64_t mask = (uint64_t)1 << (s1_len - 1);
 
@@ -2534,14 +2542,14 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
     if (HP & mask) {
       currDist++;
       if (maxMisses < 2) {
-        return -1;
+        return (std::size_t)-1;
       }
       maxMisses -= 2;
     } else if (HN & mask) {
       currDist--;
     } else {
       if (maxMisses < 1) {
-        return -1;
+        return (std::size_t)-1;
       }
       --maxMisses;
     }
@@ -2569,7 +2577,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 
   const std::size_t words = PM.m_val.size();
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s1_len - currDist;
+  std::size_t maxMisses = max + s2.size() - currDist;
   std::vector<Vectors> vecs(words);
   const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
@@ -2616,14 +2624,14 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
       if (Ph & Last) {
         currDist++;
         if (maxMisses < 2) {
-          return -1;
+          return (std::size_t)-1;
         }
         maxMisses -= 2;
       } else if (Mh & Last) {
         currDist--;
       } else {
         if (maxMisses < 1) {
-          return -1;
+          return (std::size_t)-1;
         }
         --maxMisses;
       }
@@ -2647,27 +2655,27 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // at least length difference insertions/deletions required
   std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
   if (len_diff > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   // do this first, since we can not remove any affix in encoded form
   if (max >= 4) {
     std::size_t dist = 0;
-    if (s1.size() < 65) {
+    if (s2.size() < 65) {
       dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
     } else {
       dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
     }
 
-    return (dist > max) ? -1 : dist;
+    return (dist > max) ? (std::size_t)-1 : dist;
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -2681,12 +2689,8 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   if (s1.empty()) {
     return s2.size();
   }
-
-  if (s1.size() > s2.size()) {
-    return levenshtein_mbleven2018(s1, s2, max);
-  } else {
-    return levenshtein_mbleven2018(s2, s1, max);
-  }
+ 
+  return levenshtein_mbleven2018(s1, s2, max);
 }
 
 
@@ -2703,14 +2707,14 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // at least length difference insertions/deletions required
   if (s2.size() - s1.size() > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   /* The Levenshtein distance between
@@ -2731,13 +2735,13 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
   if (s2.size() < 65) {
     std::size_t dist = levenshtein_hyrroe2003(s1,
       common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size(), max);
-    return (dist > max) ? -1 : dist;
+    return (dist > max) ? (std::size_t)-1 : dist;
   }
 
   std::size_t dist = levenshtein_myers1999_block(s1,
     common::BlockPatternMatchVector<sizeof(CharT2)>(s2), s2.size(), max);
 
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 
@@ -2835,12 +2839,16 @@ static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][8] = {
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
 {
+  if (s1.size() < s2.size()) {
+    return weighted_levenshtein_mbleven2018(s2, s1, max);
+  }
+
   std::size_t len_diff = s1.size() - s2.size();
   auto possible_ops = weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
   std::size_t dist = max + 1;
 
   for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    uint8_t ops = possible_ops[pos];
+    int ops = possible_ops[pos];
     std::size_t s1_pos = 0;
     std::size_t s2_pos = 0;
     std::size_t cur_dist = 0;
@@ -2868,7 +2876,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
     dist = std::min(dist, cur_dist);
   }
 
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 /*
@@ -2876,7 +2884,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
  * The code uses wikipedia's 64-bit popcount implementation:
  * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
  */
-static inline int popcount64(uint64_t x)
+static inline std::size_t popcount64(uint64_t x)
 {
   const uint64_t m1  = 0x5555555555555555; //binary: 0101...
   const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
@@ -2886,7 +2894,7 @@ static inline int popcount64(uint64_t x)
   x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
   x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
   x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-  return (x * h01) >> 56;  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+  return static_cast<std::size_t>((x * h01) >> 56);  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
 }
 
 /*
@@ -2933,7 +2941,7 @@ static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> 
   }
 
   std::size_t dist = s1.size() + s2_len;
-  uint64_t bitmask = set_bits(s2_len);
+  uint64_t bitmask = set_bits(static_cast<int>(s2_len));
 
   dist -= popcount64(DHzero & bitmask);
   dist -= popcount64(DHpos1 & bitmask) * 2;
@@ -2994,8 +3002,9 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       //Find 1s
       const uint64_t INITpos1s = DHneg1temp & Matches;
 
-      uint64_t sum = (INITpos1s + DHneg1temp);
-      OverFlow0 = (sum < INITpos1s) || (sum < DHneg1temp);
+      uint64_t sum = INITpos1s;
+      sum += DHneg1temp;
+      OverFlow0 = sum < DHneg1temp;
       const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
 
       //set RemainingDHneg1
@@ -3008,8 +3017,9 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       uint64_t initval = (INITzeros << 1);
       INITzerosprevbit = INITzeros >> 63;
 
-      initval += RemainDHneg1;
-      OverFlow1 = initval < RemainDHneg1;
+      sum = initval;
+      sum += RemainDHneg1;
+      OverFlow0 |= sum < RemainDHneg1;
       const uint64_t DVzeroshift = initval ^ RemainDHneg1;
 
       //Find -1s
@@ -3032,7 +3042,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       DH[0].DHneg1 = DHneg1temp;
     }
 
-    for (std::size_t word = 1; word < words-1; ++word) {
+    for (std::size_t word = 1; word < words - 1; ++word) {
       uint64_t DHpos1temp    = DH[word].DHpos1;
       uint64_t DHzerotemp    = DH[word].DHzero;
       uint64_t DHneg1temp    = DH[word].DHneg1;
@@ -3045,8 +3055,12 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       //Find 1s
       const uint64_t INITpos1s = DHneg1temp & Matches;
 
-      uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-      OverFlow0 = (sum < INITpos1s) || (sum < DHneg1temp) || (sum < OverFlow0);
+
+      uint64_t sum = INITpos1s;
+      sum += OverFlow0;
+      OverFlow0 = sum < OverFlow0;
+      sum += DHneg1temp;
+      OverFlow0 |= sum < DHneg1temp;
       const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
 
       //set RemainingDHneg1
@@ -3060,8 +3074,12 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       INITzerosprevbit = INITzeros >> 63;
       initval = (INITzeros << 1) | initval;
 
-      sum = initval + RemainDHneg1 + OverFlow1;
-      OverFlow1 = (sum < initval) || (sum < RemainDHneg1) || (sum < OverFlow1);
+
+      sum = initval;
+      sum += OverFlow1;
+      OverFlow1 = sum < OverFlow1;
+      sum += RemainDHneg1;
+      OverFlow0 |= sum < RemainDHneg1;
       const uint64_t DVzeroshift = sum ^ RemainDHneg1;
 
       //Find -1s
@@ -3134,7 +3152,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       DH[words - 1].DHneg1 = DHneg1temp;
     }
   }
-
+  
   //find scores in last row
   std::size_t dist = s1.size() + s2_len;
 
@@ -3144,7 +3162,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
     dist -= popcount64(DH[word].DHpos1) * 2;
   }
 
-  uint64_t bitmask = set_bits(s2_len - (words - 1) * 64);
+  uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
   dist -= popcount64(DH.back().DHzero & bitmask);
   dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
 
@@ -3154,7 +3172,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  if (s1.size() < 65) {
+  if (s2.size() < 65) {
     return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size());
   } else {
     return weighted_levenshtein_bitpal_blockwise(
@@ -3171,35 +3189,35 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // when the strings have a similar length each difference causes
   // at least a edit distance of 2, so a direct comparision is sufficient
   if (max == 1) {
     if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
     }
   }
 
   // at least length difference insertions/deletions required
   std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
   if (len_diff > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   // do this first, since we can not remove any affix in encoded form
   if (max >= 5) {
     std::size_t dist = 0;
-    if (s1.size() < 65) {
+    if (s2.size() < 65) {
       dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
     } else {
       dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
     }
 
-    return (dist > max) ? -1 : dist;
+    return (dist > max) ? (std::size_t)-1 : dist;
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -3214,11 +3232,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
     return s2.size();
   }
 
-  if (s1.size() > s2.size()) {
-    return weighted_levenshtein_mbleven2018(s1, s2, max);
-  } else {
-    return weighted_levenshtein_mbleven2018(s2, s1, max);
-  }
+  return weighted_levenshtein_mbleven2018(s1, s2, max);
 }
 
 
@@ -3233,22 +3247,22 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   // when no differences are allowed a direct comparision is sufficient
   if (max == 0) {
     if (s1.size() != s2.size()) {
-      return -1;
+      return (std::size_t)-1;
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
   }
 
   // when the strings have a similar length each difference causes
   // at least a edit distance of 2, so a direct comparision is sufficient
   if (max == 1) {
     if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : -1;
+      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
     }
   }
 
   // at least length difference insertions/deletions required
   if (s1.size() - s2.size() > max) {
-    return -1;
+    return (std::size_t)-1;
   }
 
   // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -3264,7 +3278,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   }
 
   std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
-  return (dist > max) ? -1 : dist;
+  return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 template <typename CharT1, typename CharT2, std::size_t size>
@@ -3343,7 +3357,7 @@ std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, bas
     }
   }
 
-  return (cache.back() <= max) ? cache.back() : -1;
+  return (cache.back() <= max) ? cache.back() : (std::size_t)-1;
 }
 
 template <typename CharT1, typename CharT2>
@@ -3354,12 +3368,12 @@ std::size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<
   if (s1.size() >= s2.size()) {
     // at least length difference deletions required
     if ((s1.size() - s2.size()) * weights.delete_cost > max) {
-      return -1;
+      return (std::size_t)-1;
     }
   } else {
     // at least length difference insertions required
     if ((s2.size() - s1.size()) * weights.insert_cost > max) {
-      return -1;
+      return (std::size_t)-1;
     }
   }
 
@@ -4281,7 +4295,6 @@ private:
 #include <algorithm>
 #include <tuple>
 #include <algorithm>
-#include <memory>
 #include <vector>
 
 namespace rapidfuzz {
@@ -4316,14 +4329,17 @@ class SequenceMatcher {
     // Find longest junk free match
     {
       for(size_t i = a_low; i < a_high; ++i) {
-        for(size_t j = b_high - 1; j != b_low - 1; --j) {
+        std::size_t last_cache = 0;
+        for(size_t j = b_low; j < b_high; ++j) {
           if (b_[j] != a_[i]) {
-            j2len_[j+1] = 0;
+            j2len_[j] = last_cache;
+            last_cache = 0;
             continue;
           }
 
           size_t k = j2len_[j] + 1;
-          j2len_[j+1] = k;
+          j2len_[j] = last_cache;
+          last_cache = k;
           if (k > best_size) {
             best_i = i - k + 1;
             best_j = j - k + 1;
@@ -4331,8 +4347,10 @@ class SequenceMatcher {
           }
         }
       }
-      for(size_t j = b_low; j < b_high; ++j) {
-        j2len_[j+1] = 0;
+
+      // we never write to the first element
+      for(size_t j = b_low+1; j < b_high; ++j) {
+        j2len_[j] = 0;
       }
     }
 

@@ -147,26 +147,6 @@ StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_stri
   return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
 }
 
-template <typename Sentence1, typename Sentence2>
-std::size_t common::count_uncommon_chars(const Sentence1& s1, const Sentence2& s2)
-{
-  std::array<signed int, 32> char_freq{};
-  for (const auto& ch : s1) {
-    ++char_freq[ch % 32];
-  }
-
-  for (const auto& ch : s2) {
-    --char_freq[ch % 32];
-  }
-
-  std::size_t count = 0;
-  for (const auto& freq : char_freq) {
-    count += static_cast<std::size_t>(std::abs(freq));
-  }
-
-  return count;
-}
-
 template <typename Sentence, typename CharT>
 SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
 {
