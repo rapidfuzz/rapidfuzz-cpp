@@ -237,7 +237,7 @@ $(function() {
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    : s1_view(common::to_string_view(s1)) {}</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160; </div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  dts::size_t distance(<span class="keyword">const</span> Sentence2&amp; s2, percent score_cutoff = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  std::size_t distance(<span class="keyword">const</span> Sentence2&amp; s2, percent score_cutoff = 0)<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__string__metric.html#gaaef6bbb6260afa72b541e79f6e74a9fc">hamming</a>(s1_view, s2, score_cutoff);</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  }</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160; </div>
