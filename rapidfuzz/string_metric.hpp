@@ -177,6 +177,41 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
   return detail::generic_levenshtein(sentence1, sentence2, weights, max);
 }
 
+template<typename Sentence1>
+struct CachedLevenshtein {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable weights = {1, 1, 1})
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
+
+  template<typename Sentence2>
+  std::size_t distance(const Sentence2& s2, percent score_cutoff = 0) const
+  {
+    auto s2_view = common::to_string_view(s2);
+
+    if (weights.insert_cost == weights.delete_cost) {
+      /* uniform Levenshtein multiplied with the common factor */
+      if (weights.insert_cost == weights.replace_cost) {
+        return detail::levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff) * weights.insert_cost;
+      }
+      /*
+       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+       * therefore this can be implemented as InDel distance multiplied with the common factor
+       */
+      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+        return detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff) * weights.insert_cost;
+      }
+    }
+
+    return detail::generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  LevenshteinWeightTable weights;
+};
+
 /**
  * @brief Calculates a normalized levenshtein distance using custom
  * costs for insertion, deletion and substitution.
@@ -353,6 +388,22 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
 
   return hamm > max ? (std::size_t)-1 : hamm;
 }
+
+template<typename Sentence1>
+struct CachedHamming {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedHamming(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  std::size_t distance(const Sentence2& s2, percent score_cutoff = 0) const {
+    return hamming(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
 
 /**
  * @brief Calculates a normalized hamming distance
