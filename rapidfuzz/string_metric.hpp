@@ -161,16 +161,27 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
   auto sentence2 = common::to_string_view(s2);
 
   if (weights.insert_cost == weights.delete_cost) {
+    /* when insertions + deletions operations are free there can not be any edit distance */
+    if (weights.insert_cost == 0) {
+      return 0;
+    }
+
     /* uniform Levenshtein multiplied with the common factor */
     if (weights.insert_cost == weights.replace_cost) {
-      return detail::levenshtein(sentence1, sentence2, max) * weights.insert_cost;
+      // max can make use of the common divisor of the three weights
+      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+      const std::size_t distance = detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+      return (distance <= max) ? distance : (std::size_t)-1;
     }
     /*
      * when replace_cost >= insert_cost + delete_cost no substitutions are performed
      * therefore this can be implemented as InDel distance multiplied with the common factor
      */
     else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-      return detail::weighted_levenshtein(sentence1, sentence2, max) * weights.insert_cost;
+      // max can make use of the common divisor of the three weights
+      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+      const std::size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+      return (distance <= max) ? distance : (std::size_t)-1;
     }
   }
 
@@ -185,25 +196,36 @@ struct CachedLevenshtein {
     : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
 
   template<typename Sentence2>
-  std::size_t distance(const Sentence2& s2, percent score_cutoff = 0) const
+  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const
   {
     auto s2_view = common::to_string_view(s2);
 
     if (weights.insert_cost == weights.delete_cost) {
+      /* when insertions + deletions operations are free there can not be any edit distance */
+      if (weights.insert_cost == 0) {
+        return 0;
+      }
+
       /* uniform Levenshtein multiplied with the common factor */
       if (weights.insert_cost == weights.replace_cost) {
-        return detail::levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff) * weights.insert_cost;
+        // max can make use of the common divisor of the three weights
+        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+        const std::size_t distance = detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
+        return (distance <= max) ? distance : (std::size_t)-1;
       }
       /*
        * when replace_cost >= insert_cost + delete_cost no substitutions are performed
        * therefore this can be implemented as InDel distance multiplied with the common factor
        */
       else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-        return detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff) * weights.insert_cost;
+        // max can make use of the common divisor of the three weights
+        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+        const std::size_t distance = detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
+        return (distance <= max) ? distance : (std::size_t)-1;
       }
     }
 
-    return detail::generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+    return detail::generic_levenshtein(s1_view, s2_view, weights, max);
   }
 
 private:
@@ -397,8 +419,8 @@ struct CachedHamming {
     : s1_view(common::to_string_view(s1)) {}
 
   template<typename Sentence2>
-  std::size_t distance(const Sentence2& s2, percent score_cutoff = 0) const {
-    return hamming(s1_view, s2, score_cutoff);
+  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const {
+    return hamming(s1_view, s2, max);
   }
 
 private:
