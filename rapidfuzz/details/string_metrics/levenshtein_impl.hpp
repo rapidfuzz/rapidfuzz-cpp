@@ -106,7 +106,27 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
   uint64_t VN = 0;
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s2.size() - currDist;
+
+  // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+  // make sure a wraparound can never occur
+  std::size_t maxMisses = 0;
+  if (s1_len > s2.size()) {
+    if (s1_len - s2.size() < max) {
+      maxMisses = max - (s1_len - s2.size());
+    } else {
+      // minimum is 0
+      maxMisses = 0;
+    }
+  } else {
+    maxMisses = s2.size() - s1_len;
+    if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+      maxMisses = max + maxMisses;
+    } else {
+      // max is (size_t)-1
+      maxMisses = std::numeric_limits<std::size_t>::max();
+    }
+  }
+
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
   uint64_t mask = (uint64_t)1 << (s1_len - 1);
 
