@@ -421,6 +421,11 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
     return (std::size_t)-1;
   }
 
+  // important to catch, since this causes block.m_val to be empty -> raises exception on access
+  if (s2.empty()) {
+    return s1.size();
+  }
+
   // do this first, since we can not remove any affix in encoded form
   if (max >= 5) {
     std::size_t dist = 0;

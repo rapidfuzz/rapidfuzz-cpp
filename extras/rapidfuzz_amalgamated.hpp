@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-03-23 06:49:16.808756
+//  Generated: 2021-03-27 13:49:30.312124
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2522,7 +2522,27 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::P
 
   uint64_t VN = 0;
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s2.size() - currDist;
+
+  // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+  // make sure a wraparound can never occur
+  std::size_t maxMisses = 0;
+  if (s1_len > s2.size()) {
+    if (s1_len - s2.size() < max) {
+      maxMisses = max - (s1_len - s2.size());
+    } else {
+      // minimum is 0
+      maxMisses = 0;
+    }
+  } else {
+    maxMisses = s2.size() - s1_len;
+    if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+      maxMisses = max + maxMisses;
+    } else {
+      // max is (size_t)-1
+      maxMisses = std::numeric_limits<std::size_t>::max();
+    }
+  }
+
   /* mask used when computing D[m,j] in the paper 10^(m-1) */
   uint64_t mask = (uint64_t)1 << (s1_len - 1);
 
@@ -2577,7 +2597,27 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 
   const std::size_t words = PM.m_val.size();
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s2.size() - currDist;
+
+  // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+  // make sure a wraparound can never occur
+  std::size_t maxMisses = 0;
+  if (s1_len > s2.size()) {
+    if (s1_len - s2.size() < max) {
+      maxMisses = max - (s1_len - s2.size());
+    } else {
+      // minimum is 0
+      maxMisses = 0;
+    }
+  } else {
+    maxMisses = s2.size() - s1_len;
+    if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+      maxMisses = max + maxMisses;
+    } else {
+      // max is (size_t)-1
+      maxMisses = std::numeric_limits<std::size_t>::max();
+    }
+  }
+
   std::vector<Vectors> vecs(words);
   const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
@@ -2664,6 +2704,11 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
   if (len_diff > max) {
     return (std::size_t)-1;
+  }
+
+  // important to catch, since this causes block.m_val to be empty -> raises exception on access
+  if (s2.empty()) {
+    return s1.size();
   }
 
   // do this first, since we can not remove any affix in encoded form
@@ -3208,6 +3253,11 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
     return (std::size_t)-1;
   }
 
+  // important to catch, since this causes block.m_val to be empty -> raises exception on access
+  if (s2.empty()) {
+    return s1.size();
+  }
+
   // do this first, since we can not remove any affix in encoded form
   if (max >= 5) {
     std::size_t dist = 0;
@@ -3576,21 +3626,78 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
   auto sentence2 = common::to_string_view(s2);
 
   if (weights.insert_cost == weights.delete_cost) {
+    /* when insertions + deletions operations are free there can not be any edit distance */
+    if (weights.insert_cost == 0) {
+      return 0;
+    }
+
     /* uniform Levenshtein multiplied with the common factor */
     if (weights.insert_cost == weights.replace_cost) {
-      return detail::levenshtein(sentence1, sentence2, max) * weights.insert_cost;
+      // max can make use of the common divisor of the three weights
+      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+      const std::size_t distance = detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+      return (distance <= max) ? distance : (std::size_t)-1;
     }
     /*
      * when replace_cost >= insert_cost + delete_cost no substitutions are performed
      * therefore this can be implemented as InDel distance multiplied with the common factor
      */
     else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-      return detail::weighted_levenshtein(sentence1, sentence2, max) * weights.insert_cost;
+      // max can make use of the common divisor of the three weights
+      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+      const std::size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+      return (distance <= max) ? distance : (std::size_t)-1;
     }
   }
 
   return detail::generic_levenshtein(sentence1, sentence2, weights, max);
 }
+
+template<typename Sentence1>
+struct CachedLevenshtein {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable weights = {1, 1, 1})
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
+
+  template<typename Sentence2>
+  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const
+  {
+    auto s2_view = common::to_string_view(s2);
+
+    if (weights.insert_cost == weights.delete_cost) {
+      /* when insertions + deletions operations are free there can not be any edit distance */
+      if (weights.insert_cost == 0) {
+        return 0;
+      }
+
+      /* uniform Levenshtein multiplied with the common factor */
+      if (weights.insert_cost == weights.replace_cost) {
+        // max can make use of the common divisor of the three weights
+        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+        const std::size_t distance = detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
+        return (distance <= max) ? distance : (std::size_t)-1;
+      }
+      /*
+       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+       * therefore this can be implemented as InDel distance multiplied with the common factor
+       */
+      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+        // max can make use of the common divisor of the three weights
+        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+        const std::size_t distance = detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
+        return (distance <= max) ? distance : (std::size_t)-1;
+      }
+    }
+
+    return detail::generic_levenshtein(s1_view, s2_view, weights, max);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  LevenshteinWeightTable weights;
+};
 
 /**
  * @brief Calculates a normalized levenshtein distance using custom
@@ -3768,6 +3875,22 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
 
   return hamm > max ? (std::size_t)-1 : hamm;
 }
+
+template<typename Sentence1>
+struct CachedHamming {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedHamming(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const {
+    return hamming(s1_view, s2, max);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
 
 /**
  * @brief Calculates a normalized hamming distance

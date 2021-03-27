@@ -181,7 +181,27 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 
   const std::size_t words = PM.m_val.size();
   std::size_t currDist = s1_len;
-  std::size_t maxMisses = max + s2.size() - currDist;
+
+  // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+  // make sure a wraparound can never occur
+  std::size_t maxMisses = 0;
+  if (s1_len > s2.size()) {
+    if (s1_len - s2.size() < max) {
+      maxMisses = max - (s1_len - s2.size());
+    } else {
+      // minimum is 0
+      maxMisses = 0;
+    }
+  } else {
+    maxMisses = s2.size() - s1_len;
+    if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+      maxMisses = max + maxMisses;
+    } else {
+      // max is (size_t)-1
+      maxMisses = std::numeric_limits<std::size_t>::max();
+    }
+  }
+
   std::vector<Vectors> vecs(words);
   const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
@@ -268,6 +288,11 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
   if (len_diff > max) {
     return (std::size_t)-1;
+  }
+
+  // important to catch, since this causes block.m_val to be empty -> raises exception on access
+  if (s2.empty()) {
+    return s1.size();
   }
 
   // do this first, since we can not remove any affix in encoded form
