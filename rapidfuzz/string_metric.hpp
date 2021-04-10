@@ -192,8 +192,8 @@ template<typename Sentence1>
 struct CachedLevenshtein {
   using CharT1 = char_type<Sentence1>;
 
-  CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable weights = {1, 1, 1})
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
+  CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}
 
   template<typename Sentence2>
   std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const
@@ -334,8 +334,8 @@ template<typename Sentence1>
 struct CachedNormalizedLevenshtein {
   using CharT1 = char_type<Sentence1>;
 
-  CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable weights = {1, 1, 1})
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}
+  CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
+    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const
