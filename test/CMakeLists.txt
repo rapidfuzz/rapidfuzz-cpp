@@ -1,4 +1,4 @@
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3.0.0 REQUIRED)
 
 function(rapidfuzz_add_test NAME SOURCE)
 	add_executable(test_${NAME} ${SOURCE})
