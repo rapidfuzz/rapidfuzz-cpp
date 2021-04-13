@@ -121,6 +121,12 @@ std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
+template<typename T>
+constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
+{
+    return typename std::make_unsigned<T>::type(value);
+}
+
 template <std::size_t size>
 struct PatternMatchVector;
 
@@ -143,8 +149,9 @@ struct PatternMatchVector {
 
   template <typename CharT>
   void insert(CharT ch, int pos) {
-    uint8_t hash = ch % 128;
-    uint32_t key = ch | 0x80000000U;
+    auto uch = to_unsigned(ch);
+    uint8_t hash = uch % 128;
+    uint32_t key = uch | 0x80000000U;
 
     // overflow starts search at 0 again.
     // Since a maximum of 64 elements is in here m_key[hash] will be false
@@ -160,8 +167,9 @@ struct PatternMatchVector {
 
   template <typename CharT>
   uint64_t get(CharT ch) const {
-    uint8_t hash = ch % 128;
-    uint32_t key = ch | 0x80000000U;
+    auto uch = to_unsigned(ch);
+    uint8_t hash = uch % 128;
+    uint32_t key = uch | 0x80000000U;
 
     while (m_key[hash] && m_key[hash] != key) {
       if (hash == 127) hash = 0;
@@ -195,13 +203,14 @@ struct PatternMatchVector<1> {
 
   template<typename CharT>
   uint64_t get(CharT ch) const {
+    auto uch = to_unsigned(ch);
     // prevent conditional expression is constant on MSVC
     static constexpr bool is_byte = sizeof(CharT) == 1;
     if(is_byte)
     {
-      return m_val[(unsigned char)ch];
+      return m_val[uch];
     }
-    return (ch < 256) ? m_val[ch] : 0;
+    return (uch < 256) ? m_val[ch] : 0;
   }
 };
 
