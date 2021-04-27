@@ -127,8 +127,8 @@ $(function() {
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="keyword">struct </span>CachedLevenshtein {</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  <span class="keyword">using</span> CharT1 = char_type&lt;Sentence1&gt;;</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160; </div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  CachedLevenshtein(<span class="keyword">const</span> Sentence1&amp; s1, LevenshteinWeightTable weights = {1, 1, 1})</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  CachedLevenshtein(<span class="keyword">const</span> Sentence1&amp; s1, LevenshteinWeightTable aWeights = {1, 1, 1})</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160; </div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Sentence2&gt;</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  std::size_t distance(<span class="keyword">const</span> Sentence2&amp; s2, std::size_t max = std::numeric_limits&lt;std::size_t&gt;::max())<span class="keyword"> const</span></div>
@@ -198,8 +198,8 @@ $(function() {
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;<span class="keyword">struct </span>CachedNormalizedLevenshtein {</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;  <span class="keyword">using</span> CharT1 = char_type&lt;Sentence1&gt;;</div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160; </div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  CachedNormalizedLevenshtein(<span class="keyword">const</span> Sentence1&amp; s1, LevenshteinWeightTable weights = {1, 1, 1})</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(weights) {}</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  CachedNormalizedLevenshtein(<span class="keyword">const</span> Sentence1&amp; s1, LevenshteinWeightTable aWeights = {1, 1, 1})</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160; </div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Sentence2&gt;</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  <span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga28f2cfa40a0f19c23d85fee3d1750bcc">ratio</a>(<span class="keyword">const</span> Sentence2&amp; s2, percent score_cutoff = 0)<span class="keyword"> const</span></div>
