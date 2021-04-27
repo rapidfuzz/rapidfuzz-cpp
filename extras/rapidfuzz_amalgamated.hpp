@@ -4426,8 +4426,8 @@ struct MatchingBlock {
   std::size_t spos;
   std::size_t dpos;
   std::size_t length;	
-  MatchingBlock(std::size_t spos, std::size_t dpos, std::size_t length)
-      : spos(spos), dpos(dpos), length(length)
+  MatchingBlock(std::size_t aSPos, std::size_t aDPos, std::size_t aLength)
+      : spos(aSPos), dpos(aDPos), length(aLength)
   {}
 };
 
