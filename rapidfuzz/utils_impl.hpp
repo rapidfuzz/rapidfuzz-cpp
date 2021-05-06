@@ -5,8 +5,10 @@
 #include <array>
 #include <cctype>
 #include <cwctype>
+#include <limits>
 
 #include <rapidfuzz/details/unicode.hpp>
+#include <rapidfuzz/details/common.hpp>
 
 namespace rapidfuzz {
 
@@ -19,7 +21,7 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
    *
    * generated using
    * `[ord(chr(x).lower()) if chr(x).isalnum() else 0x20 for x in range(256)]`
-   * in Python
+   * in Python3.9
    */
   static const int extended_ascii_mapping[256] = {
     32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
@@ -40,29 +42,23 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
 
   std::basic_string<CharT> str(std::forward<Sentence>(s));
 
-// this requires sources to compiled, while the current version for C++ is header only
-// this will be added to the C++ version later on.
-#ifndef RAPIDFUZZ_PYTHON
   std::transform(str.begin(), str.end(), str.begin(),
-                 [](CharT ch2) {
-    int ch = static_cast<int>(ch2);
-    return (ch < 256) ? extended_ascii_mapping[ch] : ch; });
-#else
-  // use direct mapping for extended Asciis
-  if (sizeof(CharT) == 1) {
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [](CharT ch2) {
-      int ch = static_cast<int>(ch2);
+               [](CharT ch) {
+    /* irrelevant cases for a given char type are removed at compile time by any decent compiler */
+    if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
+      return ch;
+    } else if (ch < 256) {
       return static_cast<CharT>(extended_ascii_mapping[ch]);
-      });
-  } else {
-    std::transform(str.begin(), str.end(), str.begin(),
-                 [](CharT ch2) {
-      uint32_t ch = static_cast<uint32_t>(ch2);
-      return (ch < 256) ? static_cast<CharT>(extended_ascii_mapping[ch]) : static_cast<CharT>(Unicode::UnicodeDefaultProcess(ch2));
-    });
-  }
+    } else {
+      // this requires sources to compiled, while the current version for C++ is header only
+      // this will be added to the C++ version later on.
+#ifdef RAPIDFUZZ_PYTHON
+      return static_cast<CharT>(Unicode::UnicodeDefaultProcess(static_cast<uint32_t>(ch)));
+#else
+      return ch;
 #endif
+    }
+  });
 
   str.erase(str.begin(),
             std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
