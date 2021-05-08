@@ -127,11 +127,20 @@ constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
     return typename std::make_unsigned<T>::type(value);
 }
 
+template<typename T>
+constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
+{
+    return typename std::make_signed<T>::type(value);
+}
+
 template <typename T, typename U>
 bool mixed_sign_equal(const T a, const U b) {
-  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
-  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
-  return a >= botU && b >= botT && to_unsigned(a) == to_unsigned(b);
+  if (std::is_signed<T>::value == std::is_signed<U>::value) {
+    return a == b;     
+  } else {
+    // They can't be equal if 'a' or 'b' is negative. 
+    return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b); 
+  }
 }
 
 template <typename T, typename U>
