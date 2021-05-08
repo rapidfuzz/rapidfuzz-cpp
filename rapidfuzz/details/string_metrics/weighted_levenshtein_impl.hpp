@@ -123,9 +123,9 @@ static inline uint64_t set_bits(int n)
   return result;
 }
 
-template <typename CharT1, std::size_t size>
+template <typename CharT1, typename BlockPatternCharT>
 static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
-  const common::PatternMatchVector<size>& block, std::size_t s2_len)
+  const common::PatternMatchVector<BlockPatternCharT>& block, std::size_t s2_len)
 {
   uint64_t DHneg1 = ~0x0ull;
   uint64_t DHzero = 0;
@@ -176,9 +176,9 @@ constexpr T bit_check(T val, U bit)
 }
 
 
-template <typename CharT1, std::size_t size>
+template <typename CharT1, typename BlockPatternCharT>
 std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<size>& block, std::size_t s2_len)
+  const common::BlockPatternMatchVector<BlockPatternCharT>& block, std::size_t s2_len)
 {
   struct HorizontalDelta {
     uint64_t DHpos1;
@@ -386,17 +386,17 @@ template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
   if (s2.size() < 65) {
-    return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<sizeof(CharT2)>(s2), s2.size());
+    return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
   } else {
     return weighted_levenshtein_bitpal_blockwise(
-      s1, common::BlockPatternMatchVector<sizeof(CharT2)>(s2), s2.size());
+      s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
   }
 }
 
 //TODO this implementation needs some cleanup
-template <typename CharT1, typename CharT2, std::size_t size>
+template <typename CharT1, typename CharT2, typename BlockPatternCharT>
 std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<size>& block, basic_string_view<CharT2> s2,
+  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
   std::size_t max)
 {
   // when no differences are allowed a direct comparision is sufficient
@@ -499,9 +499,9 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
   return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-template <typename CharT1, typename CharT2, std::size_t size>
+template <typename CharT1, typename CharT2, typename BlockPatternCharT>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<size>& block, basic_string_view<CharT2> s2,
+  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
   const double score_cutoff)
 {
   if (s1.empty() || s2.empty()) {

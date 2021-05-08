@@ -166,8 +166,8 @@ private:
  * properly
  */
 #if 0
-template<typename Sentence1, std::size_t size,  typename Sentence2>
-std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<size>& blockmap_s1, Sentence2 s2) {
+template<typename Sentence1, typename BlockPatternCharT,  typename Sentence2>
+std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1, Sentence2 s2) {
   if (s1.size() > 64) {
     return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
   }
@@ -223,8 +223,8 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
 }
 #endif
 
-template<typename Sentence1, /*std::size_t size,*/ typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<size>& blockmap_s1,*/ Sentence2 s2) {
+template<typename Sentence1, /*typename BlockPatternCharT,*/ typename Sentence2>
+std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1,*/ Sentence2 s2) {
   //return longest_common_subsequence(s1, blockmap_s1, s2);
   return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
 }

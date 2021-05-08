@@ -56,7 +56,7 @@ struct CachedRatio {
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  common::BlockPatternMatchVector<CharT1> blockmap_s1;
 };
 
 /**
@@ -394,10 +394,10 @@ private:
 // todo somehow implement this using other ratios with creating PatternMatchVector
 // multiple times
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1;
+  common::BlockPatternMatchVector<CharT1> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
-  common::BlockPatternMatchVector<sizeof(CharT1)> blockmap_s1_sorted;
+  common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
 };
 
 /**

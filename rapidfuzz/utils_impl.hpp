@@ -48,7 +48,7 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
       return ch;
     } else if (ch < 256) {
-      return static_cast<CharT>(extended_ascii_mapping[ch]);
+      return static_cast<CharT>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);
     } else {
       // this requires sources to compiled, while the current version for C++ is header only
       // this will be added to the C++ version later on.
