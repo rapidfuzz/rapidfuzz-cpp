@@ -67,7 +67,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
     std::size_t cur_dist = 0;
 
     while (s1_pos < s1.size() && s2_pos < s2.size()) {
-      if (s1[s1_pos] != s2[s2_pos]) {
+      if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
         // substitutions have a weight of 2
         if ((ops & 0x3) == 3) {
           cur_dist += 2;

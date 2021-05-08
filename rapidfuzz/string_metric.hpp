@@ -403,7 +403,7 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
   std::size_t hamm = 0;
 
   for (std::size_t i = 0; i < sentence1.length(); i++) {
-      if (sentence1[i] != sentence2[i]) {
+      if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
           hamm++;
       }
   }

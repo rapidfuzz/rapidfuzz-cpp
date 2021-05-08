@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-05-08 08:59:53.220156
+//  Generated: 2021-05-08 12:15:19.412533
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2055,12 +2055,35 @@ constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
     return typename std::make_unsigned<T>::type(value);
 }
 
-// todo: add unit tests and fuzz tests for this
-template <typename CharT1, std::size_t size=sizeof(CharT1), bool sign=std::is_signed<CharT1>::value>
+template <typename T, typename U>
+bool mixed_sign_equal(const T a, const U b) {
+  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
+  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
+  return a >= botU && b >= botT && to_unsigned(a) == to_unsigned(b);
+}
+
+template <typename T, typename U>
+bool mixed_sign_unequal(const T a, const U b) {
+  return !mixed_sign_equal(a, b);
+}
+
+/*
+ * taken from https://stackoverflow.com/a/17251989/11335032
+ */
+template <typename T, typename U>
+bool CanTypeFitValue(const U value) {
+  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
+  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
+  const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max() );
+  const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max() );
+  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );        
+}
+
+template <typename CharT1, std::size_t size=sizeof(CharT1)>
 struct PatternMatchVector;
 
 template <typename CharT1, std::size_t size>
-struct PatternMatchVector<CharT1, size, false> {
+struct PatternMatchVector {
   std::array<CharT1, 128> m_key;
   std::array<uint64_t, 128> m_val;
 
@@ -2086,7 +2109,7 @@ struct PatternMatchVector<CharT1, size, false> {
      * since 0 is a valid key
      */
     while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
+      hash = (uint8_t)(hash + 1) % 128;
     }
 
     m_key[hash] = key;
@@ -2095,69 +2118,8 @@ struct PatternMatchVector<CharT1, size, false> {
 
   template <typename CharT2>
   uint64_t get(CharT2 ch) const {
-    if (ch < 0 || ch > std::numeric_limits<CharT1>::max()) {
+    if (!CanTypeFitValue<CharT1>(ch)) {
       return 0;
-    }
-
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = (CharT1)ch;
-
-    /* it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
-    }
-
-    return m_val[hash];
-  }
-};
-
-template <typename CharT1, std::size_t size>
-struct PatternMatchVector<CharT1, size, true> {
-  std::array<CharT1, 128> m_key;
-  std::array<uint64_t, 128> m_val;
-
-  PatternMatchVector()
-    : m_key(), m_val() {}
-
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_key(), m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = ch;
-
-    /* Since a maximum of 64 elements is in here m_val[hash] will be empty
-     * after a maximum of 64 checks
-     * it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
-    }
-
-    m_key[hash] = key;
-    m_val[hash] |= 1ull << pos;
-  }
-
-  template <typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (std::is_signed<CharT2>::value) {
-      if (ch < std::numeric_limits<CharT1>::min() || ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
-    } else {
-      if (ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
     }
 
     auto uch = to_unsigned(ch);
@@ -2168,7 +2130,7 @@ struct PatternMatchVector<CharT1, size, true> {
      * since 0 is a valid key
      */
     while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
+      hash = (uint8_t)(hash + 1) % 128;
     }
 
     return m_val[hash];
@@ -2176,7 +2138,7 @@ struct PatternMatchVector<CharT1, size, true> {
 };
 
 template <typename CharT1>
-struct PatternMatchVector<CharT1, 1, false> {
+struct PatternMatchVector<CharT1, 1> {
   std::array<uint64_t, 256> m_val;
 
   PatternMatchVector()
@@ -2191,53 +2153,16 @@ struct PatternMatchVector<CharT1, 1, false> {
   }
 
   void insert(CharT1 ch, int pos) {
-    m_val[ch] |= 1ull << pos;
+    m_val[uint8_t(ch)] |= 1ull << pos;
   }
 
   template<typename CharT2>
   uint64_t get(CharT2 ch) const {
-    if (ch < 0 || ch > std::numeric_limits<CharT1>::max()) {
+    if (!CanTypeFitValue<CharT1>(ch)) {
       return 0;
     }
-    return m_val[to_unsigned(ch)];
-  }
-};
 
-template <typename CharT1>
-struct PatternMatchVector<CharT1, 1, true> {
-  using UCharT1 = typename std::make_unsigned<CharT1>::type;
-  std::array<uint64_t, 255> m_val;
-
-  PatternMatchVector()
-    : m_val() {}
-
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    UCharT1 uch = UCharT1(1) + std::numeric_limits<CharT1>::max() + ch;
-    m_val[uch] |= 1ull << pos;
-  }
-
-  template<typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (std::is_signed<CharT2>::value) {
-      if (ch < std::numeric_limits<CharT1>::min() || ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
-    } else {
-      if (ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
-    }
-
-    UCharT1 uch = UCharT1(1) + std::numeric_limits<CharT1>::max() + ch;
-    return m_val[uch];
+    return m_val[uint8_t(ch)];
   }
 };
 
@@ -2294,7 +2219,7 @@ bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
   if (x.size() != y.size()) return false;
 
   for (std::size_t i = 0; i < x.size(); ++i) {
-    if (x[i] != y[i]) return false;
+    if (common::mixed_sign_unequal(x[i], y[i])) return false;
   }
   return true;
 }
@@ -2383,7 +2308,7 @@ std::pair<InputIterator1, InputIterator2>
 common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
                 InputIterator2 last2)
 {
-  while (first1 != last1 && first2 != last2 && *first1 == *first2) {
+  while (first1 != last1 && first2 != last2 && common::mixed_sign_equal(*first1, *first2)) {
     ++first1;
     ++first2;
   }
@@ -2574,7 +2499,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
     std::size_t s2_pos = 0;
     std::size_t cur_dist = 0;
     while (s1_pos < s1.size() && s2_pos < s2.size()) {
-      if (s1[s1_pos] != s2[s2_pos]) {
+      if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
         cur_dist++;
         if (!ops) break;
         if (ops & 1) s1_pos++;
@@ -2999,7 +2924,7 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
     std::size_t cur_dist = 0;
 
     while (s1_pos < s1.size() && s2_pos < s2.size()) {
-      if (s1[s1_pos] != s2[s2_pos]) {
+      if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
         // substitutions have a weight of 2
         if ((ops & 0x3) == 3) {
           cur_dist += 2;
@@ -3498,7 +3423,7 @@ std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, bas
     *cache_iter += weights.insert_cost;
 
     for (const auto& char1 : s1) {
-      if (char1 != char2) {
+      if (common::mixed_sign_unequal(char1, char2)) {
         temp = std::min({*cache_iter + weights.delete_cost, *(cache_iter + 1) + weights.insert_cost,
                          temp + weights.replace_cost});
       }
@@ -4554,7 +4479,7 @@ class SequenceMatcher {
       for(size_t i = a_low; i < a_high; ++i) {
         std::size_t last_cache = 0;
         for(size_t j = b_low; j < b_high; ++j) {
-          if (b_[j] != a_[i]) {
+          if (common::mixed_sign_unequal(b_[j], a_[i])) {
             j2len_[j] = last_cache;
             last_cache = 0;
             continue;
@@ -4577,14 +4502,14 @@ class SequenceMatcher {
       }
     }
 
-    while (best_i > a_low && best_j > b_low && a_[best_i-1] == b_[best_j-1]) {
+    while (best_i > a_low && best_j > b_low && common::mixed_sign_equal(a_[best_i-1], b_[best_j-1])) {
       --best_i;
       --best_j;
       ++best_size;
     }
 
     while ((best_i+best_size) < a_high && (best_j+best_size) < b_high
-           && a_[best_i+best_size] == b_[best_j+best_size])
+           && common::mixed_sign_equal(a_[best_i+best_size], b_[best_j+best_size]))
     {
       ++best_size;
     }

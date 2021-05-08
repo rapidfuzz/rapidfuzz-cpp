@@ -127,12 +127,35 @@ constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
     return typename std::make_unsigned<T>::type(value);
 }
 
-// todo: add unit tests and fuzz tests for this
-template <typename CharT1, std::size_t size=sizeof(CharT1), bool sign=std::is_signed<CharT1>::value>
+template <typename T, typename U>
+bool mixed_sign_equal(const T a, const U b) {
+  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
+  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
+  return a >= botU && b >= botT && to_unsigned(a) == to_unsigned(b);
+}
+
+template <typename T, typename U>
+bool mixed_sign_unequal(const T a, const U b) {
+  return !mixed_sign_equal(a, b);
+}
+
+/*
+ * taken from https://stackoverflow.com/a/17251989/11335032
+ */
+template <typename T, typename U>
+bool CanTypeFitValue(const U value) {
+  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
+  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
+  const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max() );
+  const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max() );
+  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );        
+}
+
+template <typename CharT1, std::size_t size=sizeof(CharT1)>
 struct PatternMatchVector;
 
 template <typename CharT1, std::size_t size>
-struct PatternMatchVector<CharT1, size, false> {
+struct PatternMatchVector {
   std::array<CharT1, 128> m_key;
   std::array<uint64_t, 128> m_val;
 
@@ -158,7 +181,7 @@ struct PatternMatchVector<CharT1, size, false> {
      * since 0 is a valid key
      */
     while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
+      hash = (uint8_t)(hash + 1) % 128;
     }
 
     m_key[hash] = key;
@@ -167,69 +190,8 @@ struct PatternMatchVector<CharT1, size, false> {
 
   template <typename CharT2>
   uint64_t get(CharT2 ch) const {
-    if (ch < 0 || ch > std::numeric_limits<CharT1>::max()) {
+    if (!CanTypeFitValue<CharT1>(ch)) {
       return 0;
-    }
-
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = (CharT1)ch;
-
-    /* it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
-    }
-
-    return m_val[hash];
-  }
-};
-
-template <typename CharT1, std::size_t size>
-struct PatternMatchVector<CharT1, size, true> {
-  std::array<CharT1, 128> m_key;
-  std::array<uint64_t, 128> m_val;
-
-  PatternMatchVector()
-    : m_key(), m_val() {}
-
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_key(), m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = ch;
-
-    /* Since a maximum of 64 elements is in here m_val[hash] will be empty
-     * after a maximum of 64 checks
-     * it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
-    }
-
-    m_key[hash] = key;
-    m_val[hash] |= 1ull << pos;
-  }
-
-  template <typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (std::is_signed<CharT2>::value) {
-      if (ch < std::numeric_limits<CharT1>::min() || ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
-    } else {
-      if (ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
     }
 
     auto uch = to_unsigned(ch);
@@ -240,7 +202,7 @@ struct PatternMatchVector<CharT1, size, true> {
      * since 0 is a valid key
      */
     while (m_val[hash] && m_key[hash] != key) {
-      hash = (hash + 1) % 128;
+      hash = (uint8_t)(hash + 1) % 128;
     }
 
     return m_val[hash];
@@ -248,7 +210,7 @@ struct PatternMatchVector<CharT1, size, true> {
 };
 
 template <typename CharT1>
-struct PatternMatchVector<CharT1, 1, false> {
+struct PatternMatchVector<CharT1, 1> {
   std::array<uint64_t, 256> m_val;
 
   PatternMatchVector()
@@ -263,53 +225,16 @@ struct PatternMatchVector<CharT1, 1, false> {
   }
 
   void insert(CharT1 ch, int pos) {
-    m_val[ch] |= 1ull << pos;
+    m_val[uint8_t(ch)] |= 1ull << pos;
   }
 
   template<typename CharT2>
   uint64_t get(CharT2 ch) const {
-    if (ch < 0 || ch > std::numeric_limits<CharT1>::max()) {
+    if (!CanTypeFitValue<CharT1>(ch)) {
       return 0;
     }
-    return m_val[to_unsigned(ch)];
-  }
-};
 
-template <typename CharT1>
-struct PatternMatchVector<CharT1, 1, true> {
-  using UCharT1 = typename std::make_unsigned<CharT1>::type;
-  std::array<uint64_t, 255> m_val;
-
-  PatternMatchVector()
-    : m_val() {}
-
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    UCharT1 uch = UCharT1(1) + std::numeric_limits<CharT1>::max() + ch;
-    m_val[uch] |= 1ull << pos;
-  }
-
-  template<typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (std::is_signed<CharT2>::value) {
-      if (ch < std::numeric_limits<CharT1>::min() || ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
-    } else {
-      if (ch > std::numeric_limits<CharT1>::max()) {
-        return 0;
-      }
-    }
-
-    UCharT1 uch = UCharT1(1) + std::numeric_limits<CharT1>::max() + ch;
-    return m_val[uch];
+    return m_val[uint8_t(ch)];
   }
 };
 
