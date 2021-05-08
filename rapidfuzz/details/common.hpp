@@ -135,7 +135,9 @@ constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
 
 template <typename T, typename U>
 bool mixed_sign_equal(const T a, const U b) {
-  if (std::is_signed<T>::value == std::is_signed<U>::value) {
+  // prevent conditional expression is constant on MSVC
+  static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
+  if (is_same_sign) {
     return a == b;     
   } else {
     // They can't be equal if 'a' or 'b' is negative. 
