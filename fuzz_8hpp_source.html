@@ -97,7 +97,7 @@ $(function() {
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  rapidfuzz::basic_string_view&lt;CharT1&gt; s1_view;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  common::BlockPatternMatchVector&lt;<span class="keyword">sizeof</span>(CharT1)&gt; blockmap_s1;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  common::BlockPatternMatchVector&lt;CharT1&gt; blockmap_s1;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;};</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2, <span class="keyword">typename</span> CharT1 = <span class="keywordtype">char</span>_type&lt;Sentence1&gt;,</div>
@@ -257,10 +257,10 @@ $(function() {
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;<span class="comment">// todo somehow implement this using other ratios with creating PatternMatchVector</span></div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<span class="comment">// multiple times</span></div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  rapidfuzz::basic_string_view&lt;CharT1&gt; s1_view;</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  common::BlockPatternMatchVector&lt;<span class="keyword">sizeof</span>(CharT1)&gt; blockmap_s1;</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  common::BlockPatternMatchVector&lt;CharT1&gt; blockmap_s1;</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  SplittedSentenceView&lt;CharT1&gt; tokens_s1;</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  std::basic_string&lt;CharT1&gt; s1_sorted;</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  common::BlockPatternMatchVector&lt;<span class="keyword">sizeof</span>(CharT1)&gt; blockmap_s1_sorted;</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  common::BlockPatternMatchVector&lt;CharT1&gt; blockmap_s1_sorted;</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;};</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160; </div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>

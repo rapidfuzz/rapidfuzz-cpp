@@ -119,7 +119,7 @@ $(function() {
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    if (ch &lt; 0 || rapidfuzz::common::to_unsigned(ch) &gt; std::numeric_limits&lt;uint32_t&gt;::max()) {</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      return ch;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    } <span class="keywordflow">else</span> if (ch &lt; 256) {</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CharT<span class="keyword">&gt;</span>(extended_ascii_mapping[ch]);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CharT<span class="keyword">&gt;</span>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      <span class="comment">// this requires sources to compiled, while the current version for C++ is header only</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      <span class="comment">// this will be added to the C++ version later on.</span></div>

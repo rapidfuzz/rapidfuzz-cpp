@@ -165,7 +165,7 @@ $(function() {
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160; </div>
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  rapidfuzz::basic_string_view&lt;CharT1&gt; s1_view;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  common::BlockPatternMatchVector&lt;<span class="keyword">sizeof</span>(CharT1)&gt; blockmap_s1;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  common::BlockPatternMatchVector&lt;CharT1&gt; blockmap_s1;</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  LevenshteinWeightTable weights;</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;};</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160; </div>
@@ -225,7 +225,7 @@ $(function() {
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160; </div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  rapidfuzz::basic_string_view&lt;CharT1&gt; s1_view;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  common::BlockPatternMatchVector&lt;<span class="keyword">sizeof</span>(CharT1)&gt; blockmap_s1;</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  common::BlockPatternMatchVector&lt;CharT1&gt; blockmap_s1;</div>
 <div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  LevenshteinWeightTable weights;</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;};</div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160; </div>
@@ -243,7 +243,7 @@ $(function() {
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  std::size_t hamm = 0;</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160; </div>
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; sentence1.length(); i++) {</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;      <span class="keywordflow">if</span> (sentence1[i] != sentence2[i]) {</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;      <span class="keywordflow">if</span> (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;          hamm++;</div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;      }</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  }</div>

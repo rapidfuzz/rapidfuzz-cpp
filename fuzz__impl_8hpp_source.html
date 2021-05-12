@@ -195,8 +195,8 @@ $(function() {
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;}</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="comment">// todo this is a temporary solution until WRatio is properly implemented using other scorers</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, std::<span class="keywordtype">size_t</span> size, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;percent partial_ratio_map(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> common::BlockPatternMatchVector&lt;size&gt;&amp; blockmap_s1, <span class="keyword">const</span> Sentence2&amp; s2, percent score_cutoff)</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> BlockPatternCharT, <span class="keyword">typename</span> Sentence2&gt;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;percent partial_ratio_map(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> common::BlockPatternMatchVector&lt;BlockPatternCharT&gt;&amp; blockmap_s1, <span class="keyword">const</span> Sentence2&amp; s2, percent score_cutoff)</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;{</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keywordflow">if</span> (score_cutoff &gt; 100) {</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keywordflow">return</span> 0;</div>
@@ -542,10 +542,10 @@ $(function() {
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;}</div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160; </div>
 <div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<span class="comment">// todo this is a temporary solution until WRatio is properly implemented using other scorers</span></div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1, std::<span class="keywordtype">size_t</span> size, <span class="keyword">typename</span> Sentence2&gt;</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1, <span class="keyword">typename</span> BlockPatternCharT, <span class="keyword">typename</span> Sentence2&gt;</div>
 <div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;percent <a class="code" href="group__Fuzz.html#gaf6ce26eac6e74e05a6085d19491223bd">token_ratio</a>(</div>
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;  <span class="keyword">const</span> std::basic_string&lt;CharT1&gt;&amp; s1_sorted, <span class="keyword">const</span> SplittedSentenceView&lt;CharT1&gt;&amp; tokens_s1,</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  <span class="keyword">const</span> common::BlockPatternMatchVector&lt;size&gt;&amp; blockmap_s1_sorted,</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  <span class="keyword">const</span> common::BlockPatternMatchVector&lt;BlockPatternCharT&gt;&amp; blockmap_s1_sorted,</div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;  <span class="keyword">const</span> Sentence2&amp; s2, percent score_cutoff)</div>
 <div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;{</div>
 <div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;  <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
