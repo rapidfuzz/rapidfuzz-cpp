@@ -124,8 +124,8 @@ percent partial_ratio_map(const Sentence1& s1, const CachedRatio<CachedSentence1
 }
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
-template <typename Sentence1, std::size_t size, typename Sentence2>
-percent partial_ratio_map(const Sentence1& s1, const common::BlockPatternMatchVector<size>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
+template <typename Sentence1, typename BlockPatternCharT, typename Sentence2>
+percent partial_ratio_map(const Sentence1& s1, const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) {
     return 0;
@@ -471,10 +471,10 @@ percent token_ratio(
 }
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
-template <typename CharT1, std::size_t size, typename Sentence2>
+template <typename CharT1, typename BlockPatternCharT, typename Sentence2>
 percent token_ratio(
   const std::basic_string<CharT1>& s1_sorted, const SplittedSentenceView<CharT1>& tokens_s1,
-  const common::BlockPatternMatchVector<size>& blockmap_s1_sorted,
+  const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1_sorted,
   const Sentence2& s2, percent score_cutoff)
 {
   if (score_cutoff > 100) return 0;

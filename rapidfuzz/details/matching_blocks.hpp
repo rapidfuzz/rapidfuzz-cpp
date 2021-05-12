@@ -65,7 +65,7 @@ class SequenceMatcher {
       for(size_t i = a_low; i < a_high; ++i) {
         std::size_t last_cache = 0;
         for(size_t j = b_low; j < b_high; ++j) {
-          if (b_[j] != a_[i]) {
+          if (common::mixed_sign_unequal(b_[j], a_[i])) {
             j2len_[j] = last_cache;
             last_cache = 0;
             continue;
@@ -88,14 +88,14 @@ class SequenceMatcher {
       }
     }
 
-    while (best_i > a_low && best_j > b_low && a_[best_i-1] == b_[best_j-1]) {
+    while (best_i > a_low && best_j > b_low && common::mixed_sign_equal(a_[best_i-1], b_[best_j-1])) {
       --best_i;
       --best_j;
       ++best_size;
     }
 
     while ((best_i+best_size) < a_high && (best_j+best_size) < b_high
-           && a_[best_i+best_size] == b_[best_j+best_size])
+           && common::mixed_sign_equal(a_[best_i+best_size], b_[best_j+best_size]))
     {
       ++best_size;
     }
@@ -166,8 +166,8 @@ private:
  * properly
  */
 #if 0
-template<typename Sentence1, std::size_t size,  typename Sentence2>
-std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<size>& blockmap_s1, Sentence2 s2) {
+template<typename Sentence1, typename BlockPatternCharT,  typename Sentence2>
+std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1, Sentence2 s2) {
   if (s1.size() > 64) {
     return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
   }
@@ -223,8 +223,8 @@ std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common
 }
 #endif
 
-template<typename Sentence1, /*std::size_t size,*/ typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<size>& blockmap_s1,*/ Sentence2 s2) {
+template<typename Sentence1, /*typename BlockPatternCharT,*/ typename Sentence2>
+std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1,*/ Sentence2 s2) {
   //return longest_common_subsequence(s1, blockmap_s1, s2);
   return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
 }
