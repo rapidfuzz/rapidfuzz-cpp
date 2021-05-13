@@ -24,29 +24,33 @@ namespace detail {
  * difference between the two strings, that is below the maximum
  * edit distance
  *
- *   01 = DELETE, 10 = INSERT, 11 = SUBSTITUTE
+ *   0x1 = 01 = DELETE,
+ *   0x2 = 10 = INSERT
  *
- * For example, 3F -> 0b111111 means three substitutions
+ * 0x5 -> DEL + DEL
+ * 0x6 -> DEL + INS
+ * 0x9 -> INS + DEL
+ * 0xA -> INS + INS
  */
-static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][8] = {
+static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
   /* max edit distance 1 */
-  {0}, /* case does not occur */              /* len_diff 0 */
-  {0x01},                                     /* len_diff 1 */
+  {0}, /* case does not occur */        /* len_diff 0 */
+  {0x01},                               /* len_diff 1 */
   /* max edit distance 2 */
-  {0x03, 0x09, 0x06},                         /* len_diff 0 */
-  {0x01},                                     /* len_diff 1 */
-  {0x05},                                     /* len_diff 2 */
+  {0x09, 0x06},                         /* len_diff 0 */
+  {0x01},                               /* len_diff 1 */
+  {0x05},                               /* len_diff 2 */
   /* max edit distance 3 */
-  {0x03, 0x09, 0x06},                         /* len_diff 0 */
-  {0x25, 0x19, 0x16, 0x0D, 0x07},             /* len_diff 1 */
-  {0x05},                                     /* len_diff 2 */
-  {0x15},                                     /* len_diff 3 */
+  {0x09, 0x06},                         /* len_diff 0 */
+  {0x25, 0x19, 0x16},                   /* len_diff 1 */
+  {0x05},                               /* len_diff 2 */
+  {0x15},                               /* len_diff 3 */
   /* max edit distance 4 */
-  {0x0F, 0x39, 0x36, 0x1E, 0x1B, 0x2D, 0x27}, /* len_diff 0 */
-  {0x0D, 0x07, 0x19, 0x16, 0x25},             /* len_diff 1 */
-  {0x35, 0x1D, 0x17},                         /* len_diff 2 */
-  {0x15},                                     /* len_diff 3 */
-  {0x55},                                     /* len_diff 4 */
+  {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
+  {0x25, 0x19, 0x16},                   /* len_diff 1 */
+  {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
+  {0x15},                               /* len_diff 3 */
+  {0x55},                               /* len_diff 4 */
 };
 
 template <typename CharT1, typename CharT2>
@@ -68,16 +72,11 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
 
     while (s1_pos < s1.size() && s2_pos < s2.size()) {
       if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
-        // substitutions have a weight of 2
-        if ((ops & 0x3) == 3) {
-          cur_dist += 2;
-        } else {
-          cur_dist++;
-        }
+        cur_dist++;
 
         if (!ops) break;
         if (ops & 1) s1_pos++;
-        if (ops & 2) s2_pos++;
+        else if (ops & 2) s2_pos++;
         ops >>= 2;
       } else {
         s1_pos++;
