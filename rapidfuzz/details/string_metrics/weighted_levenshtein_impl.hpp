@@ -364,7 +364,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       DH[words - 1].DHneg1 = DHneg1temp;
     }
   }
-  
+
   //find scores in last row
   std::size_t dist = s1.size() + s2_len;
 

@@ -223,7 +223,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
       const uint64_t PbTemp = Pb;
       Pb = Ph >> 63;
       Ph = (Ph << 1) | PbTemp;
-    
+
       const uint64_t MbTemp = Mb;
       Mb = Mh >> 63;
       Mh = (Mh << 1) | MbTemp;
@@ -318,7 +318,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   if (s1.empty()) {
     return s2.size();
   }
- 
+
   return levenshtein_mbleven2018(s1, s2, max);
 }
 

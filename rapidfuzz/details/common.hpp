@@ -138,10 +138,10 @@ bool mixed_sign_equal(const T a, const U b) {
   // prevent conditional expression is constant on MSVC
   static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
   if (is_same_sign) {
-    return a == b;     
+    return a == b;
   } else {
-    // They can't be equal if 'a' or 'b' is negative. 
-    return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b); 
+    // They can't be equal if 'a' or 'b' is negative.
+    return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
   }
 }
 
@@ -159,7 +159,7 @@ bool CanTypeFitValue(const U value) {
   const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
   const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max() );
   const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max() );
-  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );        
+  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );
 }
 
 template <typename CharT1, std::size_t size=sizeof(CharT1)>

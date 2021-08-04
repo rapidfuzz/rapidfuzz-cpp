@@ -147,7 +147,7 @@ double score = rapidfuzz::fuzz::token_set_ratio("fuzzy was a bear", "fuzzy fuzzy
 ### Process
 In the Python implementation there is a module process, which is used to compare e.g. a string to a list of strings.
 In Python this both saves the time to implement those features yourself and can be a lot more efficient than repeated type
-conversions between Python and C++. Implementing a similar function in C++ using templates is not easily possible and probably slower than implementing them on your own. Thats why this section describes how users can implement those features with a couple lines of code using the C++ library. 
+conversions between Python and C++. Implementing a similar function in C++ using templates is not easily possible and probably slower than implementing them on your own. Thats why this section describes how users can implement those features with a couple lines of code using the C++ library.
 
 ### extract
 

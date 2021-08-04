@@ -13,7 +13,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   memcpy(&codeLen, data, sizeof(codeLen));
 
   if (codeLen+4 > size || codeLen+4 < 4){
-     return 0;  
+     return 0;
   }
   const uint8_t *code = &data[4];
   const uint8_t *input = &data[4+codeLen];

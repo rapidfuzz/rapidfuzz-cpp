@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-05-08 12:15:19.412533
+//  Generated: 2021-08-04 21:44:04.790315
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2055,11 +2055,22 @@ constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
     return typename std::make_unsigned<T>::type(value);
 }
 
+template<typename T>
+constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
+{
+    return typename std::make_signed<T>::type(value);
+}
+
 template <typename T, typename U>
 bool mixed_sign_equal(const T a, const U b) {
-  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
-  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
-  return a >= botU && b >= botT && to_unsigned(a) == to_unsigned(b);
+  // prevent conditional expression is constant on MSVC
+  static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
+  if (is_same_sign) {
+    return a == b;
+  } else {
+    // They can't be equal if 'a' or 'b' is negative.
+    return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
+  }
 }
 
 template <typename T, typename U>
@@ -2076,7 +2087,7 @@ bool CanTypeFitValue(const U value) {
   const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
   const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max() );
   const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max() );
-  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );        
+  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );
 }
 
 template <typename CharT1, std::size_t size=sizeof(CharT1)>
@@ -2664,7 +2675,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
       const uint64_t PbTemp = Pb;
       Pb = Ph >> 63;
       Ph = (Ph << 1) | PbTemp;
-    
+
       const uint64_t MbTemp = Mb;
       Mb = Mh >> 63;
       Mh = (Mh << 1) | MbTemp;
@@ -2759,7 +2770,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
   if (s1.empty()) {
     return s2.size();
   }
- 
+
   return levenshtein_mbleven2018(s1, s2, max);
 }
 
@@ -2881,29 +2892,33 @@ namespace detail {
  * difference between the two strings, that is below the maximum
  * edit distance
  *
- *   01 = DELETE, 10 = INSERT, 11 = SUBSTITUTE
+ *   0x1 = 01 = DELETE,
+ *   0x2 = 10 = INSERT
  *
- * For example, 3F -> 0b111111 means three substitutions
+ * 0x5 -> DEL + DEL
+ * 0x6 -> DEL + INS
+ * 0x9 -> INS + DEL
+ * 0xA -> INS + INS
  */
-static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][8] = {
+static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
   /* max edit distance 1 */
-  {0}, /* case does not occur */              /* len_diff 0 */
-  {0x01},                                     /* len_diff 1 */
+  {0}, /* case does not occur */        /* len_diff 0 */
+  {0x01},                               /* len_diff 1 */
   /* max edit distance 2 */
-  {0x03, 0x09, 0x06},                         /* len_diff 0 */
-  {0x01},                                     /* len_diff 1 */
-  {0x05},                                     /* len_diff 2 */
+  {0x09, 0x06},                         /* len_diff 0 */
+  {0x01},                               /* len_diff 1 */
+  {0x05},                               /* len_diff 2 */
   /* max edit distance 3 */
-  {0x03, 0x09, 0x06},                         /* len_diff 0 */
-  {0x25, 0x19, 0x16, 0x0D, 0x07},             /* len_diff 1 */
-  {0x05},                                     /* len_diff 2 */
-  {0x15},                                     /* len_diff 3 */
+  {0x09, 0x06},                         /* len_diff 0 */
+  {0x25, 0x19, 0x16},                   /* len_diff 1 */
+  {0x05},                               /* len_diff 2 */
+  {0x15},                               /* len_diff 3 */
   /* max edit distance 4 */
-  {0x0F, 0x39, 0x36, 0x1E, 0x1B, 0x2D, 0x27}, /* len_diff 0 */
-  {0x0D, 0x07, 0x19, 0x16, 0x25},             /* len_diff 1 */
-  {0x35, 0x1D, 0x17},                         /* len_diff 2 */
-  {0x15},                                     /* len_diff 3 */
-  {0x55},                                     /* len_diff 4 */
+  {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
+  {0x25, 0x19, 0x16},                   /* len_diff 1 */
+  {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
+  {0x15},                               /* len_diff 3 */
+  {0x55},                               /* len_diff 4 */
 };
 
 template <typename CharT1, typename CharT2>
@@ -2925,16 +2940,11 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
 
     while (s1_pos < s1.size() && s2_pos < s2.size()) {
       if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
-        // substitutions have a weight of 2
-        if ((ops & 0x3) == 3) {
-          cur_dist += 2;
-        } else {
-          cur_dist++;
-        }
+        cur_dist++;
 
         if (!ops) break;
         if (ops & 1) s1_pos++;
-        if (ops & 2) s2_pos++;
+        else if (ops & 2) s2_pos++;
         ops >>= 2;
       } else {
         s1_pos++;
@@ -3222,7 +3232,7 @@ std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
       DH[words - 1].DHneg1 = DHneg1temp;
     }
   }
-  
+
   //find scores in last row
   std::size_t dist = s1.size() + s2_len;
 
@@ -3893,7 +3903,7 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
   std::size_t hamm = 0;
 
   for (std::size_t i = 0; i < sentence1.length(); i++) {
-      if (sentence1[i] != sentence2[i]) {
+      if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
           hamm++;
       }
   }
