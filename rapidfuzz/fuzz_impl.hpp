@@ -238,6 +238,13 @@ percent token_set_ratio(
   const SplittedSentenceView<CharT1>& tokens_a, const SplittedSentenceView<CharT2>& tokens_b,
   const percent score_cutoff)
 {
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (tokens_a.empty() || tokens_a.empty())
+  {
+    return 0;
+  }
+
   auto decomposition = common::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
   auto diff_ab = decomposition.difference_ab;
@@ -322,6 +329,13 @@ percent partial_token_set_ratio(
   const SplittedSentenceView<CharT1>& tokens_a, const SplittedSentenceView<CharT2>& tokens_b,
   const percent score_cutoff)
 {
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (tokens_a.empty() || tokens_a.empty())
+  {
+    return 0;
+  }
+
   auto decomposition = common::set_decomposition(tokens_a, tokens_b);
 
   // exit early when there is a common word in both sequences
@@ -637,6 +651,13 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
   auto s1_view = common::to_string_view(s1);
   auto s2_view = common::to_string_view(s2);
 
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
+
   size_t len_a = s1_view.length();
   size_t len_b = s2_view.length();
   double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
@@ -680,6 +701,13 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
   constexpr double UNBASE_SCALE = 0.95;
 
   auto s2_view = common::to_string_view(s2);
+
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
 
   size_t len_a = s1_view.length();
   size_t len_b = s2_view.length();
@@ -729,14 +757,33 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  return ratio(s1, s2, score_cutoff);
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
+
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
+
+  return ratio(s1_view, s2_view, score_cutoff);
 }
 
 template<typename Sentence1>
 template<typename Sentence2>
 double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  return cached_ratio.ratio(s2, score_cutoff);
+  auto s2_view = common::to_string_view(s2);
+
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
+
+  return cached_ratio.ratio(s2_view, score_cutoff);
 }
 
 } // namespace fuzz
