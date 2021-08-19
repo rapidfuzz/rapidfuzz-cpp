@@ -100,5 +100,5 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
 }
 
 } // namespace detail
-} // namespace levenshtein
+} // namespace string_metric
 } // namespace rapidfuzz

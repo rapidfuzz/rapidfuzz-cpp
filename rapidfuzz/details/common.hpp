@@ -38,7 +38,7 @@ template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                                         SplittedSentenceView<CharT2> b);
 
-constexpr percent result_cutoff(const double result, const percent score_cutoff);
+constexpr percent result_cutoff(double result, percent score_cutoff);
 
 constexpr percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
 

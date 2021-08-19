@@ -50,7 +50,7 @@ DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentence
   return {difference_ab, difference_ba, intersection};
 }
 
-constexpr percent common::result_cutoff(const double result, const percent score_cutoff)
+constexpr percent common::result_cutoff(double result, percent score_cutoff)
 {
   return (result >= score_cutoff) ? result : 0;
 }

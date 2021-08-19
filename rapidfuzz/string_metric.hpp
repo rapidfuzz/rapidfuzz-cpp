@@ -6,6 +6,7 @@
 #include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp>
+#include <rapidfuzz/details/string_metrics/jaro_impl.hpp>
 
 #include <cmath>
 #include <numeric>
@@ -308,7 +309,7 @@ private:
 template <typename Sentence1, typename Sentence2>
 double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
                               LevenshteinWeightTable weights = {1, 1, 1},
-                              double score_cutoff = 0.0)
+                              percent score_cutoff = 0.0)
 {
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
@@ -452,7 +453,7 @@ private:
  *   as a float between 0 and 100
  */
 template <typename Sentence1, typename Sentence2>
-double normalized_hamming(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
 {
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
@@ -477,6 +478,99 @@ private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
+/**
+ * @brief Calculates the jaro winkler similarity
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param prefix_weight
+ *   weight used for the common prefix of the two strings. Default is 0.1.
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 100.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return jaro winkler similarity between s1 and s2
+ *   as a float between 0 and 100
+ */
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2,
+                    double prefix_weight = 0.1, percent score_cutoff = 0.0)
+{
+  auto sentence1 = common::to_string_view(s1);
+  auto sentence2 = common::to_string_view(s2);
+
+  return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
+}
+
+template<typename Sentence1>
+struct CachedJaroWinklerSimilarity {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedJaroWinklerSimilarity(const Sentence1& s1, double prefix_weight_ = 0.1)
+    : s1_view(common::to_string_view(s1)), prefix_weight(prefix_weight_) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
+    return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  double prefix_weight;
+};
+
+/**
+ * @brief Calculates the jaro similarity
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 100.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return jaro similarity between s1 and s2
+ *   as a float between 0 and 100
+ */
+template <typename Sentence1, typename Sentence2>
+double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
+{
+  auto sentence1 = common::to_string_view(s1);
+  auto sentence2 = common::to_string_view(s2);
+
+  return detail::jaro_similarity(sentence1, sentence2, score_cutoff);
+}
+
+template<typename Sentence1>
+struct CachedJaroSimilarity {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedJaroSimilarity(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
+    return jaro_similarity(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
 
 /**@}*/
 
