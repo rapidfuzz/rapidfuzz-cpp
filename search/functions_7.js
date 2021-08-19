@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['token_5fratio_30',['token_ratio',['../group__Fuzz.html#gaf6ce26eac6e74e05a6085d19491223bd',1,'rapidfuzz::fuzz']]],
-  ['token_5fset_5fratio_31',['token_set_ratio',['../group__Fuzz.html#gabd9cb43ce680441e6868aa76f5d74206',1,'rapidfuzz::fuzz']]],
-  ['token_5fsort_5fratio_32',['token_sort_ratio',['../group__Fuzz.html#ga917959e001a3bb12ef88dd2aafa9e9a5',1,'rapidfuzz::fuzz']]]
+  ['ratio_33',['ratio',['../group__Fuzz.html#ga28f2cfa40a0f19c23d85fee3d1750bcc',1,'rapidfuzz::fuzz']]]
 ];
