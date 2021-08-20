@@ -138,7 +138,7 @@ template&lt;typename Sentence1 , typename Sentence2 &gt; </div>
 <p><code>#include &lt;rapidfuzz/string_metric.hpp&gt;</code></p>
 
 <p>Calculates the Hamming distance between two strings. </p>
-<p>Both string require a similar length</p>
+<p>Both strings require a similar length</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">Sentence1</td><td>This is a string that can be converted to basic_string_view&lt;char_type&gt; </td></tr>
@@ -268,7 +268,7 @@ template&lt;typename Sentence1 , typename Sentence2 &gt; </div>
   <table class="params">
     <tr><td class="paramname">s1</td><td>string to compare with s2 (for type info check Template parameters above) </td></tr>
     <tr><td class="paramname">s2</td><td>string to compare with s1 (for type info check Template parameters above) </td></tr>
-    <tr><td class="paramname">prefix_weight</td><td>weight used for the common prefix of the two strings. Default is 0.1. </td></tr>
+    <tr><td class="paramname">prefix_weight</td><td>Weight used for the common prefix of the two strings. Has to be between 0 and 0.25. Default is 0.1. </td></tr>
     <tr><td class="paramname">score_cutoff</td><td>Optional argument for a score threshold as a float between 0 and 100. For ratio &lt; score_cutoff 0 is returned instead. Default is 0, which deactivates this behaviour.</td></tr>
   </table>
   </dd>
