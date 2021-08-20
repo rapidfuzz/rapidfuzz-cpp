@@ -370,7 +370,7 @@ private:
  * @brief Calculates the Hamming distance between two strings.
  *
  * @details
- * Both string require a similar length
+ * Both strings require a similar length
  *
  *
  * @tparam Sentence1 This is a string that can be converted to
@@ -491,7 +491,8 @@ private:
  * @param s2
  *   string to compare with s1 (for type info check Template parameters above)
  * @param prefix_weight
- *   weight used for the common prefix of the two strings. Default is 0.1.
+ *   Weight used for the common prefix of the two strings.
+ *   Has to be between 0 and 0.25. Default is 0.1.
  * @param score_cutoff
  *   Optional argument for a score threshold as a float between 0 and 100.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
@@ -506,6 +507,10 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2,
 {
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
+
+  if (prefix_weight < 0.0 || prefix_weight > 0.25) {
+    throw std::invalid_argument("prefix_weight has to be between 0.0 - 0.25");
+  }
 
   return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
 }

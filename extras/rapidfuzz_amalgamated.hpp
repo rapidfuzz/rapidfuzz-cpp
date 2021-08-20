@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-08-04 21:44:04.790315
+//  Generated: 2021-08-20 14:19:41.395323
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1966,7 +1966,7 @@ template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                                         SplittedSentenceView<CharT2> b);
 
-constexpr percent result_cutoff(const double result, const percent score_cutoff);
+constexpr percent result_cutoff(double result, percent score_cutoff);
 
 constexpr percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
 
@@ -2264,7 +2264,7 @@ DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentence
   return {difference_ab, difference_ba, intersection};
 }
 
-constexpr percent common::result_cutoff(const double result, const percent score_cutoff)
+constexpr percent common::result_cutoff(double result, percent score_cutoff)
 {
   return (result >= score_cutoff) ? result : 0;
 }
@@ -3504,7 +3504,125 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
 }
 
 } // namespace detail
-} // namespace levenshtein
+} // namespace string_metric
+} // namespace rapidfuzz
+
+
+namespace rapidfuzz {
+namespace string_metric {
+namespace detail {
+
+#define NOTNUM(c)   ((c>57) || (c<48))
+
+/* For now this implementation is ported from
+ * https://github.com/jamesturk/cjellyfish
+ *
+ * this is only a placeholder which should be replaced by a faster implementation
+ * in the future
+ */
+template <typename CharT1, typename CharT2>
+double _jaro_winkler(basic_string_view<CharT1> ying,
+                     basic_string_view<CharT2> yang,
+                     int winklerize, double prefix_weight = 0.1)
+{
+    std::size_t min_len;
+    std::size_t search_range;
+    std::size_t trans_count, common_chars;
+
+    // ensure that neither string is blank
+    if (!ying.size() || !yang.size()) return 0;
+
+    if (ying.size() > yang.size()) {
+        search_range = ying.size();
+        min_len = yang.size();
+    } else {
+        search_range = yang.size();
+        min_len = ying.size();
+    }
+  
+    // Blank out the flags
+    std::vector<int> ying_flag(ying.size() + 1);
+    std::vector<int> yang_flag(yang.size() + 1);
+
+    search_range = (search_range/2) - 1;
+    if (search_range < 0) search_range = 0;
+
+
+    // Looking only within the search range, count and flag the matched pairs.
+    common_chars = 0;
+    for (std::size_t i = 0; i < ying.size(); i++) {
+        std::size_t lowlim = (i >= search_range) ? i - search_range : 0;
+        std::size_t hilim = (i + search_range <= yang.size()-1) ? (i + search_range) : yang.size()-1;
+        for (std::size_t j = lowlim; j <= hilim; j++)  {
+            if (!yang_flag[j] && yang[j] == ying[i]) {
+                yang_flag[j] = 1;
+                ying_flag[i] = 1;
+                common_chars++;
+                break;
+            }
+        }
+    }
+
+    // If no characters in common - return
+    if (!common_chars) {
+        return 0;
+    }
+
+    // Count the number of transpositions
+    std::size_t k = trans_count = 0;
+    for (std::size_t i = 0; i < ying.size(); i++) {
+        if (ying_flag[i]) {
+            std::size_t j = k;
+            for (; j < yang.size(); j++) {
+                if (yang_flag[j]) {
+                    k = j + 1;
+                    break;
+                }
+            }
+            if (ying[i] != yang[j]) {
+                trans_count++;
+            }
+        }
+    }
+    trans_count /= 2;
+
+    // adjust for similarities in nonmatched characters
+
+    // Main weight computation.
+    double weight = common_chars / ((double) ying.size()) + common_chars / ((double) yang.size())
+        + ((double) (common_chars - trans_count)) / ((double) common_chars);
+    weight /=  3.0;
+
+    // Continue to boost the weight if the strings are similar
+    if (winklerize && weight > 0.7) {
+        // Adjust for having up to the first 4 characters in common
+        std::size_t j = (min_len >= 4) ? 4 : min_len;
+        std::size_t i = 0;
+        for (i=0; ((i<j) && (ying[i] == yang[i]) && (NOTNUM(ying[i]))); i++);
+        if (i) {
+            weight += i * prefix_weight * (1.0 - weight);
+        }
+    }
+
+    return weight;
+}
+
+
+template <typename CharT1, typename CharT2>
+double jaro_winkler_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang,
+                               double prefix_weight, percent score_cutoff)
+{
+    return common::result_cutoff(_jaro_winkler(ying, yang, 1, prefix_weight)*100, score_cutoff);
+}
+
+template <typename CharT1, typename CharT2>
+double jaro_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang, percent score_cutoff)
+{
+    return common::result_cutoff(_jaro_winkler(ying, yang, 0)*100, score_cutoff);
+}
+
+} // namespace detail
+} // namespace string_metric
 } // namespace rapidfuzz
 
 #include <cmath>
@@ -3808,7 +3926,7 @@ private:
 template <typename Sentence1, typename Sentence2>
 double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
                               LevenshteinWeightTable weights = {1, 1, 1},
-                              double score_cutoff = 0.0)
+                              percent score_cutoff = 0.0)
 {
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
@@ -3869,7 +3987,7 @@ private:
  * @brief Calculates the Hamming distance between two strings.
  *
  * @details
- * Both string require a similar length
+ * Both strings require a similar length
  *
  *
  * @tparam Sentence1 This is a string that can be converted to
@@ -3952,7 +4070,7 @@ private:
  *   as a float between 0 and 100
  */
 template <typename Sentence1, typename Sentence2>
-double normalized_hamming(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
 {
   auto sentence1 = common::to_string_view(s1);
   auto sentence2 = common::to_string_view(s2);
@@ -3977,6 +4095,104 @@ private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
+/**
+ * @brief Calculates the jaro winkler similarity
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param prefix_weight
+ *   Weight used for the common prefix of the two strings.
+ *   Has to be between 0 and 0.25. Default is 0.1.
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 100.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return jaro winkler similarity between s1 and s2
+ *   as a float between 0 and 100
+ */
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2,
+                    double prefix_weight = 0.1, percent score_cutoff = 0.0)
+{
+  auto sentence1 = common::to_string_view(s1);
+  auto sentence2 = common::to_string_view(s2);
+
+  if (prefix_weight < 0.0 || prefix_weight > 0.25) {
+    throw std::invalid_argument("prefix_weight has to be between 0.0 - 0.25");
+  }
+
+  return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
+}
+
+template<typename Sentence1>
+struct CachedJaroWinklerSimilarity {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedJaroWinklerSimilarity(const Sentence1& s1, double prefix_weight_ = 0.1)
+    : s1_view(common::to_string_view(s1)), prefix_weight(prefix_weight_) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
+    return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+  double prefix_weight;
+};
+
+/**
+ * @brief Calculates the jaro similarity
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 100.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return jaro similarity between s1 and s2
+ *   as a float between 0 and 100
+ */
+template <typename Sentence1, typename Sentence2>
+double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
+{
+  auto sentence1 = common::to_string_view(s1);
+  auto sentence2 = common::to_string_view(s2);
+
+  return detail::jaro_similarity(sentence1, sentence2, score_cutoff);
+}
+
+template<typename Sentence1>
+struct CachedJaroSimilarity {
+  using CharT1 = char_type<Sentence1>;
+
+  CachedJaroSimilarity(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)) {}
+
+  template<typename Sentence2>
+  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
+    return jaro_similarity(s1_view, s2, score_cutoff);
+  }
+
+private:
+  rapidfuzz::basic_string_view<CharT1> s1_view;
+};
 
 /**@}*/
 
@@ -4889,6 +5105,13 @@ percent token_set_ratio(
   const SplittedSentenceView<CharT1>& tokens_a, const SplittedSentenceView<CharT2>& tokens_b,
   const percent score_cutoff)
 {
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (tokens_a.empty() || tokens_a.empty())
+  {
+    return 0;
+  }
+
   auto decomposition = common::set_decomposition(tokens_a, tokens_b);
   auto intersect = decomposition.intersection;
   auto diff_ab = decomposition.difference_ab;
@@ -4973,6 +5196,13 @@ percent partial_token_set_ratio(
   const SplittedSentenceView<CharT1>& tokens_a, const SplittedSentenceView<CharT2>& tokens_b,
   const percent score_cutoff)
 {
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (tokens_a.empty() || tokens_a.empty())
+  {
+    return 0;
+  }
+
   auto decomposition = common::set_decomposition(tokens_a, tokens_b);
 
   // exit early when there is a common word in both sequences
@@ -5288,6 +5518,13 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
   auto s1_view = common::to_string_view(s1);
   auto s2_view = common::to_string_view(s2);
 
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
+
   size_t len_a = s1_view.length();
   size_t len_b = s2_view.length();
   double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
@@ -5331,6 +5568,13 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
   constexpr double UNBASE_SCALE = 0.95;
 
   auto s2_view = common::to_string_view(s2);
+
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
 
   size_t len_a = s1_view.length();
   size_t len_b = s2_view.length();
@@ -5380,14 +5624,33 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  return ratio(s1, s2, score_cutoff);
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
+
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
+
+  return ratio(s1_view, s2_view, score_cutoff);
 }
 
 template<typename Sentence1>
 template<typename Sentence2>
 double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  return cached_ratio.ratio(s2, score_cutoff);
+  auto s2_view = common::to_string_view(s2);
+
+  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+  if (s1_view.empty() || s2_view.empty())
+  {
+    return 0;
+  }
+
+  return cached_ratio.ratio(s2_view, score_cutoff);
 }
 
 } // namespace fuzz
