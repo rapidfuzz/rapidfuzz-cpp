@@ -39,8 +39,8 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     std::vector<int> ying_flag(ying.size() + 1);
     std::vector<int> yang_flag(yang.size() + 1);
 
-    search_range = (search_range/2) - 1;
-    if (search_range < 0) search_range = 0;
+    search_range = (search_range/2);
+    if (search_range > 0) search_range--;
 
 
     // Looking only within the search range, count and flag the matched pairs.

@@ -27,4 +27,31 @@ struct LevenshteinWeightTable {
   std::size_t replace_cost;
 };
 
+/**
+ * @brief Edit operation types used by the Levenshtein distance
+ */
+enum class LevenshteinEditType {
+  None    = 0, /**< No Operation required */
+  Replace = 1, /**< Replace a character if a string by another character */
+  Insert  = 2, /**< Insert a character into a string */
+  Delete  = 3  /**< Delete a character from a string */
+};
+
+/**
+ * @brief Edit operations used by the Levenshtein distance
+ *
+ * This represents an edit operation of type type which is applied to
+ * the source string
+ *
+ * Replace: replace character at src_pos with character at dest_pos
+ * Insert:  insert character from dest_pos at src_pos
+ * Delete:  delete character at src_pos
+ */
+struct LevenshteinEditOp {
+  LevenshteinEditType type; /**< type of the edit operation */
+  std::size_t src_pos;      /**< index into the source string */
+  std::size_t dest_pos;     /**< index into the destination string */
+};
+
+
 } // namespace rapidfuzz

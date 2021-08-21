@@ -7,6 +7,7 @@
 #include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/jaro_impl.hpp>
+#include <rapidfuzz/details/string_metrics/levenshtein_editops_impl.hpp>
 
 #include <cmath>
 #include <numeric>
@@ -365,6 +366,30 @@ private:
   common::BlockPatternMatchVector<CharT1> blockmap_s1;
   LevenshteinWeightTable weights;
 };
+
+/**
+ * @brief Return list of LevenshteinEditOp describing how to turn s1 into s2.
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ *
+ * @return Edit operations required to turn s1 into s2
+ */
+template <typename Sentence1, typename Sentence2>
+std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
+{
+  auto sentence1 = common::to_string_view(s1);
+  auto sentence2 = common::to_string_view(s2);
+
+  return detail::levenshtein_editops(sentence1, sentence2);
+}
 
 /**
  * @brief Calculates the Hamming distance between two strings.

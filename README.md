@@ -8,10 +8,6 @@
     <img src="https://github.com/maxbachmann/rapidfuzz/workflows/Build/badge.svg"
          alt="Continous Integration">
   </a>
-  <a href="https://gitter.im/rapidfuzz/community">
-    <img src="https://badges.gitter.im/rapidfuzz/community.svg"
-         alt="Gitter chat">
-  </a>
   <a href="https://maxbachmann.github.io/rapidfuzz">
     <img src="https://img.shields.io/badge/-documentation-blue"
          alt="Documentation">

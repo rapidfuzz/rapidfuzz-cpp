@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-08-20 14:19:41.395323
+//  Generated: 2021-08-21 02:50:51.408106
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1561,6 +1561,33 @@ struct LevenshteinWeightTable {
   std::size_t delete_cost;
   std::size_t replace_cost;
 };
+
+/**
+ * @brief Edit operation types used by the Levenshtein distance
+ */
+enum class LevenshteinEditType {
+  None    = 0, /**< No Operation required */
+  Replace = 1, /**< Replace a character if a string by another character */
+  Insert  = 2, /**< Insert a character into a string */
+  Delete  = 3  /**< Delete a character from a string */
+};
+
+/**
+ * @brief Edit operations used by the Levenshtein distance
+ *
+ * This represents an edit operation of type type which is applied to
+ * the source string
+ *
+ * Replace: replace character at src_pos with character at dest_pos
+ * Insert:  insert character from dest_pos at src_pos
+ * Delete:  delete character at src_pos
+ */
+struct LevenshteinEditOp {
+  LevenshteinEditType type; /**< type of the edit operation */
+  std::size_t src_pos;      /**< index into the source string */
+  std::size_t dest_pos;     /**< index into the destination string */
+};
+
 
 } // namespace rapidfuzz
 #include <algorithm>
@@ -3544,8 +3571,8 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     std::vector<int> ying_flag(ying.size() + 1);
     std::vector<int> yang_flag(yang.size() + 1);
 
-    search_range = (search_range/2) - 1;
-    if (search_range < 0) search_range = 0;
+    search_range = (search_range/2);
+    if (search_range > 0) search_range--;
 
 
     // Looking only within the search range, count and flag the matched pairs.
@@ -3625,6 +3652,128 @@ double jaro_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2>
 } // namespace string_metric
 } // namespace rapidfuzz
 
+#include <numeric>
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <stdexcept>
+
+namespace rapidfuzz {
+namespace string_metric {
+namespace detail {
+
+template <typename CharT1, typename CharT2>
+std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+  std::size_t rows = s1.size() + 1;
+  std::size_t cols = s2.size() + 1;
+  std::size_t matrix_size = rows * cols;
+  if (matrix_size / rows != cols)
+  {
+    throw std::length_error("cannot create matrix larger than SIZE_MAX");
+  }
+  std::vector<std::size_t> matrix(rows * cols);
+
+  for (std::size_t col = 0; col < cols; col++)
+  {
+    matrix[col] = col;
+  }
+
+  for (std::size_t row = 1; row < rows; row++)
+  {
+    matrix[row * cols] = row;
+  }
+
+  for (std::size_t i = 0; i < s1.size(); i++) {
+    size_t* prev = &matrix[i * cols];
+    size_t* cur = &matrix[(i + 1) * cols + 1];
+    auto char1 = s1[i];
+    size_t temp = i;
+
+    for (const auto& char2 : s2) {
+      temp = std::min({temp + 1, *prev + (char1 != char2), *(prev + 1) + 1});
+      *cur = temp;
+      cur++;
+      prev++;
+    }
+  }
+
+  return matrix;
+}
+
+template <typename CharT1, typename CharT2>
+std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+  /* prefix and suffix are no-ops, which do not need to be added to the editops */
+  auto affix = common::remove_common_affix(s1, s2);
+  std::vector<std::size_t> matrix = levenshtein_matrix(s1, s2);
+  std::size_t dist = matrix.back();
+
+  std::vector<LevenshteinEditOp> editops(dist);
+
+  if (dist == 0)
+  {
+    return editops;
+  }
+
+  std::size_t row = s1.size();
+  std::size_t col = s2.size();
+  std::size_t cols = s2.size() + 1;
+  const std::size_t* cur = &matrix.back();
+
+  while (row || col)
+  {
+    /* horizontal == current and character similar -> no-operation */
+    if (row && col && (*cur == *(cur - cols - 1)) && s1[row - 1] == s2[col - 1])
+    {
+      row--;
+      col--;
+      cur -= cols + 1;
+      continue;
+    }
+    /* horizontal + 1 == current -> replacement */
+    else if (row && col && (*cur == *(cur - cols - 1) + 1))
+
+    {
+      dist--;
+      editops[dist].type = LevenshteinEditType::Replace;
+      editops[dist].src_pos = row + affix.prefix_len;
+      editops[dist].dest_pos = col + affix.prefix_len;
+      row--;
+      col--;
+      cur -= cols + 1;
+    }
+    /* left + 1 == current -> insertion */
+    else if (col && (*cur == *(cur - 1) + 1))
+    {
+      dist--;
+      editops[dist].type = LevenshteinEditType::Insert;
+      editops[dist].src_pos = row + affix.prefix_len;
+      editops[dist].dest_pos = col + affix.prefix_len;
+      col--;
+      cur--;
+    }
+    /* above + 1 == current -> deletion */
+    else
+    {
+      /* this should be the case as long as there is no error in the implementation */
+      assert((row && (*cur == *(cur - cols) + 1)));
+
+      dist--;
+      editops[dist].type = LevenshteinEditType::Delete;
+      editops[dist].src_pos = row + affix.prefix_len;
+      editops[dist].dest_pos = col + affix.prefix_len;
+      row--;
+      cur -= cols;
+    }
+  }
+
+  return editops;
+}
+
+} // namespace detail
+} // namespace string_metric
+} // namespace rapidfuzz
 #include <cmath>
 #include <numeric>
 #include <tuple>
@@ -3982,6 +4131,30 @@ private:
   common::BlockPatternMatchVector<CharT1> blockmap_s1;
   LevenshteinWeightTable weights;
 };
+
+/**
+ * @brief Return list of LevenshteinEditOp describing how to turn s1 into s2.
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ *
+ * @return Edit operations required to turn s1 into s2
+ */
+template <typename Sentence1, typename Sentence2>
+std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
+{
+  auto sentence1 = common::to_string_view(s1);
+  auto sentence2 = common::to_string_view(s2);
+
+  return detail::levenshtein_editops(sentence1, sentence2);
+}
 
 /**
  * @brief Calculates the Hamming distance between two strings.
