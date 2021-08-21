@@ -81,6 +81,10 @@ Functions</h2></td></tr>
 <tr class="memitem:ga63bcd785829ec8b10b4bcb41e853fe74"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__string__metric.html#ga63bcd785829ec8b10b4bcb41e853fe74">rapidfuzz::string_metric::normalized_levenshtein</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, LevenshteinWeightTable weights={1, 1, 1}, percent score_cutoff=0.0)</td></tr>
 <tr class="memdesc:ga63bcd785829ec8b10b4bcb41e853fe74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates a normalized levenshtein distance using custom costs for insertion, deletion and substitution.  <a href="group__string__metric.html#ga63bcd785829ec8b10b4bcb41e853fe74">More...</a><br /></td></tr>
 <tr class="separator:ga63bcd785829ec8b10b4bcb41e853fe74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5e61de8649969745dc93b8dd47b6575b"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename Sentence2 &gt; </td></tr>
+<tr class="memitem:ga5e61de8649969745dc93b8dd47b6575b"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; LevenshteinEditOp &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__string__metric.html#ga5e61de8649969745dc93b8dd47b6575b">rapidfuzz::string_metric::levenshtein_editops</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2)</td></tr>
+<tr class="memdesc:ga5e61de8649969745dc93b8dd47b6575b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return list of LevenshteinEditOp describing how to turn s1 into s2.  <a href="group__string__metric.html#ga5e61de8649969745dc93b8dd47b6575b">More...</a><br /></td></tr>
+<tr class="separator:ga5e61de8649969745dc93b8dd47b6575b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaaef6bbb6260afa72b541e79f6e74a9fc"><td class="memTemplParams" colspan="2">template&lt;typename Sentence1 , typename Sentence2 &gt; </td></tr>
 <tr class="memitem:gaaef6bbb6260afa72b541e79f6e74a9fc"><td class="memTemplItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__string__metric.html#gaaef6bbb6260afa72b541e79f6e74a9fc">rapidfuzz::string_metric::hamming</a> (const Sentence1 &amp;s1, const Sentence2 &amp;s2, std::size_t max=std::numeric_limits&lt; std::size_t &gt;::max())</td></tr>
 <tr class="memdesc:gaaef6bbb6260afa72b541e79f6e74a9fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates the Hamming distance between two strings.  <a href="group__string__metric.html#gaaef6bbb6260afa72b541e79f6e74a9fc">More...</a><br /></td></tr>
@@ -370,6 +374,55 @@ template&lt;typename Sentence1 , typename Sentence2 &gt; </div>
 
 </div>
 </div>
+<a id="ga5e61de8649969745dc93b8dd47b6575b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5e61de8649969745dc93b8dd47b6575b">&#9670;&nbsp;</a></span>levenshtein_editops()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Sentence1 , typename Sentence2 &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;LevenshteinEditOp&gt; rapidfuzz::string_metric::levenshtein_editops </td>
+          <td>(</td>
+          <td class="paramtype">const Sentence1 &amp;&#160;</td>
+          <td class="paramname"><em>s1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const Sentence2 &amp;&#160;</td>
+          <td class="paramname"><em>s2</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><code>#include &lt;rapidfuzz/string_metric.hpp&gt;</code></p>
+
+<p>Return list of LevenshteinEditOp describing how to turn s1 into s2. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Sentence1</td><td>This is a string that can be converted to basic_string_view&lt;char_type&gt; </td></tr>
+    <tr><td class="paramname">Sentence2</td><td>This is a string that can be converted to basic_string_view&lt;char_type&gt;</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">s1</td><td>string to compare with s2 (for type info check Template parameters above) </td></tr>
+    <tr><td class="paramname">s2</td><td>string to compare with s1 (for type info check Template parameters above)</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Edit operations required to turn s1 into s2 </dd></dl>
+
+</div>
+</div>
 <a id="ga8589e7617a317961abf1096a990afe39"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga8589e7617a317961abf1096a990afe39">&#9670;&nbsp;</a></span>normalized_hamming()</h2>
 
@@ -505,8 +558,8 @@ template&lt;typename Sentence1 , typename Sentence2 &gt; </div>
 </div>
 </div><!-- contents -->
 <div class="ttc" id="agroup__Fuzz_html_ga28f2cfa40a0f19c23d85fee3d1750bcc"><div class="ttname"><a href="group__Fuzz.html#ga28f2cfa40a0f19c23d85fee3d1750bcc">rapidfuzz::fuzz::ratio</a></div><div class="ttdeci">percent ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, percent score_cutoff=0)</div><div class="ttdoc">calculates a simple ratio between two strings</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:22</div></div>
-<div class="ttc" id="agroup__string__metric_html_ga63bcd785829ec8b10b4bcb41e853fe74"><div class="ttname"><a href="group__string__metric.html#ga63bcd785829ec8b10b4bcb41e853fe74">rapidfuzz::string_metric::normalized_levenshtein</a></div><div class="ttdeci">double normalized_levenshtein(const Sentence1 &amp;s1, const Sentence2 &amp;s2, LevenshteinWeightTable weights={1, 1, 1}, percent score_cutoff=0.0)</div><div class="ttdoc">Calculates a normalized levenshtein distance using custom costs for insertion, deletion and substitut...</div><div class="ttdef"><b>Definition:</b> string_metric.hpp:310</div></div>
-<div class="ttc" id="agroup__string__metric_html_ga540eec35fe2e2b0efc65195bf5ab6a79"><div class="ttname"><a href="group__string__metric.html#ga540eec35fe2e2b0efc65195bf5ab6a79">rapidfuzz::string_metric::levenshtein</a></div><div class="ttdeci">std::size_t levenshtein(const Sentence1 &amp;s1, const Sentence2 &amp;s2, LevenshteinWeightTable weights={1, 1, 1}, std::size_t max=std::numeric_limits&lt; std::size_t &gt;::max())</div><div class="ttdoc">Calculates the minimum number of insertions, deletions, and substitutions required to change one sequ...</div><div class="ttdef"><b>Definition:</b> string_metric.hpp:157</div></div>
+<div class="ttc" id="agroup__string__metric_html_ga63bcd785829ec8b10b4bcb41e853fe74"><div class="ttname"><a href="group__string__metric.html#ga63bcd785829ec8b10b4bcb41e853fe74">rapidfuzz::string_metric::normalized_levenshtein</a></div><div class="ttdeci">double normalized_levenshtein(const Sentence1 &amp;s1, const Sentence2 &amp;s2, LevenshteinWeightTable weights={1, 1, 1}, percent score_cutoff=0.0)</div><div class="ttdoc">Calculates a normalized levenshtein distance using custom costs for insertion, deletion and substitut...</div><div class="ttdef"><b>Definition:</b> string_metric.hpp:311</div></div>
+<div class="ttc" id="agroup__string__metric_html_ga540eec35fe2e2b0efc65195bf5ab6a79"><div class="ttname"><a href="group__string__metric.html#ga540eec35fe2e2b0efc65195bf5ab6a79">rapidfuzz::string_metric::levenshtein</a></div><div class="ttdeci">std::size_t levenshtein(const Sentence1 &amp;s1, const Sentence2 &amp;s2, LevenshteinWeightTable weights={1, 1, 1}, std::size_t max=std::numeric_limits&lt; std::size_t &gt;::max())</div><div class="ttdoc">Calculates the minimum number of insertions, deletions, and substitutions required to change one sequ...</div><div class="ttdef"><b>Definition:</b> string_metric.hpp:158</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">
