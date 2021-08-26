@@ -83,8 +83,8 @@ $(function() {
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">namespace </span>rapidfuzz {</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT, <span class="keyword">typename</span>&gt;</div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">   16</a></span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">utils::default_process</a>(Sentence&amp;&amp; s)</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT&gt;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;std::size_t <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">utils::default_process</a>(CharT* str, std::size_t len)</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;{</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="comment">/* mapping converting</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">   * - non alphanumeric characters to whitespace (32)</span></div>
@@ -111,45 +111,64 @@ $(function() {
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253, 254, 255</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  };</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  std::basic_string&lt;CharT&gt; str(std::forward&lt;Sentence&gt;(s));</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  std::transform(str.begin(), str.end(), str.begin(),</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;               [](CharT ch) {</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="comment">/* irrelevant cases for a given char type are removed at compile time by any decent compiler */</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    if (ch &lt; 0 || rapidfuzz::common::to_unsigned(ch) &gt; std::numeric_limits&lt;uint32_t&gt;::max()) {</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      return ch;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    } <span class="keywordflow">else</span> if (ch &lt; 256) {</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CharT<span class="keyword">&gt;</span>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      <span class="comment">// this requires sources to compiled, while the current version for C++ is header only</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      <span class="comment">// this will be added to the C++ version later on.</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#ifdef RAPIDFUZZ_PYTHON</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CharT<span class="keyword">&gt;</span>(Unicode::UnicodeDefaultProcess(<span class="keyword">static_cast&lt;</span>uint32_t<span class="keyword">&gt;</span>(ch)));</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      <span class="keywordflow">return</span> ch;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  });</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  str.erase(str.begin(),</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            std::find_if(str.begin(), str.end(), [](<span class="keyword">const</span> CharT&amp; ch) {return ch != <span class="stringliteral">&#39; &#39;</span>; }));</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  std::transform(str, str + len, str,</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;               [](CharT ch) {</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="comment">/* irrelevant cases for a given char type are removed at compile time by any decent compiler */</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordflow">if</span> (ch &lt; 0 || rapidfuzz::common::to_unsigned(ch) &gt; std::numeric_limits&lt;uint32_t&gt;::max()) {</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      <span class="keywordflow">return</span> ch;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (ch &lt; 256) {</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CharT<span class="keyword">&gt;</span>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <span class="comment">// this requires sources to compiled, while the current version for C++ is header only</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="comment">// this will be added to the C++ version later on.</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#ifdef RAPIDFUZZ_PYTHON</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span>CharT<span class="keyword">&gt;</span>(Unicode::UnicodeDefaultProcess(<span class="keyword">static_cast&lt;</span>uint32_t<span class="keyword">&gt;</span>(ch)));</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordflow">return</span> ch;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  });</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keywordflow">while</span> (len &gt; 0 &amp;&amp; str[len - 1] == <span class="charliteral">&#39; &#39;</span>)</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  {</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    len--;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  str.erase(</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      std::find_if(str.rbegin(), str.rend(), [](<span class="keyword">const</span> CharT&amp; ch) { return ch != <span class="stringliteral">&#39; &#39;</span>; }).base(),</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      str.end());</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keywordflow">return</span> str;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;}</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  std::size_t prefix = 0;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keywordflow">while</span> (len &gt; 0 &amp;&amp; str[prefix] == <span class="charliteral">&#39; &#39;</span>)</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  {</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    len--;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    prefix++;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  }</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT, <span class="keyword">typename</span>&gt;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">utils::default_process</a>(Sentence s)</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;{</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(std::basic_string&lt;CharT&gt;(s.data(), s.size()));</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;}</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;} <span class="comment">// namespace rapidfuzz</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keywordflow">if</span> (prefix != 0)</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  {</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    std::copy(str + prefix, str + prefix + len, str);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  }</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keywordflow">return</span> len;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;}</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT, <span class="keyword">typename</span>&gt;</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">   83</a></span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">utils::default_process</a>(Sentence&amp;&amp; s)</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;{</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  std::basic_string&lt;CharT&gt; str(std::forward&lt;Sentence&gt;(s));</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  std::size_t len = <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(&amp;str[0], str.size());</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  str.resize(len);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordflow">return</span> str;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;}</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence, <span class="keyword">typename</span> CharT, <span class="keyword">typename</span>&gt;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;std::basic_string&lt;CharT&gt; <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">utils::default_process</a>(Sentence s)</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;{</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="group__Utils.html#gac380da5bee37d107618195bab1619eac">default_process</a>(std::basic_string&lt;CharT&gt;(s.data(), s.size()));</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;} <span class="comment">// namespace rapidfuzz</span></div>
 </div><!-- fragment --></div><!-- contents -->
-<div class="ttc" id="agroup__Utils_html_gac380da5bee37d107618195bab1619eac"><div class="ttname"><a href="group__Utils.html#gac380da5bee37d107618195bab1619eac">rapidfuzz::utils::default_process</a></div><div class="ttdeci">std::basic_string&lt; CharT &gt; default_process(Sentence &amp;&amp;s)</div><div class="ttdoc">removes any non alphanumeric characters, trim whitespaces from beginning/end and lowercase the string...</div><div class="ttdef"><b>Definition:</b> utils_impl.hpp:16</div></div>
+<div class="ttc" id="agroup__Utils_html_gac380da5bee37d107618195bab1619eac"><div class="ttname"><a href="group__Utils.html#gac380da5bee37d107618195bab1619eac">rapidfuzz::utils::default_process</a></div><div class="ttdeci">std::basic_string&lt; CharT &gt; default_process(Sentence &amp;&amp;s)</div><div class="ttdoc">removes any non alphanumeric characters, trim whitespaces from beginning/end and lowercase the string...</div><div class="ttdef"><b>Definition:</b> utils_impl.hpp:83</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">
