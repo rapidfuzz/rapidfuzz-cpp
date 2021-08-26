@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-08-21 02:50:51.408106
+//  Generated: 2021-08-26 23:54:23.911465
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1852,6 +1852,9 @@ template <
                            has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> default_process(Sentence s);
 
+template <typename CharT>
+std::size_t default_process(CharT* str, std::size_t len);
+
 /**@}*/
 
 } // namespace utils
@@ -2414,8 +2417,8 @@ SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
 
 namespace rapidfuzz {
 
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence&& s)
+template <typename CharT>
+std::size_t utils::default_process(CharT* str, std::size_t len)
 {
   /* mapping converting
    * - non alphanumeric characters to whitespace (32)
@@ -2442,9 +2445,7 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253, 254, 255
   };
 
-  std::basic_string<CharT> str(std::forward<Sentence>(s));
-
-  std::transform(str.begin(), str.end(), str.begin(),
+  std::transform(str, str + len, str,
                [](CharT ch) {
     /* irrelevant cases for a given char type are removed at compile time by any decent compiler */
     if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
@@ -2462,13 +2463,34 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     }
   });
 
-  str.erase(str.begin(),
-            std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
+  while (len > 0 && str[len - 1] == ' ')
+  {
+    len--;
+  }
 
-  str.erase(
-      std::find_if(str.rbegin(), str.rend(), [](const CharT& ch) { return ch != ' '; }).base(),
-      str.end());
+  std::size_t prefix = 0;
+  while (len > 0 && str[prefix] == ' ')
+  {
+    len--;
+    prefix++;
+  }
 
+  if (prefix != 0)
+  {
+    std::copy(str + prefix, str + prefix + len, str);
+  }
+
+  return len;
+}
+
+
+template <typename Sentence, typename CharT, typename>
+std::basic_string<CharT> utils::default_process(Sentence&& s)
+{
+  std::basic_string<CharT> str(std::forward<Sentence>(s));
+
+  std::size_t len = default_process(&str[0], str.size());
+  str.resize(len);
   return str;
 }
 
@@ -3616,8 +3638,8 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     // adjust for similarities in nonmatched characters
 
     // Main weight computation.
-    double weight = common_chars / ((double) ying.size()) + common_chars / ((double) yang.size())
-        + ((double) (common_chars - trans_count)) / ((double) common_chars);
+    double weight = common_chars / ((double) ying.size()) + (double)common_chars / ((double) yang.size())
+        + ((double)(common_chars - trans_count)) / ((double)common_chars);
     weight /=  3.0;
 
     // Continue to boost the weight if the strings are similar
@@ -3627,7 +3649,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
         std::size_t i = 0;
         for (i=0; ((i<j) && (ying[i] == yang[i]) && (NOTNUM(ying[i]))); i++);
         if (i) {
-            weight += i * prefix_weight * (1.0 - weight);
+            weight += (double)i * prefix_weight * (1.0 - weight);
         }
     }
 

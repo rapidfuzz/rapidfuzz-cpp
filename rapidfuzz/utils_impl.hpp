@@ -12,8 +12,8 @@
 
 namespace rapidfuzz {
 
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence&& s)
+template <typename CharT>
+std::size_t utils::default_process(CharT* str, std::size_t len)
 {
   /* mapping converting
    * - non alphanumeric characters to whitespace (32)
@@ -40,9 +40,7 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253, 254, 255
   };
 
-  std::basic_string<CharT> str(std::forward<Sentence>(s));
-
-  std::transform(str.begin(), str.end(), str.begin(),
+  std::transform(str, str + len, str,
                [](CharT ch) {
     /* irrelevant cases for a given char type are removed at compile time by any decent compiler */
     if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
@@ -60,13 +58,34 @@ std::basic_string<CharT> utils::default_process(Sentence&& s)
     }
   });
 
-  str.erase(str.begin(),
-            std::find_if(str.begin(), str.end(), [](const CharT& ch) {return ch != ' '; }));
+  while (len > 0 && str[len - 1] == ' ')
+  {
+    len--;
+  }
 
-  str.erase(
-      std::find_if(str.rbegin(), str.rend(), [](const CharT& ch) { return ch != ' '; }).base(),
-      str.end());
+  std::size_t prefix = 0;
+  while (len > 0 && str[prefix] == ' ')
+  {
+    len--;
+    prefix++;
+  }
 
+  if (prefix != 0)
+  {
+    std::copy(str + prefix, str + prefix + len, str);
+  }
+
+  return len;
+}
+
+
+template <typename Sentence, typename CharT, typename>
+std::basic_string<CharT> utils::default_process(Sentence&& s)
+{
+  std::basic_string<CharT> str(std::forward<Sentence>(s));
+
+  std::size_t len = default_process(&str[0], str.size());
+  str.resize(len);
   return str;
 }
 

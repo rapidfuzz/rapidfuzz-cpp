@@ -45,6 +45,9 @@ template <
                            has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> default_process(Sentence s);
 
+template <typename CharT>
+std::size_t default_process(CharT* str, std::size_t len);
+
 /**@}*/
 
 } // namespace utils

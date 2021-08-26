@@ -84,8 +84,8 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     // adjust for similarities in nonmatched characters
 
     // Main weight computation.
-    double weight = common_chars / ((double) ying.size()) + common_chars / ((double) yang.size())
-        + ((double) (common_chars - trans_count)) / ((double) common_chars);
+    double weight = common_chars / ((double) ying.size()) + (double)common_chars / ((double) yang.size())
+        + ((double)(common_chars - trans_count)) / ((double)common_chars);
     weight /=  3.0;
 
     // Continue to boost the weight if the strings are similar
@@ -95,7 +95,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
         std::size_t i = 0;
         for (i=0; ((i<j) && (ying[i] == yang[i]) && (NOTNUM(ying[i]))); i++);
         if (i) {
-            weight += i * prefix_weight * (1.0 - weight);
+            weight += (double)i * prefix_weight * (1.0 - weight);
         }
     }
 
