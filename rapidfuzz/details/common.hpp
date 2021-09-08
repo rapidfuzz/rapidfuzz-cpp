@@ -282,34 +282,77 @@ struct BlockPatternMatchVector {
   }
 };
 
-template <
-  typename CharT1, typename ValueType,
-  typename UCharT1 = typename std::make_unsigned<CharT1>::type,
-  std::size_t N = std::numeric_limits<UCharT1>::max()>
-struct DynamicCharLookupTable {
-  std::array<ValueType, N> m_val;
-  ValueType m_default;
+template <typename CharT1, typename ValueType, std::size_t size=sizeof(CharT1)>
+struct CharHashTable;
 
-  DynamicCharLookupTable()
-    : m_val{}, m_default{} {}
+template <typename CharT1, typename ValueType>
+struct CharHashTable<CharT1, ValueType, 1>
+{
+    using UCharT1 = typename std::make_unsigned<CharT1>::type;
 
-  template<typename CharT2>
-  ValueType& operator[](CharT2 ch) {
-    if (!CanTypeFitValue<CharT1>(ch)) {
-      return m_default;
+    std::array<ValueType, std::numeric_limits<UCharT1>::max()> m_val;
+    ValueType m_default;
+
+    CharHashTable()
+        : m_val{}, m_default{} {}
+
+    template<typename CharT2>
+    ValueType& operator[](CharT2 ch) {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        return m_val[UCharT1(ch)];
     }
 
-    return m_val[UCharT1(ch)];
-  }
+    template<typename CharT2>
+    const ValueType& operator[](CharT2 ch) const {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
 
-  template<typename CharT2>
-  const ValueType& operator[](CharT2 ch) const {
-    if (!CanTypeFitValue<CharT1>(ch)) {
-      return m_default;
+        return m_val[UCharT1(ch)];
+    }
+};
+
+template <typename CharT1, typename ValueType, std::size_t size>
+struct CharHashTable
+{
+    std::unordered_map<CharT1, ValueType> m_val;
+    ValueType m_default;
+
+    CharHashTable()
+        : m_val{}, m_default{} {}
+
+    template<typename CharT2>
+    ValueType& operator[](CharT2 ch) {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        auto search = m_val.find(CharT1(ch));
+        if (search == m_val.end())
+        {
+            return m_default;
+        }
+
+        return search->second;
     }
 
-    return m_val[UCharT1(ch)];
-  }
+    template<typename CharT2>
+    const ValueType& operator[](CharT2 ch) const {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        auto search = m_val.find(CharT1(ch));
+        if (search == m_val.end())
+        {
+            return m_default;
+        }
+
+        return search->second;
+    }
 };
 
 /**@}*/

@@ -88,28 +88,20 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent partial_ratio2(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent partial_ratio3(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-
 // todo add real implementation
 template<typename Sentence1>
 struct CachedPartialRatio {
+  friend class CachedWRatio;
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
+  CachedPartialRatio(const Sentence1& s1);
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::CharHashTable<CharT1, bool> s1_char_map;
   CachedRatio<Sentence1> cached_ratio;
 };
 
@@ -402,8 +394,8 @@ struct CachedWRatio {
 private:
 // todo somehow implement this using other ratios with creating PatternMatchVector
 // multiple times
+  CachedPartialRatio<Sentence1> cached_partial_ratio;
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
   common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
