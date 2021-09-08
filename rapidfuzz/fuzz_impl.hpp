@@ -9,6 +9,7 @@
 #include <cmath>
 #include <iterator>
 #include <vector>
+#include <unordered_map>
 
 namespace rapidfuzz {
 namespace fuzz {
@@ -81,6 +82,198 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 
   return max_ratio;
 }
+
+
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+percent partial_ratio3(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+  if (score_cutoff > 100) {
+    return 0;
+  }
+
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
+
+  if (s1_view.empty() || s2_view.empty()) {
+    return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
+  }
+
+  if (s1_view.length() > s2_view.length()) {
+    return partial_ratio(s2_view, s1_view, score_cutoff);
+  }
+
+  CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
+  common::DynamicCharLookupTable<char, bool> elements;
+  //std::unordered_map<CharT1, bool> elements;
+  for(const CharT1& elem : s1_view) elements[(char)elem] = true;
+
+  //auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, s2_view);
+
+    //parts1 = [s2[0 : i + len(s1)] for i in range(-len(s1)+1, 0)]
+    //parts2 = [s2[i : i + len(s1)] for i in range(0, len(s2) - len(s1))]
+    //parts3 = [s2[i :     len(s2)] for i in range(len(s2) - len(s1), len(s2))]
+
+  double max_ratio = 0;
+  double best_ratio = 0;
+  for (int i = 0; i < s2_view.size() - s1_view.size(); ++i)
+  {
+    auto long_substr = s2_view.substr(i, s1_view.size());
+
+    if (!elements[s2_view.back()])//elements.count(s2_view.back()) == 0)
+    {
+      continue;
+    }
+
+    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+    if (ls_ratio > max_ratio) {
+      score_cutoff = max_ratio = ls_ratio;
+      if (ls_ratio == 100.0)
+      {
+        return 100.0;
+      }
+    }
+  }
+
+  for (int i = 1; i < s1_view.size(); ++i)
+  {
+    auto long_substr = s2_view.substr(0, i);
+
+    if (!elements[s2_view.back()])
+    {
+      continue;
+    }
+
+    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+    if (ls_ratio > max_ratio) {
+      score_cutoff = max_ratio = ls_ratio;
+      if (ls_ratio == 100.0)
+      {
+        return 100.0;
+      }
+    }
+  }
+
+  for (int i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i)
+  {
+    auto long_substr = s2_view.substr(i, s1_view.size());
+
+    if (!elements[s2_view[0]])
+    {
+      continue;
+    }
+
+    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+    if (ls_ratio > max_ratio) {
+      score_cutoff = max_ratio = ls_ratio;
+      if (ls_ratio == 100.0)
+      {
+        return 100.0;
+      }
+    }
+  }
+
+  return max_ratio;
+}
+/*
+  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
+
+  std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
+  return (dist != (std::size_t)-1)
+    ? common::norm_distance(dist, lensum, score_cutoff)
+    : 0.0;*/
+
+
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+percent partial_ratio2(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+  if (score_cutoff > 100) {
+    return 0;
+  }
+
+  auto s1_view = common::to_string_view(s1);
+  auto s2_view = common::to_string_view(s2);
+
+  if (s1_view.empty() || s2_view.empty()) {
+    return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
+  }
+
+  if (s1_view.length() > s2_view.length()) {
+    return partial_ratio(s2_view, s1_view, score_cutoff);
+  }
+
+  CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
+  common::DynamicCharLookupTable<char, bool> elements;
+  //std::unordered_map<CharT1, bool> elements;
+  for(const CharT1& elem : s1_view) elements[(char)elem] = true;
+
+  //auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, s2_view);
+
+    //parts1 = [s2[0 : i + len(s1)] for i in range(-len(s1)+1, 0)]
+    //parts2 = [s2[i : i + len(s1)] for i in range(0, len(s2) - len(s1))]
+    //parts3 = [s2[i :     len(s2)] for i in range(len(s2) - len(s1), len(s2))]
+
+  double max_ratio = 0;
+  for (int i = 0; i < s2_view.size() - s1_view.size(); ++i)
+  {
+    auto long_substr = s2_view.substr(i, s1_view.size());
+
+    if (!elements[s2_view.back()])//elements.count(s2_view.back()) == 0)
+    {
+      continue;
+    }
+
+    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+    if (ls_ratio > max_ratio) {
+      score_cutoff = max_ratio = ls_ratio;
+      if (ls_ratio == 100.0)
+      {
+        return 100.0;
+      }
+    }
+  }
+
+  for (int i = 1; i < s1_view.size(); ++i)
+  {
+    auto long_substr = s2_view.substr(0, i);
+
+    if (!elements[s2_view.back()])
+    {
+      continue;
+    }
+
+    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+    if (ls_ratio > max_ratio) {
+      score_cutoff = max_ratio = ls_ratio;
+      if (ls_ratio == 100.0)
+      {
+        return 100.0;
+      }
+    }
+  }
+
+  for (int i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i)
+  {
+    auto long_substr = s2_view.substr(i, s1_view.size());
+
+    if (!elements[s2_view[0]])
+    {
+      continue;
+    }
+
+    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+    if (ls_ratio > max_ratio) {
+      score_cutoff = max_ratio = ls_ratio;
+      if (ls_ratio == 100.0)
+      {
+        return 100.0;
+      }
+    }
+  }
+
+  return max_ratio;
+}
+
+
 
 
 namespace detail {
@@ -173,10 +366,11 @@ double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_c
   auto s2_view = common::to_string_view(s2);
 
   if (s1_view.size() > s2_view.size() || s1_view.size() > 64) {
-    return partial_ratio(s1_view, s2_view, score_cutoff);
+    return partial_ratio2(s1_view, s2_view, score_cutoff);
   }
+  return partial_ratio2(s1_view, s2_view, score_cutoff);
 
-  return detail::partial_ratio_map(s1_view, cached_ratio, s2_view, score_cutoff);
+  //return detail::partial_ratio_map(s1_view, cached_ratio, s2_view, score_cutoff);
 }
 
 /**********************************************
@@ -608,7 +802,7 @@ percent partial_token_ratio(
   auto diff_ab = decomposition.difference_ab;
   auto diff_ba = decomposition.difference_ba;
 
-  percent result = partial_ratio(s1_sorted, tokens_b.join(), score_cutoff);
+  percent result = partial_ratio2(s1_sorted, tokens_b.join(), score_cutoff);
 
   // do not calculate the same partial_ratio twice
   if (tokens_s1.word_count() == diff_ab.word_count() &&
@@ -617,7 +811,7 @@ percent partial_token_ratio(
   }
 
   score_cutoff = std::max(score_cutoff, result);
-  return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
+  return std::max(result, partial_ratio2(diff_ab.join(), diff_ba.join(), score_cutoff));
 }
 
 } // namespace detail
@@ -675,7 +869,7 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 
   // increase the score_cutoff by a small step so it might be able to exit early
   score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / PARTIAL_SCALE;
-  end_ratio = std::max(end_ratio, partial_ratio(s1, s2, score_cutoff) * PARTIAL_SCALE);
+  end_ratio = std::max(end_ratio, partial_ratio2(s1, s2, score_cutoff) * PARTIAL_SCALE);
 
   score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
   return std::max(end_ratio,

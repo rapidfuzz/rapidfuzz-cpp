@@ -88,6 +88,15 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
           typename CharT2 = char_type<Sentence2>>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_ratio2(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_ratio3(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+
 // todo add real implementation
 template<typename Sentence1>
 struct CachedPartialRatio {

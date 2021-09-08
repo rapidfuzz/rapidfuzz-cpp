@@ -282,6 +282,36 @@ struct BlockPatternMatchVector {
   }
 };
 
+template <
+  typename CharT1, typename ValueType,
+  typename UCharT1 = typename std::make_unsigned<CharT1>::type,
+  std::size_t N = std::numeric_limits<UCharT1>::max()>
+struct DynamicCharLookupTable {
+  std::array<ValueType, N> m_val;
+  ValueType m_default;
+
+  DynamicCharLookupTable()
+    : m_val{}, m_default{} {}
+
+  template<typename CharT2>
+  ValueType& operator[](CharT2 ch) {
+    if (!CanTypeFitValue<CharT1>(ch)) {
+      return m_default;
+    }
+
+    return m_val[UCharT1(ch)];
+  }
+
+  template<typename CharT2>
+  const ValueType& operator[](CharT2 ch) const {
+    if (!CanTypeFitValue<CharT1>(ch)) {
+      return m_default;
+    }
+
+    return m_val[UCharT1(ch)];
+  }
+};
+
 /**@}*/
 
 } // namespace common

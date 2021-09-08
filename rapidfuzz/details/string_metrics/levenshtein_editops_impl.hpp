@@ -34,6 +34,11 @@ std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1, basic_
     matrix[row * cols] = row;
   }
 
+  if (s2.empty())
+  {
+    return matrix;
+  }
+
   for (std::size_t i = 0; i < s1.size(); i++) {
     size_t* prev = &matrix[i * cols];
     size_t* cur = &matrix[(i + 1) * cols + 1];
