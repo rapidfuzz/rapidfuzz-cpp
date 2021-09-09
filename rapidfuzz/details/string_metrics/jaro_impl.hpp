@@ -49,7 +49,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
         std::size_t lowlim = (i >= search_range) ? i - search_range : 0;
         std::size_t hilim = (i + search_range <= yang.size()-1) ? (i + search_range) : yang.size()-1;
         for (std::size_t j = lowlim; j <= hilim; j++)  {
-            if (!yang_flag[j] && yang[j] == ying[i]) {
+            if (!yang_flag[j] && common::mixed_sign_equal(yang[j], ying[i])) {
                 yang_flag[j] = 1;
                 ying_flag[i] = 1;
                 common_chars++;
@@ -74,7 +74,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
                     break;
                 }
             }
-            if (ying[i] != yang[j]) {
+            if (common::mixed_sign_unequal(ying[i], yang[j])) {
                 trans_count++;
             }
         }
@@ -93,7 +93,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
         // Adjust for having up to the first 4 characters in common
         std::size_t j = (min_len >= 4) ? 4 : min_len;
         std::size_t i = 0;
-        for (i=0; ((i<j) && (ying[i] == yang[i]) && (NOTNUM(ying[i]))); i++);
+        for (i=0; ((i<j) && common::mixed_sign_equal(ying[i], yang[i]) && (NOTNUM(ying[i]))); i++);
         if (i) {
             weight += (double)i * prefix_weight * (1.0 - weight);
         }

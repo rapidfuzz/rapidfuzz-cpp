@@ -91,7 +91,7 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 // todo add real implementation
 template<typename Sentence1>
 struct CachedPartialRatio {
-  friend class CachedWRatio;
+  template<typename> friend class CachedWRatio;
   using CharT1 = char_type<Sentence1>;
 
   CachedPartialRatio(const Sentence1& s1);

@@ -50,7 +50,7 @@ class SequenceMatcher {
  public:
   using match_t = std::tuple<size_t, size_t, size_t>;
 
-  SequenceMatcher2(basic_string_view<CharT1> a, basic_string_view<CharT2> b)
+  SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b)
   : a_(a), b_(b) {
     j2len_.resize(b.size()+1);
     for (std::size_t i = 0; i < b.size(); ++i) {

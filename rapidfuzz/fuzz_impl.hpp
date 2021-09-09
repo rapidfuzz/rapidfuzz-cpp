@@ -14,7 +14,6 @@
 namespace rapidfuzz {
 namespace fuzz {
 
-
 /**********************************************
  *                  ratio
  *********************************************/
@@ -28,8 +27,10 @@ percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cuto
 template<typename Sentence1>
 template<typename Sentence2>
 double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
+  auto s2_view = common::to_string_view(s2);
+
   return string_metric::detail::normalized_weighted_levenshtein(
-    s2, blockmap_s1, s1_view, score_cutoff);
+    s2_view, blockmap_s1, s1_view, score_cutoff);
 }
 
 /**********************************************
@@ -38,20 +39,21 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
 
 namespace detail {
 
-
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
 percent partial_ratio_short_needle(
-    const Sentence1& s1, const CachedRatio<CachedSentence1>& cached_ratio, const common::CharHashTable<CachedSentence1, bool>& s1_char_map,
+    const Sentence1& s1,
+    const CachedRatio<CachedSentence1>& cached_ratio,
+    const common::CharHashTable<char_type<Sentence1>, bool>& s1_char_map,
     const Sentence2& s2, percent score_cutoff)
 {
     double max_ratio = 0;
     auto s1_view = common::to_string_view(s1);
     auto s2_view = common::to_string_view(s2);
 
-    for (int i = 1; i < s1_view.size(); ++i) {
+    for (std::size_t i = 1; i < s1_view.size(); ++i) {
         auto long_substr = s2_view.substr(0, i);
 
-        if (!s1_char_map[s2_view.back()]) {
+        if (!s1_char_map[long_substr.back()]) {
             continue;
         }
 
@@ -64,10 +66,10 @@ percent partial_ratio_short_needle(
         }
     }
 
-    for (int i = 0; i < s2_view.size() - s1_view.size(); ++i) {
+    for (std::size_t i = 0; i < s2_view.size() - s1_view.size(); ++i) {
         auto long_substr = s2_view.substr(i, s1_view.size());
 
-        if (!s1_char_map[s2_view.back()]) {
+        if (!s1_char_map[long_substr.back()]) {
             continue;
         }
 
@@ -80,10 +82,10 @@ percent partial_ratio_short_needle(
         }
     }
 
-    for (int i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
+    for (std::size_t i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
         auto long_substr = s2_view.substr(i, s1_view.size());
 
-        if (!s1_char_map[s2_view[0]]) {
+        if (!s1_char_map[long_substr[0]]) {
             continue;
         }
 
@@ -99,10 +101,9 @@ percent partial_ratio_short_needle(
     return max_ratio;
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>>
 percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-    double max_ratio = 0;
     auto s1_view = common::to_string_view(s1);
     CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
 
@@ -111,7 +112,7 @@ percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, per
         s1_char_map[ch] = true;
     }
 
-    return partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2, score_cutoff)
+    return partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2, score_cutoff);
 }
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
@@ -152,7 +153,7 @@ percent partial_ratio_long_needle(const Sentence1& s1, const CachedRatio<CachedS
     return max_ratio;
 }
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+template <typename Sentence1, typename Sentence2>
 percent partial_ratio_long_needle(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
     auto s1_view = common::to_string_view(s1);
@@ -720,7 +721,7 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 
 template<typename Sentence1>
 CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
- : tokens_s1(common::sorted_split(s1)) : cached_partial_ratio(s1)
+ : cached_partial_ratio(s1), tokens_s1(common::sorted_split(s1)) 
 {
   s1_view = common::to_string_view(s1);
   s1_sorted = tokens_s1.join();

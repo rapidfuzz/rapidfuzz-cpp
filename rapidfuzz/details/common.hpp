@@ -9,6 +9,7 @@
 #include <tuple>
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include <cstring>
 
 namespace rapidfuzz {
@@ -290,7 +291,7 @@ struct CharHashTable<CharT1, ValueType, 1>
 {
     using UCharT1 = typename std::make_unsigned<CharT1>::type;
 
-    std::array<ValueType, std::numeric_limits<UCharT1>::max()> m_val;
+    std::array<ValueType, std::numeric_limits<UCharT1>::max() + 1> m_val;
     ValueType m_default;
 
     CharHashTable()
