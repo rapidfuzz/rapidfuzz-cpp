@@ -9,6 +9,7 @@
 #include <tuple>
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include <cstring>
 
 namespace rapidfuzz {
@@ -280,6 +281,79 @@ struct BlockPatternMatchVector {
     auto* be = &m_val[block];
     return be->get(ch);
   }
+};
+
+template <typename CharT1, typename ValueType, std::size_t size=sizeof(CharT1)>
+struct CharHashTable;
+
+template <typename CharT1, typename ValueType>
+struct CharHashTable<CharT1, ValueType, 1>
+{
+    using UCharT1 = typename std::make_unsigned<CharT1>::type;
+
+    std::array<ValueType, std::numeric_limits<UCharT1>::max() + 1> m_val;
+    ValueType m_default;
+
+    CharHashTable()
+        : m_val{}, m_default{} {}
+
+    template<typename CharT2>
+    ValueType& operator[](CharT2 ch) {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        return m_val[UCharT1(ch)];
+    }
+
+    template<typename CharT2>
+    const ValueType& operator[](CharT2 ch) const {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        return m_val[UCharT1(ch)];
+    }
+};
+
+template <typename CharT1, typename ValueType, std::size_t size>
+struct CharHashTable
+{
+    std::unordered_map<CharT1, ValueType> m_val;
+    ValueType m_default;
+
+    CharHashTable()
+        : m_val{}, m_default{} {}
+
+    template<typename CharT2>
+    ValueType& operator[](CharT2 ch) {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        auto search = m_val.find(CharT1(ch));
+        if (search == m_val.end())
+        {
+            return m_default;
+        }
+
+        return search->second;
+    }
+
+    template<typename CharT2>
+    const ValueType& operator[](CharT2 ch) const {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        auto search = m_val.find(CharT1(ch));
+        if (search == m_val.end())
+        {
+            return m_default;
+        }
+
+        return search->second;
+    }
 };
 
 /**@}*/

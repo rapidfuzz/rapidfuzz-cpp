@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-08-26 23:54:23.911465
+//  Generated: 2021-09-09 09:00:37.489781
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1967,6 +1967,7 @@ uint32_t UnicodeDefaultProcess(uint32_t ch);
 #include <tuple>
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include <cstring>
 
 namespace rapidfuzz {
@@ -2238,6 +2239,79 @@ struct BlockPatternMatchVector {
     auto* be = &m_val[block];
     return be->get(ch);
   }
+};
+
+template <typename CharT1, typename ValueType, std::size_t size=sizeof(CharT1)>
+struct CharHashTable;
+
+template <typename CharT1, typename ValueType>
+struct CharHashTable<CharT1, ValueType, 1>
+{
+    using UCharT1 = typename std::make_unsigned<CharT1>::type;
+
+    std::array<ValueType, std::numeric_limits<UCharT1>::max()> m_val;
+    ValueType m_default;
+
+    CharHashTable()
+        : m_val{}, m_default{} {}
+
+    template<typename CharT2>
+    ValueType& operator[](CharT2 ch) {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        return m_val[UCharT1(ch)];
+    }
+
+    template<typename CharT2>
+    const ValueType& operator[](CharT2 ch) const {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        return m_val[UCharT1(ch)];
+    }
+};
+
+template <typename CharT1, typename ValueType, std::size_t size>
+struct CharHashTable
+{
+    std::unordered_map<CharT1, ValueType> m_val;
+    ValueType m_default;
+
+    CharHashTable()
+        : m_val{}, m_default{} {}
+
+    template<typename CharT2>
+    ValueType& operator[](CharT2 ch) {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        auto search = m_val.find(CharT1(ch));
+        if (search == m_val.end())
+        {
+            return m_default;
+        }
+
+        return search->second;
+    }
+
+    template<typename CharT2>
+    const ValueType& operator[](CharT2 ch) const {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return m_default;
+        }
+
+        auto search = m_val.find(CharT1(ch));
+        if (search == m_val.end())
+        {
+            return m_default;
+        }
+
+        return search->second;
+    }
 };
 
 /**@}*/
@@ -3603,7 +3677,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
         std::size_t lowlim = (i >= search_range) ? i - search_range : 0;
         std::size_t hilim = (i + search_range <= yang.size()-1) ? (i + search_range) : yang.size()-1;
         for (std::size_t j = lowlim; j <= hilim; j++)  {
-            if (!yang_flag[j] && yang[j] == ying[i]) {
+            if (!yang_flag[j] && common::mixed_sign_equal(yang[j], ying[i])) {
                 yang_flag[j] = 1;
                 ying_flag[i] = 1;
                 common_chars++;
@@ -3628,7 +3702,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
                     break;
                 }
             }
-            if (ying[i] != yang[j]) {
+            if (common::mixed_sign_unequal(ying[i], yang[j])) {
                 trans_count++;
             }
         }
@@ -3647,7 +3721,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
         // Adjust for having up to the first 4 characters in common
         std::size_t j = (min_len >= 4) ? 4 : min_len;
         std::size_t i = 0;
-        for (i=0; ((i<j) && (ying[i] == yang[i]) && (NOTNUM(ying[i]))); i++);
+        for (i=0; ((i<j) && common::mixed_sign_equal(ying[i], yang[i]) && (NOTNUM(ying[i]))); i++);
         if (i) {
             weight += (double)i * prefix_weight * (1.0 - weight);
         }
@@ -3704,6 +3778,11 @@ std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1, basic_
   for (std::size_t row = 1; row < rows; row++)
   {
     matrix[row * cols] = row;
+  }
+
+  if (s2.empty())
+  {
+    return matrix;
   }
 
   for (std::size_t i = 0; i < s1.size(); i++) {
@@ -4481,16 +4560,17 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 // todo add real implementation
 template<typename Sentence1>
 struct CachedPartialRatio {
+  template<typename> friend class CachedWRatio;
   using CharT1 = char_type<Sentence1>;
 
-  CachedPartialRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
+  CachedPartialRatio(const Sentence1& s1);
 
   template<typename Sentence2>
   double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
   rapidfuzz::basic_string_view<CharT1> s1_view;
+  common::CharHashTable<CharT1, bool> s1_char_map;
   CachedRatio<Sentence1> cached_ratio;
 };
 
@@ -4783,8 +4863,8 @@ struct CachedWRatio {
 private:
 // todo somehow implement this using other ratios with creating PatternMatchVector
 // multiple times
+  CachedPartialRatio<Sentence1> cached_partial_ratio;
   rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
   SplittedSentenceView<CharT1> tokens_s1;
   std::basic_string<CharT1> s1_sorted;
   common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
@@ -4880,14 +4960,17 @@ struct MatchingBlock {
 
 namespace difflib {
 
-template <typename Sentence1, typename Sentence2>
+template <typename CharT1, typename CharT2>
 class SequenceMatcher {
  public:
   using match_t = std::tuple<size_t, size_t, size_t>;
 
-  SequenceMatcher(Sentence1 const& a, Sentence2 const& b)
+  SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b)
   : a_(a), b_(b) {
     j2len_.resize(b.size()+1);
+    for (std::size_t i = 0; i < b.size(); ++i) {
+      b2j_[b[i]].push_back(i);
+    }
   }
 
   match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high) {
@@ -4897,18 +4980,25 @@ class SequenceMatcher {
 
     // Find longest junk free match
     {
-      for(size_t i = a_low; i < a_high; ++i) {
-        std::size_t last_cache = 0;
-        for(size_t j = b_low; j < b_high; ++j) {
-          if (common::mixed_sign_unequal(b_[j], a_[i])) {
-            j2len_[j] = last_cache;
-            last_cache = 0;
-            continue;
+      for (size_t i = a_low; i < a_high; ++i) {
+        std::size_t next_val = 0;
+        const auto& indexes = b2j_[a_[i]];
+        for (size_t pos = 0; pos < indexes.size(); pos++) {
+          std::size_t j = indexes[pos];
+          if (j < b_low) continue;
+          if (j >= b_high) break;
+
+          size_t k = next_val + 1;
+
+          /* the next value might be overwritten below
+           * so cache it */
+          if (pos + 1 < indexes.size())
+          {
+            next_val = j2len_[indexes[pos + 1]];
           }
 
-          size_t k = j2len_[j] + 1;
-          j2len_[j] = last_cache;
-          last_cache = k;
+          j2len_[j+1] = k;
+          //last_cache = k;
           if (k > best_size) {
             best_i = i - k + 1;
             best_j = j - k + 1;
@@ -4917,10 +5007,7 @@ class SequenceMatcher {
         }
       }
 
-      // we never write to the first element
-      for(size_t j = b_low+1; j < b_high; ++j) {
-        j2len_[j] = 0;
-      }
+      std::fill(j2len_.begin()+b_low, j2len_.begin()+b_high, 0);
     }
 
     while (best_i > a_low && best_j > b_low && common::mixed_sign_equal(a_[best_i-1], b_[best_j-1])) {
@@ -4987,81 +5074,19 @@ class SequenceMatcher {
   }
 
 protected:
-  Sentence1 a_;
-  Sentence2 b_;
+  basic_string_view<CharT1> a_;
+  basic_string_view<CharT2> b_;
 
 private:
   // Cache to avoid reallocations
   std::vector<size_t> j2len_;
+  common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
 };
-
 }  // namespace difflib
 
-/* TODO this implementation is broken. The LCS part works fine, but extracting the longest sequences does not work
- * properly
- */
-#if 0
-template<typename Sentence1, typename BlockPatternCharT,  typename Sentence2>
-std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1, Sentence2 s2) {
-  if (s1.size() > 64) {
-    return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
-  }
-
-  std::vector<rapidfuzz::MatchingBlock> matching_blocks;
-
-  // Hyyrö, Heikki. (2004). A Note on Bit-Parallel Alignment Computation. 79-87.
-  // build LCS Matrix
-  std::uint64_t S = ~0x0ull;
-  std::vector<std::uint64_t> Vs;
-  Vs.reserve(s2.size());
-
-  for (std::size_t j = 0; j < s2.size(); ++j) {
-    uint64_t Matches = blockmap_s1.get(s2[j]);
-    uint64_t u = S & Matches;
-    S = (S + u) | (S - u);
-    Vs.push_back(S);
-  }
-
-  std::size_t pos_s1 = s1.size() - 1;
-  std::size_t pos_s2 = s2.size() - 1;
-
-  std::size_t length = 0;
-
-  while(pos_s1 != (std::size_t)-1 && pos_s2 != (std::size_t)-1) {
-    if (Vs[pos_s2] & (0x1ull << pos_s1)) {
-      if (length) {
-        matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
-        length = 0;
-      }
-      --pos_s1;
-    } else {
-      if (!(pos_s2 && ~Vs[pos_s2-1] & (0x1ull << pos_s1))) {
-        ++length;
-        --pos_s1;
-      } else {
-        if (length) {
-          matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
-          length = 0;
-        }
-      }
-      --pos_s2;
-    }
-  }
-
-  if (length) {
-    matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
-  }
-
-  matching_blocks.emplace_back(s1.size(), s2.size(), 0);
-
-  return matching_blocks;
-}
-#endif
-
-template<typename Sentence1, /*typename BlockPatternCharT,*/ typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1,*/ Sentence2 s2) {
-  //return longest_common_subsequence(s1, blockmap_s1, s2);
-  return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
+template<typename CharT1, typename CharT2>
+std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2) {
+  return difflib::SequenceMatcher<CharT1, CharT2>(s1, s2).get_matching_blocks();
 }
 
 } /* namespace detail */
@@ -5071,10 +5096,10 @@ std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::Pat
 #include <cmath>
 #include <iterator>
 #include <vector>
+#include <unordered_map>
 
 namespace rapidfuzz {
 namespace fuzz {
-
 
 /**********************************************
  *                  ratio
@@ -5095,150 +5120,189 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
     s2_view, blockmap_s1, s1_view, score_cutoff);
 }
 
-
 /**********************************************
  *              partial_ratio
  *********************************************/
 
-template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
-{
-  if (score_cutoff > 100) {
-    return 0;
-  }
-
-  auto s1_view = common::to_string_view(s1);
-  auto s2_view = common::to_string_view(s2);
-
-  if (s1_view.empty() || s2_view.empty()) {
-    return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
-  }
-
-  if (s1_view.length() > s2_view.length()) {
-    return partial_ratio(s2_view, s1_view, score_cutoff);
-  }
-
-  CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
-
-  auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, s2_view);
-
-  // when there is a full match exit early
-  for (const auto& block : blocks) {
-    if (block.length == s1_view.length()) {
-      return 100;
-    }
-  }
-
-  double max_ratio = 0;
-  for (const auto& block : blocks) {
-    std::size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
-    auto long_substr = s2_view.substr(long_start, s1_view.length());
-
-    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
-
-    if (ls_ratio > max_ratio) {
-      score_cutoff = max_ratio = ls_ratio;
-    }
-  }
-
-  return max_ratio;
-}
-
-
 namespace detail {
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
-percent partial_ratio_map(const Sentence1& s1, const CachedRatio<CachedSentence1>& cached_ratio, const Sentence2& s2, percent score_cutoff)
+percent partial_ratio_short_needle(
+    const Sentence1& s1,
+    const CachedRatio<CachedSentence1>& cached_ratio,
+    const common::CharHashTable<char_type<Sentence1>, bool>& s1_char_map,
+    const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+    double max_ratio = 0;
+    auto s1_view = common::to_string_view(s1);
+    auto s2_view = common::to_string_view(s2);
 
-  auto s1_view = common::to_string_view(s1);
-  auto s2_view = common::to_string_view(s2);
+    for (std::size_t i = 1; i < s1_view.size(); ++i) {
+        auto long_substr = s2_view.substr(0, i);
 
-  if (s1_view.empty() || s2_view.empty()) {
-    return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
-  }
+        if (!s1_char_map[long_substr.back()]) {
+            continue;
+        }
 
-  auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, s2_view);
-
-  // when there is a full match exit early
-  for (const auto& block : blocks) {
-    if (block.length == s1_view.length()) {
-      return 100;
+        double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+        if (ls_ratio > max_ratio) {
+            score_cutoff = max_ratio = ls_ratio;
+            if (ls_ratio == 100.0) {
+                return 100.0;
+            }
+        }
     }
-  }
 
-  double max_ratio = 0;
-  for (const auto& block : blocks) {
-    std::size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
-    auto long_substr = s2_view.substr(long_start, s1_view.length());
+    for (std::size_t i = 0; i < s2_view.size() - s1_view.size(); ++i) {
+        auto long_substr = s2_view.substr(i, s1_view.size());
 
-    double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+        if (!s1_char_map[long_substr.back()]) {
+            continue;
+        }
 
-    if (ls_ratio > max_ratio) {
-      score_cutoff = max_ratio = ls_ratio;
+        double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+        if (ls_ratio > max_ratio) {
+            score_cutoff = max_ratio = ls_ratio;
+            if (ls_ratio == 100.0) {
+                return 100.0;
+            }
+        }
     }
-  }
 
-  return max_ratio;
+    for (std::size_t i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
+        auto long_substr = s2_view.substr(i, s1_view.size());
+
+        if (!s1_char_map[long_substr[0]]) {
+            continue;
+        }
+
+        double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+        if (ls_ratio > max_ratio) {
+            score_cutoff = max_ratio = ls_ratio;
+            if (ls_ratio == 100.0) {
+                return 100.0;
+            }
+        }
+    }
+
+    return max_ratio;
 }
 
-// todo this is a temporary solution until WRatio is properly implemented using other scorers
-template <typename Sentence1, typename BlockPatternCharT, typename Sentence2>
-percent partial_ratio_map(const Sentence1& s1, const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1, const Sentence2& s2, percent score_cutoff)
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>>
+percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) {
-    return 0;
-  }
+    auto s1_view = common::to_string_view(s1);
+    CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
 
-  auto s1_view = common::to_string_view(s1);
-  auto s2_view = common::to_string_view(s2);
-
-  if (s1_view.empty() || s2_view.empty()) {
-    return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
-  }
-
-  size_t short_len = s1_view.length();
-
-  auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, /*blockmap_s1,*/ s2_view);
-
-  // when there is a full match exit early
-  for (const auto& block : blocks) {
-    if (block.length == short_len) {
-      return 100;
+    common::CharHashTable<CharT1, bool> s1_char_map;
+    for(const CharT1& ch : s1_view) {
+        s1_char_map[ch] = true;
     }
-  }
 
-  double max_ratio = 0;
-  for (const auto& block : blocks) {
-    size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
-    auto long_substr = s2_view.substr(long_start, short_len);
+    return partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2, score_cutoff);
+}
 
-    double ls_ratio = string_metric::detail::normalized_weighted_levenshtein(
-      long_substr, blockmap_s1, s1_view, score_cutoff);
-
-    if (ls_ratio > max_ratio) {
-      score_cutoff = max_ratio = ls_ratio;
+template <typename Sentence1, typename CachedSentence1, typename Sentence2>
+percent partial_ratio_long_needle(const Sentence1& s1, const CachedRatio<CachedSentence1>& cached_ratio, const Sentence2& s2, percent score_cutoff)
+{
+    double max_ratio = 0;
+    if (score_cutoff > 100) {
+        return 0;
     }
-  }
 
-  return max_ratio;
+    auto s1_view = common::to_string_view(s1);
+    auto s2_view = common::to_string_view(s2);
+
+    if (s1_view.empty() || s2_view.empty()) {
+        return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
+    }
+
+    auto blocks = rapidfuzz::detail::get_matching_blocks(s1_view, s2_view);
+
+    // when there is a full match exit early
+    for (const auto& block : blocks) {
+        if (block.length == s1_view.length()) {
+            return 100;
+        }
+    }
+
+    for (const auto& block : blocks) {
+        std::size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
+        auto long_substr = s2_view.substr(long_start, s1_view.length());
+
+        double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
+
+        if (ls_ratio > max_ratio) {
+           score_cutoff = max_ratio = ls_ratio;
+        }
+    }
+
+    return max_ratio;
+}
+
+template <typename Sentence1, typename Sentence2>
+percent partial_ratio_long_needle(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+    auto s1_view = common::to_string_view(s1);
+    CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
+
+    return partial_ratio_long_needle(s1_view, cached_ratio, s2, score_cutoff);
 }
 
 } /* detail */
 
+template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
+percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+{
+    if (score_cutoff > 100) {
+        return 0;
+    }
+
+    auto s1_view = common::to_string_view(s1);
+    auto s2_view = common::to_string_view(s2);
+
+    if (s1_view.empty() || s2_view.empty()) {
+        return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
+    }
+
+    if (s1_view.length() > s2_view.length()) {
+        return partial_ratio(s2_view, s1_view, score_cutoff);
+    }
+
+    if (s1_view.length() <= 64) {
+        return detail::partial_ratio_short_needle(s1_view, s2_view, score_cutoff);
+    } else {
+        return detail::partial_ratio_long_needle(s1_view, s2_view, score_cutoff);
+    }
+}
+
+template<typename Sentence1>
+CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1)
+    : s1_view(common::to_string_view(s1)), cached_ratio(s1)
+{
+    for(const CharT1& ch : s1_view) {
+        s1_char_map[ch] = true;
+    }
+}
+
 template<typename Sentence1>
 template<typename Sentence2>
 double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
-  auto s2_view = common::to_string_view(s2);
+    auto s2_view = common::to_string_view(s2);
 
-  if (s1_view.size() > s2_view.size() || s1_view.size() > 64) {
-    return partial_ratio(s1_view, s2_view, score_cutoff);
-  }
+    if (s1_view.size() > s2_view.size()) {
+        return partial_ratio(s1_view, s2_view, score_cutoff);
+    }
 
-  return detail::partial_ratio_map(s1_view, cached_ratio, s2_view, score_cutoff);
+    if (s1_view.empty() || s2_view.empty()) {
+        return static_cast<double>(s1_view.empty() && s2_view.empty()) * 100.0;
+    }
+
+    if (s1_view.length() <= 64) {
+        return detail::partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2_view, score_cutoff);
+    } else {
+        return detail::partial_ratio_long_needle(s1_view, cached_ratio, s2_view, score_cutoff);
+    }
 }
 
 /**********************************************
@@ -5493,7 +5557,7 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 namespace detail {
 template <typename CharT1, typename CachedSentence1, typename Sentence2>
 percent token_ratio(
-  /*const std::basic_string<CharT1>& s1_sorted,*/ const SplittedSentenceView<CharT1>& s1_tokens,
+  const SplittedSentenceView<CharT1>& s1_tokens,
   const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted,
   const Sentence2& s2, percent score_cutoff)
 {
@@ -5616,7 +5680,7 @@ template<typename Sentence1>
 template<typename Sentence2>
 double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  return detail::token_ratio(/*s1_sorted,*/ s1_tokens, cached_ratio_s1_sorted, s2, score_cutoff);
+  return detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, s2, score_cutoff);
 }
 
 
@@ -5725,33 +5789,30 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
   double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
                                      : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-
   percent end_ratio = ratio(s1, s2, score_cutoff);
 
   if (len_ratio < 1.5) {
-    score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+    score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
     return std::max(end_ratio, token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE);
   }
 
   const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
 
-  // increase the score_cutoff by a small step so it might be able to exit early
-  score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / PARTIAL_SCALE;
+  score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
   end_ratio = std::max(end_ratio, partial_ratio(s1, s2, score_cutoff) * PARTIAL_SCALE);
 
-  score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+  score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
   return std::max(end_ratio,
                   partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
 }
 
 template<typename Sentence1>
 CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
- : tokens_s1(common::sorted_split(s1))
+ : cached_partial_ratio(s1), tokens_s1(common::sorted_split(s1)) 
 {
   s1_view = common::to_string_view(s1);
   s1_sorted = tokens_s1.join();
 
-  blockmap_s1.insert(s1_view);
   blockmap_s1_sorted.insert(common::to_string_view(s1_sorted));
 }
 
@@ -5776,19 +5837,10 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
   double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
                                      : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-
-  percent end_ratio = 0;
-  if (s1_view.size() < 65) {
-    // use pre calculated values
-    end_ratio = string_metric::detail::normalized_weighted_levenshtein(
-      s2_view, blockmap_s1, s1_view, score_cutoff);
-  } else {
-    end_ratio = fuzz::ratio(s1_view, s2_view, score_cutoff);
-  }
-
+  percent end_ratio = cached_partial_ratio.cached_ratio.ratio(s2_view, score_cutoff);
 
   if (len_ratio < 1.5) {
-    score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+    score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
     // use pre calculated values
     auto r = detail::token_ratio(s1_sorted, tokens_s1, blockmap_s1_sorted, s2_view, score_cutoff);
     return std::max(end_ratio, r * UNBASE_SCALE);
@@ -5796,16 +5848,10 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 
   const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
 
-  // increase the score_cutoff by a small step so it might be able to exit early
-  score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / PARTIAL_SCALE;
-
-  if (s1_view.size() > s2_view.size() || s1_view.size() > 64) {
-    end_ratio = std::max(end_ratio, partial_ratio(s1_view, s2_view, score_cutoff) * PARTIAL_SCALE);
-  } else {
-    end_ratio = std::max(end_ratio, detail::partial_ratio_map(s1_view, blockmap_s1, s2_view, score_cutoff) * PARTIAL_SCALE);
-  }
-
-  score_cutoff = std::max(score_cutoff, end_ratio + 0.00001) / UNBASE_SCALE;
+  score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
+  end_ratio = std::max(end_ratio, cached_partial_ratio.ratio(s2_view, score_cutoff) * PARTIAL_SCALE);
+  
+  score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
   auto r = detail::partial_token_ratio(s1_sorted, tokens_s1, s2_view, score_cutoff);
   return std::max(end_ratio, r * UNBASE_SCALE * PARTIAL_SCALE);
 

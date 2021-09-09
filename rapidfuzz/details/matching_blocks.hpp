@@ -45,14 +45,17 @@ struct MatchingBlock {
 
 namespace difflib {
 
-template <typename Sentence1, typename Sentence2>
+template <typename CharT1, typename CharT2>
 class SequenceMatcher {
  public:
   using match_t = std::tuple<size_t, size_t, size_t>;
 
-  SequenceMatcher(Sentence1 const& a, Sentence2 const& b)
+  SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b)
   : a_(a), b_(b) {
     j2len_.resize(b.size()+1);
+    for (std::size_t i = 0; i < b.size(); ++i) {
+      b2j_[b[i]].push_back(i);
+    }
   }
 
   match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high) {
@@ -62,18 +65,25 @@ class SequenceMatcher {
 
     // Find longest junk free match
     {
-      for(size_t i = a_low; i < a_high; ++i) {
-        std::size_t last_cache = 0;
-        for(size_t j = b_low; j < b_high; ++j) {
-          if (common::mixed_sign_unequal(b_[j], a_[i])) {
-            j2len_[j] = last_cache;
-            last_cache = 0;
-            continue;
+      for (size_t i = a_low; i < a_high; ++i) {
+        std::size_t next_val = 0;
+        const auto& indexes = b2j_[a_[i]];
+        for (size_t pos = 0; pos < indexes.size(); pos++) {
+          std::size_t j = indexes[pos];
+          if (j < b_low) continue;
+          if (j >= b_high) break;
+
+          size_t k = next_val + 1;
+
+          /* the next value might be overwritten below
+           * so cache it */
+          if (pos + 1 < indexes.size())
+          {
+            next_val = j2len_[indexes[pos + 1]];
           }
 
-          size_t k = j2len_[j] + 1;
-          j2len_[j] = last_cache;
-          last_cache = k;
+          j2len_[j+1] = k;
+          //last_cache = k;
           if (k > best_size) {
             best_i = i - k + 1;
             best_j = j - k + 1;
@@ -82,10 +92,7 @@ class SequenceMatcher {
         }
       }
 
-      // we never write to the first element
-      for(size_t j = b_low+1; j < b_high; ++j) {
-        j2len_[j] = 0;
-      }
+      std::fill(j2len_.begin()+b_low, j2len_.begin()+b_high, 0);
     }
 
     while (best_i > a_low && best_j > b_low && common::mixed_sign_equal(a_[best_i-1], b_[best_j-1])) {
@@ -152,81 +159,19 @@ class SequenceMatcher {
   }
 
 protected:
-  Sentence1 a_;
-  Sentence2 b_;
+  basic_string_view<CharT1> a_;
+  basic_string_view<CharT2> b_;
 
 private:
   // Cache to avoid reallocations
   std::vector<size_t> j2len_;
+  common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
 };
-
 }  // namespace difflib
 
-/* TODO this implementation is broken. The LCS part works fine, but extracting the longest sequences does not work
- * properly
- */
-#if 0
-template<typename Sentence1, typename BlockPatternCharT,  typename Sentence2>
-std::vector<MatchingBlock> longest_common_subsequence(Sentence1 s1, const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1, Sentence2 s2) {
-  if (s1.size() > 64) {
-    return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
-  }
-
-  std::vector<rapidfuzz::MatchingBlock> matching_blocks;
-
-  // Hyyrö, Heikki. (2004). A Note on Bit-Parallel Alignment Computation. 79-87.
-  // build LCS Matrix
-  std::uint64_t S = ~0x0ull;
-  std::vector<std::uint64_t> Vs;
-  Vs.reserve(s2.size());
-
-  for (std::size_t j = 0; j < s2.size(); ++j) {
-    uint64_t Matches = blockmap_s1.get(s2[j]);
-    uint64_t u = S & Matches;
-    S = (S + u) | (S - u);
-    Vs.push_back(S);
-  }
-
-  std::size_t pos_s1 = s1.size() - 1;
-  std::size_t pos_s2 = s2.size() - 1;
-
-  std::size_t length = 0;
-
-  while(pos_s1 != (std::size_t)-1 && pos_s2 != (std::size_t)-1) {
-    if (Vs[pos_s2] & (0x1ull << pos_s1)) {
-      if (length) {
-        matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
-        length = 0;
-      }
-      --pos_s1;
-    } else {
-      if (!(pos_s2 && ~Vs[pos_s2-1] & (0x1ull << pos_s1))) {
-        ++length;
-        --pos_s1;
-      } else {
-        if (length) {
-          matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
-          length = 0;
-        }
-      }
-      --pos_s2;
-    }
-  }
-
-  if (length) {
-    matching_blocks.emplace_back(pos_s1 + 1, pos_s2 + 1, length);
-  }
-
-  matching_blocks.emplace_back(s1.size(), s2.size(), 0);
-
-  return matching_blocks;
-}
-#endif
-
-template<typename Sentence1, /*typename BlockPatternCharT,*/ typename Sentence2>
-std::vector<MatchingBlock> get_matching_blocks(Sentence1 s1, /*const common::PatternMatchVector<BlockPatternCharT>& blockmap_s1,*/ Sentence2 s2) {
-  //return longest_common_subsequence(s1, blockmap_s1, s2);
-  return difflib::SequenceMatcher<Sentence1, Sentence2>(s1, s2).get_matching_blocks();
+template<typename CharT1, typename CharT2>
+std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2) {
+  return difflib::SequenceMatcher<CharT1, CharT2>(s1, s2).get_matching_blocks();
 }
 
 } /* namespace detail */
