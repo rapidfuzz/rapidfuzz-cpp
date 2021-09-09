@@ -3,17 +3,17 @@
 
 #pragma once
 #include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
-#include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/jaro_impl.hpp>
 #include <rapidfuzz/details/string_metrics/levenshtein_editops_impl.hpp>
+#include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
+#include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 
 #include <cmath>
 #include <numeric>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
-#include <stdexcept>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -23,7 +23,6 @@ namespace string_metric {
  * Different useful string_metrics
  * @{
  */
-
 
 /**
  * @brief Calculates the minimum number of insertions, deletions, and substitutions
@@ -159,81 +158,93 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
                         LevenshteinWeightTable weights = {1, 1, 1},
                         std::size_t max = std::numeric_limits<std::size_t>::max())
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
-
-  if (weights.insert_cost == weights.delete_cost) {
-    /* when insertions + deletions operations are free there can not be any edit distance */
-    if (weights.insert_cost == 0) {
-      return 0;
-    }
-
-    /* uniform Levenshtein multiplied with the common factor */
-    if (weights.insert_cost == weights.replace_cost) {
-      // max can make use of the common divisor of the three weights
-      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-      const std::size_t distance = detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
-      return (distance <= max) ? distance : (std::size_t)-1;
-    }
-    /*
-     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-     * therefore this can be implemented as InDel distance multiplied with the common factor
-     */
-    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-      // max can make use of the common divisor of the three weights
-      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-      const std::size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
-      return (distance <= max) ? distance : (std::size_t)-1;
-    }
-  }
-
-  return detail::generic_levenshtein(sentence1, sentence2, weights, max);
-}
-
-template<typename Sentence1>
-struct CachedLevenshtein {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}
-
-  template<typename Sentence2>
-  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const
-  {
-    auto s2_view = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
     if (weights.insert_cost == weights.delete_cost) {
-      /* when insertions + deletions operations are free there can not be any edit distance */
-      if (weights.insert_cost == 0) {
-        return 0;
-      }
+        /* when insertions + deletions operations are free there can not be any edit distance */
+        if (weights.insert_cost == 0) {
+            return 0;
+        }
 
-      /* uniform Levenshtein multiplied with the common factor */
-      if (weights.insert_cost == weights.replace_cost) {
-        // max can make use of the common divisor of the three weights
-        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-        const std::size_t distance = detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
-        return (distance <= max) ? distance : (std::size_t)-1;
-      }
-      /*
-       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-       * therefore this can be implemented as InDel distance multiplied with the common factor
-       */
-      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-        // max can make use of the common divisor of the three weights
-        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-        const std::size_t distance = detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
-        return (distance <= max) ? distance : (std::size_t)-1;
-      }
+        /* uniform Levenshtein multiplied with the common factor */
+        if (weights.insert_cost == weights.replace_cost) {
+            // max can make use of the common divisor of the three weights
+            const std::size_t new_max =
+                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+            const std::size_t distance =
+                detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            return (distance <= max) ? distance : (std::size_t)-1;
+        }
+        /*
+         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+         * therefore this can be implemented as InDel distance multiplied with the common factor
+         */
+        else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+            // max can make use of the common divisor of the three weights
+            const std::size_t new_max =
+                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+            const std::size_t distance =
+                detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            return (distance <= max) ? distance : (std::size_t)-1;
+        }
     }
 
-    return detail::generic_levenshtein(s1_view, s2_view, weights, max);
-  }
+    return detail::generic_levenshtein(sentence1, sentence2, weights, max);
+}
+
+template <typename Sentence1>
+struct CachedLevenshtein {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+    {}
+
+    template <typename Sentence2>
+    std::size_t distance(const Sentence2& s2,
+                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    {
+        auto s2_view = common::to_string_view(s2);
+
+        if (weights.insert_cost == weights.delete_cost) {
+            /* when insertions + deletions operations are free there can not be any edit distance */
+            if (weights.insert_cost == 0) {
+                return 0;
+            }
+
+            /* uniform Levenshtein multiplied with the common factor */
+            if (weights.insert_cost == weights.replace_cost) {
+                // max can make use of the common divisor of the three weights
+                const std::size_t new_max =
+                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+                const std::size_t distance =
+                    detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
+                    weights.insert_cost;
+                return (distance <= max) ? distance : (std::size_t)-1;
+            }
+            /*
+             * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+             * therefore this can be implemented as InDel distance multiplied with the common factor
+             */
+            else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+                // max can make use of the common divisor of the three weights
+                const std::size_t new_max =
+                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+                const std::size_t distance =
+                    detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
+                    weights.insert_cost;
+                return (distance <= max) ? distance : (std::size_t)-1;
+            }
+        }
+
+        return detail::generic_levenshtein(s1_view, s2_view, weights, max);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
-  LevenshteinWeightTable weights;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    LevenshteinWeightTable weights;
 };
 
 /**
@@ -312,59 +323,61 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
                               LevenshteinWeightTable weights = {1, 1, 1},
                               percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
-
-  if (weights.insert_cost == weights.delete_cost) {
-    /* uniform Levenshtein */
-    if (weights.insert_cost == weights.replace_cost) {
-      return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
-    }
-    /*
-     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-     * therefore this can be implemented as InDel distance
-     */
-    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-      return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
-    }
-  }
-
-  return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
-}
-
-template<typename Sentence1>
-struct CachedNormalizedLevenshtein {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const
-  {
-    auto s2_view = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
     if (weights.insert_cost == weights.delete_cost) {
-      /* uniform Levenshtein */
-      if (weights.insert_cost == weights.replace_cost) {
-        return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
-      }
-      /*
-       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-       * therefore this can be implemented as InDel distance
-       */
-      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-        return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
-      }
+        /* uniform Levenshtein */
+        if (weights.insert_cost == weights.replace_cost) {
+            return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
+        }
+        /*
+         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+         * therefore this can be implemented as InDel distance
+         */
+        else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+            return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
+        }
     }
 
-    return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
-  }
+    return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
+}
+
+template <typename Sentence1>
+struct CachedNormalizedLevenshtein {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        auto s2_view = common::to_string_view(s2);
+
+        if (weights.insert_cost == weights.delete_cost) {
+            /* uniform Levenshtein */
+            if (weights.insert_cost == weights.replace_cost) {
+                return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+            }
+            /*
+             * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+             * therefore this can be implemented as InDel distance
+             */
+            else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+                return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
+                                                               score_cutoff);
+            }
+        }
+
+        return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
-  LevenshteinWeightTable weights;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    LevenshteinWeightTable weights;
 };
 
 /**
@@ -385,10 +398,10 @@ private:
 template <typename Sentence1, typename Sentence2>
 std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  return detail::levenshtein_editops(sentence1, sentence2);
+    return detail::levenshtein_editops(sentence1, sentence2);
 }
 
 /**
@@ -419,38 +432,40 @@ template <typename Sentence1, typename Sentence2>
 std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
                     std::size_t max = std::numeric_limits<std::size_t>::max())
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  if (sentence1.size() != sentence2.size()) {
-    throw std::invalid_argument("s1 and s2 are not the same length.");
-  }
+    if (sentence1.size() != sentence2.size()) {
+        throw std::invalid_argument("s1 and s2 are not the same length.");
+    }
 
-  std::size_t hamm = 0;
+    std::size_t hamm = 0;
 
-  for (std::size_t i = 0; i < sentence1.length(); i++) {
-      if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
-          hamm++;
-      }
-  }
+    for (std::size_t i = 0; i < sentence1.length(); i++) {
+        if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
+            hamm++;
+        }
+    }
 
-  return hamm > max ? (std::size_t)-1 : hamm;
+    return hamm > max ? (std::size_t)-1 : hamm;
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedHamming {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedHamming(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+    CachedHamming(const Sentence1& s1) : s1_view(common::to_string_view(s1))
+    {}
 
-  template<typename Sentence2>
-  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const {
-    return hamming(s1_view, s2, max);
-  }
+    template <typename Sentence2>
+    std::size_t distance(const Sentence2& s2,
+                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    {
+        return hamming(s1_view, s2, max);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
 /**
@@ -480,27 +495,26 @@ private:
 template <typename Sentence1, typename Sentence2>
 double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
-  return common::norm_distance(
-    hamming(sentence1, sentence2), sentence1.size(), score_cutoff
-  );
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
+    return common::norm_distance(hamming(sentence1, sentence2), sentence1.size(), score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedNormalizedHamming {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedNormalizedHamming(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+    CachedNormalizedHamming(const Sentence1& s1) : s1_view(common::to_string_view(s1))
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return normalized_hamming(s1_view, s2, score_cutoff);
-  }
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        return normalized_hamming(s1_view, s2, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
 /**
@@ -527,34 +541,36 @@ private:
  *   as a float between 0 and 100
  */
 template <typename Sentence1, typename Sentence2>
-double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2,
-                    double prefix_weight = 0.1, percent score_cutoff = 0.0)
+double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
+                               percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  if (prefix_weight < 0.0 || prefix_weight > 0.25) {
-    throw std::invalid_argument("prefix_weight has to be between 0.0 - 0.25");
-  }
+    if (prefix_weight < 0.0 || prefix_weight > 0.25) {
+        throw std::invalid_argument("prefix_weight has to be between 0.0 - 0.25");
+    }
 
-  return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
+    return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedJaroWinklerSimilarity {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedJaroWinklerSimilarity(const Sentence1& s1, double prefix_weight_ = 0.1)
-    : s1_view(common::to_string_view(s1)), prefix_weight(prefix_weight_) {}
+    CachedJaroWinklerSimilarity(const Sentence1& s1, double prefix_weight_ = 0.1)
+        : s1_view(common::to_string_view(s1)), prefix_weight(prefix_weight_)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
-  }
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  double prefix_weight;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    double prefix_weight;
 };
 
 /**
@@ -580,29 +596,30 @@ private:
 template <typename Sentence1, typename Sentence2>
 double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  return detail::jaro_similarity(sentence1, sentence2, score_cutoff);
+    return detail::jaro_similarity(sentence1, sentence2, score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedJaroSimilarity {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedJaroSimilarity(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+    CachedJaroSimilarity(const Sentence1& s1) : s1_view(common::to_string_view(s1))
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return jaro_similarity(s1_view, s2, score_cutoff);
-  }
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        return jaro_similarity(s1_view, s2, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
 /**@}*/
 
-} // namespace levenshtein
+} // namespace string_metric
 } // namespace rapidfuzz

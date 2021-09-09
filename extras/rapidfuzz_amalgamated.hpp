@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-09-09 09:00:37.489781
+//  Generated: 2021-09-09 13:21:44.323838
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -10,6 +10,11 @@
 #define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 
 
+
+#include <array>
+#include <cmath>
+#include <cstring>
+#include <algorithm>
 
 
 #include <type_traits>
@@ -25,174 +30,181 @@
 
 
 #ifndef NONSTD_SV_LITE_H_INCLUDED
-#define NONSTD_SV_LITE_H_INCLUDED
+#    define NONSTD_SV_LITE_H_INCLUDED
 
-#define string_view_lite_MAJOR  1
-#define string_view_lite_MINOR  4
-#define string_view_lite_PATCH  0
+#    define string_view_lite_MAJOR 1
+#    define string_view_lite_MINOR 4
+#    define string_view_lite_PATCH 0
 
-#define string_view_lite_VERSION  nssv_STRINGIFY(string_view_lite_MAJOR) "." nssv_STRINGIFY(string_view_lite_MINOR) "." nssv_STRINGIFY(string_view_lite_PATCH)
+#    define string_view_lite_VERSION                                                               \
+        nssv_STRINGIFY(string_view_lite_MAJOR) "." nssv_STRINGIFY(                                 \
+            string_view_lite_MINOR) "." nssv_STRINGIFY(string_view_lite_PATCH)
 
-#define nssv_STRINGIFY(  x )  nssv_STRINGIFY_( x )
-#define nssv_STRINGIFY_( x )  #x
+#    define nssv_STRINGIFY(x) nssv_STRINGIFY_(x)
+#    define nssv_STRINGIFY_(x) #    x
 
 // string-view lite configuration:
 
-#define nssv_STRING_VIEW_DEFAULT  0
-#define nssv_STRING_VIEW_NONSTD   1
-#define nssv_STRING_VIEW_STD      2
+#    define nssv_STRING_VIEW_DEFAULT 0
+#    define nssv_STRING_VIEW_NONSTD 1
+#    define nssv_STRING_VIEW_STD 2
 
-#if !defined( nssv_CONFIG_SELECT_STRING_VIEW )
-# define nssv_CONFIG_SELECT_STRING_VIEW  ( nssv_HAVE_STD_STRING_VIEW ? nssv_STRING_VIEW_STD : nssv_STRING_VIEW_NONSTD )
-#endif
+#    if !defined(nssv_CONFIG_SELECT_STRING_VIEW)
+#        define nssv_CONFIG_SELECT_STRING_VIEW                                                     \
+            (nssv_HAVE_STD_STRING_VIEW ? nssv_STRING_VIEW_STD : nssv_STRING_VIEW_NONSTD)
+#    endif
 
-#if defined( nssv_CONFIG_SELECT_STD_STRING_VIEW ) || defined( nssv_CONFIG_SELECT_NONSTD_STRING_VIEW )
-# error nssv_CONFIG_SELECT_STD_STRING_VIEW and nssv_CONFIG_SELECT_NONSTD_STRING_VIEW are deprecated and removed, please use nssv_CONFIG_SELECT_STRING_VIEW=nssv_STRING_VIEW_...
-#endif
+#    if defined(nssv_CONFIG_SELECT_STD_STRING_VIEW) ||                                             \
+        defined(nssv_CONFIG_SELECT_NONSTD_STRING_VIEW)
+#        error nssv_CONFIG_SELECT_STD_STRING_VIEW and nssv_CONFIG_SELECT_NONSTD_STRING_VIEW are deprecated and removed, please use nssv_CONFIG_SELECT_STRING_VIEW=nssv_STRING_VIEW_...
+#    endif
 
-#ifndef  nssv_CONFIG_STD_SV_OPERATOR
-# define nssv_CONFIG_STD_SV_OPERATOR  0
-#endif
+#    ifndef nssv_CONFIG_STD_SV_OPERATOR
+#        define nssv_CONFIG_STD_SV_OPERATOR 0
+#    endif
 
-#ifndef  nssv_CONFIG_USR_SV_OPERATOR
-# define nssv_CONFIG_USR_SV_OPERATOR  1
-#endif
+#    ifndef nssv_CONFIG_USR_SV_OPERATOR
+#        define nssv_CONFIG_USR_SV_OPERATOR 1
+#    endif
 
-#ifdef   nssv_CONFIG_CONVERSION_STD_STRING
-# define nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS   nssv_CONFIG_CONVERSION_STD_STRING
-# define nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS  nssv_CONFIG_CONVERSION_STD_STRING
-#endif
+#    ifdef nssv_CONFIG_CONVERSION_STD_STRING
+#        define nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS nssv_CONFIG_CONVERSION_STD_STRING
+#        define nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS nssv_CONFIG_CONVERSION_STD_STRING
+#    endif
 
-#ifndef  nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS
-# define nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS  1
-#endif
+#    ifndef nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS
+#        define nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS 1
+#    endif
 
-#ifndef  nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
-# define nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS  1
-#endif
+#    ifndef nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
+#        define nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS 1
+#    endif
 
 // Control presence of exception handling (try and auto discover):
 
-#ifndef nssv_CONFIG_NO_EXCEPTIONS
-# if defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)
-#  define nssv_CONFIG_NO_EXCEPTIONS  0
-# else
-#  define nssv_CONFIG_NO_EXCEPTIONS  1
-# endif
-#endif
+#    ifndef nssv_CONFIG_NO_EXCEPTIONS
+#        if defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND)
+#            define nssv_CONFIG_NO_EXCEPTIONS 0
+#        else
+#            define nssv_CONFIG_NO_EXCEPTIONS 1
+#        endif
+#    endif
 
 // C++ language version detection (C++20 is speculative):
 // Note: VC14.0/1900 (VS2015) lacks too much from C++14.
 
-#ifndef   nssv_CPLUSPLUS
-# if defined(_MSVC_LANG ) && !defined(__clang__)
-#  define nssv_CPLUSPLUS  (_MSC_VER == 1900 ? 201103L : _MSVC_LANG )
-# else
-#  define nssv_CPLUSPLUS  __cplusplus
-# endif
-#endif
+#    ifndef nssv_CPLUSPLUS
+#        if defined(_MSVC_LANG) && !defined(__clang__)
+#            define nssv_CPLUSPLUS (_MSC_VER == 1900 ? 201103L : _MSVC_LANG)
+#        else
+#            define nssv_CPLUSPLUS __cplusplus
+#        endif
+#    endif
 
-#define nssv_CPP98_OR_GREATER  ( nssv_CPLUSPLUS >= 199711L )
-#define nssv_CPP11_OR_GREATER  ( nssv_CPLUSPLUS >= 201103L )
-#define nssv_CPP11_OR_GREATER_ ( nssv_CPLUSPLUS >= 201103L )
-#define nssv_CPP14_OR_GREATER  ( nssv_CPLUSPLUS >= 201402L )
-#define nssv_CPP17_OR_GREATER  ( nssv_CPLUSPLUS >= 201703L )
-#define nssv_CPP20_OR_GREATER  ( nssv_CPLUSPLUS >= 202000L )
+#    define nssv_CPP98_OR_GREATER (nssv_CPLUSPLUS >= 199711L)
+#    define nssv_CPP11_OR_GREATER (nssv_CPLUSPLUS >= 201103L)
+#    define nssv_CPP11_OR_GREATER_ (nssv_CPLUSPLUS >= 201103L)
+#    define nssv_CPP14_OR_GREATER (nssv_CPLUSPLUS >= 201402L)
+#    define nssv_CPP17_OR_GREATER (nssv_CPLUSPLUS >= 201703L)
+#    define nssv_CPP20_OR_GREATER (nssv_CPLUSPLUS >= 202000L)
 
 // use C++17 std::string_view if available and requested:
 
-#if nssv_CPP17_OR_GREATER && defined(__has_include )
-# if __has_include( <string_view> )
-#  define nssv_HAVE_STD_STRING_VIEW  1
-# else
-#  define nssv_HAVE_STD_STRING_VIEW  0
-# endif
-#else
-# define  nssv_HAVE_STD_STRING_VIEW  0
-#endif
+#    if nssv_CPP17_OR_GREATER && defined(__has_include)
+#        if __has_include(<string_view> )
+#            define nssv_HAVE_STD_STRING_VIEW 1
+#        else
+#            define nssv_HAVE_STD_STRING_VIEW 0
+#        endif
+#    else
+#        define nssv_HAVE_STD_STRING_VIEW 0
+#    endif
 
-#define  nssv_USES_STD_STRING_VIEW  ( (nssv_CONFIG_SELECT_STRING_VIEW == nssv_STRING_VIEW_STD) || ((nssv_CONFIG_SELECT_STRING_VIEW == nssv_STRING_VIEW_DEFAULT) && nssv_HAVE_STD_STRING_VIEW) )
+#    define nssv_USES_STD_STRING_VIEW                                                              \
+        ((nssv_CONFIG_SELECT_STRING_VIEW == nssv_STRING_VIEW_STD) ||                               \
+         ((nssv_CONFIG_SELECT_STRING_VIEW == nssv_STRING_VIEW_DEFAULT) &&                          \
+          nssv_HAVE_STD_STRING_VIEW))
 
-#define nssv_HAVE_STARTS_WITH ( nssv_CPP20_OR_GREATER || !nssv_USES_STD_STRING_VIEW )
-#define nssv_HAVE_ENDS_WITH     nssv_HAVE_STARTS_WITH
+#    define nssv_HAVE_STARTS_WITH (nssv_CPP20_OR_GREATER || !nssv_USES_STD_STRING_VIEW)
+#    define nssv_HAVE_ENDS_WITH nssv_HAVE_STARTS_WITH
 
 //
 // Use C++17 std::string_view:
 //
 
-#if nssv_USES_STD_STRING_VIEW
+#    if nssv_USES_STD_STRING_VIEW
 
-#include <string_view>
+#        include <string_view>
 
 // Extensions for std::string:
 
-#if nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
+#        if nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
 
 namespace rapidfuzz {
 
-template< class CharT, class Traits, class Allocator = std::allocator<CharT> >
-std::basic_string<CharT, Traits, Allocator>
-to_string( std::basic_string_view<CharT, Traits> v, Allocator const & a = Allocator() )
+template <class CharT, class Traits, class Allocator = std::allocator<CharT>>
+std::basic_string<CharT, Traits, Allocator> to_string(std::basic_string_view<CharT, Traits> v,
+                                                      Allocator const& a = Allocator())
 {
-    return std::basic_string<CharT,Traits, Allocator>( v.begin(), v.end(), a );
+    return std::basic_string<CharT, Traits, Allocator>(v.begin(), v.end(), a);
 }
 
-template< class CharT, class Traits, class Allocator >
+template <class CharT, class Traits, class Allocator>
 std::basic_string_view<CharT, Traits>
-to_string_view( std::basic_string<CharT, Traits, Allocator> const & s )
+to_string_view(std::basic_string<CharT, Traits, Allocator> const& s)
 {
-    return std::basic_string_view<CharT, Traits>( s.data(), s.size() );
+    return std::basic_string_view<CharT, Traits>(s.data(), s.size());
 }
 
 // Literal operators sv and _sv:
 
-#if nssv_CONFIG_STD_SV_OPERATOR
+#            if nssv_CONFIG_STD_SV_OPERATOR
 
 using namespace std::literals::string_view_literals;
 
-#endif
+#            endif
 
-#if nssv_CONFIG_USR_SV_OPERATOR
+#            if nssv_CONFIG_USR_SV_OPERATOR
 
 inline namespace literals {
 inline namespace string_view_literals {
 
-
-constexpr std::string_view operator "" _sv( const char* str, size_t len ) noexcept  // (1)
+constexpr std::string_view operator"" _sv(const char* str, size_t len) noexcept // (1)
 {
-    return std::string_view{ str, len };
+    return std::string_view{str, len};
 }
 
-constexpr std::u16string_view operator "" _sv( const char16_t* str, size_t len ) noexcept  // (2)
+constexpr std::u16string_view operator"" _sv(const char16_t* str, size_t len) noexcept // (2)
 {
-    return std::u16string_view{ str, len };
+    return std::u16string_view{str, len};
 }
 
-constexpr std::u32string_view operator "" _sv( const char32_t* str, size_t len ) noexcept  // (3)
+constexpr std::u32string_view operator"" _sv(const char32_t* str, size_t len) noexcept // (3)
 {
-    return std::u32string_view{ str, len };
+    return std::u32string_view{str, len};
 }
 
-constexpr std::wstring_view operator "" _sv( const wchar_t* str, size_t len ) noexcept  // (4)
+constexpr std::wstring_view operator"" _sv(const wchar_t* str, size_t len) noexcept // (4)
 {
-    return std::wstring_view{ str, len };
+    return std::wstring_view{str, len};
 }
 
-}} // namespace literals::string_view_literals
+} // namespace string_view_literals
+} // namespace literals
 
-#endif // nssv_CONFIG_USR_SV_OPERATOR
+#            endif // nssv_CONFIG_USR_SV_OPERATOR
 
 } // namespace rapidfuzz
 
-#endif // nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
+#        endif // nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
 
 namespace rapidfuzz {
 
+using std::basic_string_view;
 using std::string_view;
-using std::wstring_view;
 using std::u16string_view;
 using std::u32string_view;
-using std::basic_string_view;
+using std::wstring_view;
 
 // literal "sv" and "_sv", see above
 
@@ -207,7 +219,7 @@ using std::operator<<;
 
 } // namespace rapidfuzz
 
-#else // nssv_HAVE_STD_STRING_VIEW
+#    else // nssv_HAVE_STD_STRING_VIEW
 
 //
 // Before C++17: use string_view lite:
@@ -227,118 +239,121 @@ using std::operator<<;
 // MSVC++ 14.1  _MSC_VER >= 1910  nssv_COMPILER_MSVC_VERSION == 141  (Visual Studio 2017)
 // MSVC++ 14.2  _MSC_VER >= 1920  nssv_COMPILER_MSVC_VERSION == 142  (Visual Studio 2019)
 
-#if defined(_MSC_VER ) && !defined(__clang__)
-# define nssv_COMPILER_MSVC_VER      (_MSC_VER )
-# define nssv_COMPILER_MSVC_VERSION  (_MSC_VER / 10 - 10 * ( 5 + (_MSC_VER < 1900 ) ) )
-#else
-# define nssv_COMPILER_MSVC_VER      0
-# define nssv_COMPILER_MSVC_VERSION  0
-#endif
+#        if defined(_MSC_VER) && !defined(__clang__)
+#            define nssv_COMPILER_MSVC_VER (_MSC_VER)
+#            define nssv_COMPILER_MSVC_VERSION (_MSC_VER / 10 - 10 * (5 + (_MSC_VER < 1900)))
+#        else
+#            define nssv_COMPILER_MSVC_VER 0
+#            define nssv_COMPILER_MSVC_VERSION 0
+#        endif
 
-#define nssv_COMPILER_VERSION( major, minor, patch )  ( 10 * ( 10 * (major) + (minor) ) + (patch) )
+#        define nssv_COMPILER_VERSION(major, minor, patch) (10 * (10 * (major) + (minor)) + (patch))
 
-#if defined(__clang__)
-# define nssv_COMPILER_CLANG_VERSION  nssv_COMPILER_VERSION(__clang_major__, __clang_minor__, __clang_patchlevel__)
-#else
-# define nssv_COMPILER_CLANG_VERSION    0
-#endif
+#        if defined(__clang__)
+#            define nssv_COMPILER_CLANG_VERSION                                                    \
+                nssv_COMPILER_VERSION(__clang_major__, __clang_minor__, __clang_patchlevel__)
+#        else
+#            define nssv_COMPILER_CLANG_VERSION 0
+#        endif
 
-#if defined(__GNUC__) && !defined(__clang__)
-# define nssv_COMPILER_GNUC_VERSION  nssv_COMPILER_VERSION(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
-#else
-# define nssv_COMPILER_GNUC_VERSION    0
-#endif
+#        if defined(__GNUC__) && !defined(__clang__)
+#            define nssv_COMPILER_GNUC_VERSION                                                     \
+                nssv_COMPILER_VERSION(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
+#        else
+#            define nssv_COMPILER_GNUC_VERSION 0
+#        endif
 
 // half-open range [lo..hi):
-#define nssv_BETWEEN( v, lo, hi ) ( (lo) <= (v) && (v) < (hi) )
+#        define nssv_BETWEEN(v, lo, hi) ((lo) <= (v) && (v) < (hi))
 
 // Presence of language and library features:
 
-#ifdef _HAS_CPP0X
-# define nssv_HAS_CPP0X  _HAS_CPP0X
-#else
-# define nssv_HAS_CPP0X  0
-#endif
+#        ifdef _HAS_CPP0X
+#            define nssv_HAS_CPP0X _HAS_CPP0X
+#        else
+#            define nssv_HAS_CPP0X 0
+#        endif
 
 // Unless defined otherwise below, consider VC14 as C++11 for variant-lite:
 
-#if nssv_COMPILER_MSVC_VER >= 1900
-# undef  nssv_CPP11_OR_GREATER
-# define nssv_CPP11_OR_GREATER  1
-#endif
+#        if nssv_COMPILER_MSVC_VER >= 1900
+#            undef nssv_CPP11_OR_GREATER
+#            define nssv_CPP11_OR_GREATER 1
+#        endif
 
-#define nssv_CPP11_90   (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1500)
-#define nssv_CPP11_100  (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1600)
-#define nssv_CPP11_110  (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1700)
-#define nssv_CPP11_120  (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1800)
-#define nssv_CPP11_140  (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1900)
-#define nssv_CPP11_141  (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1910)
+#        define nssv_CPP11_90 (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1500)
+#        define nssv_CPP11_100 (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1600)
+#        define nssv_CPP11_110 (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1700)
+#        define nssv_CPP11_120 (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1800)
+#        define nssv_CPP11_140 (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1900)
+#        define nssv_CPP11_141 (nssv_CPP11_OR_GREATER_ || nssv_COMPILER_MSVC_VER >= 1910)
 
-#define nssv_CPP14_000  (nssv_CPP14_OR_GREATER)
-#define nssv_CPP17_000  (nssv_CPP17_OR_GREATER)
+#        define nssv_CPP14_000 (nssv_CPP14_OR_GREATER)
+#        define nssv_CPP17_000 (nssv_CPP17_OR_GREATER)
 
 // Presence of C++11 language features:
 
-#define nssv_HAVE_CONSTEXPR_11          nssv_CPP11_140
-#define nssv_HAVE_EXPLICIT_CONVERSION   nssv_CPP11_140
-#define nssv_HAVE_INLINE_NAMESPACE      nssv_CPP11_140
-#define nssv_HAVE_NOEXCEPT              nssv_CPP11_140
-#define nssv_HAVE_NULLPTR               nssv_CPP11_100
-#define nssv_HAVE_REF_QUALIFIER         nssv_CPP11_140
-#define nssv_HAVE_UNICODE_LITERALS      nssv_CPP11_140
-#define nssv_HAVE_USER_DEFINED_LITERALS nssv_CPP11_140
-#define nssv_HAVE_WCHAR16_T             nssv_CPP11_100
-#define nssv_HAVE_WCHAR32_T             nssv_CPP11_100
+#        define nssv_HAVE_CONSTEXPR_11 nssv_CPP11_140
+#        define nssv_HAVE_EXPLICIT_CONVERSION nssv_CPP11_140
+#        define nssv_HAVE_INLINE_NAMESPACE nssv_CPP11_140
+#        define nssv_HAVE_NOEXCEPT nssv_CPP11_140
+#        define nssv_HAVE_NULLPTR nssv_CPP11_100
+#        define nssv_HAVE_REF_QUALIFIER nssv_CPP11_140
+#        define nssv_HAVE_UNICODE_LITERALS nssv_CPP11_140
+#        define nssv_HAVE_USER_DEFINED_LITERALS nssv_CPP11_140
+#        define nssv_HAVE_WCHAR16_T nssv_CPP11_100
+#        define nssv_HAVE_WCHAR32_T nssv_CPP11_100
 
-#if ! ( ( nssv_CPP11_OR_GREATER && nssv_COMPILER_CLANG_VERSION ) || nssv_BETWEEN( nssv_COMPILER_CLANG_VERSION, 300, 400 ) )
-# define nssv_HAVE_STD_DEFINED_LITERALS  nssv_CPP11_140
-#else
-# define nssv_HAVE_STD_DEFINED_LITERALS  0
-#endif
+#        if !((nssv_CPP11_OR_GREATER && nssv_COMPILER_CLANG_VERSION) ||                            \
+              nssv_BETWEEN(nssv_COMPILER_CLANG_VERSION, 300, 400))
+#            define nssv_HAVE_STD_DEFINED_LITERALS nssv_CPP11_140
+#        else
+#            define nssv_HAVE_STD_DEFINED_LITERALS 0
+#        endif
 
 // Presence of C++14 language features:
 
-#define nssv_HAVE_CONSTEXPR_14          nssv_CPP14_000
+#        define nssv_HAVE_CONSTEXPR_14 nssv_CPP14_000
 
 // Presence of C++17 language features:
 
-#define nssv_HAVE_NODISCARD             nssv_CPP17_000
+#        define nssv_HAVE_NODISCARD nssv_CPP17_000
 
 // Presence of C++ library features:
 
-#define nssv_HAVE_STD_HASH              nssv_CPP11_120
+#        define nssv_HAVE_STD_HASH nssv_CPP11_120
 
 // C++ feature usage:
 
-#if nssv_HAVE_CONSTEXPR_11
-# define nssv_constexpr  constexpr
-#else
-# define nssv_constexpr  /*constexpr*/
-#endif
+#        if nssv_HAVE_CONSTEXPR_11
+#            define nssv_constexpr constexpr
+#        else
+#            define nssv_constexpr /*constexpr*/
+#        endif
 
-#if  nssv_HAVE_CONSTEXPR_14
-# define nssv_constexpr14  constexpr
-#else
-# define nssv_constexpr14  /*constexpr*/
-#endif
+#        if nssv_HAVE_CONSTEXPR_14
+#            define nssv_constexpr14 constexpr
+#        else
+#            define nssv_constexpr14 /*constexpr*/
+#        endif
 
-#if nssv_HAVE_EXPLICIT_CONVERSION
-# define nssv_explicit  explicit
-#else
-# define nssv_explicit  /*explicit*/
-#endif
+#        if nssv_HAVE_EXPLICIT_CONVERSION
+#            define nssv_explicit explicit
+#        else
+#            define nssv_explicit /*explicit*/
+#        endif
 
-#if nssv_HAVE_INLINE_NAMESPACE
-# define nssv_inline_ns  inline
-#else
-# define nssv_inline_ns  /*inline*/
-#endif
+#        if nssv_HAVE_INLINE_NAMESPACE
+#            define nssv_inline_ns inline
+#        else
+#            define nssv_inline_ns /*inline*/
+#        endif
 
-#if nssv_HAVE_NOEXCEPT
-# define nssv_noexcept  noexcept
-#else
-# define nssv_noexcept  /*noexcept*/
-#endif
+#        if nssv_HAVE_NOEXCEPT
+#            define nssv_noexcept noexcept
+#        else
+#            define nssv_noexcept /*noexcept*/
+#        endif
 
 //#if nssv_HAVE_REF_QUALIFIER
 //# define nssv_ref_qual  &
@@ -348,65 +363,66 @@ using std::operator<<;
 //# define nssv_refref_qual  /*&&*/
 //#endif
 
-#if nssv_HAVE_NULLPTR
-# define nssv_nullptr  nullptr
-#else
-# define nssv_nullptr  NULL
-#endif
+#        if nssv_HAVE_NULLPTR
+#            define nssv_nullptr nullptr
+#        else
+#            define nssv_nullptr NULL
+#        endif
 
-#if nssv_HAVE_NODISCARD
-# define nssv_nodiscard  [[nodiscard]]
-#else
-# define nssv_nodiscard  /*[[nodiscard]]*/
-#endif
+#        if nssv_HAVE_NODISCARD
+#            define nssv_nodiscard [[nodiscard]]
+#        else
+#            define nssv_nodiscard /*[[nodiscard]]*/
+#        endif
 
 // Additional includes:
 
-#include <algorithm>
-#include <cassert>
-#include <iterator>
-#include <limits>
-#include <ostream>
-#include <string>   // std::char_traits<>
+#        include <algorithm>
+#        include <cassert>
+#        include <iterator>
+#        include <limits>
+#        include <ostream>
+#        include <string> // std::char_traits<>
 
-#if ! nssv_CONFIG_NO_EXCEPTIONS
-# include <stdexcept>
-#endif
+#        if !nssv_CONFIG_NO_EXCEPTIONS
+#            include <stdexcept>
+#        endif
 
-#if nssv_CPP11_OR_GREATER
-# include <type_traits>
-#endif
+#        if nssv_CPP11_OR_GREATER
+#            include <type_traits>
+#        endif
 
 // Clang, GNUC, MSVC warning suppression macros:
 
-#if defined(__clang__)
-# pragma clang diagnostic ignored "-Wreserved-user-defined-literal"
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wuser-defined-literals"
-#elif defined(__GNUC__)
-# pragma  GCC  diagnostic push
-# pragma  GCC  diagnostic ignored "-Wliteral-suffix"
-#endif // __clang__
+#        if defined(__clang__)
+#            pragma clang diagnostic ignored "-Wreserved-user-defined-literal"
+#            pragma clang diagnostic push
+#            pragma clang diagnostic ignored "-Wuser-defined-literals"
+#        elif defined(__GNUC__)
+#            pragma GCC diagnostic push
+#            pragma GCC diagnostic ignored "-Wliteral-suffix"
+#        endif // __clang__
 
-#if nssv_COMPILER_MSVC_VERSION >= 140
-# define nssv_SUPPRESS_MSGSL_WARNING(expr)        [[gsl::suppress(expr)]]
-# define nssv_SUPPRESS_MSVC_WARNING(code, descr)  __pragma(warning(suppress: code) )
-# define nssv_DISABLE_MSVC_WARNINGS(codes)        __pragma(warning(push))  __pragma(warning(disable: codes))
-#else
-# define nssv_SUPPRESS_MSGSL_WARNING(expr)
-# define nssv_SUPPRESS_MSVC_WARNING(code, descr)
-# define nssv_DISABLE_MSVC_WARNINGS(codes)
-#endif
+#        if nssv_COMPILER_MSVC_VERSION >= 140
+#            define nssv_SUPPRESS_MSGSL_WARNING(expr) [[gsl::suppress(expr)]]
+#            define nssv_SUPPRESS_MSVC_WARNING(code, descr) __pragma(warning(suppress : code))
+#            define nssv_DISABLE_MSVC_WARNINGS(codes)                                              \
+                __pragma(warning(push)) __pragma(warning(disable : codes))
+#        else
+#            define nssv_SUPPRESS_MSGSL_WARNING(expr)
+#            define nssv_SUPPRESS_MSVC_WARNING(code, descr)
+#            define nssv_DISABLE_MSVC_WARNINGS(codes)
+#        endif
 
-#if defined(__clang__)
-# define nssv_RESTORE_WARNINGS()  _Pragma("clang diagnostic pop")
-#elif defined(__GNUC__)
-# define nssv_RESTORE_WARNINGS()  _Pragma("GCC diagnostic pop")
-#elif nssv_COMPILER_MSVC_VERSION >= 140
-# define nssv_RESTORE_WARNINGS()  __pragma(warning(pop ))
-#else
-# define nssv_RESTORE_WARNINGS()
-#endif
+#        if defined(__clang__)
+#            define nssv_RESTORE_WARNINGS() _Pragma("clang diagnostic pop")
+#        elif defined(__GNUC__)
+#            define nssv_RESTORE_WARNINGS() _Pragma("GCC diagnostic pop")
+#        elif nssv_COMPILER_MSVC_VERSION >= 140
+#            define nssv_RESTORE_WARNINGS() __pragma(warning(pop))
+#        else
+#            define nssv_RESTORE_WARNINGS()
+#        endif
 
 // Suppress the following MSVC (GSL) warnings:
 // - C4455, non-gsl   : 'operator ""sv': literal suffix identifiers that do not
@@ -415,1039 +431,1137 @@ using std::operator<<;
 //                      use brace initialization, gsl::narrow_cast or gsl::narow
 // - C26481: gsl::b.1 : don't use pointer arithmetic. Use span instead
 
-nssv_DISABLE_MSVC_WARNINGS( 4455 26481 26472 )
-//nssv_DISABLE_CLANG_WARNINGS( "-Wuser-defined-literals" )
-//nssv_DISABLE_GNUC_WARNINGS( -Wliteral-suffix )
+nssv_DISABLE_MSVC_WARNINGS(4455 26481 26472)
+    // nssv_DISABLE_CLANG_WARNINGS( "-Wuser-defined-literals" )
+    // nssv_DISABLE_GNUC_WARNINGS( -Wliteral-suffix )
 
-namespace rapidfuzz { namespace sv_lite {
-
-#if nssv_CPP11_OR_GREATER
-
-namespace detail {
-
-#if nssv_CPP14_OR_GREATER
-
-template< typename CharT >
-inline constexpr std::size_t length( CharT * s, std::size_t result = 0 )
+    namespace rapidfuzz
 {
-    CharT * v = s;
-    std::size_t r = result;
-    while ( *v != '\0' ) {
-       ++v;
-       ++r;
-    }
-    return r;
-}
+    namespace sv_lite {
 
-#else // nssv_CPP14_OR_GREATER
+#        if nssv_CPP11_OR_GREATER
 
-// Expect tail call optimization to make length() non-recursive:
+    namespace detail {
 
-template< typename CharT >
-inline constexpr std::size_t length( CharT * s, std::size_t result = 0 )
-{
-    return *s == '\0' ? result : length( s + 1, result + 1 );
-}
+#            if nssv_CPP14_OR_GREATER
 
-#endif // nssv_CPP14_OR_GREATER
-
-} // namespace detail
-
-#endif // nssv_CPP11_OR_GREATER
-
-template
-<
-    class CharT,
-    class Traits = std::char_traits<CharT>
->
-class basic_string_view;
-
-//
-// basic_string_view:
-//
-
-template
-<
-    class CharT,
-    class Traits /* = std::char_traits<CharT> */
->
-class basic_string_view
-{
-public:
-    // Member types:
-
-    typedef Traits traits_type;
-    typedef CharT  value_type;
-
-    typedef CharT       * pointer;
-    typedef CharT const * const_pointer;
-    typedef CharT       & reference;
-    typedef CharT const & const_reference;
-
-    typedef const_pointer iterator;
-    typedef const_pointer const_iterator;
-    typedef std::reverse_iterator< const_iterator > reverse_iterator;
-    typedef	std::reverse_iterator< const_iterator > const_reverse_iterator;
-
-    typedef std::size_t     size_type;
-    typedef std::ptrdiff_t  difference_type;
-
-    // 24.4.2.1 Construction and assignment:
-
-    nssv_constexpr basic_string_view() nssv_noexcept
-        : data_( nssv_nullptr )
-        , size_( 0 )
-    {}
-
-#if nssv_CPP11_OR_GREATER
-    nssv_constexpr basic_string_view( basic_string_view const & other ) nssv_noexcept = default;
-#else
-    nssv_constexpr basic_string_view( basic_string_view const & other ) nssv_noexcept
-        : data_( other.data_)
-        , size_( other.size_)
-    {}
-#endif
-
-    nssv_constexpr basic_string_view( CharT const * s, size_type count ) nssv_noexcept // non-standard noexcept
-        : data_( s )
-        , size_( count )
-    {}
-
-    nssv_constexpr basic_string_view( CharT const * s) nssv_noexcept // non-standard noexcept
-        : data_( s )
-#if nssv_CPP17_OR_GREATER
-        , size_( Traits::length(s) )
-#elif nssv_CPP11_OR_GREATER
-        , size_( detail::length(s) )
-#else
-        , size_( Traits::length(s) )
-#endif
-    {}
-
-    // Assignment:
-
-#if nssv_CPP11_OR_GREATER
-    nssv_constexpr14 basic_string_view & operator=( basic_string_view const & other ) nssv_noexcept = default;
-#else
-    nssv_constexpr14 basic_string_view & operator=( basic_string_view const & other ) nssv_noexcept
+    template <typename CharT>
+    inline constexpr std::size_t length(CharT* s, std::size_t result = 0)
     {
-        data_ = other.data_;
-        size_ = other.size_;
-        return *this;
-    }
-#endif
-
-    // 24.4.2.2 Iterator support:
-
-    nssv_constexpr const_iterator begin()  const nssv_noexcept { return data_;         }
-    nssv_constexpr const_iterator end()    const nssv_noexcept { return data_ + size_; }
-
-    nssv_constexpr const_iterator cbegin() const nssv_noexcept { return begin(); }
-    nssv_constexpr const_iterator cend()   const nssv_noexcept { return end();   }
-
-    nssv_constexpr const_reverse_iterator rbegin()  const nssv_noexcept { return const_reverse_iterator( end() );   }
-    nssv_constexpr const_reverse_iterator rend()    const nssv_noexcept { return const_reverse_iterator( begin() ); }
-
-    nssv_constexpr const_reverse_iterator crbegin() const nssv_noexcept { return rbegin(); }
-    nssv_constexpr const_reverse_iterator crend()   const nssv_noexcept { return rend();   }
-
-    // 24.4.2.3 Capacity:
-
-    nssv_constexpr size_type size()     const nssv_noexcept { return size_; }
-    nssv_constexpr size_type length()   const nssv_noexcept { return size_; }
-    nssv_constexpr size_type max_size() const nssv_noexcept { return (std::numeric_limits< size_type >::max)(); }
-
-    // since C++20
-    nssv_nodiscard nssv_constexpr bool empty() const nssv_noexcept
-    {
-        return 0 == size_;
-    }
-
-    // 24.4.2.4 Element access:
-
-    nssv_constexpr const_reference operator[]( size_type pos ) const
-    {
-        return data_at( pos );
-    }
-
-    nssv_constexpr14 const_reference at( size_type pos ) const
-    {
-#if nssv_CONFIG_NO_EXCEPTIONS
-        assert( pos < size() );
-#else
-        if ( pos >= size() )
-        {
-            throw std::out_of_range("rapidfuzz::string_view::at()");
+        CharT* v = s;
+        std::size_t r = result;
+        while (*v != '\0') {
+            ++v;
+            ++r;
         }
-#endif
-        return data_at( pos );
+        return r;
     }
 
-    nssv_constexpr const_reference front() const { return data_at( 0 );          }
-    nssv_constexpr const_reference back()  const { return data_at( size() - 1 ); }
+#            else // nssv_CPP14_OR_GREATER
 
-    nssv_constexpr const_pointer   data()  const nssv_noexcept { return data_; }
+    // Expect tail call optimization to make length() non-recursive:
 
-    // 24.4.2.5 Modifiers:
-
-    nssv_constexpr14 void remove_prefix( size_type n )
+    template <typename CharT>
+    inline constexpr std::size_t length(CharT* s, std::size_t result = 0)
     {
-        assert( n <= size() );
-        data_ += n;
-        size_ -= n;
+        return *s == '\0' ? result : length(s + 1, result + 1);
     }
 
-    nssv_constexpr14 void remove_suffix( size_type n )
-    {
-        assert( n <= size() );
-        size_ -= n;
-    }
+#            endif // nssv_CPP14_OR_GREATER
 
-    nssv_constexpr14 void swap( basic_string_view & other ) nssv_noexcept
-    {
-        using std::swap;
-        swap( data_, other.data_ );
-        swap( size_, other.size_ );
-    }
+    } // namespace detail
 
-    // 24.4.2.6 String operations:
+#        endif // nssv_CPP11_OR_GREATER
 
-    size_type copy( CharT * dest, size_type n, size_type pos = 0 ) const
-    {
-#if nssv_CONFIG_NO_EXCEPTIONS
-        assert( pos <= size() );
-#else
-        if ( pos > size() )
+    template <class CharT, class Traits = std::char_traits<CharT>>
+    class basic_string_view;
+
+    //
+    // basic_string_view:
+    //
+
+    template <class CharT, class Traits /* = std::char_traits<CharT> */
+              >
+    class basic_string_view {
+    public:
+        // Member types:
+
+        typedef Traits traits_type;
+        typedef CharT value_type;
+
+        typedef CharT* pointer;
+        typedef CharT const* const_pointer;
+        typedef CharT& reference;
+        typedef CharT const& const_reference;
+
+        typedef const_pointer iterator;
+        typedef const_pointer const_iterator;
+        typedef std::reverse_iterator<const_iterator> reverse_iterator;
+        typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
+        typedef std::size_t size_type;
+        typedef std::ptrdiff_t difference_type;
+
+        // 24.4.2.1 Construction and assignment:
+
+        nssv_constexpr basic_string_view() nssv_noexcept : data_(nssv_nullptr), size_(0)
+        {}
+
+#        if nssv_CPP11_OR_GREATER
+        nssv_constexpr basic_string_view(basic_string_view const& other) nssv_noexcept = default;
+#        else
+        nssv_constexpr basic_string_view(basic_string_view const& other) nssv_noexcept
+            : data_(other.data_),
+              size_(other.size_)
+        {}
+#        endif
+
+        nssv_constexpr basic_string_view(CharT const* s,
+                                         size_type count) nssv_noexcept // non-standard noexcept
+            : data_(s),
+              size_(count)
+        {}
+
+        nssv_constexpr basic_string_view(CharT const* s) nssv_noexcept // non-standard noexcept
+            : data_(s)
+#        if nssv_CPP17_OR_GREATER
+            ,
+              size_(Traits::length(s))
+#        elif nssv_CPP11_OR_GREATER
+            ,
+              size_(detail::length(s))
+#        else
+            ,
+              size_(Traits::length(s))
+#        endif
+        {}
+
+        // Assignment:
+
+#        if nssv_CPP11_OR_GREATER
+        nssv_constexpr14 basic_string_view&
+        operator=(basic_string_view const& other) nssv_noexcept = default;
+#        else
+        nssv_constexpr14 basic_string_view& operator=(basic_string_view const& other) nssv_noexcept
         {
-            throw std::out_of_range("rapidfuzz::string_view::copy()");
+            data_ = other.data_;
+            size_ = other.size_;
+            return *this;
         }
-#endif
-        const size_type rlen = (std::min)( n, size() - pos );
+#        endif
 
-        (void) Traits::copy( dest, data() + pos, rlen );
+        // 24.4.2.2 Iterator support:
 
-        return rlen;
-    }
-
-    nssv_constexpr14 basic_string_view substr( size_type pos = 0, size_type n = npos ) const
-    {
-#if nssv_CONFIG_NO_EXCEPTIONS
-        assert( pos <= size() );
-#else
-        if ( pos > size() )
+        nssv_constexpr const_iterator begin() const nssv_noexcept
         {
-            throw std::out_of_range("rapidfuzz::string_view::substr()");
+            return data_;
         }
-#endif
-        return basic_string_view( data() + pos, (std::min)( n, size() - pos ) );
-    }
-
-    // compare(), 6x:
-
-    nssv_constexpr14 int compare( basic_string_view other ) const nssv_noexcept // (1)
-    {
-        if ( const int result = Traits::compare( data(), other.data(), (std::min)( size(), other.size() ) ) )
+        nssv_constexpr const_iterator end() const nssv_noexcept
         {
-            return result;
+            return data_ + size_;
         }
 
-        return size() == other.size() ? 0 : size() < other.size() ? -1 : 1;
-    }
-
-    nssv_constexpr int compare( size_type pos1, size_type n1, basic_string_view other ) const // (2)
-    {
-        return substr( pos1, n1 ).compare( other );
-    }
-
-    nssv_constexpr int compare( size_type pos1, size_type n1, basic_string_view other, size_type pos2, size_type n2 ) const // (3)
-    {
-        return substr( pos1, n1 ).compare( other.substr( pos2, n2 ) );
-    }
-
-    nssv_constexpr int compare( CharT const * s ) const // (4)
-    {
-        return compare( basic_string_view( s ) );
-    }
-
-    nssv_constexpr int compare( size_type pos1, size_type n1, CharT const * s ) const // (5)
-    {
-        return substr( pos1, n1 ).compare( basic_string_view( s ) );
-    }
-
-    nssv_constexpr int compare( size_type pos1, size_type n1, CharT const * s, size_type n2 ) const // (6)
-    {
-        return substr( pos1, n1 ).compare( basic_string_view( s, n2 ) );
-    }
-
-    // 24.4.2.7 Searching:
-
-    // starts_with(), 3x, since C++20:
-
-    nssv_constexpr bool starts_with( basic_string_view v ) const nssv_noexcept  // (1)
-    {
-        return size() >= v.size() && compare( 0, v.size(), v ) == 0;
-    }
-
-    nssv_constexpr bool starts_with( CharT c ) const nssv_noexcept  // (2)
-    {
-        return starts_with( basic_string_view( &c, 1 ) );
-    }
-
-    nssv_constexpr bool starts_with( CharT const * s ) const  // (3)
-    {
-        return starts_with( basic_string_view( s ) );
-    }
-
-    // ends_with(), 3x, since C++20:
-
-    nssv_constexpr bool ends_with( basic_string_view v ) const nssv_noexcept  // (1)
-    {
-        return size() >= v.size() && compare( size() - v.size(), npos, v ) == 0;
-    }
-
-    nssv_constexpr bool ends_with( CharT c ) const nssv_noexcept  // (2)
-    {
-        return ends_with( basic_string_view( &c, 1 ) );
-    }
-
-    nssv_constexpr bool ends_with( CharT const * s ) const  // (3)
-    {
-        return ends_with( basic_string_view( s ) );
-    }
-
-    // find(), 4x:
-
-    nssv_constexpr14 size_type find( basic_string_view v, size_type pos = 0 ) const nssv_noexcept  // (1)
-    {
-        return assert( v.size() == 0 || v.data() != nssv_nullptr )
-            , pos >= size()
-            ? npos
-            : to_pos( std::search( cbegin() + pos, cend(), v.cbegin(), v.cend(), Traits::eq ) );
-    }
-
-    nssv_constexpr14 size_type find( CharT c, size_type pos = 0 ) const nssv_noexcept  // (2)
-    {
-        return find( basic_string_view( &c, 1 ), pos );
-    }
-
-    nssv_constexpr14 size_type find( CharT const * s, size_type pos, size_type n ) const  // (3)
-    {
-        return find( basic_string_view( s, n ), pos );
-    }
-
-    nssv_constexpr14 size_type find( CharT const * s, size_type pos = 0 ) const  // (4)
-    {
-        return find( basic_string_view( s ), pos );
-    }
-
-    // rfind(), 4x:
-
-    nssv_constexpr14 size_type rfind( basic_string_view v, size_type pos = npos ) const nssv_noexcept  // (1)
-    {
-        if ( size() < v.size() )
+        nssv_constexpr const_iterator cbegin() const nssv_noexcept
         {
-            return npos;
+            return begin();
+        }
+        nssv_constexpr const_iterator cend() const nssv_noexcept
+        {
+            return end();
         }
 
-        if ( v.empty() )
+        nssv_constexpr const_reverse_iterator rbegin() const nssv_noexcept
         {
-            return (std::min)( size(), pos );
+            return const_reverse_iterator(end());
+        }
+        nssv_constexpr const_reverse_iterator rend() const nssv_noexcept
+        {
+            return const_reverse_iterator(begin());
         }
 
-        const_iterator last   = cbegin() + (std::min)( size() - v.size(), pos ) + v.size();
-        const_iterator result = std::find_end( cbegin(), last, v.cbegin(), v.cend(), Traits::eq );
-
-        return result != last ? size_type( result - cbegin() ) : npos;
-    }
-
-    nssv_constexpr14 size_type rfind( CharT c, size_type pos = npos ) const nssv_noexcept  // (2)
-    {
-        return rfind( basic_string_view( &c, 1 ), pos );
-    }
-
-    nssv_constexpr14 size_type rfind( CharT const * s, size_type pos, size_type n ) const  // (3)
-    {
-        return rfind( basic_string_view( s, n ), pos );
-    }
-
-    nssv_constexpr14 size_type rfind( CharT const * s, size_type pos = npos ) const  // (4)
-    {
-        return rfind( basic_string_view( s ), pos );
-    }
-
-    // find_first_of(), 4x:
-
-    nssv_constexpr size_type find_first_of( basic_string_view v, size_type pos = 0 ) const nssv_noexcept  // (1)
-    {
-        return pos >= size()
-            ? npos
-            : to_pos( std::find_first_of( cbegin() + pos, cend(), v.cbegin(), v.cend(), Traits::eq ) );
-    }
-
-    nssv_constexpr size_type find_first_of( CharT c, size_type pos = 0 ) const nssv_noexcept  // (2)
-    {
-        return find_first_of( basic_string_view( &c, 1 ), pos );
-    }
-
-    nssv_constexpr size_type find_first_of( CharT const * s, size_type pos, size_type n ) const  // (3)
-    {
-        return find_first_of( basic_string_view( s, n ), pos );
-    }
-
-    nssv_constexpr size_type find_first_of(  CharT const * s, size_type pos = 0 ) const  // (4)
-    {
-        return find_first_of( basic_string_view( s ), pos );
-    }
-
-    // find_last_of(), 4x:
-
-    nssv_constexpr size_type find_last_of( basic_string_view v, size_type pos = npos ) const nssv_noexcept  // (1)
-    {
-        return empty()
-            ? npos
-            : pos >= size()
-            ? find_last_of( v, size() - 1 )
-            : to_pos( std::find_first_of( const_reverse_iterator( cbegin() + pos + 1 ), crend(), v.cbegin(), v.cend(), Traits::eq ) );
-    }
-
-    nssv_constexpr size_type find_last_of( CharT c, size_type pos = npos ) const nssv_noexcept  // (2)
-    {
-        return find_last_of( basic_string_view( &c, 1 ), pos );
-    }
-
-    nssv_constexpr size_type find_last_of( CharT const * s, size_type pos, size_type count ) const  // (3)
-    {
-        return find_last_of( basic_string_view( s, count ), pos );
-    }
-
-    nssv_constexpr size_type find_last_of( CharT const * s, size_type pos = npos ) const  // (4)
-    {
-        return find_last_of( basic_string_view( s ), pos );
-    }
-
-    // find_first_not_of(), 4x:
-
-    nssv_constexpr size_type find_first_not_of( basic_string_view v, size_type pos = 0 ) const nssv_noexcept  // (1)
-    {
-        return pos >= size()
-            ? npos
-            : to_pos( std::find_if( cbegin() + pos, cend(), not_in_view( v ) ) );
-    }
-
-    nssv_constexpr size_type find_first_not_of( CharT c, size_type pos = 0 ) const nssv_noexcept  // (2)
-    {
-        return find_first_not_of( basic_string_view( &c, 1 ), pos );
-    }
-
-    nssv_constexpr size_type find_first_not_of( CharT const * s, size_type pos, size_type count ) const  // (3)
-    {
-        return find_first_not_of( basic_string_view( s, count ), pos );
-    }
-
-    nssv_constexpr size_type find_first_not_of( CharT const * s, size_type pos = 0 ) const  // (4)
-    {
-        return find_first_not_of( basic_string_view( s ), pos );
-    }
-
-    // find_last_not_of(), 4x:
-
-    nssv_constexpr size_type find_last_not_of( basic_string_view v, size_type pos = npos ) const nssv_noexcept  // (1)
-    {
-        return empty()
-            ? npos
-            : pos >= size()
-            ? find_last_not_of( v, size() - 1 )
-            : to_pos( std::find_if( const_reverse_iterator( cbegin() + pos + 1 ), crend(), not_in_view( v ) ) );
-    }
-
-    nssv_constexpr size_type find_last_not_of( CharT c, size_type pos = npos ) const nssv_noexcept  // (2)
-    {
-        return find_last_not_of( basic_string_view( &c, 1 ), pos );
-    }
-
-    nssv_constexpr size_type find_last_not_of( CharT const * s, size_type pos, size_type count ) const  // (3)
-    {
-        return find_last_not_of( basic_string_view( s, count ), pos );
-    }
-
-    nssv_constexpr size_type find_last_not_of( CharT const * s, size_type pos = npos ) const  // (4)
-    {
-        return find_last_not_of( basic_string_view( s ), pos );
-    }
-
-    // Constants:
-
-#if nssv_CPP17_OR_GREATER
-    static nssv_constexpr size_type npos = size_type(-1);
-#elif nssv_CPP11_OR_GREATER
-    enum : size_type { npos = size_type(-1) };
-#else
-    enum { npos = size_type(-1) };
-#endif
-
-private:
-    struct not_in_view
-    {
-        const basic_string_view v;
-
-        nssv_constexpr explicit not_in_view( basic_string_view v_ ) : v( v_ ) {}
-
-        nssv_constexpr bool operator()( CharT c ) const
+        nssv_constexpr const_reverse_iterator crbegin() const nssv_noexcept
         {
-            return npos == v.find_first_of( c );
+            return rbegin();
         }
+        nssv_constexpr const_reverse_iterator crend() const nssv_noexcept
+        {
+            return rend();
+        }
+
+        // 24.4.2.3 Capacity:
+
+        nssv_constexpr size_type size() const nssv_noexcept
+        {
+            return size_;
+        }
+        nssv_constexpr size_type length() const nssv_noexcept
+        {
+            return size_;
+        }
+        nssv_constexpr size_type max_size() const nssv_noexcept
+        {
+            return (std::numeric_limits<size_type>::max)();
+        }
+
+        // since C++20
+        nssv_nodiscard nssv_constexpr bool empty() const nssv_noexcept
+        {
+            return 0 == size_;
+        }
+
+        // 24.4.2.4 Element access:
+
+        nssv_constexpr const_reference operator[](size_type pos) const
+        {
+            return data_at(pos);
+        }
+
+        nssv_constexpr14 const_reference at(size_type pos) const
+        {
+#        if nssv_CONFIG_NO_EXCEPTIONS
+            assert(pos < size());
+#        else
+            if (pos >= size()) {
+                throw std::out_of_range("rapidfuzz::string_view::at()");
+            }
+#        endif
+            return data_at(pos);
+        }
+
+        nssv_constexpr const_reference front() const
+        {
+            return data_at(0);
+        }
+        nssv_constexpr const_reference back() const
+        {
+            return data_at(size() - 1);
+        }
+
+        nssv_constexpr const_pointer data() const nssv_noexcept
+        {
+            return data_;
+        }
+
+        // 24.4.2.5 Modifiers:
+
+        nssv_constexpr14 void remove_prefix(size_type n)
+        {
+            assert(n <= size());
+            data_ += n;
+            size_ -= n;
+        }
+
+        nssv_constexpr14 void remove_suffix(size_type n)
+        {
+            assert(n <= size());
+            size_ -= n;
+        }
+
+        nssv_constexpr14 void swap(basic_string_view& other) nssv_noexcept
+        {
+            using std::swap;
+            swap(data_, other.data_);
+            swap(size_, other.size_);
+        }
+
+        // 24.4.2.6 String operations:
+
+        size_type copy(CharT* dest, size_type n, size_type pos = 0) const
+        {
+#        if nssv_CONFIG_NO_EXCEPTIONS
+            assert(pos <= size());
+#        else
+            if (pos > size()) {
+                throw std::out_of_range("rapidfuzz::string_view::copy()");
+            }
+#        endif
+            const size_type rlen = (std::min)(n, size() - pos);
+
+            (void)Traits::copy(dest, data() + pos, rlen);
+
+            return rlen;
+        }
+
+        nssv_constexpr14 basic_string_view substr(size_type pos = 0, size_type n = npos) const
+        {
+#        if nssv_CONFIG_NO_EXCEPTIONS
+            assert(pos <= size());
+#        else
+            if (pos > size()) {
+                throw std::out_of_range("rapidfuzz::string_view::substr()");
+            }
+#        endif
+            return basic_string_view(data() + pos, (std::min)(n, size() - pos));
+        }
+
+        // compare(), 6x:
+
+        nssv_constexpr14 int compare(basic_string_view other) const nssv_noexcept // (1)
+        {
+            if (const int result =
+                    Traits::compare(data(), other.data(), (std::min)(size(), other.size()))) {
+                return result;
+            }
+
+            return size() == other.size() ? 0 : size() < other.size() ? -1 : 1;
+        }
+
+        nssv_constexpr int compare(size_type pos1, size_type n1,
+                                   basic_string_view other) const // (2)
+        {
+            return substr(pos1, n1).compare(other);
+        }
+
+        nssv_constexpr int compare(size_type pos1, size_type n1, basic_string_view other,
+                                   size_type pos2, size_type n2) const // (3)
+        {
+            return substr(pos1, n1).compare(other.substr(pos2, n2));
+        }
+
+        nssv_constexpr int compare(CharT const* s) const // (4)
+        {
+            return compare(basic_string_view(s));
+        }
+
+        nssv_constexpr int compare(size_type pos1, size_type n1, CharT const* s) const // (5)
+        {
+            return substr(pos1, n1).compare(basic_string_view(s));
+        }
+
+        nssv_constexpr int compare(size_type pos1, size_type n1, CharT const* s,
+                                   size_type n2) const // (6)
+        {
+            return substr(pos1, n1).compare(basic_string_view(s, n2));
+        }
+
+        // 24.4.2.7 Searching:
+
+        // starts_with(), 3x, since C++20:
+
+        nssv_constexpr bool starts_with(basic_string_view v) const nssv_noexcept // (1)
+        {
+            return size() >= v.size() && compare(0, v.size(), v) == 0;
+        }
+
+        nssv_constexpr bool starts_with(CharT c) const nssv_noexcept // (2)
+        {
+            return starts_with(basic_string_view(&c, 1));
+        }
+
+        nssv_constexpr bool starts_with(CharT const* s) const // (3)
+        {
+            return starts_with(basic_string_view(s));
+        }
+
+        // ends_with(), 3x, since C++20:
+
+        nssv_constexpr bool ends_with(basic_string_view v) const nssv_noexcept // (1)
+        {
+            return size() >= v.size() && compare(size() - v.size(), npos, v) == 0;
+        }
+
+        nssv_constexpr bool ends_with(CharT c) const nssv_noexcept // (2)
+        {
+            return ends_with(basic_string_view(&c, 1));
+        }
+
+        nssv_constexpr bool ends_with(CharT const* s) const // (3)
+        {
+            return ends_with(basic_string_view(s));
+        }
+
+        // find(), 4x:
+
+        nssv_constexpr14 size_type find(basic_string_view v,
+                                        size_type pos = 0) const nssv_noexcept // (1)
+        {
+            return assert(v.size() == 0 || v.data() != nssv_nullptr),
+                   pos >= size() ? npos
+                                 : to_pos(std::search(cbegin() + pos, cend(), v.cbegin(), v.cend(),
+                                                      Traits::eq));
+        }
+
+        nssv_constexpr14 size_type find(CharT c, size_type pos = 0) const nssv_noexcept // (2)
+        {
+            return find(basic_string_view(&c, 1), pos);
+        }
+
+        nssv_constexpr14 size_type find(CharT const* s, size_type pos, size_type n) const // (3)
+        {
+            return find(basic_string_view(s, n), pos);
+        }
+
+        nssv_constexpr14 size_type find(CharT const* s, size_type pos = 0) const // (4)
+        {
+            return find(basic_string_view(s), pos);
+        }
+
+        // rfind(), 4x:
+
+        nssv_constexpr14 size_type rfind(basic_string_view v,
+                                         size_type pos = npos) const nssv_noexcept // (1)
+        {
+            if (size() < v.size()) {
+                return npos;
+            }
+
+            if (v.empty()) {
+                return (std::min)(size(), pos);
+            }
+
+            const_iterator last = cbegin() + (std::min)(size() - v.size(), pos) + v.size();
+            const_iterator result = std::find_end(cbegin(), last, v.cbegin(), v.cend(), Traits::eq);
+
+            return result != last ? size_type(result - cbegin()) : npos;
+        }
+
+        nssv_constexpr14 size_type rfind(CharT c, size_type pos = npos) const nssv_noexcept // (2)
+        {
+            return rfind(basic_string_view(&c, 1), pos);
+        }
+
+        nssv_constexpr14 size_type rfind(CharT const* s, size_type pos, size_type n) const // (3)
+        {
+            return rfind(basic_string_view(s, n), pos);
+        }
+
+        nssv_constexpr14 size_type rfind(CharT const* s, size_type pos = npos) const // (4)
+        {
+            return rfind(basic_string_view(s), pos);
+        }
+
+        // find_first_of(), 4x:
+
+        nssv_constexpr size_type find_first_of(basic_string_view v,
+                                               size_type pos = 0) const nssv_noexcept // (1)
+        {
+            return pos >= size() ? npos
+                                 : to_pos(std::find_first_of(cbegin() + pos, cend(), v.cbegin(),
+                                                             v.cend(), Traits::eq));
+        }
+
+        nssv_constexpr size_type find_first_of(CharT c,
+                                               size_type pos = 0) const nssv_noexcept // (2)
+        {
+            return find_first_of(basic_string_view(&c, 1), pos);
+        }
+
+        nssv_constexpr size_type find_first_of(CharT const* s, size_type pos,
+                                               size_type n) const // (3)
+        {
+            return find_first_of(basic_string_view(s, n), pos);
+        }
+
+        nssv_constexpr size_type find_first_of(CharT const* s, size_type pos = 0) const // (4)
+        {
+            return find_first_of(basic_string_view(s), pos);
+        }
+
+        // find_last_of(), 4x:
+
+        nssv_constexpr size_type find_last_of(basic_string_view v,
+                                              size_type pos = npos) const nssv_noexcept // (1)
+        {
+            return empty() ? npos
+                   : pos >= size()
+                       ? find_last_of(v, size() - 1)
+                       : to_pos(std::find_first_of(const_reverse_iterator(cbegin() + pos + 1),
+                                                   crend(), v.cbegin(), v.cend(), Traits::eq));
+        }
+
+        nssv_constexpr size_type find_last_of(CharT c,
+                                              size_type pos = npos) const nssv_noexcept // (2)
+        {
+            return find_last_of(basic_string_view(&c, 1), pos);
+        }
+
+        nssv_constexpr size_type find_last_of(CharT const* s, size_type pos,
+                                              size_type count) const // (3)
+        {
+            return find_last_of(basic_string_view(s, count), pos);
+        }
+
+        nssv_constexpr size_type find_last_of(CharT const* s, size_type pos = npos) const // (4)
+        {
+            return find_last_of(basic_string_view(s), pos);
+        }
+
+        // find_first_not_of(), 4x:
+
+        nssv_constexpr size_type find_first_not_of(basic_string_view v,
+                                                   size_type pos = 0) const nssv_noexcept // (1)
+        {
+            return pos >= size() ? npos
+                                 : to_pos(std::find_if(cbegin() + pos, cend(), not_in_view(v)));
+        }
+
+        nssv_constexpr size_type find_first_not_of(CharT c,
+                                                   size_type pos = 0) const nssv_noexcept // (2)
+        {
+            return find_first_not_of(basic_string_view(&c, 1), pos);
+        }
+
+        nssv_constexpr size_type find_first_not_of(CharT const* s, size_type pos,
+                                                   size_type count) const // (3)
+        {
+            return find_first_not_of(basic_string_view(s, count), pos);
+        }
+
+        nssv_constexpr size_type find_first_not_of(CharT const* s, size_type pos = 0) const // (4)
+        {
+            return find_first_not_of(basic_string_view(s), pos);
+        }
+
+        // find_last_not_of(), 4x:
+
+        nssv_constexpr size_type find_last_not_of(basic_string_view v,
+                                                  size_type pos = npos) const nssv_noexcept // (1)
+        {
+            return empty()         ? npos
+                   : pos >= size() ? find_last_not_of(v, size() - 1)
+                                   : to_pos(std::find_if(const_reverse_iterator(cbegin() + pos + 1),
+                                                         crend(), not_in_view(v)));
+        }
+
+        nssv_constexpr size_type find_last_not_of(CharT c,
+                                                  size_type pos = npos) const nssv_noexcept // (2)
+        {
+            return find_last_not_of(basic_string_view(&c, 1), pos);
+        }
+
+        nssv_constexpr size_type find_last_not_of(CharT const* s, size_type pos,
+                                                  size_type count) const // (3)
+        {
+            return find_last_not_of(basic_string_view(s, count), pos);
+        }
+
+        nssv_constexpr size_type find_last_not_of(CharT const* s, size_type pos = npos) const // (4)
+        {
+            return find_last_not_of(basic_string_view(s), pos);
+        }
+
+        // Constants:
+
+#        if nssv_CPP17_OR_GREATER
+        static nssv_constexpr size_type npos = size_type(-1);
+#        elif nssv_CPP11_OR_GREATER
+        enum : size_type { npos = size_type(-1) };
+#        else
+        enum { npos = size_type(-1) };
+#        endif
+
+    private:
+        struct not_in_view {
+            const basic_string_view v;
+
+            nssv_constexpr explicit not_in_view(basic_string_view v_) : v(v_)
+            {}
+
+            nssv_constexpr bool operator()(CharT c) const
+            {
+                return npos == v.find_first_of(c);
+            }
+        };
+
+        nssv_constexpr size_type to_pos(const_iterator it) const
+        {
+            return it == cend() ? npos : size_type(it - cbegin());
+        }
+
+        nssv_constexpr size_type to_pos(const_reverse_iterator it) const
+        {
+            return it == crend() ? npos : size_type(crend() - it - 1);
+        }
+
+        nssv_constexpr const_reference data_at(size_type pos) const
+        {
+#        if nssv_BETWEEN(nssv_COMPILER_GNUC_VERSION, 1, 500)
+            return data_[pos];
+#        else
+            return assert(pos < size()), data_[pos];
+#        endif
+        }
+
+    private:
+        const_pointer data_;
+        size_type size_;
+
+    public:
+#        if nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS
+
+        template <class Allocator>
+        basic_string_view(std::basic_string<CharT, Traits, Allocator> const& s) nssv_noexcept
+            : data_(s.data()),
+              size_(s.size())
+        {}
+
+#            if nssv_HAVE_EXPLICIT_CONVERSION
+
+        template <class Allocator>
+        explicit operator std::basic_string<CharT, Traits, Allocator>() const
+        {
+            return to_string(Allocator());
+        }
+
+#            endif // nssv_HAVE_EXPLICIT_CONVERSION
+
+#            if nssv_CPP11_OR_GREATER
+
+        template <class Allocator = std::allocator<CharT>>
+        std::basic_string<CharT, Traits, Allocator>
+        to_string(Allocator const& a = Allocator()) const
+        {
+            return std::basic_string<CharT, Traits, Allocator>(begin(), end(), a);
+        }
+
+#            else
+
+        std::basic_string<CharT, Traits> to_string() const
+        {
+            return std::basic_string<CharT, Traits>(begin(), end());
+        }
+
+        template <class Allocator>
+        std::basic_string<CharT, Traits, Allocator> to_string(Allocator const& a) const
+        {
+            return std::basic_string<CharT, Traits, Allocator>(begin(), end(), a);
+        }
+
+#            endif // nssv_CPP11_OR_GREATER
+
+#        endif // nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS
     };
 
-    nssv_constexpr size_type to_pos( const_iterator it ) const
+    //
+    // Non-member functions:
+    //
+
+    // 24.4.3 Non-member comparison functions:
+    // lexicographically compare two string views (function template):
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator==(basic_string_view<CharT, Traits> lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
     {
-        return it == cend() ? npos : size_type( it - cbegin() );
+        return lhs.compare(rhs) == 0;
     }
 
-    nssv_constexpr size_type to_pos( const_reverse_iterator it ) const
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator!=(basic_string_view<CharT, Traits> lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
     {
-        return it == crend() ? npos : size_type( crend() - it - 1 );
+        return lhs.compare(rhs) != 0;
     }
 
-    nssv_constexpr const_reference data_at( size_type pos ) const
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<(basic_string_view<CharT, Traits> lhs,
+                                  basic_string_view<CharT, Traits> rhs) nssv_noexcept
     {
-#if nssv_BETWEEN( nssv_COMPILER_GNUC_VERSION, 1, 500 )
-        return data_[pos];
-#else
-        return assert( pos < size() ), data_[pos];
-#endif
+        return lhs.compare(rhs) < 0;
     }
 
-private:
-    const_pointer data_;
-    size_type     size_;
-
-public:
-#if nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS
-
-    template< class Allocator >
-    basic_string_view( std::basic_string<CharT, Traits, Allocator> const & s ) nssv_noexcept
-        : data_( s.data() )
-        , size_( s.size() )
-    {}
-
-#if nssv_HAVE_EXPLICIT_CONVERSION
-
-    template< class Allocator >
-    explicit operator std::basic_string<CharT, Traits, Allocator>() const
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<=(basic_string_view<CharT, Traits> lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
     {
-        return to_string( Allocator() );
+        return lhs.compare(rhs) <= 0;
     }
 
-#endif // nssv_HAVE_EXPLICIT_CONVERSION
-
-#if nssv_CPP11_OR_GREATER
-
-    template< class Allocator = std::allocator<CharT> >
-    std::basic_string<CharT, Traits, Allocator>
-    to_string( Allocator const & a = Allocator() ) const
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>(basic_string_view<CharT, Traits> lhs,
+                                  basic_string_view<CharT, Traits> rhs) nssv_noexcept
     {
-        return std::basic_string<CharT, Traits, Allocator>( begin(), end(), a );
+        return lhs.compare(rhs) > 0;
     }
 
-#else
-
-    std::basic_string<CharT, Traits>
-    to_string() const
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>=(basic_string_view<CharT, Traits> lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
     {
-        return std::basic_string<CharT, Traits>( begin(), end() );
+        return lhs.compare(rhs) >= 0;
     }
 
-    template< class Allocator >
-    std::basic_string<CharT, Traits, Allocator>
-    to_string( Allocator const & a ) const
+    // Let S be basic_string_view<CharT, Traits>, and sv be an instance of S.
+    // Implementations shall provide sufficient additional overloads marked
+    // constexpr and noexcept so that an object t with an implicit conversion
+    // to S can be compared according to Table 67.
+
+#        if !nssv_CPP11_OR_GREATER || nssv_BETWEEN(nssv_COMPILER_MSVC_VERSION, 100, 141)
+
+    // accomodate for older compilers:
+
+    // ==
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator==(basic_string_view<CharT, Traits> lhs,
+                                   CharT const* rhs) nssv_noexcept
     {
-        return std::basic_string<CharT, Traits, Allocator>( begin(), end(), a );
+        return lhs.compare(rhs) == 0;
     }
 
-#endif // nssv_CPP11_OR_GREATER
-
-#endif // nssv_CONFIG_CONVERSION_STD_STRING_CLASS_METHODS
-};
-
-//
-// Non-member functions:
-//
-
-// 24.4.3 Non-member comparison functions:
-// lexicographically compare two string views (function template):
-
-template< class CharT, class Traits >
-nssv_constexpr bool operator== (
-    basic_string_view <CharT, Traits> lhs,
-    basic_string_view <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) == 0 ; }
-
-template< class CharT, class Traits >
-nssv_constexpr bool operator!= (
-    basic_string_view <CharT, Traits> lhs,
-    basic_string_view <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) != 0 ; }
-
-template< class CharT, class Traits >
-nssv_constexpr bool operator< (
-    basic_string_view <CharT, Traits> lhs,
-    basic_string_view <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) < 0 ; }
-
-template< class CharT, class Traits >
-nssv_constexpr bool operator<= (
-    basic_string_view <CharT, Traits> lhs,
-    basic_string_view <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) <= 0 ; }
-
-template< class CharT, class Traits >
-nssv_constexpr bool operator> (
-    basic_string_view <CharT, Traits> lhs,
-    basic_string_view <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) > 0 ; }
-
-template< class CharT, class Traits >
-nssv_constexpr bool operator>= (
-    basic_string_view <CharT, Traits> lhs,
-    basic_string_view <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) >= 0 ; }
-
-// Let S be basic_string_view<CharT, Traits>, and sv be an instance of S.
-// Implementations shall provide sufficient additional overloads marked
-// constexpr and noexcept so that an object t with an implicit conversion
-// to S can be compared according to Table 67.
-
-#if ! nssv_CPP11_OR_GREATER || nssv_BETWEEN( nssv_COMPILER_MSVC_VERSION, 100, 141 )
-
-// accomodate for older compilers:
-
-// ==
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator==(
-    basic_string_view<CharT, Traits> lhs,
-    CharT const * rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) == 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator==(
-    CharT const * lhs,
-    basic_string_view<CharT, Traits> rhs ) nssv_noexcept
-{ return rhs.compare( lhs ) == 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator==(
-    basic_string_view<CharT, Traits> lhs,
-    std::basic_string<CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.size() == rhs.size() && lhs.compare( rhs ) == 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator==(
-    std::basic_string<CharT, Traits> rhs,
-    basic_string_view<CharT, Traits> lhs ) nssv_noexcept
-{ return lhs.size() == rhs.size() && lhs.compare( rhs ) == 0; }
-
-// !=
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator!=(
-    basic_string_view<CharT, Traits> lhs,
-    char const * rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) != 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator!=(
-    char const * lhs,
-    basic_string_view<CharT, Traits> rhs ) nssv_noexcept
-{ return rhs.compare( lhs ) != 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator!=(
-    basic_string_view<CharT, Traits> lhs,
-    std::basic_string<CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.size() != rhs.size() && lhs.compare( rhs ) != 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator!=(
-    std::basic_string<CharT, Traits> rhs,
-    basic_string_view<CharT, Traits> lhs ) nssv_noexcept
-{ return lhs.size() != rhs.size() || rhs.compare( lhs ) != 0; }
-
-// <
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<(
-    basic_string_view<CharT, Traits> lhs,
-    char const * rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) < 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<(
-    char const * lhs,
-    basic_string_view<CharT, Traits> rhs ) nssv_noexcept
-{ return rhs.compare( lhs ) > 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<(
-    basic_string_view<CharT, Traits> lhs,
-    std::basic_string<CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) < 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<(
-    std::basic_string<CharT, Traits> rhs,
-    basic_string_view<CharT, Traits> lhs ) nssv_noexcept
-{ return rhs.compare( lhs ) > 0; }
-
-// <=
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<=(
-    basic_string_view<CharT, Traits> lhs,
-    char const * rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) <= 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<=(
-    char const * lhs,
-    basic_string_view<CharT, Traits> rhs ) nssv_noexcept
-{ return rhs.compare( lhs ) >= 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<=(
-    basic_string_view<CharT, Traits> lhs,
-    std::basic_string<CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) <= 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator<=(
-    std::basic_string<CharT, Traits> rhs,
-    basic_string_view<CharT, Traits> lhs ) nssv_noexcept
-{ return rhs.compare( lhs ) >= 0; }
-
-// >
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>(
-    basic_string_view<CharT, Traits> lhs,
-    char const * rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) > 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>(
-    char const * lhs,
-    basic_string_view<CharT, Traits> rhs ) nssv_noexcept
-{ return rhs.compare( lhs ) < 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>(
-    basic_string_view<CharT, Traits> lhs,
-    std::basic_string<CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) > 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>(
-    std::basic_string<CharT, Traits> rhs,
-    basic_string_view<CharT, Traits> lhs ) nssv_noexcept
-{ return rhs.compare( lhs ) < 0; }
-
-// >=
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>=(
-    basic_string_view<CharT, Traits> lhs,
-    char const * rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) >= 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>=(
-    char const * lhs,
-    basic_string_view<CharT, Traits> rhs ) nssv_noexcept
-{ return rhs.compare( lhs ) <= 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>=(
-    basic_string_view<CharT, Traits> lhs,
-    std::basic_string<CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) >= 0; }
-
-template< class CharT, class Traits>
-nssv_constexpr bool operator>=(
-    std::basic_string<CharT, Traits> rhs,
-    basic_string_view<CharT, Traits> lhs ) nssv_noexcept
-{ return rhs.compare( lhs ) <= 0; }
-
-#else // newer compilers:
-
-#define nssv_BASIC_STRING_VIEW_I(T,U)  typename std::decay< basic_string_view<T,U> >::type
-
-#if nssv_BETWEEN( nssv_COMPILER_MSVC_VERSION, 140, 150 )
-# define nssv_MSVC_ORDER(x)  , int=x
-#else
-# define nssv_MSVC_ORDER(x)  /*, int=x*/
-#endif
-
-// ==
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(1) >
-nssv_constexpr bool operator==(
-         basic_string_view  <CharT, Traits> lhs,
-    nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) == 0; }
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(2) >
-nssv_constexpr bool operator==(
-    nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
-         basic_string_view  <CharT, Traits> rhs ) nssv_noexcept
-{ return lhs.size() == rhs.size() && lhs.compare( rhs ) == 0; }
-
-// !=
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(1) >
-nssv_constexpr bool operator!= (
-         basic_string_view  < CharT, Traits > lhs,
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) rhs ) nssv_noexcept
-{ return lhs.size() != rhs.size() || lhs.compare( rhs ) != 0 ; }
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(2) >
-nssv_constexpr bool operator!= (
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) lhs,
-         basic_string_view  < CharT, Traits > rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) != 0 ; }
-
-// <
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(1) >
-nssv_constexpr bool operator< (
-         basic_string_view  < CharT, Traits > lhs,
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) < 0 ; }
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(2) >
-nssv_constexpr bool operator< (
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) lhs,
-         basic_string_view  < CharT, Traits > rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) < 0 ; }
-
-// <=
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(1) >
-nssv_constexpr bool operator<= (
-         basic_string_view  < CharT, Traits > lhs,
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) <= 0 ; }
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(2) >
-nssv_constexpr bool operator<= (
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) lhs,
-         basic_string_view  < CharT, Traits > rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) <= 0 ; }
-
-// >
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(1) >
-nssv_constexpr bool operator> (
-         basic_string_view  < CharT, Traits > lhs,
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) > 0 ; }
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(2) >
-nssv_constexpr bool operator> (
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) lhs,
-         basic_string_view  < CharT, Traits > rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) > 0 ; }
-
-// >=
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(1) >
-nssv_constexpr bool operator>= (
-         basic_string_view  < CharT, Traits > lhs,
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) >= 0 ; }
-
-template< class CharT, class Traits  nssv_MSVC_ORDER(2) >
-nssv_constexpr bool operator>= (
-    nssv_BASIC_STRING_VIEW_I( CharT, Traits ) lhs,
-         basic_string_view  < CharT, Traits > rhs ) nssv_noexcept
-{ return lhs.compare( rhs ) >= 0 ; }
-
-#undef nssv_MSVC_ORDER
-#undef nssv_BASIC_STRING_VIEW_I
-
-#endif // compiler-dependent approach to comparisons
-
-// 24.4.4 Inserters and extractors:
-
-namespace detail {
-
-template< class Stream >
-void write_padding( Stream & os, std::streamsize n )
-{
-    for ( std::streamsize i = 0; i < n; ++i )
-        os.rdbuf()->sputc( os.fill() );
-}
-
-template< class Stream, class View >
-Stream & write_to_stream( Stream & os, View const & sv )
-{
-    typename Stream::sentry sentry( os );
-
-    if ( !os )
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator==(CharT const* lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) == 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator==(basic_string_view<CharT, Traits> lhs,
+                                   std::basic_string<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator==(std::basic_string<CharT, Traits> rhs,
+                                   basic_string_view<CharT, Traits> lhs) nssv_noexcept
+    {
+        return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
+    }
+
+    // !=
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator!=(basic_string_view<CharT, Traits> lhs,
+                                   char const* rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) != 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator!=(char const* lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) != 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator!=(basic_string_view<CharT, Traits> lhs,
+                                   std::basic_string<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.size() != rhs.size() && lhs.compare(rhs) != 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator!=(std::basic_string<CharT, Traits> rhs,
+                                   basic_string_view<CharT, Traits> lhs) nssv_noexcept
+    {
+        return lhs.size() != rhs.size() || rhs.compare(lhs) != 0;
+    }
+
+    // <
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<(basic_string_view<CharT, Traits> lhs,
+                                  char const* rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) < 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<(char const* lhs,
+                                  basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) > 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<(basic_string_view<CharT, Traits> lhs,
+                                  std::basic_string<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) < 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<(std::basic_string<CharT, Traits> rhs,
+                                  basic_string_view<CharT, Traits> lhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) > 0;
+    }
+
+    // <=
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<=(basic_string_view<CharT, Traits> lhs,
+                                   char const* rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) <= 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<=(char const* lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) >= 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<=(basic_string_view<CharT, Traits> lhs,
+                                   std::basic_string<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) <= 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator<=(std::basic_string<CharT, Traits> rhs,
+                                   basic_string_view<CharT, Traits> lhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) >= 0;
+    }
+
+    // >
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>(basic_string_view<CharT, Traits> lhs,
+                                  char const* rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) > 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>(char const* lhs,
+                                  basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) < 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>(basic_string_view<CharT, Traits> lhs,
+                                  std::basic_string<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) > 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>(std::basic_string<CharT, Traits> rhs,
+                                  basic_string_view<CharT, Traits> lhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) < 0;
+    }
+
+    // >=
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>=(basic_string_view<CharT, Traits> lhs,
+                                   char const* rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) >= 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>=(char const* lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) <= 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>=(basic_string_view<CharT, Traits> lhs,
+                                   std::basic_string<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) >= 0;
+    }
+
+    template <class CharT, class Traits>
+    nssv_constexpr bool operator>=(std::basic_string<CharT, Traits> rhs,
+                                   basic_string_view<CharT, Traits> lhs) nssv_noexcept
+    {
+        return rhs.compare(lhs) <= 0;
+    }
+
+#        else // newer compilers:
+
+#            define nssv_BASIC_STRING_VIEW_I(T, U)                                                 \
+                typename std::decay<basic_string_view<T, U>>::type
+
+#            if nssv_BETWEEN(nssv_COMPILER_MSVC_VERSION, 140, 150)
+#                define nssv_MSVC_ORDER(x) , int = x
+#            else
+#                define nssv_MSVC_ORDER(x) /*, int=x*/
+#            endif
+
+    // ==
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(1)>
+    nssv_constexpr bool operator==(basic_string_view<CharT, Traits> lhs,
+                                   nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) == 0;
+    }
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(2)>
+    nssv_constexpr bool operator==(nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
+    }
+
+    // !=
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(1)>
+    nssv_constexpr bool operator!=(basic_string_view<CharT, Traits> lhs,
+                                   nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs) nssv_noexcept
+    {
+        return lhs.size() != rhs.size() || lhs.compare(rhs) != 0;
+    }
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(2)>
+    nssv_constexpr bool operator!=(nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) != 0;
+    }
+
+    // <
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(1)>
+    nssv_constexpr bool operator<(basic_string_view<CharT, Traits> lhs,
+                                  nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) < 0;
+    }
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(2)>
+    nssv_constexpr bool operator<(nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
+                                  basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) < 0;
+    }
+
+    // <=
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(1)>
+    nssv_constexpr bool operator<=(basic_string_view<CharT, Traits> lhs,
+                                   nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) <= 0;
+    }
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(2)>
+    nssv_constexpr bool operator<=(nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) <= 0;
+    }
+
+    // >
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(1)>
+    nssv_constexpr bool operator>(basic_string_view<CharT, Traits> lhs,
+                                  nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) > 0;
+    }
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(2)>
+    nssv_constexpr bool operator>(nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
+                                  basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) > 0;
+    }
+
+    // >=
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(1)>
+    nssv_constexpr bool operator>=(basic_string_view<CharT, Traits> lhs,
+                                   nssv_BASIC_STRING_VIEW_I(CharT, Traits) rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) >= 0;
+    }
+
+    template <class CharT, class Traits nssv_MSVC_ORDER(2)>
+    nssv_constexpr bool operator>=(nssv_BASIC_STRING_VIEW_I(CharT, Traits) lhs,
+                                   basic_string_view<CharT, Traits> rhs) nssv_noexcept
+    {
+        return lhs.compare(rhs) >= 0;
+    }
+
+#            undef nssv_MSVC_ORDER
+#            undef nssv_BASIC_STRING_VIEW_I
+
+#        endif // compiler-dependent approach to comparisons
+
+    // 24.4.4 Inserters and extractors:
+
+    namespace detail {
+
+    template <class Stream>
+    void write_padding(Stream& os, std::streamsize n)
+    {
+        for (std::streamsize i = 0; i < n; ++i)
+            os.rdbuf()->sputc(os.fill());
+    }
+
+    template <class Stream, class View>
+    Stream& write_to_stream(Stream& os, View const& sv)
+    {
+        typename Stream::sentry sentry(os);
+
+        if (!os) return os;
+
+        const std::streamsize length = static_cast<std::streamsize>(sv.length());
+
+        // Whether, and how, to pad:
+        const bool pad = (length < os.width());
+        const bool left_pad =
+            pad && (os.flags() & std::ios_base::adjustfield) == std::ios_base::right;
+
+        if (left_pad) write_padding(os, os.width() - length);
+
+        // Write span characters:
+        os.rdbuf()->sputn(sv.begin(), length);
+
+        if (pad && !left_pad) write_padding(os, os.width() - length);
+
+        // Reset output stream width:
+        os.width(0);
+
         return os;
+    }
 
-    const std::streamsize length = static_cast<std::streamsize>( sv.length() );
+    } // namespace detail
 
-    // Whether, and how, to pad:
-    const bool      pad = ( length < os.width() );
-    const bool left_pad = pad && ( os.flags() & std::ios_base::adjustfield ) == std::ios_base::right;
+    template <class CharT, class Traits>
+    std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os,
+                                                  basic_string_view<CharT, Traits> sv)
+    {
+        return detail::write_to_stream(os, sv);
+    }
 
-    if ( left_pad )
-        write_padding( os, os.width() - length );
+    // Several typedefs for common character types are provided:
 
-    // Write span characters:
-    os.rdbuf()->sputn( sv.begin(), length );
+    typedef basic_string_view<char> string_view;
+    typedef basic_string_view<wchar_t> wstring_view;
+#        if nssv_HAVE_WCHAR16_T
+    typedef basic_string_view<char16_t> u16string_view;
+    typedef basic_string_view<char32_t> u32string_view;
+#        endif
 
-    if ( pad && !left_pad )
-        write_padding( os, os.width() - length );
-
-    // Reset output stream width:
-    os.width( 0 );
-
-    return os;
-}
-
-} // namespace detail
-
-template< class CharT, class Traits >
-std::basic_ostream<CharT, Traits> &
-operator<<(
-    std::basic_ostream<CharT, Traits>& os,
-    basic_string_view <CharT, Traits> sv )
-{
-    return detail::write_to_stream( os, sv );
-}
-
-// Several typedefs for common character types are provided:
-
-typedef basic_string_view<char>      string_view;
-typedef basic_string_view<wchar_t>   wstring_view;
-#if nssv_HAVE_WCHAR16_T
-typedef basic_string_view<char16_t>  u16string_view;
-typedef basic_string_view<char32_t>  u32string_view;
-#endif
-
-}} // namespace rapidfuzz::sv_lite
+    } // namespace sv_lite
+} // namespace rapidfuzz::sv_lite
 
 //
 // 24.4.6 Suffix for basic_string_view literals:
 //
 
-#if nssv_HAVE_USER_DEFINED_LITERALS
+#        if nssv_HAVE_USER_DEFINED_LITERALS
 
 namespace rapidfuzz {
-nssv_inline_ns namespace literals {
-nssv_inline_ns namespace string_view_literals {
-
-#if nssv_CONFIG_STD_SV_OPERATOR && nssv_HAVE_STD_DEFINED_LITERALS
-
-nssv_constexpr rapidfuzz::sv_lite::string_view operator "" sv( const char* str, size_t len ) nssv_noexcept  // (1)
+nssv_inline_ns namespace literals
 {
-    return rapidfuzz::sv_lite::string_view{ str, len };
+    nssv_inline_ns namespace string_view_literals
+    {
+
+#            if nssv_CONFIG_STD_SV_OPERATOR && nssv_HAVE_STD_DEFINED_LITERALS
+
+        nssv_constexpr rapidfuzz::sv_lite::string_view operator"" sv(const char* str, size_t len)
+            nssv_noexcept // (1)
+        {
+            return rapidfuzz::sv_lite::string_view{str, len};
+        }
+
+        nssv_constexpr rapidfuzz::sv_lite::u16string_view operator"" sv(
+            const char16_t* str, size_t len) nssv_noexcept // (2)
+        {
+            return rapidfuzz::sv_lite::u16string_view{str, len};
+        }
+
+        nssv_constexpr rapidfuzz::sv_lite::u32string_view operator"" sv(
+            const char32_t* str, size_t len) nssv_noexcept // (3)
+        {
+            return rapidfuzz::sv_lite::u32string_view{str, len};
+        }
+
+        nssv_constexpr rapidfuzz::sv_lite::wstring_view operator"" sv(
+            const wchar_t* str, size_t len) nssv_noexcept // (4)
+        {
+            return rapidfuzz::sv_lite::wstring_view{str, len};
+        }
+
+#            endif // nssv_CONFIG_STD_SV_OPERATOR && nssv_HAVE_STD_DEFINED_LITERALS
+
+#            if nssv_CONFIG_USR_SV_OPERATOR
+
+        nssv_constexpr rapidfuzz::sv_lite::string_view operator"" _sv(const char* str, size_t len)
+            nssv_noexcept // (1)
+        {
+            return rapidfuzz::sv_lite::string_view{str, len};
+        }
+
+        nssv_constexpr rapidfuzz::sv_lite::u16string_view operator"" _sv(
+            const char16_t* str, size_t len) nssv_noexcept // (2)
+        {
+            return rapidfuzz::sv_lite::u16string_view{str, len};
+        }
+
+        nssv_constexpr rapidfuzz::sv_lite::u32string_view operator"" _sv(
+            const char32_t* str, size_t len) nssv_noexcept // (3)
+        {
+            return rapidfuzz::sv_lite::u32string_view{str, len};
+        }
+
+        nssv_constexpr rapidfuzz::sv_lite::wstring_view operator"" _sv(
+            const wchar_t* str, size_t len) nssv_noexcept // (4)
+        {
+            return rapidfuzz::sv_lite::wstring_view{str, len};
+        }
+
+#            endif // nssv_CONFIG_USR_SV_OPERATOR
+    }
 }
+} // namespace rapidfuzz
 
-nssv_constexpr rapidfuzz::sv_lite::u16string_view operator "" sv( const char16_t* str, size_t len ) nssv_noexcept  // (2)
-{
-    return rapidfuzz::sv_lite::u16string_view{ str, len };
-}
-
-nssv_constexpr rapidfuzz::sv_lite::u32string_view operator "" sv( const char32_t* str, size_t len ) nssv_noexcept  // (3)
-{
-    return rapidfuzz::sv_lite::u32string_view{ str, len };
-}
-
-nssv_constexpr rapidfuzz::sv_lite::wstring_view operator "" sv( const wchar_t* str, size_t len ) nssv_noexcept  // (4)
-{
-    return rapidfuzz::sv_lite::wstring_view{ str, len };
-}
-
-#endif // nssv_CONFIG_STD_SV_OPERATOR && nssv_HAVE_STD_DEFINED_LITERALS
-
-#if nssv_CONFIG_USR_SV_OPERATOR
-
-nssv_constexpr rapidfuzz::sv_lite::string_view operator "" _sv( const char* str, size_t len ) nssv_noexcept  // (1)
-{
-    return rapidfuzz::sv_lite::string_view{ str, len };
-}
-
-nssv_constexpr rapidfuzz::sv_lite::u16string_view operator "" _sv( const char16_t* str, size_t len ) nssv_noexcept  // (2)
-{
-    return rapidfuzz::sv_lite::u16string_view{ str, len };
-}
-
-nssv_constexpr rapidfuzz::sv_lite::u32string_view operator "" _sv( const char32_t* str, size_t len ) nssv_noexcept  // (3)
-{
-    return rapidfuzz::sv_lite::u32string_view{ str, len };
-}
-
-nssv_constexpr rapidfuzz::sv_lite::wstring_view operator "" _sv( const wchar_t* str, size_t len ) nssv_noexcept  // (4)
-{
-    return rapidfuzz::sv_lite::wstring_view{ str, len };
-}
-
-#endif // nssv_CONFIG_USR_SV_OPERATOR
-
-}}} // namespace rapidfuzz::literals::string_view_literals
-
-#endif
+#        endif
 
 //
 // Extensions for std::string:
 //
 
-#if nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
+#        if nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
 
 namespace rapidfuzz {
 namespace sv_lite {
 
 // Exclude MSVC 14 (19.00): it yields ambiguous to_string():
 
-#if nssv_CPP11_OR_GREATER && nssv_COMPILER_MSVC_VERSION != 140
+#            if nssv_CPP11_OR_GREATER && nssv_COMPILER_MSVC_VERSION != 140
 
-template< class CharT, class Traits, class Allocator = std::allocator<CharT> >
-std::basic_string<CharT, Traits, Allocator>
-to_string( basic_string_view<CharT, Traits> v, Allocator const & a = Allocator() )
+template <class CharT, class Traits, class Allocator = std::allocator<CharT>>
+std::basic_string<CharT, Traits, Allocator> to_string(basic_string_view<CharT, Traits> v,
+                                                      Allocator const& a = Allocator())
 {
-    return std::basic_string<CharT,Traits, Allocator>( v.begin(), v.end(), a );
+    return std::basic_string<CharT, Traits, Allocator>(v.begin(), v.end(), a);
 }
 
-#else
+#            else
 
-template< class CharT, class Traits >
-std::basic_string<CharT, Traits>
-to_string( basic_string_view<CharT, Traits> v )
+template <class CharT, class Traits>
+std::basic_string<CharT, Traits> to_string(basic_string_view<CharT, Traits> v)
 {
-    return std::basic_string<CharT, Traits>( v.begin(), v.end() );
+    return std::basic_string<CharT, Traits>(v.begin(), v.end());
 }
 
-template< class CharT, class Traits, class Allocator >
-std::basic_string<CharT, Traits, Allocator>
-to_string( basic_string_view<CharT, Traits> v, Allocator const & a )
+template <class CharT, class Traits, class Allocator>
+std::basic_string<CharT, Traits, Allocator> to_string(basic_string_view<CharT, Traits> v,
+                                                      Allocator const& a)
 {
-    return std::basic_string<CharT, Traits, Allocator>( v.begin(), v.end(), a );
+    return std::basic_string<CharT, Traits, Allocator>(v.begin(), v.end(), a);
 }
 
-#endif // nssv_CPP11_OR_GREATER
+#            endif // nssv_CPP11_OR_GREATER
 
-template< class CharT, class Traits, class Allocator >
+template <class CharT, class Traits, class Allocator>
 basic_string_view<CharT, Traits>
-to_string_view( std::basic_string<CharT, Traits, Allocator> const & s )
+to_string_view(std::basic_string<CharT, Traits, Allocator> const& s)
 {
-    return basic_string_view<CharT, Traits>( s.data(), s.size() );
+    return basic_string_view<CharT, Traits>(s.data(), s.size());
 }
 
-}} // namespace rapidfuzz::sv_lite
+} // namespace sv_lite
+} // namespace rapidfuzz
 
-#endif // nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
+#        endif // nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
 
 //
 // make types and algorithms available in namespace rapidfuzz:
@@ -1459,12 +1573,12 @@ using sv_lite::basic_string_view;
 using sv_lite::string_view;
 using sv_lite::wstring_view;
 
-#if nssv_HAVE_WCHAR16_T
+#        if nssv_HAVE_WCHAR16_T
 using sv_lite::u16string_view;
-#endif
-#if nssv_HAVE_WCHAR32_T
+#        endif
+#        if nssv_HAVE_WCHAR32_T
 using sv_lite::u32string_view;
-#endif
+#        endif
 
 // literal "sv"
 
@@ -1477,10 +1591,10 @@ using sv_lite::operator>=;
 
 using sv_lite::operator<<;
 
-#if nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
+#        if nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
 using sv_lite::to_string;
 using sv_lite::to_string_view;
-#endif
+#        endif
 
 } // namespace rapidfuzz
 
@@ -1489,60 +1603,56 @@ using sv_lite::to_string_view;
 // Note: The hash value of a string view object is equal to the hash value of
 // the corresponding string object.
 
-#if nssv_HAVE_STD_HASH
+#        if nssv_HAVE_STD_HASH
 
-#include <functional>
+#            include <functional>
 
 namespace std {
 
-template<>
-struct hash< rapidfuzz::string_view >
-{
+template <>
+struct hash<rapidfuzz::string_view> {
 public:
-    std::size_t operator()( rapidfuzz::string_view v ) const nssv_noexcept
+    std::size_t operator()(rapidfuzz::string_view v) const nssv_noexcept
     {
-        return std::hash<std::string>()( std::string( v.data(), v.size() ) );
+        return std::hash<std::string>()(std::string(v.data(), v.size()));
     }
 };
 
-template<>
-struct hash< rapidfuzz::wstring_view >
-{
+template <>
+struct hash<rapidfuzz::wstring_view> {
 public:
-    std::size_t operator()( rapidfuzz::wstring_view v ) const nssv_noexcept
+    std::size_t operator()(rapidfuzz::wstring_view v) const nssv_noexcept
     {
-        return std::hash<std::wstring>()( std::wstring( v.data(), v.size() ) );
+        return std::hash<std::wstring>()(std::wstring(v.data(), v.size()));
     }
 };
 
-template<>
-struct hash< rapidfuzz::u16string_view >
-{
+template <>
+struct hash<rapidfuzz::u16string_view> {
 public:
-    std::size_t operator()( rapidfuzz::u16string_view v ) const nssv_noexcept
+    std::size_t operator()(rapidfuzz::u16string_view v) const nssv_noexcept
     {
-        return std::hash<std::u16string>()( std::u16string( v.data(), v.size() ) );
+        return std::hash<std::u16string>()(std::u16string(v.data(), v.size()));
     }
 };
 
-template<>
-struct hash< rapidfuzz::u32string_view >
-{
+template <>
+struct hash<rapidfuzz::u32string_view> {
 public:
-    std::size_t operator()( rapidfuzz::u32string_view v ) const nssv_noexcept
+    std::size_t operator()(rapidfuzz::u32string_view v) const nssv_noexcept
     {
-        return std::hash<std::u32string>()( std::u32string( v.data(), v.size() ) );
+        return std::hash<std::u32string>()(std::u32string(v.data(), v.size()));
     }
 };
 
 } // namespace std
 
-#endif // nssv_HAVE_STD_HASH
+#        endif // nssv_HAVE_STD_HASH
 
 nssv_RESTORE_WARNINGS()
 
-#endif // nssv_HAVE_STD_STRING_VIEW
-#endif // NONSTD_SV_LITE_H_INCLUDED
+#    endif // nssv_HAVE_STD_STRING_VIEW
+#endif     // NONSTD_SV_LITE_H_INCLUDED
 namespace rapidfuzz {
 
 /* 0.0% - 100.0% */
@@ -1552,24 +1662,24 @@ template <typename CharT>
 using string_view_vec = std::vector<basic_string_view<CharT>>;
 
 struct StringAffix {
-  std::size_t prefix_len;
-  std::size_t suffix_len;
+    std::size_t prefix_len;
+    std::size_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
-  std::size_t insert_cost;
-  std::size_t delete_cost;
-  std::size_t replace_cost;
+    std::size_t insert_cost;
+    std::size_t delete_cost;
+    std::size_t replace_cost;
 };
 
 /**
  * @brief Edit operation types used by the Levenshtein distance
  */
 enum class LevenshteinEditType {
-  None    = 0, /**< No Operation required */
-  Replace = 1, /**< Replace a character if a string by another character */
-  Insert  = 2, /**< Insert a character into a string */
-  Delete  = 3  /**< Delete a character from a string */
+    None = 0,    /**< No Operation required */
+    Replace = 1, /**< Replace a character if a string by another character */
+    Insert = 2,  /**< Insert a character into a string */
+    Delete = 3   /**< Delete a character from a string */
 };
 
 /**
@@ -1583,14 +1693,12 @@ enum class LevenshteinEditType {
  * Delete:  delete character at src_pos
  */
 struct LevenshteinEditOp {
-  LevenshteinEditType type; /**< type of the edit operation */
-  std::size_t src_pos;      /**< index into the source string */
-  std::size_t dest_pos;     /**< index into the destination string */
+    LevenshteinEditType type; /**< type of the edit operation */
+    std::size_t src_pos;      /**< index into the source string */
+    std::size_t dest_pos;     /**< index into the destination string */
 };
 
-
 } // namespace rapidfuzz
-#include <algorithm>
 #include <string>
 
 namespace rapidfuzz {
@@ -1598,76 +1706,75 @@ namespace rapidfuzz {
 template <typename CharT>
 class SplittedSentenceView {
 public:
-  SplittedSentenceView(string_view_vec<CharT> sentence) : m_sentence(std::move(sentence))
-  {}
+    SplittedSentenceView(string_view_vec<CharT> sentence) : m_sentence(std::move(sentence))
+    {}
 
-  std::size_t dedupe();
-  std::size_t size() const;
+    std::size_t dedupe();
+    std::size_t size() const;
 
-  std::size_t length() const
-  {
-    return size();
-  }
+    std::size_t length() const
+    {
+        return size();
+    }
 
-  bool empty() const
-  {
-    return m_sentence.empty();
-  }
+    bool empty() const
+    {
+        return m_sentence.empty();
+    }
 
-  std::size_t word_count() const
-  {
-    return m_sentence.size();
-  }
+    std::size_t word_count() const
+    {
+        return m_sentence.size();
+    }
 
-  std::basic_string<CharT> join() const;
+    std::basic_string<CharT> join() const;
 
-  string_view_vec<CharT> words() const
-  {
-    return m_sentence;
-  }
+    string_view_vec<CharT> words() const
+    {
+        return m_sentence;
+    }
 
 private:
-  string_view_vec<CharT> m_sentence;
+    string_view_vec<CharT> m_sentence;
 };
-
 
 template <typename CharT>
 std::size_t SplittedSentenceView<CharT>::dedupe()
 {
-  std::size_t old_word_count = word_count();
-  m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
-  return old_word_count - word_count();
+    std::size_t old_word_count = word_count();
+    m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
+    return old_word_count - word_count();
 }
 
 template <typename CharT>
 std::size_t SplittedSentenceView<CharT>::size() const
 {
-  if (m_sentence.empty()) return 0;
+    if (m_sentence.empty()) return 0;
 
-  // there is a whitespace between each word
-  std::size_t result = m_sentence.size() - 1;
-  for (const auto& word : m_sentence) {
-    result += word.size();
-  }
+    // there is a whitespace between each word
+    std::size_t result = m_sentence.size() - 1;
+    for (const auto& word : m_sentence) {
+        result += word.size();
+    }
 
-  return result;
+    return result;
 }
 
 template <typename CharT>
 std::basic_string<CharT> SplittedSentenceView<CharT>::join() const
 {
-  if (m_sentence.empty()) {
-    return std::basic_string<CharT>();
-  }
+    if (m_sentence.empty()) {
+        return std::basic_string<CharT>();
+    }
 
-  auto sentence_iter = m_sentence.begin();
-  std::basic_string<CharT> joined{*sentence_iter};
-  const std::basic_string<CharT> whitespace{0x20};
-  ++sentence_iter;
-  for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
-    joined.append(whitespace).append(std::basic_string<CharT>{*sentence_iter});
-  }
-  return joined;
+    auto sentence_iter = m_sentence.begin();
+    std::basic_string<CharT> joined{*sentence_iter};
+    const std::basic_string<CharT> whitespace{0x20};
+    ++sentence_iter;
+    for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
+        joined.append(whitespace).append(std::basic_string<CharT>{*sentence_iter});
+    }
+    return joined;
 }
 
 } // namespace rapidfuzz
@@ -1711,58 +1818,58 @@ struct satisfies_any<Cond, Conds...>
 // https://stackoverflow.com/questions/16893992/check-if-type-can-be-explicitly-converted
 template <typename From, typename To>
 struct is_explicitly_convertible {
-  template <typename T>
-  static void f(T);
+    template <typename T>
+    static void f(T);
 
-  template <typename F, typename T>
-  static constexpr auto test(int /*unused*/)
-    -> decltype(f(static_cast<T>(std::declval<F>())), true)
-  {
-    return true;
-  }
+    template <typename F, typename T>
+    static constexpr auto test(int /*unused*/)
+        -> decltype(f(static_cast<T>(std::declval<F>())), true)
+    {
+        return true;
+    }
 
-  template <typename F, typename T>
-  static constexpr auto test(...) -> bool
-  {
-    return false;
-  }
+    template <typename F, typename T>
+    static constexpr auto test(...) -> bool
+    {
+        return false;
+    }
 
-  static bool const value = test<From, To>(0);
+    static bool const value = test<From, To>(0);
 };
 
 #define GENERATE_HAS_MEMBER(member)                                                                \
                                                                                                    \
-  template <typename T>                                                                            \
-  struct has_member_##member {                                                                     \
-  private:                                                                                         \
-    using yes = std::true_type;                                                                    \
-    using no = std::false_type;                                                                    \
+    template <typename T>                                                                          \
+    struct has_member_##member {                                                                   \
+    private:                                                                                       \
+        using yes = std::true_type;                                                                \
+        using no = std::false_type;                                                                \
                                                                                                    \
-    struct Fallback {                                                                              \
-      int member;                                                                                  \
-    };                                                                                             \
-    struct Derived : T, Fallback {};                                                               \
+        struct Fallback {                                                                          \
+            int member;                                                                            \
+        };                                                                                         \
+        struct Derived : T, Fallback {};                                                           \
                                                                                                    \
-    template <class U>                                                                             \
-    static no test(decltype(U::member)*);                                                          \
-    template <typename U>                                                                          \
-    static yes test(U*);                                                                           \
+        template <class U>                                                                         \
+        static no test(decltype(U::member)*);                                                      \
+        template <typename U>                                                                      \
+        static yes test(U*);                                                                       \
                                                                                                    \
-    template <typename U, typename = enable_if_t<std::is_class<U>::value>>                         \
-    static constexpr bool class_test(U*)                                                           \
-    {                                                                                              \
-      return std::is_same<decltype(test<Derived>(nullptr)), yes>::value;                           \
-    }                                                                                              \
+        template <typename U, typename = enable_if_t<std::is_class<U>::value>>                     \
+        static constexpr bool class_test(U*)                                                       \
+        {                                                                                          \
+            return std::is_same<decltype(test<Derived>(nullptr)), yes>::value;                     \
+        }                                                                                          \
                                                                                                    \
-    template <typename U, typename = enable_if_t<!std::is_class<U>::value>>                        \
-    static constexpr bool class_test(const U&)                                                     \
-    {                                                                                              \
-      return false;                                                                                \
-    }                                                                                              \
+        template <typename U, typename = enable_if_t<!std::is_class<U>::value>>                    \
+        static constexpr bool class_test(const U&)                                                 \
+        {                                                                                          \
+            return false;                                                                          \
+        }                                                                                          \
                                                                                                    \
-  public:                                                                                          \
-    static constexpr bool value = class_test(static_cast<T*>(nullptr));                            \
-  };
+    public:                                                                                        \
+        static constexpr bool value = class_test(static_cast<T*>(nullptr));                        \
+    };
 
 GENERATE_HAS_MEMBER(data) // Creates 'has_member_data'
 GENERATE_HAS_MEMBER(size) // Creates 'has_member_size'
@@ -1772,217 +1879,79 @@ using has_data_and_size = satisfies_all<has_member_data<Sentence>, has_member_si
 
 // This trait checks if a given type is a standard collection of hashable types
 // SFINAE ftw
-template <class T> class is_hashable_sequence {
-  is_hashable_sequence() = delete;
-  using hashable = char;
-  struct not_hashable { char t[2]; };  // Ensured to work on any platform
-  template <typename C> static hashable matcher(decltype(&std::hash<typename C::value_type>::operator()));
-  template <typename C> static not_hashable matcher(...);
+template <class T>
+class is_hashable_sequence {
+    is_hashable_sequence() = delete;
+    using hashable = char;
+    struct not_hashable {
+        char t[2];
+    }; // Ensured to work on any platform
+    template <typename C>
+    static hashable matcher(decltype(&std::hash<typename C::value_type>::operator()));
+    template <typename C>
+    static not_hashable matcher(...);
 
- public:
-  static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(hashable));
+public:
+    static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(hashable));
 };
 
-template <class T> class is_standard_iterable {
-  is_standard_iterable () = delete;
-  using iterable = char;
-  struct not_iterable { char t[2]; };  // Ensured to work on any platform
-  template <typename C> static iterable matcher(typename C::const_iterator*);
-  template <typename C> static not_iterable matcher(...);
+template <class T>
+class is_standard_iterable {
+    is_standard_iterable() = delete;
+    using iterable = char;
+    struct not_iterable {
+        char t[2];
+    }; // Ensured to work on any platform
+    template <typename C>
+    static iterable matcher(typename C::const_iterator*);
+    template <typename C>
+    static not_iterable matcher(...);
 
- public:
-  static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(iterable));
+public:
+    static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(iterable));
 };
 
-
-template <typename C> void* sub_matcher(typename C::value_type const& (C::*)(size_t) const);
+template <typename C>
+void* sub_matcher(typename C::value_type const& (C::*)(size_t) const);
 
 // TODO: Not a real SFINAE, because of the ambiguity between
 // value_type const& operator[](size_t) const;
 // and value_type& operator[](size_t);
 // Not really important
-template <class T> class has_bracket_operator {
-  has_bracket_operator () = delete;
-  using has_op = char;
-  struct hasnt_op { char t[2]; };  // Ensured to work on any platform
-  template <typename C> static has_op matcher(decltype(sub_matcher<T>(&T::at)));
-  template <typename C> static hasnt_op matcher(...);
- public:
-  static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
+template <class T>
+class has_bracket_operator {
+    has_bracket_operator() = delete;
+    using has_op = char;
+    struct hasnt_op {
+        char t[2];
+    }; // Ensured to work on any platform
+    template <typename C>
+    static has_op matcher(decltype(sub_matcher<T>(&T::at)));
+    template <typename C>
+    static hasnt_op matcher(...);
+
+public:
+    static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
 };
 
 } // namespace rapidfuzz
-
-#include <cmath>
 #include <tuple>
-#include <vector>
-
-namespace rapidfuzz {
-namespace utils {
-
-/**
- * @defgroup Utils Utils
- * Utility functions
- * @{
- */
-
-/**
- * @brief removes any non alphanumeric characters, trim whitespaces from
- * beginning/end and lowercase the string. Currently this only supports
- * Ascii. Characters outside of the ascii spec are not changed. This
- * will be changed in the future to support full unicode. In case this has
- * has a noticable effect on the performance an additional `ascii_default_process`
- * function will be provided, that keeps this behaviour
- *
- * @tparam CharT char type of the string
- *
- * @param s string to process
- *
- * @return returns the processed string
- */
-
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
-std::basic_string<CharT> default_process(Sentence&& s);
-
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
-                           has_data_and_size<Sentence>::value>>
-std::basic_string<CharT> default_process(Sentence s);
-
-template <typename CharT>
-std::size_t default_process(CharT* str, std::size_t len);
-
-/**@}*/
-
-} // namespace utils
-} // namespace rapidfuzz
-
-
-#include <algorithm>
-#include <array>
-#include <cctype>
-#include <cwctype>
-#include <limits>
-
-
-#include <type_traits>
-#include <cstdint>
-
-namespace rapidfuzz {
-namespace Unicode {
-
-template <typename, typename = void>
-struct is_space_dispatch_tag : std::integral_constant<int, 0> {};
-
-template <typename CharT>
-struct is_space_dispatch_tag<CharT, typename std::enable_if<sizeof(CharT) == 1>::type>
-    : std::integral_constant<int, 1> {};
-
-/*
- * Implementation of is_space for char types that are at least 2 Byte in size
- */
-template <typename CharT>
-bool is_space_impl(const CharT ch, std::integral_constant<int, 0>)
-{
-  switch (ch) {
-  case 0x0009:
-  case 0x000A:
-  case 0x000B:
-  case 0x000C:
-  case 0x000D:
-  case 0x001C:
-  case 0x001D:
-  case 0x001E:
-  case 0x001F:
-  case 0x0020:
-  case 0x0085:
-  case 0x00A0:
-  case 0x1680:
-  case 0x2000:
-  case 0x2001:
-  case 0x2002:
-  case 0x2003:
-  case 0x2004:
-  case 0x2005:
-  case 0x2006:
-  case 0x2007:
-  case 0x2008:
-  case 0x2009:
-  case 0x200A:
-  case 0x2028:
-  case 0x2029:
-  case 0x202F:
-  case 0x205F:
-  case 0x3000:
-    return true;
-  }
-  return false;
-}
-
-/*
- * Implementation of is_space for char types that are 1 Byte in size
- */
-template <typename CharT>
-bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
-{
-  switch (ch) {
-  case 0x0009:
-  case 0x000A:
-  case 0x000B:
-  case 0x000C:
-  case 0x000D:
-  case 0x001C:
-  case 0x001D:
-  case 0x001E:
-  case 0x001F:
-  case 0x0020:
-    return true;
-  }
-  return false;
-}
-
-/*
- * checks whether unicode characters have the bidirectional
- * type 'WS', 'B' or 'S' or the category 'Zs'
- */
-template <typename CharT>
-bool is_space(const CharT ch)
-{
-  return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
-}
-
-// this requires sources to compiled, while the current version for C++ is header only
-// this will be added to the C++ version later on.
-#ifdef RAPIDFUZZ_PYTHON
-uint32_t UnicodeDefaultProcess(uint32_t ch);
-#endif
-
-} // namespace Unicode
-} // namespace rapidfuzz
-
-#include <cmath>
-#include <tuple>
-#include <vector>
-#include <array>
 #include <unordered_map>
-#include <cstring>
+#include <vector>
 
 namespace rapidfuzz {
 
 template <typename CharT1, typename CharT2, typename CharT3>
 struct DecomposedSet {
-  SplittedSentenceView<CharT1> difference_ab;
-  SplittedSentenceView<CharT2> difference_ba;
-  SplittedSentenceView<CharT3> intersection;
-  DecomposedSet(SplittedSentenceView<CharT1> diff_ab, SplittedSentenceView<CharT2> diff_ba,
-                SplittedSentenceView<CharT3> intersect)
-      : difference_ab(std::move(diff_ab)),
-        difference_ba(std::move(diff_ba)),
-        intersection(std::move(intersect))
-  {}
+    SplittedSentenceView<CharT1> difference_ab;
+    SplittedSentenceView<CharT2> difference_ba;
+    SplittedSentenceView<CharT3> intersection;
+    DecomposedSet(SplittedSentenceView<CharT1> diff_ab, SplittedSentenceView<CharT2> diff_ba,
+                  SplittedSentenceView<CharT3> intersect)
+        : difference_ab(std::move(diff_ab)),
+          difference_ba(std::move(diff_ba)),
+          intersection(std::move(intersect))
+    {}
 };
 
 namespace common {
@@ -2076,187 +2045,197 @@ std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view
 template <typename CharT1, typename CharT2>
 std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
-
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
-template<typename T>
+template <typename T>
 constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
 {
     return typename std::make_unsigned<T>::type(value);
 }
 
-template<typename T>
+template <typename T>
 constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
 {
     return typename std::make_signed<T>::type(value);
 }
 
 template <typename T, typename U>
-bool mixed_sign_equal(const T a, const U b) {
-  // prevent conditional expression is constant on MSVC
-  static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
-  if (is_same_sign) {
-    return a == b;
-  } else {
-    // They can't be equal if 'a' or 'b' is negative.
-    return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
-  }
+bool mixed_sign_equal(const T a, const U b)
+{
+    // prevent conditional expression is constant on MSVC
+    static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
+    if (is_same_sign) {
+        return a == b;
+    }
+    else {
+        // They can't be equal if 'a' or 'b' is negative.
+        return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
+    }
 }
 
 template <typename T, typename U>
-bool mixed_sign_unequal(const T a, const U b) {
-  return !mixed_sign_equal(a, b);
+bool mixed_sign_unequal(const T a, const U b)
+{
+    return !mixed_sign_equal(a, b);
 }
 
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
  */
 template <typename T, typename U>
-bool CanTypeFitValue(const U value) {
-  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
-  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
-  const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max() );
-  const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max() );
-  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );
+bool CanTypeFitValue(const U value)
+{
+    const intmax_t botT = intmax_t(std::numeric_limits<T>::min());
+    const intmax_t botU = intmax_t(std::numeric_limits<U>::min());
+    const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max());
+    const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max());
+    return !((botT > botU && value < static_cast<U>(botT)) ||
+             (topT < topU && value > static_cast<U>(topT)));
 }
 
-template <typename CharT1, std::size_t size=sizeof(CharT1)>
+template <typename CharT1, std::size_t size = sizeof(CharT1)>
 struct PatternMatchVector;
 
 template <typename CharT1, std::size_t size>
 struct PatternMatchVector {
-  std::array<CharT1, 128> m_key;
-  std::array<uint64_t, 128> m_val;
+    std::array<CharT1, 128> m_key;
+    std::array<uint64_t, 128> m_val;
 
-  PatternMatchVector()
-    : m_key(), m_val() {}
+    PatternMatchVector() : m_key(), m_val()
+    {}
 
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_key(), m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = ch;
-
-    /* Since a maximum of 64 elements is in here m_val[hash] will be empty
-     * after a maximum of 64 checks
-     * it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (uint8_t)(hash + 1) % 128;
+    PatternMatchVector(basic_string_view<CharT1> s) : m_key(), m_val()
+    {
+        for (std::size_t i = 0; i < s.size(); i++) {
+            insert(s[i], static_cast<int>(i));
+        }
     }
 
-    m_key[hash] = key;
-    m_val[hash] |= 1ull << pos;
-  }
+    void insert(CharT1 ch, int pos)
+    {
+        auto uch = to_unsigned(ch);
+        uint8_t hash = uch % 128;
+        CharT1 key = ch;
 
-  template <typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (!CanTypeFitValue<CharT1>(ch)) {
-      return 0;
+        /* Since a maximum of 64 elements is in here m_val[hash] will be empty
+         * after a maximum of 64 checks
+         * it is important to search for an empty value instead of an empty key,
+         * since 0 is a valid key
+         */
+        while (m_val[hash] && m_key[hash] != key) {
+            hash = (uint8_t)(hash + 1) % 128;
+        }
+
+        m_key[hash] = key;
+        m_val[hash] |= 1ull << pos;
     }
 
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = (CharT1)uch;
+    template <typename CharT2>
+    uint64_t get(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return 0;
+        }
 
-    /* it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (uint8_t)(hash + 1) % 128;
+        auto uch = to_unsigned(ch);
+        uint8_t hash = uch % 128;
+        CharT1 key = (CharT1)uch;
+
+        /* it is important to search for an empty value instead of an empty key,
+         * since 0 is a valid key
+         */
+        while (m_val[hash] && m_key[hash] != key) {
+            hash = (uint8_t)(hash + 1) % 128;
+        }
+
+        return m_val[hash];
     }
-
-    return m_val[hash];
-  }
 };
 
 template <typename CharT1>
 struct PatternMatchVector<CharT1, 1> {
-  std::array<uint64_t, 256> m_val;
+    std::array<uint64_t, 256> m_val;
 
-  PatternMatchVector()
-    : m_val() {}
+    PatternMatchVector() : m_val()
+    {}
 
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    m_val[uint8_t(ch)] |= 1ull << pos;
-  }
-
-  template<typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (!CanTypeFitValue<CharT1>(ch)) {
-      return 0;
+    PatternMatchVector(basic_string_view<CharT1> s) : m_val()
+    {
+        for (std::size_t i = 0; i < s.size(); i++) {
+            insert(s[i], static_cast<int>(i));
+        }
     }
 
-    return m_val[uint8_t(ch)];
-  }
+    void insert(CharT1 ch, int pos)
+    {
+        m_val[uint8_t(ch)] |= 1ull << pos;
+    }
+
+    template <typename CharT2>
+    uint64_t get(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return 0;
+        }
+
+        return m_val[uint8_t(ch)];
+    }
 };
 
 template <typename CharT1>
 struct BlockPatternMatchVector {
-  std::vector<PatternMatchVector<CharT1>> m_val;
+    std::vector<PatternMatchVector<CharT1>> m_val;
 
-  BlockPatternMatchVector() {}
+    BlockPatternMatchVector()
+    {}
 
-  BlockPatternMatchVector(basic_string_view<CharT1> s)
-  {
-    insert(s);
-  }
-
-  void insert(std::size_t block, CharT1 ch, int pos) {
-    auto* be = &m_val[block];
-    be->insert(ch, pos);
-  }
-
-  void insert(basic_string_view<CharT1> s) {
-    std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
-    m_val.resize(nr);
-
-    for (std::size_t i = 0; i < s.size(); i++){
-      auto* be = &m_val[i/64];
-      be->insert(s[i], static_cast<int>(i%64));
+    BlockPatternMatchVector(basic_string_view<CharT1> s)
+    {
+        insert(s);
     }
-  }
 
-  template<typename CharT2>
-  uint64_t get(std::size_t block, CharT2 ch) const {
-    auto* be = &m_val[block];
-    return be->get(ch);
-  }
+    void insert(std::size_t block, CharT1 ch, int pos)
+    {
+        auto* be = &m_val[block];
+        be->insert(ch, pos);
+    }
+
+    void insert(basic_string_view<CharT1> s)
+    {
+        std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
+        m_val.resize(nr);
+
+        for (std::size_t i = 0; i < s.size(); i++) {
+            auto* be = &m_val[i / 64];
+            be->insert(s[i], static_cast<int>(i % 64));
+        }
+    }
+
+    template <typename CharT2>
+    uint64_t get(std::size_t block, CharT2 ch) const
+    {
+        auto* be = &m_val[block];
+        return be->get(ch);
+    }
 };
 
-template <typename CharT1, typename ValueType, std::size_t size=sizeof(CharT1)>
+template <typename CharT1, typename ValueType, std::size_t size = sizeof(CharT1)>
 struct CharHashTable;
 
 template <typename CharT1, typename ValueType>
-struct CharHashTable<CharT1, ValueType, 1>
-{
+struct CharHashTable<CharT1, ValueType, 1> {
     using UCharT1 = typename std::make_unsigned<CharT1>::type;
 
-    std::array<ValueType, std::numeric_limits<UCharT1>::max()> m_val;
+    std::array<ValueType, std::numeric_limits<UCharT1>::max() + 1> m_val;
     ValueType m_default;
 
-    CharHashTable()
-        : m_val{}, m_default{} {}
+    CharHashTable() : m_val{}, m_default{}
+    {}
 
-    template<typename CharT2>
-    ValueType& operator[](CharT2 ch) {
+    template <typename CharT2>
+    ValueType& operator[](CharT2 ch)
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
@@ -2264,8 +2243,9 @@ struct CharHashTable<CharT1, ValueType, 1>
         return m_val[UCharT1(ch)];
     }
 
-    template<typename CharT2>
-    const ValueType& operator[](CharT2 ch) const {
+    template <typename CharT2>
+    const ValueType& operator[](CharT2 ch) const
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
@@ -2275,38 +2255,37 @@ struct CharHashTable<CharT1, ValueType, 1>
 };
 
 template <typename CharT1, typename ValueType, std::size_t size>
-struct CharHashTable
-{
+struct CharHashTable {
     std::unordered_map<CharT1, ValueType> m_val;
     ValueType m_default;
 
-    CharHashTable()
-        : m_val{}, m_default{} {}
+    CharHashTable() : m_val{}, m_default{}
+    {}
 
-    template<typename CharT2>
-    ValueType& operator[](CharT2 ch) {
+    template <typename CharT2>
+    ValueType& operator[](CharT2 ch)
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
 
         auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end())
-        {
+        if (search == m_val.end()) {
             return m_default;
         }
 
         return search->second;
     }
 
-    template<typename CharT2>
-    const ValueType& operator[](CharT2 ch) const {
+    template <typename CharT2>
+    const ValueType& operator[](CharT2 ch) const
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
 
         auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end())
-        {
+        if (search == m_val.end()) {
             return m_default;
         }
 
@@ -2326,108 +2305,202 @@ struct CharHashTable
 #include <cwctype>
 
 
+#include <cstdint>
+#include <type_traits>
+
+namespace rapidfuzz {
+namespace Unicode {
+
+template <typename, typename = void>
+struct is_space_dispatch_tag : std::integral_constant<int, 0> {};
+
+template <typename CharT>
+struct is_space_dispatch_tag<CharT, typename std::enable_if<sizeof(CharT) == 1>::type>
+    : std::integral_constant<int, 1> {};
+
+/*
+ * Implementation of is_space for char types that are at least 2 Byte in size
+ */
+template <typename CharT>
+bool is_space_impl(const CharT ch, std::integral_constant<int, 0>)
+{
+    switch (ch) {
+    case 0x0009:
+    case 0x000A:
+    case 0x000B:
+    case 0x000C:
+    case 0x000D:
+    case 0x001C:
+    case 0x001D:
+    case 0x001E:
+    case 0x001F:
+    case 0x0020:
+    case 0x0085:
+    case 0x00A0:
+    case 0x1680:
+    case 0x2000:
+    case 0x2001:
+    case 0x2002:
+    case 0x2003:
+    case 0x2004:
+    case 0x2005:
+    case 0x2006:
+    case 0x2007:
+    case 0x2008:
+    case 0x2009:
+    case 0x200A:
+    case 0x2028:
+    case 0x2029:
+    case 0x202F:
+    case 0x205F:
+    case 0x3000:
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Implementation of is_space for char types that are 1 Byte in size
+ */
+template <typename CharT>
+bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
+{
+    switch (ch) {
+    case 0x0009:
+    case 0x000A:
+    case 0x000B:
+    case 0x000C:
+    case 0x000D:
+    case 0x001C:
+    case 0x001D:
+    case 0x001E:
+    case 0x001F:
+    case 0x0020:
+        return true;
+    }
+    return false;
+}
+
+/*
+ * checks whether unicode characters have the bidirectional
+ * type 'WS', 'B' or 'S' or the category 'Zs'
+ */
+template <typename CharT>
+bool is_space(const CharT ch)
+{
+    return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
+}
+
+// this requires sources to compiled, while the current version for C++ is header only
+// this will be added to the C++ version later on.
+#ifdef RAPIDFUZZ_PYTHON
+uint32_t UnicodeDefaultProcess(uint32_t ch);
+#endif
+
+} // namespace Unicode
+} // namespace rapidfuzz
+
 namespace rapidfuzz {
 
 template <typename CharT1, typename CharT2>
 bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
 {
-  if (x.size() != y.size()) return false;
+    if (x.size() != y.size()) return false;
 
-  for (std::size_t i = 0; i < x.size(); ++i) {
-    if (common::mixed_sign_unequal(x[i], y[i])) return false;
-  }
-  return true;
+    for (std::size_t i = 0; i < x.size(); ++i) {
+        if (common::mixed_sign_unequal(x[i], y[i])) return false;
+    }
+    return true;
 }
 
 template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentenceView<CharT1> a,
-                                                               SplittedSentenceView<CharT2> b)
+                                                                SplittedSentenceView<CharT2> b)
 {
-  a.dedupe();
-  b.dedupe();
+    a.dedupe();
+    b.dedupe();
 
-  string_view_vec<CharT1> intersection;
-  string_view_vec<CharT1> difference_ab;
-  string_view_vec<CharT2> difference_ba = b.words();
+    string_view_vec<CharT1> intersection;
+    string_view_vec<CharT1> difference_ab;
+    string_view_vec<CharT2> difference_ba = b.words();
 
-  for (const auto& current_a : a.words()) {
-    auto element_b = std::find_if(difference_ba.begin(), difference_ba.end(),
-                                  [current_a](basic_string_view<CharT2> current_b) {
-                                    return string_view_eq(current_a, current_b);
-                                  });
+    for (const auto& current_a : a.words()) {
+        auto element_b = std::find_if(difference_ba.begin(), difference_ba.end(),
+                                      [current_a](basic_string_view<CharT2> current_b) {
+                                          return string_view_eq(current_a, current_b);
+                                      });
 
-    if (element_b != difference_ba.end()) {
-      difference_ba.erase(element_b);
-      intersection.push_back(current_a);
+        if (element_b != difference_ba.end()) {
+            difference_ba.erase(element_b);
+            intersection.push_back(current_a);
+        }
+        else {
+            difference_ab.push_back(current_a);
+        }
     }
-    else {
-      difference_ab.push_back(current_a);
-    }
-  }
 
-  return {difference_ab, difference_ba, intersection};
+    return {difference_ab, difference_ba, intersection};
 }
 
 constexpr percent common::result_cutoff(double result, percent score_cutoff)
 {
-  return (result >= score_cutoff) ? result : 0;
+    return (result >= score_cutoff) ? result : 0;
 }
 
 constexpr percent common::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
 {
-  return result_cutoff(
-    (lensum > 0) ? (100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0,
-    score_cutoff
-  );
+    return result_cutoff(
+        (lensum > 0) ? (100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum))
+                     : 100.0,
+        score_cutoff);
 }
 
 static inline std::size_t common::score_cutoff_to_distance(percent score_cutoff, std::size_t lensum)
 {
-  return static_cast<std::size_t>(
-    std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100))
-  );
+    return static_cast<std::size_t>(
+        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100)));
 }
 
 template <typename T>
 constexpr bool common::is_zero(T a, T tolerance)
 {
-  return std::fabs(a) <= tolerance;
+    return std::fabs(a) <= tolerance;
 }
 
 template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> common::to_string_view(Sentence&& str)
 {
-  return basic_string_view<CharT>(std::forward<Sentence>(str));
+    return basic_string_view<CharT>(std::forward<Sentence>(str));
 }
 
 template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> common::to_string_view(const Sentence& str)
 {
-  return basic_string_view<CharT>(str.data(), str.size());
+    return basic_string_view<CharT>(str.data(), str.size());
 }
 
 template <typename Sentence, typename CharT, typename>
 std::basic_string<CharT> common::to_string(Sentence&& str)
 {
-  return std::basic_string<CharT>(std::forward<Sentence>(str));
+    return std::basic_string<CharT>(std::forward<Sentence>(str));
 }
 
 template <typename Sentence, typename CharT, typename>
 std::basic_string<CharT> common::to_string(const Sentence& str)
 {
-  return std::basic_string<CharT>(str.data(), str.size());
+    return std::basic_string<CharT>(str.data(), str.size());
 }
 
 template <typename InputIterator1, typename InputIterator2>
 std::pair<InputIterator1, InputIterator2>
 common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
-                InputIterator2 last2)
+                 InputIterator2 last2)
 {
-  while (first1 != last1 && first2 != last2 && common::mixed_sign_equal(*first1, *first2)) {
-    ++first1;
-    ++first2;
-  }
-  return std::pair<InputIterator1, InputIterator2>(first1, first2);
+    while (first1 != last1 && first2 != last2 && common::mixed_sign_equal(*first1, *first2)) {
+        ++first1;
+        ++first2;
+    }
+    return std::pair<InputIterator1, InputIterator2>(first1, first2);
 }
 
 /**
@@ -2436,11 +2509,11 @@ common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 fir
 template <typename CharT1, typename CharT2>
 std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  std::size_t prefix =
-      static_cast<std::size_t>(std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
-  a.remove_prefix(prefix);
-  b.remove_prefix(prefix);
-  return prefix;
+    std::size_t prefix = static_cast<std::size_t>(
+        std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
+    a.remove_prefix(prefix);
+    b.remove_prefix(prefix);
+    return prefix;
 }
 
 /**
@@ -2449,11 +2522,11 @@ std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_str
 template <typename CharT1, typename CharT2>
 std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  std::size_t suffix =
-      static_cast<std::size_t>(std::distance(a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
-  a.remove_suffix(suffix);
-  b.remove_suffix(suffix);
-  return suffix;
+    std::size_t suffix = static_cast<std::size_t>(std::distance(
+        a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
+    a.remove_suffix(suffix);
+    b.remove_suffix(suffix);
+    return suffix;
 }
 
 /**
@@ -2462,1168 +2535,753 @@ std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_str
 template <typename CharT1, typename CharT2>
 StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-  return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
+    return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
 }
 
 template <typename Sentence, typename CharT>
 SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
 {
-  auto s = to_string_view(std::forward<Sentence>(sentence));
-  string_view_vec<CharT> splitted;
-  const auto* first = s.data();
-  const auto* second = s.data();
-  const auto* last = first + s.size();
+    auto s = to_string_view(std::forward<Sentence>(sentence));
+    string_view_vec<CharT> splitted;
+    const auto* first = s.data();
+    const auto* second = s.data();
+    const auto* last = first + s.size();
 
-  for (; second != last && first != last; first = second + 1) {
-    second = std::find_if(first, last, Unicode::is_space<CharT>);
+    for (; second != last && first != last; first = second + 1) {
+        second = std::find_if(first, last, Unicode::is_space<CharT>);
 
-    if (first != second) {
-      splitted.emplace_back(first, second - first);
+        if (first != second) {
+            splitted.emplace_back(first, second - first);
+        }
     }
-  }
 
-  std::sort(splitted.begin(), splitted.end());
+    std::sort(splitted.begin(), splitted.end());
 
-  return SplittedSentenceView<CharT>(splitted);
+    return SplittedSentenceView<CharT>(splitted);
 }
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz {
-
-template <typename CharT>
-std::size_t utils::default_process(CharT* str, std::size_t len)
-{
-  /* mapping converting
-   * - non alphanumeric characters to whitespace (32)
-   * - alphanumeric characters to lowercase
-   *
-   * generated using
-   * `[ord(chr(x).lower()) if chr(x).isalnum() else 0x20 for x in range(256)]`
-   * in Python3.9
-   */
-  static const int extended_ascii_mapping[256] = {
-    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-    32, 32, 32, 32, 32, 32, 32, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 32, 32,
-    32, 32, 32, 32, 32, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
-    110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 32, 32, 32, 32,
-    32, 32, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
-    112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 32, 32, 32, 32, 32, 32,
-    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
-    32, 170, 32, 32, 32, 32, 32, 32, 32, 178, 179, 32, 181, 32, 32, 32, 185, 186, 32,
-    188, 189, 190, 32, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236,
-    237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253,
-    254, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
-    239, 240, 241, 242, 243, 244, 245, 246, 32, 248, 249, 250, 251, 252, 253, 254, 255
-  };
-
-  std::transform(str, str + len, str,
-               [](CharT ch) {
-    /* irrelevant cases for a given char type are removed at compile time by any decent compiler */
-    if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
-      return ch;
-    } else if (ch < 256) {
-      return static_cast<CharT>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);
-    } else {
-      // this requires sources to compiled, while the current version for C++ is header only
-      // this will be added to the C++ version later on.
-#ifdef RAPIDFUZZ_PYTHON
-      return static_cast<CharT>(Unicode::UnicodeDefaultProcess(static_cast<uint32_t>(ch)));
-#else
-      return ch;
-#endif
-    }
-  });
-
-  while (len > 0 && str[len - 1] == ' ')
-  {
-    len--;
-  }
-
-  std::size_t prefix = 0;
-  while (len > 0 && str[prefix] == ' ')
-  {
-    len--;
-    prefix++;
-  }
-
-  if (prefix != 0)
-  {
-    std::copy(str + prefix, str + prefix + len, str);
-  }
-
-  return len;
-}
-
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence&& s)
-{
-  std::basic_string<CharT> str(std::forward<Sentence>(s));
-
-  std::size_t len = default_process(&str[0], str.size());
-  str.resize(len);
-  return str;
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence s)
-{
-  return default_process(std::basic_string<CharT>(s.data(), s.size()));
-}
-
-} // namespace rapidfuzz
-
-
-#include <numeric>
-#include <algorithm>
-#include <array>
-#include <limits>
+#include <type_traits>
 
 namespace rapidfuzz {
-namespace string_metric {
-namespace detail {
-
-/*
- * An encoded mbleven model table.
- *
- * Each 8-bit integer represents an edit sequence, with using two
- * bits for a single operation.
- *
- * Each Row of 8 integers represent all possible combinations
- * of edit sequences for a gived maximum edit distance and length
- * difference between the two strings, that is below the maximum
- * edit distance
- *
- *   01 = DELETE, 10 = INSERT, 11 = SUBSTITUTE
- *
- * For example, 3F -> 0b111111 means three substitutions
- */
-static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
-  /* max edit distance 1 */
-  {0x03},                                     /* len_diff 0 */
-  {0x01},                                     /* len_diff 1 */
-  /* max edit distance 2 */
-  {0x0F, 0x09, 0x06},                         /* len_diff 0 */
-  {0x0D, 0x07},                               /* len_diff 1 */
-  {0x05},                                     /* len_diff 2 */
-  /* max edit distance 3 */
-  {0x3F, 0x27, 0x2D, 0x39, 0x36, 0x1E, 0x1B}, /* len_diff 0 */
-  {0x3D, 0x37, 0x1F, 0x25, 0x19, 0x16},       /* len_diff 1 */
-  {0x35, 0x1D, 0x17},                         /* len_diff 2 */
-  {0x15},                                     /* len_diff 3 */
-};
-
-template <typename CharT1, typename CharT2>
-std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
-{
-  if (s1.size() < s2.size()) {
-    return levenshtein_mbleven2018(s2, s1, max);
-  }
-
-  std::size_t len_diff = s1.size() - s2.size();
-  auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-  std::size_t dist = max + 1;
-
-  for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    int ops = possible_ops[pos];
-    std::size_t s1_pos = 0;
-    std::size_t s2_pos = 0;
-    std::size_t cur_dist = 0;
-    while (s1_pos < s1.size() && s2_pos < s2.size()) {
-      if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
-        cur_dist++;
-        if (!ops) break;
-        if (ops & 1) s1_pos++;
-        if (ops & 2) s2_pos++;
-        ops >>= 2;
-      } else {
-        s1_pos++;
-        s2_pos++;
-      }
-    }
-    cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
-    dist = std::min(dist, cur_dist);
-  }
-
-  return (dist > max) ? (std::size_t)-1 : dist;
-}
+namespace fuzz {
 
 /**
- * @brief Bitparallel implementation of the Levenshtein distance.
- *
- * This implementation requires the first string to have a length <= 64.
- * The algorithm used is described @cite hyrro_2002 and has a time complexity
- * of O(N). Comments and variable names in the implementation follow the
- * paper. This implementation is used internally when the strings are short enough
- *
- * @tparam CharT1 This is the char type of the first sentence
- * @tparam CharT2 This is the char type of the second sentence
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- *
- * @return returns the levenshtein distance between s1 and s2
+ * @defgroup Fuzz Fuzz
+ * A collection of string matching algorithms from FuzzyWuzzy
+ * @{
  */
-template <typename CharT1, typename BlockPatternCharT>
-std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector<BlockPatternCharT>& PM,
-  std::size_t s1_len, std::size_t max)
-{
-  /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-  uint64_t VP = (uint64_t)-1;
-  if (s1_len < 64) {
-    VP += (uint64_t)1 << s1_len;
-  }
 
-  uint64_t VN = 0;
-  std::size_t currDist = s1_len;
-
-  // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
-  // make sure a wraparound can never occur
-  std::size_t maxMisses = 0;
-  if (s1_len > s2.size()) {
-    if (s1_len - s2.size() < max) {
-      maxMisses = max - (s1_len - s2.size());
-    } else {
-      // minimum is 0
-      maxMisses = 0;
-    }
-  } else {
-    maxMisses = s2.size() - s1_len;
-    if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
-      maxMisses = max + maxMisses;
-    } else {
-      // max is (size_t)-1
-      maxMisses = std::numeric_limits<std::size_t>::max();
-    }
-  }
-
-  /* mask used when computing D[m,j] in the paper 10^(m-1) */
-  uint64_t mask = (uint64_t)1 << (s1_len - 1);
-
-/* Searching */
-  for (const auto& ch2 : s2) {
-    /* Step 1: Computing D0 */
-    uint64_t PM_j = PM.get(ch2);
-    uint64_t X = PM_j | VN;
-    uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
-
-    /* Step 2: Computing HP and HN */
-    uint64_t HP = VN | ~(D0 | VP);
-    uint64_t HN = D0 & VP;
-
-    /* Step 3: Computing the value D[m,j] */
-    // modification: early exit using maxMisses
-    if (HP & mask) {
-      currDist++;
-      if (maxMisses < 2) {
-        return (std::size_t)-1;
-      }
-      maxMisses -= 2;
-    } else if (HN & mask) {
-      currDist--;
-    } else {
-      if (maxMisses < 1) {
-        return (std::size_t)-1;
-      }
-      --maxMisses;
-    }
-
-    /* Step 4: Computing Vp and VN */
-    X  = (HP << 1) | 1;
-    VP = (HN << 1) | ~(D0 | X);
-    VN =  X & D0;
-  }
-
-  return currDist;
-}
-
-template <typename CharT1, typename BlockPatternCharT>
-std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& PM, std::size_t s1_len, std::size_t max)
-{
-  struct Vectors {
-    uint64_t Mv;
-    uint64_t Pv;
-
-    Vectors()
-      : Mv(0), Pv(~0x0ull) {}
-  };
-
-  const std::size_t words = PM.m_val.size();
-  std::size_t currDist = s1_len;
-
-  // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
-  // make sure a wraparound can never occur
-  std::size_t maxMisses = 0;
-  if (s1_len > s2.size()) {
-    if (s1_len - s2.size() < max) {
-      maxMisses = max - (s1_len - s2.size());
-    } else {
-      // minimum is 0
-      maxMisses = 0;
-    }
-  } else {
-    maxMisses = s2.size() - s1_len;
-    if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
-      maxMisses = max + maxMisses;
-    } else {
-      // max is (size_t)-1
-      maxMisses = std::numeric_limits<std::size_t>::max();
-    }
-  }
-
-  std::vector<Vectors> vecs(words);
-  const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
-
-  for (std::size_t i = 0; i < s2.size(); i++) {
-    uint64_t Pb = 1;
-    uint64_t Mb = 0;
-
-    for (std::size_t word = 0; word < words - 1; word++) {
-      const uint64_t PM_j = PM.get(word, s2[i]);
-      const uint64_t Mv = vecs[word].Mv;
-      const uint64_t Pv = vecs[word].Pv;
-
-      const uint64_t Xv = PM_j | Mv;
-      const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
-
-      uint64_t Ph = Mv | ~ (Xh | Pv);
-      uint64_t Mh = Pv & Xh;
-
-      const uint64_t PbTemp = Pb;
-      Pb = Ph >> 63;
-      Ph = (Ph << 1) | PbTemp;
-
-      const uint64_t MbTemp = Mb;
-      Mb = Mh >> 63;
-      Mh = (Mh << 1) | MbTemp;
-
-      vecs[word].Pv = Mh | ~ (Xv | Ph);
-      vecs[word].Mv = Ph & Xv;
-    }
-
-    // distance only has to be incremented/decremented in the last word
-    {
-      const uint64_t PM_j = PM.get(words - 1, s2[i]);
-      const uint64_t Mv = vecs[words - 1].Mv;
-      const uint64_t Pv = vecs[words - 1].Pv;
-
-      const uint64_t Xv = PM_j | Mv;
-      const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
-
-      uint64_t Ph = Mv | ~ (Xh | Pv);
-      uint64_t Mh = Pv & Xh;
-
-      // modification: early exit using maxMisses
-      if (Ph & Last) {
-        currDist++;
-        if (maxMisses < 2) {
-          return (std::size_t)-1;
-        }
-        maxMisses -= 2;
-      } else if (Mh & Last) {
-        currDist--;
-      } else {
-        if (maxMisses < 1) {
-          return (std::size_t)-1;
-        }
-        --maxMisses;
-      }
-
-      Ph = (Ph << 1) | Pb;
-      Mh = (Mh << 1) | Mb;
-
-      vecs[words - 1].Pv = Mh | ~ (Xv | Ph);
-      vecs[words - 1].Mv = Ph & Xv;
-    }
-  }
-
-  return currDist;
-}
-
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
-std::size_t levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
-  std::size_t max)
-{
-  // when no differences are allowed a direct comparision is sufficient
-  if (max == 0) {
-    if (s1.size() != s2.size()) {
-      return (std::size_t)-1;
-    }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-  }
-
-  // at least length difference insertions/deletions required
-  std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
-  if (len_diff > max) {
-    return (std::size_t)-1;
-  }
-
-  // important to catch, since this causes block.m_val to be empty -> raises exception on access
-  if (s2.empty()) {
-    return s1.size();
-  }
-
-  // do this first, since we can not remove any affix in encoded form
-  if (max >= 4) {
-    std::size_t dist = 0;
-    if (s2.size() < 65) {
-      dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
-    } else {
-      dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
-    }
-
-    return (dist > max) ? (std::size_t)-1 : dist;
-  }
-
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  common::remove_common_affix(s1, s2);
-
-  if (s2.empty()) {
-    return s1.size();
-  }
-
-  if (s1.empty()) {
-    return s2.size();
-  }
-
-  return levenshtein_mbleven2018(s1, s2, max);
-}
-
-
-template <typename CharT1, typename CharT2>
-std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
-{
-  /* Swapping the strings so the first string is shorter.
-   * Swapping has no effect on the score since Insertion and Deletion have the
-   * the same weight */
-  if (s1.size() > s2.size()) {
-    return levenshtein(s2, s1, max);
-  }
-
-  // when no differences are allowed a direct comparision is sufficient
-  if (max == 0) {
-    if (s1.size() != s2.size()) {
-      return (std::size_t)-1;
-    }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-  }
-
-  // at least length difference insertions/deletions required
-  if (s2.size() - s1.size() > max) {
-    return (std::size_t)-1;
-  }
-
-  /* The Levenshtein distance between
-   * <prefix><string1><suffix> and <prefix><string2><suffix>
-   * is similar to the distance between <string1> and <string2>,
-   * so they can be removed in linear time */
-  common::remove_common_affix(s1, s2);
-
-  if (s1.empty()) {
-    return s2.size();
-  }
-
-  if (max < 4) {
-    return levenshtein_mbleven2018(s1, s2, max);
-  }
-
-  /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
-  if (s2.size() < 65) {
-    std::size_t dist = levenshtein_hyrroe2003(s1,
-      common::PatternMatchVector<CharT2>(s2), s2.size(), max);
-    return (dist > max) ? (std::size_t)-1 : dist;
-  }
-
-  std::size_t dist = levenshtein_myers1999_block(s1,
-    common::BlockPatternMatchVector<CharT2>(s2), s2.size(), max);
-
-  return (dist > max) ? (std::size_t)-1 : dist;
-}
-
-
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
-double normalized_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
-  const double score_cutoff)
-{
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
-
-  /* calculate the maximum possible edit distance with
-   * Insertion/Deletion/Substitution = 1 */
-  std::size_t max_dist = std::max(s1.size(), s2.size());
-
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
-
-  std::size_t dist = levenshtein(s1, block, s2, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, max_dist, score_cutoff)
-    : 0.0;
-}
-
-template <typename CharT1, typename CharT2>
-double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, const double score_cutoff)
-{
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
-
-  /* calculate the maximum possible edit distance with
-   * Insertion/Deletion/Substitution = 1 */
-  std::size_t max_dist = std::max(s1.size(), s2.size());
-
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
-
-  std::size_t dist = levenshtein(s1, s2, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, max_dist, score_cutoff)
-    : 0.0;
-}
-
-} // namespace detail
-} // namespace levenshtein
-} // namespace rapidfuzz
-
-
-#include <algorithm>
-#include <stdexcept>
-#include <string>
-#include <array>
-#include <limits>
-
-namespace rapidfuzz {
-namespace string_metric {
-namespace detail {
-
-/*
- * An encoded mbleven model table.
+/**
+ * @brief calculates a simple ratio between two strings
  *
- * Each 8-bit integer represents an edit sequence, with using two
- * bits for a single operation.
+ * @details
+ * @code{.cpp}
+ * // score is 96.55
+ * double score = ratio("this is a test", "this is a test!")
+ * @endcode
  *
- * Each Row of 8 integers represent all possible combinations
- * of edit sequences for a gived maximum edit distance and length
- * difference between the two strings, that is below the maximum
- * edit distance
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
  *
- *   0x1 = 01 = DELETE,
- *   0x2 = 10 = INSERT
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
  *
- * 0x5 -> DEL + DEL
- * 0x6 -> DEL + INS
- * 0x9 -> INS + DEL
- * 0xA -> INS + INS
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
-  /* max edit distance 1 */
-  {0}, /* case does not occur */        /* len_diff 0 */
-  {0x01},                               /* len_diff 1 */
-  /* max edit distance 2 */
-  {0x09, 0x06},                         /* len_diff 0 */
-  {0x01},                               /* len_diff 1 */
-  {0x05},                               /* len_diff 2 */
-  /* max edit distance 3 */
-  {0x09, 0x06},                         /* len_diff 0 */
-  {0x25, 0x19, 0x16},                   /* len_diff 1 */
-  {0x05},                               /* len_diff 2 */
-  {0x15},                               /* len_diff 3 */
-  /* max edit distance 4 */
-  {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
-  {0x25, 0x19, 0x16},                   /* len_diff 1 */
-  {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
-  {0x15},                               /* len_diff 3 */
-  {0x55},                               /* len_diff 4 */
+template <typename Sentence1, typename Sentence2>
+percent ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// TODO documentation
+template <typename Sentence1>
+struct CachedRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedRatio(const Sentence1& s1) : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1;
 };
 
-template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
-{
-  if (s1.size() < s2.size()) {
-    return weighted_levenshtein_mbleven2018(s2, s1, max);
-  }
-
-  std::size_t len_diff = s1.size() - s2.size();
-  auto possible_ops = weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-  std::size_t dist = max + 1;
-
-  for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    int ops = possible_ops[pos];
-    std::size_t s1_pos = 0;
-    std::size_t s2_pos = 0;
-    std::size_t cur_dist = 0;
-
-    while (s1_pos < s1.size() && s2_pos < s2.size()) {
-      if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
-        cur_dist++;
-
-        if (!ops) break;
-        if (ops & 1) s1_pos++;
-        else if (ops & 2) s2_pos++;
-        ops >>= 2;
-      } else {
-        s1_pos++;
-        s2_pos++;
-      }
-    }
-
-    cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
-    dist = std::min(dist, cur_dist);
-  }
-
-  return (dist > max) ? (std::size_t)-1 : dist;
-}
-
-/*
- * count the number of bits set in a 64 bit integer
- * The code uses wikipedia's 64-bit popcount implementation:
- * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+/**
+ * @brief calculates the fuzz::ratio of the optimal string alignment
+ *
+ * @details
+ * test @cite hyrro_2004 @cite wagner_fischer_1974
+ * @code{.cpp}
+ * // score is 100
+ * double score = partial_ratio("this is a test", "this is a test!")
+ * @endcode
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-static inline std::size_t popcount64(uint64_t x)
-{
-  const uint64_t m1  = 0x5555555555555555; //binary: 0101...
-  const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
-  const uint64_t m4  = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
-  const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-  x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
-  x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
-  x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-  return static_cast<std::size_t>((x * h01) >> 56);  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
-}
+// todo add real implementation
+template <typename Sentence1>
+struct CachedPartialRatio {
+    template <typename>
+    friend class CachedWRatio;
+    using CharT1 = char_type<Sentence1>;
 
-/*
- * returns a 64 bit integer with the first n bits set to 1
+    CachedPartialRatio(const Sentence1& s1);
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::CharHashTable<CharT1, bool> s1_char_map;
+    CachedRatio<Sentence1> cached_ratio;
+};
+
+/**
+ * @brief Sorts the words in the strings and calculates the fuzz::ratio between
+ * them
+ *
+ * @details
+ * @code{.cpp}
+ * // score is 100
+ * double score = token_sort_ratio("fuzzy wuzzy was a bear", "wuzzy fuzzy was a
+ * bear")
+ * @endcode
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-static inline uint64_t set_bits(int n)
-{
-  uint64_t result = (uint64_t)-1;
-  // shifting by 64 bits would be undefined behavior
-  if (n < 64) {
-    result += (uint64_t)1 << n;
-  }
-  return result;
-}
-
-template <typename CharT1, typename BlockPatternCharT>
-static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
-  const common::PatternMatchVector<BlockPatternCharT>& block, std::size_t s2_len)
-{
-  uint64_t DHneg1 = ~0x0ull;
-  uint64_t DHzero = 0;
-  uint64_t DHpos1 = 0;
-
-  for (auto ch2 : s1)
-  {
-    const uint64_t Matches = block.get(ch2);
-    const uint64_t NotMatches = ~Matches;
-
-    const uint64_t INITpos1s = DHneg1 & Matches;
-    const uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
-
-    const uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
-    const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-    const uint64_t INITzeros = (DHzero & DVpos1shiftorMatch) ;
-    const uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
-
-    const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-    DHzero &= NotMatches;
-    const uint64_t DHpos1orMatch = DHpos1| Matches;
-    DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
-    DHpos1 = (DVneg1shift & DHpos1orMatch);
-    DHneg1 = ~(DHzero | DHpos1);
-  }
-
-  std::size_t dist = s1.size() + s2_len;
-  uint64_t bitmask = set_bits(static_cast<int>(s2_len));
-
-  dist -= popcount64(DHzero & bitmask);
-  dist -= popcount64(DHpos1 & bitmask) * 2;
-
-  return dist;
-}
-
-
-template <typename T, typename U>
-constexpr T bit_clear(T val, U bit)
-{
-  return val & ~(1ull << bit);
-}
-
-template <typename T, typename U>
-constexpr T bit_check(T val, U bit)
-{
-  return (val >> bit) & 0x1;
-}
-
-
-template <typename CharT1, typename BlockPatternCharT>
-std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, std::size_t s2_len)
-{
-  struct HorizontalDelta {
-    uint64_t DHpos1;
-    uint64_t DHzero;
-    uint64_t DHneg1;
-
-    HorizontalDelta()
-      : DHpos1(0), DHzero(0), DHneg1(~0x0ull) {}
-  };
-
-  std::size_t words = block.m_val.size();
-  std::vector<HorizontalDelta> DH(words);
-
-  //recursion
-  for (const auto& ch1 : s1)
-  {
-    //initialize OverFlow
-    uint64_t OverFlow0 = 0;
-    uint64_t OverFlow1 = 0;
-    uint64_t INITzerosprevbit = 0;
-
-    // manually unroll the loop iteration for the first word
-    // since there can not be a overflow before the first iteration
-    {
-      uint64_t DHpos1temp    = DH[0].DHpos1;
-      uint64_t DHzerotemp    = DH[0].DHzero;
-      uint64_t DHneg1temp    = DH[0].DHneg1;
-
-      const uint64_t Matches = block.get(0, ch1);
-
-      //Complement Matches
-      const uint64_t NotMatches = ~Matches;
-      //Finding the vertical values
-      //Find 1s
-      const uint64_t INITpos1s = DHneg1temp & Matches;
-
-      uint64_t sum = INITpos1s;
-      sum += DHneg1temp;
-      OverFlow0 = sum < DHneg1temp;
-      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-      //set RemainingDHneg1
-      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-      //combine 1s and Matches
-      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-      //Find 0s
-      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-      uint64_t initval = (INITzeros << 1);
-      INITzerosprevbit = INITzeros >> 63;
-
-      sum = initval;
-      sum += RemainDHneg1;
-      OverFlow0 |= sum < RemainDHneg1;
-      const uint64_t DVzeroshift = initval ^ RemainDHneg1;
-
-      //Find -1s
-      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-      //Finding the horizontal values
-      //Remove matches from DH values except 1
-      DHzerotemp &= NotMatches;
-      //combine 1s and Matches
-      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-      //Find 0s
-      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-      //Find 1s
-      DHpos1temp = DVneg1shift & DHpos1orMatch;
-      //Find -1s
-      DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-      DH[0].DHpos1 = DHpos1temp;
-      DH[0].DHzero = DHzerotemp;
-      DH[0].DHneg1 = DHneg1temp;
-    }
-
-    for (std::size_t word = 1; word < words - 1; ++word) {
-      uint64_t DHpos1temp    = DH[word].DHpos1;
-      uint64_t DHzerotemp    = DH[word].DHzero;
-      uint64_t DHneg1temp    = DH[word].DHneg1;
-
-      const uint64_t Matches = block.get(word, ch1);
-
-      //Complement Matches
-      const uint64_t NotMatches = ~Matches;
-      //Finding the vertical values
-      //Find 1s
-      const uint64_t INITpos1s = DHneg1temp & Matches;
-
-
-      uint64_t sum = INITpos1s;
-      sum += OverFlow0;
-      OverFlow0 = sum < OverFlow0;
-      sum += DHneg1temp;
-      OverFlow0 |= sum < DHneg1temp;
-      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-      //set RemainingDHneg1
-      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-      //combine 1s and Matches
-      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-      //Find 0s
-      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-      uint64_t initval = INITzerosprevbit;
-      INITzerosprevbit = INITzeros >> 63;
-      initval = (INITzeros << 1) | initval;
-
-
-      sum = initval;
-      sum += OverFlow1;
-      OverFlow1 = sum < OverFlow1;
-      sum += RemainDHneg1;
-      OverFlow0 |= sum < RemainDHneg1;
-      const uint64_t DVzeroshift = sum ^ RemainDHneg1;
-
-      //Find -1s
-      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-      //Finding the horizontal values
-      //Remove matches from DH values except 1
-      DHzerotemp &= NotMatches;
-      //combine 1s and Matches
-      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-      //Find 0s
-      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-      //Find 1s
-      DHpos1temp = DVneg1shift & DHpos1orMatch;
-      //Find -1s
-      DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-      DH[word].DHpos1 = DHpos1temp;
-      DH[word].DHzero = DHzerotemp;
-      DH[word].DHneg1 = DHneg1temp;
-    }
-
-    // manually unroll the loop iteration for the last word
-    // since we do not have to calculate any overflows anymore
-    if (words > 1) {
-      uint64_t DHpos1temp    = DH[words - 1].DHpos1;
-      uint64_t DHzerotemp    = DH[words - 1].DHzero;
-      uint64_t DHneg1temp    = DH[words - 1].DHneg1;
-
-      const uint64_t Matches = block.get(words - 1, ch1);
-
-      //Complement Matches
-      const uint64_t NotMatches = ~Matches;
-      //Finding the vertical values
-      //Find 1s
-      const uint64_t INITpos1s = DHneg1temp & Matches;
-
-      uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-      //set RemainingDHneg1
-      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-      //combine 1s and Matches
-      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-      //Find 0s
-      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-      uint64_t initval = (INITzeros << 1) | INITzerosprevbit;
-
-      sum = initval + RemainDHneg1 + OverFlow1;
-      const uint64_t DVzeroshift = sum ^ RemainDHneg1;
-
-      //Find -1s
-      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-      //Finding the horizontal values
-      //Remove matches from DH values except 1
-      DHzerotemp &= NotMatches;
-      //combine 1s and Matches
-      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-      //Find 0s
-      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-      //Find 1s
-      DHpos1temp = DVneg1shift & DHpos1orMatch;
-      //Find -1s
-      DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-      DH[words - 1].DHpos1 = DHpos1temp;
-      DH[words - 1].DHzero = DHzerotemp;
-      DH[words - 1].DHneg1 = DHneg1temp;
-    }
-  }
-
-  //find scores in last row
-  std::size_t dist = s1.size() + s2_len;
-
-  for (std::size_t word = 0; word < words-1; ++word)
-  {
-    dist -= popcount64(DH[word].DHzero);
-    dist -= popcount64(DH[word].DHpos1) * 2;
-  }
-
-  uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
-  dist -= popcount64(DH.back().DHzero & bitmask);
-  dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
-
-  return dist;
-}
-
-template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
-{
-  if (s2.size() < 65) {
-    return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
-  } else {
-    return weighted_levenshtein_bitpal_blockwise(
-      s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
-  }
-}
-
-//TODO this implementation needs some cleanup
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
-std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
-  std::size_t max)
-{
-  // when no differences are allowed a direct comparision is sufficient
-  if (max == 0) {
-    if (s1.size() != s2.size()) {
-      return (std::size_t)-1;
-    }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-  }
-
-  // when the strings have a similar length each difference causes
-  // at least a edit distance of 2, so a direct comparision is sufficient
-  if (max == 1) {
-    if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-    }
-  }
-
-  // at least length difference insertions/deletions required
-  std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
-  if (len_diff > max) {
-    return (std::size_t)-1;
-  }
-
-  // important to catch, since this causes block.m_val to be empty -> raises exception on access
-  if (s2.empty()) {
-    return s1.size();
-  }
-
-  // do this first, since we can not remove any affix in encoded form
-  if (max >= 5) {
-    std::size_t dist = 0;
-    if (s2.size() < 65) {
-      dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
-    } else {
-      dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
-    }
-
-    return (dist > max) ? (std::size_t)-1 : dist;
-  }
-
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  common::remove_common_affix(s1, s2);
-
-  if (s2.empty()) {
-    return s1.size();
-  }
-
-  if (s1.empty()) {
-    return s2.size();
-  }
-
-  return weighted_levenshtein_mbleven2018(s1, s2, max);
-}
-
-
-template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
-{
-  // Swapping the strings so the second string is shorter
-  if (s1.size() < s2.size()) {
-    return weighted_levenshtein(s2, s1, max);
-  }
-
-  // when no differences are allowed a direct comparision is sufficient
-  if (max == 0) {
-    if (s1.size() != s2.size()) {
-      return (std::size_t)-1;
-    }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-  }
-
-  // when the strings have a similar length each difference causes
-  // at least a edit distance of 2, so a direct comparision is sufficient
-  if (max == 1) {
-    if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-    }
-  }
-
-  // at least length difference insertions/deletions required
-  if (s1.size() - s2.size() > max) {
-    return (std::size_t)-1;
-  }
-
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  common::remove_common_affix(s1, s2);
-
-  if (s2.empty()) {
-    return s1.size();
-  }
-
-  if (max < 5) {
-    return weighted_levenshtein_mbleven2018(s1, s2, max);
-  }
-
-  std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
-  return (dist > max) ? (std::size_t)-1 : dist;
-}
-
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
-double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
-  const double score_cutoff)
-{
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
-
-  std::size_t lensum = s1.size() + s2.size();
-
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
-
-  std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, lensum, score_cutoff)
-    : 0.0;
-}
-
-template <typename CharT1, typename CharT2>
-double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, const double score_cutoff)
-{
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
-
-  std::size_t lensum = s1.size() + s2.size();
-
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
-
-  std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, lensum, score_cutoff)
-    : 0.0;
-}
-
-} // namespace detail
-} // namespace string_metric
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+// todo CachedRatio speed for equal strings vs original implementation
+// TODO documentation
+template <typename Sentence1>
+struct CachedTokenSortRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedTokenSortRatio(const Sentence1& s1)
+        : s1_sorted(common::sorted_split(s1).join()), cached_ratio(s1_sorted)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    std::basic_string<CharT1> s1_sorted;
+    CachedRatio<Sentence1> cached_ratio;
+};
+
+/**
+ * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
+ * between them
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
+                                 percent score_cutoff = 0);
+
+// TODO documentation
+template <typename Sentence1>
+struct CachedPartialTokenSortRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedPartialTokenSortRatio(const Sentence1& s1)
+        : s1_sorted(common::sorted_split(s1).join()), cached_partial_ratio(s1_sorted)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    std::basic_string<CharT1> s1_sorted;
+    CachedPartialRatio<Sentence1> cached_partial_ratio;
+};
+
+/**
+ * @brief Compares the words in the strings based on unique and common words
+ * between them using fuzz::ratio
+ *
+ * @details
+ * @code{.cpp}
+ * // score1 is 83.87
+ * double score1 = token_sort_ratio("fuzzy was a bear", "fuzzy fuzzy was a
+ * bear")
+ * // score2 is 100
+ * double score2 = token_set_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
+ * @endcode
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2>
+percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// TODO documentation
+template <typename Sentence1>
+struct CachedTokenSetRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedTokenSetRatio(const Sentence1& s1);
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    SplittedSentenceView<CharT1> tokens_s1;
+};
+
+/**
+ * @brief Compares the words in the strings based on unique and common words
+ * between them using fuzz::partial_ratio
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// TODO documentation
+template <typename Sentence1>
+struct CachedPartialTokenSetRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedPartialTokenSetRatio(const Sentence1& s1);
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    SplittedSentenceView<CharT1> tokens_s1;
+};
+
+/**
+ * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
+ * fuzz::token_sort_ratio (faster than manually executing the two functions)
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2>
+percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// todo add real implementation
+template <typename Sentence1>
+struct CachedTokenRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedTokenRatio(const Sentence1& s1)
+        : s1_tokens(common::sorted_split(s1)),
+          s1_sorted(s1_tokens.join()),
+          cached_ratio_s1_sorted(s1_sorted)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    SplittedSentenceView<CharT1> s1_tokens;
+    std::basic_string<CharT1> s1_sorted;
+    CachedRatio<Sentence1> cached_ratio_s1_sorted;
+};
+
+/**
+ * @brief Helper method that returns the maximum of
+ * fuzz::partial_token_set_ratio and fuzz::partial_token_sort_ratio (faster than
+ * manually executing the two functions)
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
+          typename CharT2 = char_type<Sentence2>>
+percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// todo add real implementation
+template <typename Sentence1>
+struct CachedPartialTokenRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedPartialTokenRatio(const Sentence1& s1);
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    SplittedSentenceView<CharT1> tokens_s1;
+    std::basic_string<CharT1> s1_sorted;
+};
+
+/**
+ * @brief Calculates a weighted ratio based on the other ratio algorithms
+ *
+ * @details
+ * @todo add a detailed description
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2>
+percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+// todo add real implementation
+template <typename Sentence1>
+struct CachedWRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedWRatio(const Sentence1& s1);
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    // todo somehow implement this using other ratios with creating PatternMatchVector
+    // multiple times
+    CachedPartialRatio<Sentence1> cached_partial_ratio;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    SplittedSentenceView<CharT1> tokens_s1;
+    std::basic_string<CharT1> s1_sorted;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
+};
+
+/**
+ * @brief Calculates a quick ratio between two strings using fuzz.ratio
+ *
+ * @details
+ * @todo add a detailed description
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1 string to compare with s2 (for type info check Template parameters
+ * above)
+ * @param s2 string to compare with s1 (for type info check Template parameters
+ * above)
+ * @param score_cutoff Optional argument for a score threshold between 0% and
+ * 100%. Matches with a lower score than this number will not be returned.
+ * Defaults to 0.
+ *
+ * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
+ */
+template <typename Sentence1, typename Sentence2>
+percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
+
+template <typename Sentence1>
+struct CachedQRatio {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedQRatio(const Sentence1& s1) : s1_view(common::to_string_view(s1)), cached_ratio(s1)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+
+private:
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    CachedRatio<Sentence1> cached_ratio;
+};
+
+/**@}*/
+
+} // namespace fuzz
 } // namespace rapidfuzz
 
-#include <numeric>
+
+// The MIT License (MIT)
+//
+// Copyright (c) 2020 Max Bachmann
+// Copyright (c) 2014 Jean-Bernard Jansen
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
+
+#include <algorithm>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
+
+namespace rapidfuzz {
+namespace detail {
+struct MatchingBlock {
+    std::size_t spos;
+    std::size_t dpos;
+    std::size_t length;
+    MatchingBlock(std::size_t aSPos, std::size_t aDPos, std::size_t aLength)
+        : spos(aSPos), dpos(aDPos), length(aLength)
+    {}
+};
+
+namespace difflib {
+
+template <typename CharT1, typename CharT2>
+class SequenceMatcher {
+public:
+    using match_t = std::tuple<size_t, size_t, size_t>;
+
+    SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b) : a_(a), b_(b)
+    {
+        j2len_.resize(b.size() + 1);
+        for (std::size_t i = 0; i < b.size(); ++i) {
+            b2j_[b[i]].push_back(i);
+        }
+    }
+
+    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high)
+    {
+        size_t best_i = a_low;
+        size_t best_j = b_low;
+        size_t best_size = 0;
+
+        // Find longest junk free match
+        {
+            for (size_t i = a_low; i < a_high; ++i) {
+                std::size_t next_val = 0;
+                const auto& indexes = b2j_[a_[i]];
+                for (size_t pos = 0; pos < indexes.size(); pos++) {
+                    std::size_t j = indexes[pos];
+                    if (j < b_low) continue;
+                    if (j >= b_high) break;
+
+                    size_t k = next_val + 1;
+
+                    /* the next value might be overwritten below
+                     * so cache it */
+                    if (pos + 1 < indexes.size()) {
+                        next_val = j2len_[indexes[pos + 1]];
+                    }
+
+                    j2len_[j + 1] = k;
+                    if (k > best_size) {
+                        best_i = i - k + 1;
+                        best_j = j - k + 1;
+                        best_size = k;
+                    }
+                }
+            }
+
+            std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
+        }
+
+        while (best_i > a_low && best_j > b_low &&
+               common::mixed_sign_equal(a_[best_i - 1], b_[best_j - 1])) {
+            --best_i;
+            --best_j;
+            ++best_size;
+        }
+
+        while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
+               common::mixed_sign_equal(a_[best_i + best_size], b_[best_j + best_size]))
+        {
+            ++best_size;
+        }
+
+        return std::make_tuple(best_i, best_j, best_size);
+    }
+
+    std::vector<MatchingBlock> get_matching_blocks()
+    {
+        // The following are tuple extracting aliases
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
+        std::vector<match_t> matching_blocks_pass1;
+
+        std::size_t queue_head = 0;
+        queue.reserve(std::min(a_.size(), b_.size()));
+        queue.emplace_back(0, a_.size(), 0, b_.size());
+
+        while (queue_head < queue.size()) {
+            size_t a_low, a_high, b_low, b_high;
+            std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
+            std::size_t spos, dpos, length;
+            std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
+            if (length) {
+                if (a_low < spos && b_low < dpos) {
+                    queue.emplace_back(a_low, spos, b_low, dpos);
+                }
+                if ((spos + length) < a_high && (dpos + length) < b_high) {
+                    queue.emplace_back(spos + length, a_high, dpos + length, b_high);
+                }
+                matching_blocks_pass1.emplace_back(spos, dpos, length);
+            }
+        }
+        std::sort(std::begin(matching_blocks_pass1), std::end(matching_blocks_pass1));
+
+        std::vector<MatchingBlock> matching_blocks;
+
+        matching_blocks.reserve(matching_blocks_pass1.size());
+
+        size_t i1, j1, k1;
+        i1 = j1 = k1 = 0;
+
+        for (match_t const& m : matching_blocks_pass1) {
+            if (i1 + k1 == std::get<0>(m) && j1 + k1 == std::get<1>(m)) {
+                k1 += std::get<2>(m);
+            }
+            else {
+                if (k1) {
+                    matching_blocks.emplace_back(i1, j1, k1);
+                }
+                std::tie(i1, j1, k1) = m;
+            }
+        }
+        if (k1) {
+            matching_blocks.emplace_back(i1, j1, k1);
+        }
+        matching_blocks.emplace_back(a_.size(), b_.size(), 0);
+
+        return matching_blocks;
+    }
+
+protected:
+    basic_string_view<CharT1> a_;
+    basic_string_view<CharT2> b_;
+
+private:
+    // Cache to avoid reallocations
+    std::vector<size_t> j2len_;
+    common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
+};
+} // namespace difflib
+
+template <typename CharT1, typename CharT2>
+std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1,
+                                               basic_string_view<CharT2> s2)
+{
+    return difflib::SequenceMatcher<CharT1, CharT2>(s1, s2).get_matching_blocks();
+}
+
+} /* namespace detail */
+} /* namespace rapidfuzz */
+
+
 #include <algorithm>
 #include <array>
 #include <limits>
-
+#include <numeric>
 
 namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
 template <typename CharT1, typename CharT2>
-std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
+                                               basic_string_view<CharT2> s2,
                                                LevenshteinWeightTable weights, std::size_t max)
 {
-  std::vector<std::size_t> cache(s1.size() + 1);
+    std::vector<std::size_t> cache(s1.size() + 1);
 
-  cache[0] = 0;
-  for (std::size_t i = 1; i < cache.size(); ++i) {
-    cache[i] = cache[i - 1] + weights.delete_cost;
-  }
-
-  for (const auto& char2 : s2) {
-    auto cache_iter = cache.begin();
-    std::size_t temp = *cache_iter;
-    *cache_iter += weights.insert_cost;
-
-    for (const auto& char1 : s1) {
-      if (common::mixed_sign_unequal(char1, char2)) {
-        temp = std::min({*cache_iter + weights.delete_cost, *(cache_iter + 1) + weights.insert_cost,
-                         temp + weights.replace_cost});
-      }
-      ++cache_iter;
-      std::swap(*cache_iter, temp);
+    cache[0] = 0;
+    for (std::size_t i = 1; i < cache.size(); ++i) {
+        cache[i] = cache[i - 1] + weights.delete_cost;
     }
-  }
 
-  return (cache.back() <= max) ? cache.back() : (std::size_t)-1;
+    for (const auto& char2 : s2) {
+        auto cache_iter = cache.begin();
+        std::size_t temp = *cache_iter;
+        *cache_iter += weights.insert_cost;
+
+        for (const auto& char1 : s1) {
+            if (common::mixed_sign_unequal(char1, char2)) {
+                temp = std::min({*cache_iter + weights.delete_cost,
+                                 *(cache_iter + 1) + weights.insert_cost,
+                                 temp + weights.replace_cost});
+            }
+            ++cache_iter;
+            std::swap(*cache_iter, temp);
+        }
+    }
+
+    return (cache.back() <= max) ? cache.back() : (std::size_t)-1;
 }
 
 template <typename CharT1, typename CharT2>
 std::size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
                                 LevenshteinWeightTable weights, std::size_t max)
 {
-  // do not swap the strings, since insertion/deletion cost can be different
-  if (s1.size() >= s2.size()) {
-    // at least length difference deletions required
-    if ((s1.size() - s2.size()) * weights.delete_cost > max) {
-      return (std::size_t)-1;
+    // do not swap the strings, since insertion/deletion cost can be different
+    if (s1.size() >= s2.size()) {
+        // at least length difference deletions required
+        if ((s1.size() - s2.size()) * weights.delete_cost > max) {
+            return (std::size_t)-1;
+        }
     }
-  } else {
-    // at least length difference insertions required
-    if ((s2.size() - s1.size()) * weights.insert_cost > max) {
-      return (std::size_t)-1;
+    else {
+        // at least length difference insertions required
+        if ((s2.size() - s1.size()) * weights.insert_cost > max) {
+            return (std::size_t)-1;
+        }
     }
-  }
 
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  common::remove_common_affix(s1, s2);
+    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
+    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
+    // time
+    common::remove_common_affix(s1, s2);
 
-  return generic_levenshtein_wagner_fischer(s1, s2, weights, max);
+    return generic_levenshtein_wagner_fischer(s1, s2, weights, max);
 }
 
 template <typename CharT1, typename CharT2>
 double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
                                       LevenshteinWeightTable weights, const double score_cutoff)
 {
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
 
-  // calculate the maximum possible edit distance from the weights
-  std::size_t max_dist = 0;
-  if (s1.size() >= s2.size()) {
-    max_dist = std::min(
-      // delete all characters from s1 and insert all characters from s2
-      s1.size() * weights.delete_cost + s2.size() * weights.insert_cost,
-      // replace all characters and delete the remaining characters from s1
-      s2.size() * weights.replace_cost + (s1.size() - s2.size()) * weights.delete_cost
-    );
-  } else {
-    max_dist = std::min(
-      // delete all characters from s1 and insert all characters from s2
-      s1.size() * weights.delete_cost + s2.size() * weights.insert_cost,
-      // replace all characters and insert the remaining characters into s1
-      s1.size() * weights.replace_cost + (s2.size() - s1.size()) * weights.insert_cost
-    );
-  }
+    // calculate the maximum possible edit distance from the weights
+    std::size_t max_dist = 0;
+    if (s1.size() >= s2.size()) {
+        max_dist = std::min(
+            // delete all characters from s1 and insert all characters from s2
+            s1.size() * weights.delete_cost + s2.size() * weights.insert_cost,
+            // replace all characters and delete the remaining characters from s1
+            s2.size() * weights.replace_cost + (s1.size() - s2.size()) * weights.delete_cost);
+    }
+    else {
+        max_dist = std::min(
+            // delete all characters from s1 and insert all characters from s2
+            s1.size() * weights.delete_cost + s2.size() * weights.insert_cost,
+            // replace all characters and insert the remaining characters into s1
+            s1.size() * weights.replace_cost + (s2.size() - s1.size()) * weights.insert_cost);
+    }
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
-  std::size_t dist = generic_levenshtein(s1, s2, weights, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, max_dist, score_cutoff)
-    : 0.0;
+    std::size_t dist = generic_levenshtein(s1, s2, weights, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
 } // namespace detail
@@ -3635,7 +3293,7 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
-#define NOTNUM(c)   ((c>57) || (c<48))
+#define NOTNUM(c) ((c > 57) || (c < 48))
 
 /* For now this implementation is ported from
  * https://github.com/jamesturk/cjellyfish
@@ -3644,9 +3302,8 @@ namespace detail {
  * in the future
  */
 template <typename CharT1, typename CharT2>
-double _jaro_winkler(basic_string_view<CharT1> ying,
-                     basic_string_view<CharT2> yang,
-                     int winklerize, double prefix_weight = 0.1)
+double _jaro_winkler(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang, int winklerize,
+                     double prefix_weight = 0.1)
 {
     std::size_t min_len;
     std::size_t search_range;
@@ -3658,25 +3315,26 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     if (ying.size() > yang.size()) {
         search_range = ying.size();
         min_len = yang.size();
-    } else {
+    }
+    else {
         search_range = yang.size();
         min_len = ying.size();
     }
-  
+
     // Blank out the flags
     std::vector<int> ying_flag(ying.size() + 1);
     std::vector<int> yang_flag(yang.size() + 1);
 
-    search_range = (search_range/2);
+    search_range = (search_range / 2);
     if (search_range > 0) search_range--;
-
 
     // Looking only within the search range, count and flag the matched pairs.
     common_chars = 0;
     for (std::size_t i = 0; i < ying.size(); i++) {
         std::size_t lowlim = (i >= search_range) ? i - search_range : 0;
-        std::size_t hilim = (i + search_range <= yang.size()-1) ? (i + search_range) : yang.size()-1;
-        for (std::size_t j = lowlim; j <= hilim; j++)  {
+        std::size_t hilim =
+            (i + search_range <= yang.size() - 1) ? (i + search_range) : yang.size() - 1;
+        for (std::size_t j = lowlim; j <= hilim; j++) {
             if (!yang_flag[j] && common::mixed_sign_equal(yang[j], ying[i])) {
                 yang_flag[j] = 1;
                 ying_flag[i] = 1;
@@ -3712,16 +3370,19 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     // adjust for similarities in nonmatched characters
 
     // Main weight computation.
-    double weight = common_chars / ((double) ying.size()) + (double)common_chars / ((double) yang.size())
-        + ((double)(common_chars - trans_count)) / ((double)common_chars);
-    weight /=  3.0;
+    double weight = common_chars / ((double)ying.size()) +
+                    (double)common_chars / ((double)yang.size()) +
+                    ((double)(common_chars - trans_count)) / ((double)common_chars);
+    weight /= 3.0;
 
     // Continue to boost the weight if the strings are similar
     if (winklerize && weight > 0.7) {
         // Adjust for having up to the first 4 characters in common
         std::size_t j = (min_len >= 4) ? 4 : min_len;
         std::size_t i = 0;
-        for (i=0; ((i<j) && common::mixed_sign_equal(ying[i], yang[i]) && (NOTNUM(ying[i]))); i++);
+        for (i = 0; ((i < j) && common::mixed_sign_equal(ying[i], yang[i]) && (NOTNUM(ying[i])));
+             i++)
+            ;
         if (i) {
             weight += (double)i * prefix_weight * (1.0 - weight);
         }
@@ -3730,28 +3391,28 @@ double _jaro_winkler(basic_string_view<CharT1> ying,
     return weight;
 }
 
-
 template <typename CharT1, typename CharT2>
 double jaro_winkler_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang,
                                double prefix_weight, percent score_cutoff)
 {
-    return common::result_cutoff(_jaro_winkler(ying, yang, 1, prefix_weight)*100, score_cutoff);
+    return common::result_cutoff(_jaro_winkler(ying, yang, 1, prefix_weight) * 100, score_cutoff);
 }
 
 template <typename CharT1, typename CharT2>
-double jaro_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang, percent score_cutoff)
+double jaro_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang,
+                       percent score_cutoff)
 {
-    return common::result_cutoff(_jaro_winkler(ying, yang, 0)*100, score_cutoff);
+    return common::result_cutoff(_jaro_winkler(ying, yang, 0) * 100, score_cutoff);
 }
 
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
 
-#include <numeric>
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <numeric>
 #include <stdexcept>
 
 namespace rapidfuzz {
@@ -3759,127 +3420,1087 @@ namespace string_metric {
 namespace detail {
 
 template <typename CharT1, typename CharT2>
-std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1,
+                                            basic_string_view<CharT2> s2)
 {
-  std::size_t rows = s1.size() + 1;
-  std::size_t cols = s2.size() + 1;
-  std::size_t matrix_size = rows * cols;
-  if (matrix_size / rows != cols)
-  {
-    throw std::length_error("cannot create matrix larger than SIZE_MAX");
-  }
-  std::vector<std::size_t> matrix(rows * cols);
-
-  for (std::size_t col = 0; col < cols; col++)
-  {
-    matrix[col] = col;
-  }
-
-  for (std::size_t row = 1; row < rows; row++)
-  {
-    matrix[row * cols] = row;
-  }
-
-  if (s2.empty())
-  {
-    return matrix;
-  }
-
-  for (std::size_t i = 0; i < s1.size(); i++) {
-    size_t* prev = &matrix[i * cols];
-    size_t* cur = &matrix[(i + 1) * cols + 1];
-    auto char1 = s1[i];
-    size_t temp = i;
-
-    for (const auto& char2 : s2) {
-      temp = std::min({temp + 1, *prev + (char1 != char2), *(prev + 1) + 1});
-      *cur = temp;
-      cur++;
-      prev++;
+    std::size_t rows = s1.size() + 1;
+    std::size_t cols = s2.size() + 1;
+    std::size_t matrix_size = rows * cols;
+    if (matrix_size / rows != cols) {
+        throw std::length_error("cannot create matrix larger than SIZE_MAX");
     }
-  }
+    std::vector<std::size_t> matrix(rows * cols);
 
-  return matrix;
+    for (std::size_t col = 0; col < cols; col++) {
+        matrix[col] = col;
+    }
+
+    for (std::size_t row = 1; row < rows; row++) {
+        matrix[row * cols] = row;
+    }
+
+    if (s2.empty()) {
+        return matrix;
+    }
+
+    for (std::size_t i = 0; i < s1.size(); i++) {
+        size_t* prev = &matrix[i * cols];
+        size_t* cur = &matrix[(i + 1) * cols + 1];
+        auto char1 = s1[i];
+        size_t temp = i;
+
+        for (const auto& char2 : s2) {
+            temp = std::min({temp + 1, *prev + (char1 != char2), *(prev + 1) + 1});
+            *cur = temp;
+            cur++;
+            prev++;
+        }
+    }
+
+    return matrix;
 }
 
 template <typename CharT1, typename CharT2>
-std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
+                                                   basic_string_view<CharT2> s2)
 {
-  /* prefix and suffix are no-ops, which do not need to be added to the editops */
-  auto affix = common::remove_common_affix(s1, s2);
-  std::vector<std::size_t> matrix = levenshtein_matrix(s1, s2);
-  std::size_t dist = matrix.back();
+    /* prefix and suffix are no-ops, which do not need to be added to the editops */
+    auto affix = common::remove_common_affix(s1, s2);
+    std::vector<std::size_t> matrix = levenshtein_matrix(s1, s2);
+    std::size_t dist = matrix.back();
 
-  std::vector<LevenshteinEditOp> editops(dist);
+    std::vector<LevenshteinEditOp> editops(dist);
 
-  if (dist == 0)
-  {
+    if (dist == 0) {
+        return editops;
+    }
+
+    std::size_t row = s1.size();
+    std::size_t col = s2.size();
+    std::size_t cols = s2.size() + 1;
+    const std::size_t* cur = &matrix.back();
+
+    while (row || col) {
+        /* horizontal == current and character similar -> no-operation */
+        if (row && col && (*cur == *(cur - cols - 1)) && s1[row - 1] == s2[col - 1]) {
+            row--;
+            col--;
+            cur -= cols + 1;
+            continue;
+        }
+        /* horizontal + 1 == current -> replacement */
+        else if (row && col && (*cur == *(cur - cols - 1) + 1)) {
+            dist--;
+            editops[dist].type = LevenshteinEditType::Replace;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
+            row--;
+            col--;
+            cur -= cols + 1;
+        }
+        /* left + 1 == current -> insertion */
+        else if (col && (*cur == *(cur - 1) + 1)) {
+            dist--;
+            editops[dist].type = LevenshteinEditType::Insert;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
+            col--;
+            cur--;
+        }
+        /* above + 1 == current -> deletion */
+        else {
+            /* this should be the case as long as there is no error in the implementation */
+            assert((row && (*cur == *(cur - cols) + 1)));
+
+            dist--;
+            editops[dist].type = LevenshteinEditType::Delete;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
+            row--;
+            cur -= cols;
+        }
+    }
+
     return editops;
-  }
-
-  std::size_t row = s1.size();
-  std::size_t col = s2.size();
-  std::size_t cols = s2.size() + 1;
-  const std::size_t* cur = &matrix.back();
-
-  while (row || col)
-  {
-    /* horizontal == current and character similar -> no-operation */
-    if (row && col && (*cur == *(cur - cols - 1)) && s1[row - 1] == s2[col - 1])
-    {
-      row--;
-      col--;
-      cur -= cols + 1;
-      continue;
-    }
-    /* horizontal + 1 == current -> replacement */
-    else if (row && col && (*cur == *(cur - cols - 1) + 1))
-
-    {
-      dist--;
-      editops[dist].type = LevenshteinEditType::Replace;
-      editops[dist].src_pos = row + affix.prefix_len;
-      editops[dist].dest_pos = col + affix.prefix_len;
-      row--;
-      col--;
-      cur -= cols + 1;
-    }
-    /* left + 1 == current -> insertion */
-    else if (col && (*cur == *(cur - 1) + 1))
-    {
-      dist--;
-      editops[dist].type = LevenshteinEditType::Insert;
-      editops[dist].src_pos = row + affix.prefix_len;
-      editops[dist].dest_pos = col + affix.prefix_len;
-      col--;
-      cur--;
-    }
-    /* above + 1 == current -> deletion */
-    else
-    {
-      /* this should be the case as long as there is no error in the implementation */
-      assert((row && (*cur == *(cur - cols) + 1)));
-
-      dist--;
-      editops[dist].type = LevenshteinEditType::Delete;
-      editops[dist].src_pos = row + affix.prefix_len;
-      editops[dist].dest_pos = col + affix.prefix_len;
-      row--;
-      cur -= cols;
-    }
-  }
-
-  return editops;
 }
 
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <numeric>
+
+namespace rapidfuzz {
+namespace string_metric {
+namespace detail {
+
+/*
+ * An encoded mbleven model table.
+ *
+ * Each 8-bit integer represents an edit sequence, with using two
+ * bits for a single operation.
+ *
+ * Each Row of 8 integers represent all possible combinations
+ * of edit sequences for a gived maximum edit distance and length
+ * difference between the two strings, that is below the maximum
+ * edit distance
+ *
+ *   01 = DELETE, 10 = INSERT, 11 = SUBSTITUTE
+ *
+ * For example, 3F -> 0b111111 means three substitutions
+ */
+static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
+    /* max edit distance 1 */
+    {0x03}, /* len_diff 0 */
+    {0x01}, /* len_diff 1 */
+    /* max edit distance 2 */
+    {0x0F, 0x09, 0x06}, /* len_diff 0 */
+    {0x0D, 0x07},       /* len_diff 1 */
+    {0x05},             /* len_diff 2 */
+    /* max edit distance 3 */
+    {0x3F, 0x27, 0x2D, 0x39, 0x36, 0x1E, 0x1B}, /* len_diff 0 */
+    {0x3D, 0x37, 0x1F, 0x25, 0x19, 0x16},       /* len_diff 1 */
+    {0x35, 0x1D, 0x17},                         /* len_diff 2 */
+    {0x15},                                     /* len_diff 3 */
+};
+
+template <typename CharT1, typename CharT2>
+std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                    std::size_t max)
+{
+    if (s1.size() < s2.size()) {
+        return levenshtein_mbleven2018(s2, s1, max);
+    }
+
+    std::size_t len_diff = s1.size() - s2.size();
+    auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
+    std::size_t dist = max + 1;
+
+    for (int pos = 0; possible_ops[pos] != 0; ++pos) {
+        int ops = possible_ops[pos];
+        std::size_t s1_pos = 0;
+        std::size_t s2_pos = 0;
+        std::size_t cur_dist = 0;
+        while (s1_pos < s1.size() && s2_pos < s2.size()) {
+            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+                cur_dist++;
+                if (!ops) break;
+                if (ops & 1) s1_pos++;
+                if (ops & 2) s2_pos++;
+                ops >>= 2;
+            }
+            else {
+                s1_pos++;
+                s2_pos++;
+            }
+        }
+        cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
+        dist = std::min(dist, cur_dist);
+    }
+
+    return (dist > max) ? (std::size_t)-1 : dist;
+}
+
+/**
+ * @brief Bitparallel implementation of the Levenshtein distance.
+ *
+ * This implementation requires the first string to have a length <= 64.
+ * The algorithm used is described @cite hyrro_2002 and has a time complexity
+ * of O(N). Comments and variable names in the implementation follow the
+ * paper. This implementation is used internally when the strings are short enough
+ *
+ * @tparam CharT1 This is the char type of the first sentence
+ * @tparam CharT2 This is the char type of the second sentence
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ *
+ * @return returns the levenshtein distance between s1 and s2
+ */
+template <typename CharT1, typename BlockPatternCharT>
+std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
+                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   std::size_t s1_len, std::size_t max)
+{
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = (uint64_t)-1;
+    if (s1_len < 64) {
+        VP += (uint64_t)1 << s1_len;
+    }
+
+    uint64_t VN = 0;
+    std::size_t currDist = s1_len;
+
+    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+    // make sure a wraparound can never occur
+    std::size_t maxMisses = 0;
+    if (s1_len > s2.size()) {
+        if (s1_len - s2.size() < max) {
+            maxMisses = max - (s1_len - s2.size());
+        }
+        else {
+            // minimum is 0
+            maxMisses = 0;
+        }
+    }
+    else {
+        maxMisses = s2.size() - s1_len;
+        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+            maxMisses = max + maxMisses;
+        }
+        else {
+            // max is (size_t)-1
+            maxMisses = std::numeric_limits<std::size_t>::max();
+        }
+    }
+
+    /* mask used when computing D[m,j] in the paper 10^(m-1) */
+    uint64_t mask = (uint64_t)1 << (s1_len - 1);
+
+    /* Searching */
+    for (const auto& ch2 : s2) {
+        /* Step 1: Computing D0 */
+        uint64_t PM_j = PM.get(ch2);
+        uint64_t X = PM_j | VN;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        // modification: early exit using maxMisses
+        if (HP & mask) {
+            currDist++;
+            if (maxMisses < 2) {
+                return (std::size_t)-1;
+            }
+            maxMisses -= 2;
+        }
+        else if (HN & mask) {
+            currDist--;
+        }
+        else {
+            if (maxMisses < 1) {
+                return (std::size_t)-1;
+            }
+            --maxMisses;
+        }
+
+        /* Step 4: Computing Vp and VN */
+        X = (HP << 1) | 1;
+        VP = (HN << 1) | ~(D0 | X);
+        VN = X & D0;
+    }
+
+    return currDist;
+}
+
+template <typename CharT1, typename BlockPatternCharT>
+std::size_t
+levenshtein_myers1999_block(basic_string_view<CharT1> s2,
+                            const common::BlockPatternMatchVector<BlockPatternCharT>& PM,
+                            std::size_t s1_len, std::size_t max)
+{
+    struct Vectors {
+        uint64_t Mv;
+        uint64_t Pv;
+
+        Vectors() : Mv(0), Pv(~0x0ull)
+        {}
+    };
+
+    const std::size_t words = PM.m_val.size();
+    std::size_t currDist = s1_len;
+
+    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+    // make sure a wraparound can never occur
+    std::size_t maxMisses = 0;
+    if (s1_len > s2.size()) {
+        if (s1_len - s2.size() < max) {
+            maxMisses = max - (s1_len - s2.size());
+        }
+        else {
+            // minimum is 0
+            maxMisses = 0;
+        }
+    }
+    else {
+        maxMisses = s2.size() - s1_len;
+        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+            maxMisses = max + maxMisses;
+        }
+        else {
+            // max is (size_t)-1
+            maxMisses = std::numeric_limits<std::size_t>::max();
+        }
+    }
+
+    std::vector<Vectors> vecs(words);
+    const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
+
+    for (std::size_t i = 0; i < s2.size(); i++) {
+        uint64_t Pb = 1;
+        uint64_t Mb = 0;
+
+        for (std::size_t word = 0; word < words - 1; word++) {
+            const uint64_t PM_j = PM.get(word, s2[i]);
+            const uint64_t Mv = vecs[word].Mv;
+            const uint64_t Pv = vecs[word].Pv;
+
+            const uint64_t Xv = PM_j | Mv;
+            const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
+
+            uint64_t Ph = Mv | ~(Xh | Pv);
+            uint64_t Mh = Pv & Xh;
+
+            const uint64_t PbTemp = Pb;
+            Pb = Ph >> 63;
+            Ph = (Ph << 1) | PbTemp;
+
+            const uint64_t MbTemp = Mb;
+            Mb = Mh >> 63;
+            Mh = (Mh << 1) | MbTemp;
+
+            vecs[word].Pv = Mh | ~(Xv | Ph);
+            vecs[word].Mv = Ph & Xv;
+        }
+
+        // distance only has to be incremented/decremented in the last word
+        {
+            const uint64_t PM_j = PM.get(words - 1, s2[i]);
+            const uint64_t Mv = vecs[words - 1].Mv;
+            const uint64_t Pv = vecs[words - 1].Pv;
+
+            const uint64_t Xv = PM_j | Mv;
+            const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
+
+            uint64_t Ph = Mv | ~(Xh | Pv);
+            uint64_t Mh = Pv & Xh;
+
+            // modification: early exit using maxMisses
+            if (Ph & Last) {
+                currDist++;
+                if (maxMisses < 2) {
+                    return (std::size_t)-1;
+                }
+                maxMisses -= 2;
+            }
+            else if (Mh & Last) {
+                currDist--;
+            }
+            else {
+                if (maxMisses < 1) {
+                    return (std::size_t)-1;
+                }
+                --maxMisses;
+            }
+
+            Ph = (Ph << 1) | Pb;
+            Mh = (Mh << 1) | Mb;
+
+            vecs[words - 1].Pv = Mh | ~(Xv | Ph);
+            vecs[words - 1].Mv = Ph & Xv;
+        }
+    }
+
+    return currDist;
+}
+
+template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+std::size_t levenshtein(basic_string_view<CharT1> s1,
+                        const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                        basic_string_view<CharT2> s2, std::size_t max)
+{
+    // when no differences are allowed a direct comparision is sufficient
+    if (max == 0) {
+        if (s1.size() != s2.size()) {
+            return (std::size_t)-1;
+        }
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+    }
+
+    // at least length difference insertions/deletions required
+    std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
+    if (len_diff > max) {
+        return (std::size_t)-1;
+    }
+
+    // important to catch, since this causes block.m_val to be empty -> raises exception on access
+    if (s2.empty()) {
+        return s1.size();
+    }
+
+    // do this first, since we can not remove any affix in encoded form
+    if (max >= 4) {
+        std::size_t dist = 0;
+        if (s2.size() < 65) {
+            dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
+        }
+        else {
+            dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
+        }
+
+        return (dist > max) ? (std::size_t)-1 : dist;
+    }
+
+    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
+    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
+    // time
+    common::remove_common_affix(s1, s2);
+
+    if (s2.empty()) {
+        return s1.size();
+    }
+
+    if (s1.empty()) {
+        return s2.size();
+    }
+
+    return levenshtein_mbleven2018(s1, s2, max);
+}
+
+template <typename CharT1, typename CharT2>
+std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+{
+    /* Swapping the strings so the first string is shorter.
+     * Swapping has no effect on the score since Insertion and Deletion have the
+     * the same weight */
+    if (s1.size() > s2.size()) {
+        return levenshtein(s2, s1, max);
+    }
+
+    // when no differences are allowed a direct comparision is sufficient
+    if (max == 0) {
+        if (s1.size() != s2.size()) {
+            return (std::size_t)-1;
+        }
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+    }
+
+    // at least length difference insertions/deletions required
+    if (s2.size() - s1.size() > max) {
+        return (std::size_t)-1;
+    }
+
+    /* The Levenshtein distance between
+     * <prefix><string1><suffix> and <prefix><string2><suffix>
+     * is similar to the distance between <string1> and <string2>,
+     * so they can be removed in linear time */
+    common::remove_common_affix(s1, s2);
+
+    if (s1.empty()) {
+        return s2.size();
+    }
+
+    if (max < 4) {
+        return levenshtein_mbleven2018(s1, s2, max);
+    }
+
+    /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
+    if (s2.size() < 65) {
+        std::size_t dist =
+            levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+        return (dist > max) ? (std::size_t)-1 : dist;
+    }
+
+    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector<CharT2>(s2),
+                                                   s2.size(), max);
+
+    return (dist > max) ? (std::size_t)-1 : dist;
+}
+
+template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+double normalized_levenshtein(basic_string_view<CharT1> s1,
+                              const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                              basic_string_view<CharT2> s2, const double score_cutoff)
+{
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
+
+    /* calculate the maximum possible edit distance with
+     * Insertion/Deletion/Substitution = 1 */
+    std::size_t max_dist = std::max(s1.size(), s2.size());
+
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
+
+    std::size_t dist = levenshtein(s1, block, s2, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+}
+
+template <typename CharT1, typename CharT2>
+double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                              const double score_cutoff)
+{
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
+
+    /* calculate the maximum possible edit distance with
+     * Insertion/Deletion/Substitution = 1 */
+    std::size_t max_dist = std::max(s1.size(), s2.size());
+
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
+
+    std::size_t dist = levenshtein(s1, s2, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+}
+
+} // namespace detail
+} // namespace string_metric
+} // namespace rapidfuzz
+
+
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <stdexcept>
+#include <string>
+
+namespace rapidfuzz {
+namespace string_metric {
+namespace detail {
+
+/*
+ * An encoded mbleven model table.
+ *
+ * Each 8-bit integer represents an edit sequence, with using two
+ * bits for a single operation.
+ *
+ * Each Row of 8 integers represent all possible combinations
+ * of edit sequences for a gived maximum edit distance and length
+ * difference between the two strings, that is below the maximum
+ * edit distance
+ *
+ *   0x1 = 01 = DELETE,
+ *   0x2 = 10 = INSERT
+ *
+ * 0x5 -> DEL + DEL
+ * 0x6 -> DEL + INS
+ * 0x9 -> INS + DEL
+ * 0xA -> INS + INS
+ */
+static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
+    /* max edit distance 1 */
+    {0},
+    /* case does not occur */ /* len_diff 0 */
+    {0x01},                   /* len_diff 1 */
+    /* max edit distance 2 */
+    {0x09, 0x06}, /* len_diff 0 */
+    {0x01},       /* len_diff 1 */
+    {0x05},       /* len_diff 2 */
+    /* max edit distance 3 */
+    {0x09, 0x06},       /* len_diff 0 */
+    {0x25, 0x19, 0x16}, /* len_diff 1 */
+    {0x05},             /* len_diff 2 */
+    {0x15},             /* len_diff 3 */
+    /* max edit distance 4 */
+    {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
+    {0x25, 0x19, 0x16},                   /* len_diff 1 */
+    {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
+    {0x15},                               /* len_diff 3 */
+    {0x55},                               /* len_diff 4 */
+};
+
+template <typename CharT1, typename CharT2>
+std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
+                                             basic_string_view<CharT2> s2, std::size_t max)
+{
+    if (s1.size() < s2.size()) {
+        return weighted_levenshtein_mbleven2018(s2, s1, max);
+    }
+
+    std::size_t len_diff = s1.size() - s2.size();
+    auto possible_ops =
+        weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
+    std::size_t dist = max + 1;
+
+    for (int pos = 0; possible_ops[pos] != 0; ++pos) {
+        int ops = possible_ops[pos];
+        std::size_t s1_pos = 0;
+        std::size_t s2_pos = 0;
+        std::size_t cur_dist = 0;
+
+        while (s1_pos < s1.size() && s2_pos < s2.size()) {
+            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+                cur_dist++;
+
+                if (!ops) break;
+                if (ops & 1)
+                    s1_pos++;
+                else if (ops & 2)
+                    s2_pos++;
+                ops >>= 2;
+            }
+            else {
+                s1_pos++;
+                s2_pos++;
+            }
+        }
+
+        cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
+        dist = std::min(dist, cur_dist);
+    }
+
+    return (dist > max) ? (std::size_t)-1 : dist;
+}
+
+/*
+ * count the number of bits set in a 64 bit integer
+ * The code uses wikipedia's 64-bit popcount implementation:
+ * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+ */
+static inline std::size_t popcount64(uint64_t x)
+{
+    const uint64_t m1 = 0x5555555555555555;  // binary: 0101...
+    const uint64_t m2 = 0x3333333333333333;  // binary: 00110011..
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;  // binary:  4 zeros,  4 ones ...
+    const uint64_t h01 = 0x0101010101010101; // the sum of 256 to the power of 0,1,2,3...
+
+    x -= (x >> 1) & m1;             // put count of each 2 bits into those 2 bits
+    x = (x & m2) + ((x >> 2) & m2); // put count of each 4 bits into those 4 bits
+    x = (x + (x >> 4)) & m4;        // put count of each 8 bits into those 8 bits
+    return static_cast<std::size_t>(
+        (x * h01) >> 56); // returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+}
+
+/*
+ * returns a 64 bit integer with the first n bits set to 1
+ */
+static inline uint64_t set_bits(int n)
+{
+    uint64_t result = (uint64_t)-1;
+    // shifting by 64 bits would be undefined behavior
+    if (n < 64) {
+        result += (uint64_t)1 << n;
+    }
+    return result;
+}
+
+template <typename CharT1, typename BlockPatternCharT>
+static inline std::size_t
+weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
+                            const common::PatternMatchVector<BlockPatternCharT>& block,
+                            std::size_t s2_len)
+{
+    uint64_t DHneg1 = ~0x0ull;
+    uint64_t DHzero = 0;
+    uint64_t DHpos1 = 0;
+
+    for (auto ch2 : s1) {
+        const uint64_t Matches = block.get(ch2);
+        const uint64_t NotMatches = ~Matches;
+
+        const uint64_t INITpos1s = DHneg1 & Matches;
+        const uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
+
+        const uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
+        const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+        const uint64_t INITzeros = (DHzero & DVpos1shiftorMatch);
+        const uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
+
+        const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+        DHzero &= NotMatches;
+        const uint64_t DHpos1orMatch = DHpos1 | Matches;
+        DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
+        DHpos1 = (DVneg1shift & DHpos1orMatch);
+        DHneg1 = ~(DHzero | DHpos1);
+    }
+
+    std::size_t dist = s1.size() + s2_len;
+    uint64_t bitmask = set_bits(static_cast<int>(s2_len));
+
+    dist -= popcount64(DHzero & bitmask);
+    dist -= popcount64(DHpos1 & bitmask) * 2;
+
+    return dist;
+}
+
+template <typename T, typename U>
+constexpr T bit_clear(T val, U bit)
+{
+    return val & ~(1ull << bit);
+}
+
+template <typename T, typename U>
+constexpr T bit_check(T val, U bit)
+{
+    return (val >> bit) & 0x1;
+}
+
+template <typename CharT1, typename BlockPatternCharT>
+std::size_t weighted_levenshtein_bitpal_blockwise(
+    basic_string_view<CharT1> s1, const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+    std::size_t s2_len)
+{
+    struct HorizontalDelta {
+        uint64_t DHpos1;
+        uint64_t DHzero;
+        uint64_t DHneg1;
+
+        HorizontalDelta() : DHpos1(0), DHzero(0), DHneg1(~0x0ull)
+        {}
+    };
+
+    std::size_t words = block.m_val.size();
+    std::vector<HorizontalDelta> DH(words);
+
+    // recursion
+    for (const auto& ch1 : s1) {
+        // initialize OverFlow
+        uint64_t OverFlow0 = 0;
+        uint64_t OverFlow1 = 0;
+        uint64_t INITzerosprevbit = 0;
+
+        // manually unroll the loop iteration for the first word
+        // since there can not be a overflow before the first iteration
+        {
+            uint64_t DHpos1temp = DH[0].DHpos1;
+            uint64_t DHzerotemp = DH[0].DHzero;
+            uint64_t DHneg1temp = DH[0].DHneg1;
+
+            const uint64_t Matches = block.get(0, ch1);
+
+            // Complement Matches
+            const uint64_t NotMatches = ~Matches;
+            // Finding the vertical values
+            // Find 1s
+            const uint64_t INITpos1s = DHneg1temp & Matches;
+
+            uint64_t sum = INITpos1s;
+            sum += DHneg1temp;
+            OverFlow0 = sum < DHneg1temp;
+            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+
+            // set RemainingDHneg1
+            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+            // combine 1s and Matches
+            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+            // Find 0s
+            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+            uint64_t initval = (INITzeros << 1);
+            INITzerosprevbit = INITzeros >> 63;
+
+            sum = initval;
+            sum += RemainDHneg1;
+            OverFlow0 |= sum < RemainDHneg1;
+            const uint64_t DVzeroshift = initval ^ RemainDHneg1;
+
+            // Find -1s
+            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+
+            // Finding the horizontal values
+            // Remove matches from DH values except 1
+            DHzerotemp &= NotMatches;
+            // combine 1s and Matches
+            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
+            // Find 0s
+            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+            // Find 1s
+            DHpos1temp = DVneg1shift & DHpos1orMatch;
+            // Find -1s
+            DHneg1temp = ~(DHzerotemp | DHpos1temp);
+
+            DH[0].DHpos1 = DHpos1temp;
+            DH[0].DHzero = DHzerotemp;
+            DH[0].DHneg1 = DHneg1temp;
+        }
+
+        for (std::size_t word = 1; word < words - 1; ++word) {
+            uint64_t DHpos1temp = DH[word].DHpos1;
+            uint64_t DHzerotemp = DH[word].DHzero;
+            uint64_t DHneg1temp = DH[word].DHneg1;
+
+            const uint64_t Matches = block.get(word, ch1);
+
+            // Complement Matches
+            const uint64_t NotMatches = ~Matches;
+            // Finding the vertical values
+            // Find 1s
+            const uint64_t INITpos1s = DHneg1temp & Matches;
+
+            uint64_t sum = INITpos1s;
+            sum += OverFlow0;
+            OverFlow0 = sum < OverFlow0;
+            sum += DHneg1temp;
+            OverFlow0 |= sum < DHneg1temp;
+            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+
+            // set RemainingDHneg1
+            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+            // combine 1s and Matches
+            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+            // Find 0s
+            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+            uint64_t initval = INITzerosprevbit;
+            INITzerosprevbit = INITzeros >> 63;
+            initval = (INITzeros << 1) | initval;
+
+            sum = initval;
+            sum += OverFlow1;
+            OverFlow1 = sum < OverFlow1;
+            sum += RemainDHneg1;
+            OverFlow0 |= sum < RemainDHneg1;
+            const uint64_t DVzeroshift = sum ^ RemainDHneg1;
+
+            // Find -1s
+            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+
+            // Finding the horizontal values
+            // Remove matches from DH values except 1
+            DHzerotemp &= NotMatches;
+            // combine 1s and Matches
+            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
+            // Find 0s
+            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+            // Find 1s
+            DHpos1temp = DVneg1shift & DHpos1orMatch;
+            // Find -1s
+            DHneg1temp = ~(DHzerotemp | DHpos1temp);
+
+            DH[word].DHpos1 = DHpos1temp;
+            DH[word].DHzero = DHzerotemp;
+            DH[word].DHneg1 = DHneg1temp;
+        }
+
+        // manually unroll the loop iteration for the last word
+        // since we do not have to calculate any overflows anymore
+        if (words > 1) {
+            uint64_t DHpos1temp = DH[words - 1].DHpos1;
+            uint64_t DHzerotemp = DH[words - 1].DHzero;
+            uint64_t DHneg1temp = DH[words - 1].DHneg1;
+
+            const uint64_t Matches = block.get(words - 1, ch1);
+
+            // Complement Matches
+            const uint64_t NotMatches = ~Matches;
+            // Finding the vertical values
+            // Find 1s
+            const uint64_t INITpos1s = DHneg1temp & Matches;
+
+            uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
+            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+
+            // set RemainingDHneg1
+            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+            // combine 1s and Matches
+            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+            // Find 0s
+            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+            uint64_t initval = (INITzeros << 1) | INITzerosprevbit;
+
+            sum = initval + RemainDHneg1 + OverFlow1;
+            const uint64_t DVzeroshift = sum ^ RemainDHneg1;
+
+            // Find -1s
+            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+
+            // Finding the horizontal values
+            // Remove matches from DH values except 1
+            DHzerotemp &= NotMatches;
+            // combine 1s and Matches
+            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
+            // Find 0s
+            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+            // Find 1s
+            DHpos1temp = DVneg1shift & DHpos1orMatch;
+            // Find -1s
+            DHneg1temp = ~(DHzerotemp | DHpos1temp);
+
+            DH[words - 1].DHpos1 = DHpos1temp;
+            DH[words - 1].DHzero = DHzerotemp;
+            DH[words - 1].DHneg1 = DHneg1temp;
+        }
+    }
+
+    // find scores in last row
+    std::size_t dist = s1.size() + s2_len;
+
+    for (std::size_t word = 0; word < words - 1; ++word) {
+        dist -= popcount64(DH[word].DHzero);
+        dist -= popcount64(DH[word].DHpos1) * 2;
+    }
+
+    uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
+    dist -= popcount64(DH.back().DHzero & bitmask);
+    dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
+
+    return dist;
+}
+
+template <typename CharT1, typename CharT2>
+std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+    if (s2.size() < 65) {
+        return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+    }
+    else {
+        return weighted_levenshtein_bitpal_blockwise(
+            s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
+    }
+}
+
+// TODO this implementation needs some cleanup
+template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
+                                 const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                                 basic_string_view<CharT2> s2, std::size_t max)
+{
+    // when no differences are allowed a direct comparision is sufficient
+    if (max == 0) {
+        if (s1.size() != s2.size()) {
+            return (std::size_t)-1;
+        }
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+    }
+
+    // when the strings have a similar length each difference causes
+    // at least a edit distance of 2, so a direct comparision is sufficient
+    if (max == 1) {
+        if (s1.size() == s2.size()) {
+            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        }
+    }
+
+    // at least length difference insertions/deletions required
+    std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
+    if (len_diff > max) {
+        return (std::size_t)-1;
+    }
+
+    // important to catch, since this causes block.m_val to be empty -> raises exception on access
+    if (s2.empty()) {
+        return s1.size();
+    }
+
+    // do this first, since we can not remove any affix in encoded form
+    if (max >= 5) {
+        std::size_t dist = 0;
+        if (s2.size() < 65) {
+            dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
+        }
+        else {
+            dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
+        }
+
+        return (dist > max) ? (std::size_t)-1 : dist;
+    }
+
+    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
+    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
+    // time
+    common::remove_common_affix(s1, s2);
+
+    if (s2.empty()) {
+        return s1.size();
+    }
+
+    if (s1.empty()) {
+        return s2.size();
+    }
+
+    return weighted_levenshtein_mbleven2018(s1, s2, max);
+}
+
+template <typename CharT1, typename CharT2>
+std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                 std::size_t max)
+{
+    // Swapping the strings so the second string is shorter
+    if (s1.size() < s2.size()) {
+        return weighted_levenshtein(s2, s1, max);
+    }
+
+    // when no differences are allowed a direct comparision is sufficient
+    if (max == 0) {
+        if (s1.size() != s2.size()) {
+            return (std::size_t)-1;
+        }
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+    }
+
+    // when the strings have a similar length each difference causes
+    // at least a edit distance of 2, so a direct comparision is sufficient
+    if (max == 1) {
+        if (s1.size() == s2.size()) {
+            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        }
+    }
+
+    // at least length difference insertions/deletions required
+    if (s1.size() - s2.size() > max) {
+        return (std::size_t)-1;
+    }
+
+    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
+    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
+    // time
+    common::remove_common_affix(s1, s2);
+
+    if (s2.empty()) {
+        return s1.size();
+    }
+
+    if (max < 5) {
+        return weighted_levenshtein_mbleven2018(s1, s2, max);
+    }
+
+    std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
+    return (dist > max) ? (std::size_t)-1 : dist;
+}
+
+template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+double
+normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
+                                const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                                basic_string_view<CharT2> s2, const double score_cutoff)
+{
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
+
+    std::size_t lensum = s1.size() + s2.size();
+
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
+
+    std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
+}
+
+template <typename CharT1, typename CharT2>
+double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                       const double score_cutoff)
+{
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
+
+    std::size_t lensum = s1.size() + s2.size();
+
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
+
+    std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
+}
+
+} // namespace detail
+} // namespace string_metric
+} // namespace rapidfuzz
+
 #include <cmath>
 #include <numeric>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
-#include <stdexcept>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -3889,7 +4510,6 @@ namespace string_metric {
  * Different useful string_metrics
  * @{
  */
-
 
 /**
  * @brief Calculates the minimum number of insertions, deletions, and substitutions
@@ -4025,81 +4645,93 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
                         LevenshteinWeightTable weights = {1, 1, 1},
                         std::size_t max = std::numeric_limits<std::size_t>::max())
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
-
-  if (weights.insert_cost == weights.delete_cost) {
-    /* when insertions + deletions operations are free there can not be any edit distance */
-    if (weights.insert_cost == 0) {
-      return 0;
-    }
-
-    /* uniform Levenshtein multiplied with the common factor */
-    if (weights.insert_cost == weights.replace_cost) {
-      // max can make use of the common divisor of the three weights
-      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-      const std::size_t distance = detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
-      return (distance <= max) ? distance : (std::size_t)-1;
-    }
-    /*
-     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-     * therefore this can be implemented as InDel distance multiplied with the common factor
-     */
-    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-      // max can make use of the common divisor of the three weights
-      const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-      const std::size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
-      return (distance <= max) ? distance : (std::size_t)-1;
-    }
-  }
-
-  return detail::generic_levenshtein(sentence1, sentence2, weights, max);
-}
-
-template<typename Sentence1>
-struct CachedLevenshtein {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}
-
-  template<typename Sentence2>
-  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const
-  {
-    auto s2_view = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
     if (weights.insert_cost == weights.delete_cost) {
-      /* when insertions + deletions operations are free there can not be any edit distance */
-      if (weights.insert_cost == 0) {
-        return 0;
-      }
+        /* when insertions + deletions operations are free there can not be any edit distance */
+        if (weights.insert_cost == 0) {
+            return 0;
+        }
 
-      /* uniform Levenshtein multiplied with the common factor */
-      if (weights.insert_cost == weights.replace_cost) {
-        // max can make use of the common divisor of the three weights
-        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-        const std::size_t distance = detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
-        return (distance <= max) ? distance : (std::size_t)-1;
-      }
-      /*
-       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-       * therefore this can be implemented as InDel distance multiplied with the common factor
-       */
-      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-        // max can make use of the common divisor of the three weights
-        const std::size_t new_max = max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-        const std::size_t distance = detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) * weights.insert_cost;
-        return (distance <= max) ? distance : (std::size_t)-1;
-      }
+        /* uniform Levenshtein multiplied with the common factor */
+        if (weights.insert_cost == weights.replace_cost) {
+            // max can make use of the common divisor of the three weights
+            const std::size_t new_max =
+                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+            const std::size_t distance =
+                detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            return (distance <= max) ? distance : (std::size_t)-1;
+        }
+        /*
+         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+         * therefore this can be implemented as InDel distance multiplied with the common factor
+         */
+        else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+            // max can make use of the common divisor of the three weights
+            const std::size_t new_max =
+                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+            const std::size_t distance =
+                detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            return (distance <= max) ? distance : (std::size_t)-1;
+        }
     }
 
-    return detail::generic_levenshtein(s1_view, s2_view, weights, max);
-  }
+    return detail::generic_levenshtein(sentence1, sentence2, weights, max);
+}
+
+template <typename Sentence1>
+struct CachedLevenshtein {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+    {}
+
+    template <typename Sentence2>
+    std::size_t distance(const Sentence2& s2,
+                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    {
+        auto s2_view = common::to_string_view(s2);
+
+        if (weights.insert_cost == weights.delete_cost) {
+            /* when insertions + deletions operations are free there can not be any edit distance */
+            if (weights.insert_cost == 0) {
+                return 0;
+            }
+
+            /* uniform Levenshtein multiplied with the common factor */
+            if (weights.insert_cost == weights.replace_cost) {
+                // max can make use of the common divisor of the three weights
+                const std::size_t new_max =
+                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+                const std::size_t distance =
+                    detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
+                    weights.insert_cost;
+                return (distance <= max) ? distance : (std::size_t)-1;
+            }
+            /*
+             * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+             * therefore this can be implemented as InDel distance multiplied with the common factor
+             */
+            else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+                // max can make use of the common divisor of the three weights
+                const std::size_t new_max =
+                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
+                const std::size_t distance =
+                    detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
+                    weights.insert_cost;
+                return (distance <= max) ? distance : (std::size_t)-1;
+            }
+        }
+
+        return detail::generic_levenshtein(s1_view, s2_view, weights, max);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
-  LevenshteinWeightTable weights;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    LevenshteinWeightTable weights;
 };
 
 /**
@@ -4178,59 +4810,61 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
                               LevenshteinWeightTable weights = {1, 1, 1},
                               percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
-
-  if (weights.insert_cost == weights.delete_cost) {
-    /* uniform Levenshtein */
-    if (weights.insert_cost == weights.replace_cost) {
-      return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
-    }
-    /*
-     * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-     * therefore this can be implemented as InDel distance
-     */
-    else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-      return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
-    }
-  }
-
-  return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
-}
-
-template<typename Sentence1>
-struct CachedNormalizedLevenshtein {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const
-  {
-    auto s2_view = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
     if (weights.insert_cost == weights.delete_cost) {
-      /* uniform Levenshtein */
-      if (weights.insert_cost == weights.replace_cost) {
-        return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
-      }
-      /*
-       * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-       * therefore this can be implemented as InDel distance
-       */
-      else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-        return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
-      }
+        /* uniform Levenshtein */
+        if (weights.insert_cost == weights.replace_cost) {
+            return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
+        }
+        /*
+         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+         * therefore this can be implemented as InDel distance
+         */
+        else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+            return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
+        }
     }
 
-    return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
-  }
+    return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
+}
+
+template <typename Sentence1>
+struct CachedNormalizedLevenshtein {
+    using CharT1 = char_type<Sentence1>;
+
+    CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+    {}
+
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        auto s2_view = common::to_string_view(s2);
+
+        if (weights.insert_cost == weights.delete_cost) {
+            /* uniform Levenshtein */
+            if (weights.insert_cost == weights.replace_cost) {
+                return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+            }
+            /*
+             * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+             * therefore this can be implemented as InDel distance
+             */
+            else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+                return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
+                                                               score_cutoff);
+            }
+        }
+
+        return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
-  LevenshteinWeightTable weights;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    LevenshteinWeightTable weights;
 };
 
 /**
@@ -4251,10 +4885,10 @@ private:
 template <typename Sentence1, typename Sentence2>
 std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  return detail::levenshtein_editops(sentence1, sentence2);
+    return detail::levenshtein_editops(sentence1, sentence2);
 }
 
 /**
@@ -4285,38 +4919,40 @@ template <typename Sentence1, typename Sentence2>
 std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
                     std::size_t max = std::numeric_limits<std::size_t>::max())
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  if (sentence1.size() != sentence2.size()) {
-    throw std::invalid_argument("s1 and s2 are not the same length.");
-  }
+    if (sentence1.size() != sentence2.size()) {
+        throw std::invalid_argument("s1 and s2 are not the same length.");
+    }
 
-  std::size_t hamm = 0;
+    std::size_t hamm = 0;
 
-  for (std::size_t i = 0; i < sentence1.length(); i++) {
-      if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
-          hamm++;
-      }
-  }
+    for (std::size_t i = 0; i < sentence1.length(); i++) {
+        if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
+            hamm++;
+        }
+    }
 
-  return hamm > max ? (std::size_t)-1 : hamm;
+    return hamm > max ? (std::size_t)-1 : hamm;
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedHamming {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedHamming(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+    CachedHamming(const Sentence1& s1) : s1_view(common::to_string_view(s1))
+    {}
 
-  template<typename Sentence2>
-  std::size_t distance(const Sentence2& s2, std::size_t max = std::numeric_limits<std::size_t>::max()) const {
-    return hamming(s1_view, s2, max);
-  }
+    template <typename Sentence2>
+    std::size_t distance(const Sentence2& s2,
+                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    {
+        return hamming(s1_view, s2, max);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
 /**
@@ -4346,27 +4982,26 @@ private:
 template <typename Sentence1, typename Sentence2>
 double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
-  return common::norm_distance(
-    hamming(sentence1, sentence2), sentence1.size(), score_cutoff
-  );
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
+    return common::norm_distance(hamming(sentence1, sentence2), sentence1.size(), score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedNormalizedHamming {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedNormalizedHamming(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+    CachedNormalizedHamming(const Sentence1& s1) : s1_view(common::to_string_view(s1))
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return normalized_hamming(s1_view, s2, score_cutoff);
-  }
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        return normalized_hamming(s1_view, s2, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
 /**
@@ -4393,34 +5028,36 @@ private:
  *   as a float between 0 and 100
  */
 template <typename Sentence1, typename Sentence2>
-double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2,
-                    double prefix_weight = 0.1, percent score_cutoff = 0.0)
+double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
+                               percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  if (prefix_weight < 0.0 || prefix_weight > 0.25) {
-    throw std::invalid_argument("prefix_weight has to be between 0.0 - 0.25");
-  }
+    if (prefix_weight < 0.0 || prefix_weight > 0.25) {
+        throw std::invalid_argument("prefix_weight has to be between 0.0 - 0.25");
+    }
 
-  return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
+    return detail::jaro_winkler_similarity(sentence1, sentence2, prefix_weight, score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedJaroWinklerSimilarity {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedJaroWinklerSimilarity(const Sentence1& s1, double prefix_weight_ = 0.1)
-    : s1_view(common::to_string_view(s1)), prefix_weight(prefix_weight_) {}
+    CachedJaroWinklerSimilarity(const Sentence1& s1, double prefix_weight_ = 0.1)
+        : s1_view(common::to_string_view(s1)), prefix_weight(prefix_weight_)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
-  }
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  double prefix_weight;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    double prefix_weight;
 };
 
 /**
@@ -4446,657 +5083,39 @@ private:
 template <typename Sentence1, typename Sentence2>
 double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
 {
-  auto sentence1 = common::to_string_view(s1);
-  auto sentence2 = common::to_string_view(s2);
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
 
-  return detail::jaro_similarity(sentence1, sentence2, score_cutoff);
+    return detail::jaro_similarity(sentence1, sentence2, score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedJaroSimilarity {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedJaroSimilarity(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)) {}
+    CachedJaroSimilarity(const Sentence1& s1) : s1_view(common::to_string_view(s1))
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const {
-    return jaro_similarity(s1_view, s2, score_cutoff);
-  }
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    {
+        return jaro_similarity(s1_view, s2, score_cutoff);
+    }
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
 };
 
 /**@}*/
 
-} // namespace levenshtein
+} // namespace string_metric
 } // namespace rapidfuzz
-
-
-#include <type_traits>
-
-namespace rapidfuzz {
-namespace fuzz {
-
-/**
- * @defgroup Fuzz Fuzz
- * A collection of string matching algorithms from FuzzyWuzzy
- * @{
- */
-
-/**
- * @brief calculates a simple ratio between two strings
- *
- * @details
- * @code{.cpp}
- * // score is 96.55
- * double score = ratio("this is a test", "this is a test!")
- * @endcode
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// TODO documentation
-template<typename Sentence1>
-struct CachedRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
-};
-
-/**
- * @brief calculates the fuzz::ratio of the optimal string alignment
- *
- * @details
- * test @cite hyrro_2004 @cite wagner_fischer_1974
- * @code{.cpp}
- * // score is 100
- * double score = partial_ratio("this is a test", "this is a test!")
- * @endcode
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// todo add real implementation
-template<typename Sentence1>
-struct CachedPartialRatio {
-  template<typename> friend class CachedWRatio;
-  using CharT1 = char_type<Sentence1>;
-
-  CachedPartialRatio(const Sentence1& s1);
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::CharHashTable<CharT1, bool> s1_char_map;
-  CachedRatio<Sentence1> cached_ratio;
-};
-
-
-/**
- * @brief Sorts the words in the strings and calculates the fuzz::ratio between
- * them
- *
- * @details
- * @code{.cpp}
- * // score is 100
- * double score = token_sort_ratio("fuzzy wuzzy was a bear", "wuzzy fuzzy was a
- * bear")
- * @endcode
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-// todo CachedRatio speed for equal strings vs original implementation
-// TODO documentation
-template<typename Sentence1>
-struct CachedTokenSortRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedTokenSortRatio(const Sentence1& s1)
-    : s1_sorted(common::sorted_split(s1).join()), cached_ratio(s1_sorted) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  std::basic_string<CharT1> s1_sorted;
-  CachedRatio<Sentence1> cached_ratio;
-};
-
-
-/**
- * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
- * between them
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
-                                 percent score_cutoff = 0);
-
-// TODO documentation
-template<typename Sentence1>
-struct CachedPartialTokenSortRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedPartialTokenSortRatio(const Sentence1& s1)
-   : s1_sorted(common::sorted_split(s1).join()), cached_partial_ratio(s1_sorted) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  std::basic_string<CharT1> s1_sorted;
-  CachedPartialRatio<Sentence1> cached_partial_ratio;
-};
-
-/**
- * @brief Compares the words in the strings based on unique and common words
- * between them using fuzz::ratio
- *
- * @details
- * @code{.cpp}
- * // score1 is 83.87
- * double score1 = token_sort_ratio("fuzzy was a bear", "fuzzy fuzzy was a
- * bear")
- * // score2 is 100
- * double score2 = token_set_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
- * @endcode
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// TODO documentation
-template<typename Sentence1>
-struct CachedTokenSetRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedTokenSetRatio(const Sentence1& s1);
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  SplittedSentenceView<CharT1> tokens_s1;
-};
-
-/**
- * @brief Compares the words in the strings based on unique and common words
- * between them using fuzz::partial_ratio
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// TODO documentation
-template<typename Sentence1>
-struct CachedPartialTokenSetRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedPartialTokenSetRatio(const Sentence1& s1);
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  SplittedSentenceView<CharT1> tokens_s1;
-};
-
-/**
- * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
- * fuzz::token_sort_ratio (faster than manually executing the two functions)
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// todo add real implementation
-template<typename Sentence1>
-struct CachedTokenRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedTokenRatio(const Sentence1& s1)
-    : s1_tokens(common::sorted_split(s1)), s1_sorted(s1_tokens.join()),
-      cached_ratio_s1_sorted(s1_sorted) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  SplittedSentenceView<CharT1> s1_tokens;
-  std::basic_string<CharT1> s1_sorted;
-  CachedRatio<Sentence1> cached_ratio_s1_sorted;
-};
-
-
-/**
- * @brief Helper method that returns the maximum of
- * fuzz::partial_token_set_ratio and fuzz::partial_token_sort_ratio (faster than
- * manually executing the two functions)
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
-percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// todo add real implementation
-template<typename Sentence1>
-struct CachedPartialTokenRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedPartialTokenRatio(const Sentence1& s1);
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  SplittedSentenceView<CharT1> tokens_s1;
-  std::basic_string<CharT1> s1_sorted;
-};
-
-
-/**
- * @brief Calculates a weighted ratio based on the other ratio algorithms
- *
- * @details
- * @todo add a detailed description
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-// todo add real implementation
-template<typename Sentence1>
-struct CachedWRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedWRatio(const Sentence1& s1);
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-// todo somehow implement this using other ratios with creating PatternMatchVector
-// multiple times
-  CachedPartialRatio<Sentence1> cached_partial_ratio;
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  SplittedSentenceView<CharT1> tokens_s1;
-  std::basic_string<CharT1> s1_sorted;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
-};
-
-/**
- * @brief Calculates a quick ratio between two strings using fuzz.ratio
- *
- * @details
- * @todo add a detailed description
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1 string to compare with s2 (for type info check Template parameters
- * above)
- * @param s2 string to compare with s1 (for type info check Template parameters
- * above)
- * @param score_cutoff Optional argument for a score threshold between 0% and
- * 100%. Matches with a lower score than this number will not be returned.
- * Defaults to 0.
- *
- * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
- */
-template <typename Sentence1, typename Sentence2>
-percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
-
-template<typename Sentence1>
-struct CachedQRatio {
-  using CharT1 = char_type<Sentence1>;
-
-  CachedQRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
-
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
-
-private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  CachedRatio<Sentence1> cached_ratio;
-};
-
-/**@}*/
-
-} // namespace fuzz
-} // namespace rapidfuzz
-
-
-// The MIT License (MIT)
-//
-// Copyright (c) 2020 Max Bachmann
-// Copyright (c) 2014 Jean-Bernard Jansen
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-
-
-
-#include <unordered_map>
-#include <algorithm>
-#include <tuple>
-#include <algorithm>
-#include <vector>
-
-namespace rapidfuzz {
-namespace detail {
-struct MatchingBlock {
-  std::size_t spos;
-  std::size_t dpos;
-  std::size_t length;
-  MatchingBlock(std::size_t aSPos, std::size_t aDPos, std::size_t aLength)
-      : spos(aSPos), dpos(aDPos), length(aLength)
-  {}
-};
-
-
-namespace difflib {
-
-template <typename CharT1, typename CharT2>
-class SequenceMatcher {
- public:
-  using match_t = std::tuple<size_t, size_t, size_t>;
-
-  SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b)
-  : a_(a), b_(b) {
-    j2len_.resize(b.size()+1);
-    for (std::size_t i = 0; i < b.size(); ++i) {
-      b2j_[b[i]].push_back(i);
-    }
-  }
-
-  match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high) {
-    size_t best_i = a_low;
-    size_t best_j = b_low;
-    size_t best_size = 0;
-
-    // Find longest junk free match
-    {
-      for (size_t i = a_low; i < a_high; ++i) {
-        std::size_t next_val = 0;
-        const auto& indexes = b2j_[a_[i]];
-        for (size_t pos = 0; pos < indexes.size(); pos++) {
-          std::size_t j = indexes[pos];
-          if (j < b_low) continue;
-          if (j >= b_high) break;
-
-          size_t k = next_val + 1;
-
-          /* the next value might be overwritten below
-           * so cache it */
-          if (pos + 1 < indexes.size())
-          {
-            next_val = j2len_[indexes[pos + 1]];
-          }
-
-          j2len_[j+1] = k;
-          //last_cache = k;
-          if (k > best_size) {
-            best_i = i - k + 1;
-            best_j = j - k + 1;
-            best_size = k;
-          }
-        }
-      }
-
-      std::fill(j2len_.begin()+b_low, j2len_.begin()+b_high, 0);
-    }
-
-    while (best_i > a_low && best_j > b_low && common::mixed_sign_equal(a_[best_i-1], b_[best_j-1])) {
-      --best_i;
-      --best_j;
-      ++best_size;
-    }
-
-    while ((best_i+best_size) < a_high && (best_j+best_size) < b_high
-           && common::mixed_sign_equal(a_[best_i+best_size], b_[best_j+best_size]))
-    {
-      ++best_size;
-    }
-
-    return std::make_tuple(best_i, best_j, best_size);
-  }
-
-  std::vector<MatchingBlock> get_matching_blocks() {
-    // The following are tuple extracting aliases
-    std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
-    std::vector<match_t> matching_blocks_pass1;
-
-    std::size_t queue_head = 0;
-    queue.reserve(std::min(a_.size(), b_.size()));
-    queue.emplace_back(0, a_.size(), 0, b_.size());
-
-    while(queue_head < queue.size()) {
-      size_t a_low, a_high, b_low, b_high;
-      std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
-      std::size_t spos, dpos, length;
-      std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
-      if (length) {
-        if (a_low < spos && b_low < dpos) {
-          queue.emplace_back(a_low, spos, b_low, dpos);
-        }
-        if ((spos + length) < a_high && (dpos + length) < b_high) {
-          queue.emplace_back(spos + length, a_high, dpos + length, b_high);
-        }
-        matching_blocks_pass1.emplace_back(spos, dpos, length);
-      }
-    }
-    std::sort(std::begin(matching_blocks_pass1), std::end(matching_blocks_pass1));
-
-    std::vector<MatchingBlock> matching_blocks;
-
-    matching_blocks.reserve(matching_blocks_pass1.size());
-
-    size_t i1, j1, k1;
-    i1 = j1 = k1 = 0;
-
-    for(match_t const& m : matching_blocks_pass1) {
-      if (i1 + k1 == std::get<0>(m) && j1 + k1 == std::get<1>(m)) {
-        k1 += std::get<2>(m);
-      }
-      else {
-        if (k1) matching_blocks.emplace_back(i1, j1, k1);
-        std::tie(i1, j1, k1) = m;
-      }
-    }
-    if (k1) matching_blocks.emplace_back(i1, j1, k1);
-    matching_blocks.emplace_back(a_.size(), b_.size(), 0);
-
-    return matching_blocks;
-  }
-
-protected:
-  basic_string_view<CharT1> a_;
-  basic_string_view<CharT2> b_;
-
-private:
-  // Cache to avoid reallocations
-  std::vector<size_t> j2len_;
-  common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
-};
-}  // namespace difflib
-
-template<typename CharT1, typename CharT2>
-std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2) {
-  return difflib::SequenceMatcher<CharT1, CharT2>(s1, s2).get_matching_blocks();
-}
-
-} /* namespace detail */
-} /* namespace rapidfuzz */
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace rapidfuzz {
 namespace fuzz {
@@ -5108,16 +5127,17 @@ namespace fuzz {
 template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
-  return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff);
+    return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff);
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
-  auto s2_view = common::to_string_view(s2);
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+{
+    auto s2_view = common::to_string_view(s2);
 
-  return string_metric::detail::normalized_weighted_levenshtein(
-    s2_view, blockmap_s1, s1_view, score_cutoff);
+    return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
+                                                                  score_cutoff);
 }
 
 /**********************************************
@@ -5127,11 +5147,10 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
 namespace detail {
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
-percent partial_ratio_short_needle(
-    const Sentence1& s1,
-    const CachedRatio<CachedSentence1>& cached_ratio,
-    const common::CharHashTable<char_type<Sentence1>, bool>& s1_char_map,
-    const Sentence2& s2, percent score_cutoff)
+percent
+partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence1>& cached_ratio,
+                           const common::CharHashTable<char_type<Sentence1>, bool>& s1_char_map,
+                           const Sentence2& s2, percent score_cutoff)
 {
     double max_ratio = 0;
     auto s1_view = common::to_string_view(s1);
@@ -5195,7 +5214,7 @@ percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, per
     CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
 
     common::CharHashTable<CharT1, bool> s1_char_map;
-    for(const CharT1& ch : s1_view) {
+    for (const CharT1& ch : s1_view) {
         s1_char_map[ch] = true;
     }
 
@@ -5203,7 +5222,9 @@ percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, per
 }
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
-percent partial_ratio_long_needle(const Sentence1& s1, const CachedRatio<CachedSentence1>& cached_ratio, const Sentence2& s2, percent score_cutoff)
+percent partial_ratio_long_needle(const Sentence1& s1,
+                                  const CachedRatio<CachedSentence1>& cached_ratio,
+                                  const Sentence2& s2, percent score_cutoff)
 {
     double max_ratio = 0;
     if (score_cutoff > 100) {
@@ -5233,7 +5254,7 @@ percent partial_ratio_long_needle(const Sentence1& s1, const CachedRatio<CachedS
         double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
 
         if (ls_ratio > max_ratio) {
-           score_cutoff = max_ratio = ls_ratio;
+            score_cutoff = max_ratio = ls_ratio;
         }
     }
 
@@ -5249,7 +5270,7 @@ percent partial_ratio_long_needle(const Sentence1& s1, const Sentence2& s2, perc
     return partial_ratio_long_needle(s1_view, cached_ratio, s2, score_cutoff);
 }
 
-} /* detail */
+} // namespace detail
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
@@ -5271,23 +5292,25 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 
     if (s1_view.length() <= 64) {
         return detail::partial_ratio_short_needle(s1_view, s2_view, score_cutoff);
-    } else {
+    }
+    else {
         return detail::partial_ratio_long_needle(s1_view, s2_view, score_cutoff);
     }
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1)
     : s1_view(common::to_string_view(s1)), cached_ratio(s1)
 {
-    for(const CharT1& ch : s1_view) {
+    for (const CharT1& ch : s1_view) {
         s1_char_map[ch] = true;
     }
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+{
     auto s2_view = common::to_string_view(s2);
 
     if (s1_view.size() > s2_view.size()) {
@@ -5299,8 +5322,10 @@ double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_c
     }
 
     if (s1_view.length() <= 64) {
-        return detail::partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2_view, score_cutoff);
-    } else {
+        return detail::partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2_view,
+                                                  score_cutoff);
+    }
+    else {
         return detail::partial_ratio_long_needle(s1_view, cached_ratio, s2_view, score_cutoff);
     }
 }
@@ -5312,47 +5337,42 @@ double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_c
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return ratio(common::sorted_split(s1).join(),
-               common::sorted_split(s2).join(), score_cutoff);
+    return ratio(common::sorted_split(s1).join(), common::sorted_split(s2).join(), score_cutoff);
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedTokenSortRatio<Sentence1>::ratio(
-  const Sentence2& s2, percent score_cutoff) const
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedTokenSortRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return cached_ratio.ratio(common::sorted_split(s2).join(), score_cutoff);
+    return cached_ratio.ratio(common::sorted_split(s2).join(), score_cutoff);
 }
-
 
 /**********************************************
  *          partial_token_sort_ratio
  *********************************************/
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
-                                       percent score_cutoff)
+percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return partial_ratio(common::sorted_split(s1).join(),
-                       common::sorted_split(s2).join(), score_cutoff);
+    return partial_ratio(common::sorted_split(s1).join(), common::sorted_split(s2).join(),
+                         score_cutoff);
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedPartialTokenSortRatio<Sentence1>::ratio(
-  const Sentence2& s2, percent score_cutoff) const
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
+                                                     percent score_cutoff) const
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return cached_partial_ratio.ratio(common::sorted_split(s2).join(), score_cutoff);
+    return cached_partial_ratio.ratio(common::sorted_split(s2).join(), score_cutoff);
 }
-
 
 /**********************************************
  *               token_set_ratio
@@ -5360,90 +5380,87 @@ double CachedPartialTokenSortRatio<Sentence1>::ratio(
 
 namespace detail {
 template <typename CharT1, typename CharT2>
-percent token_set_ratio(
-  const SplittedSentenceView<CharT1>& tokens_a, const SplittedSentenceView<CharT2>& tokens_b,
-  const percent score_cutoff)
+percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
+                        const SplittedSentenceView<CharT2>& tokens_b, const percent score_cutoff)
 {
-  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-  if (tokens_a.empty() || tokens_a.empty())
-  {
-    return 0;
-  }
+    /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+    if (tokens_a.empty() || tokens_a.empty()) {
+        return 0;
+    }
 
-  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
-  auto intersect = decomposition.intersection;
-  auto diff_ab = decomposition.difference_ab;
-  auto diff_ba = decomposition.difference_ba;
+    auto decomposition = common::set_decomposition(tokens_a, tokens_b);
+    auto intersect = decomposition.intersection;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-  // one sentence is part of the other one
-  if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-    return 100;
-  }
+    // one sentence is part of the other one
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
+        return 100;
+    }
 
-  auto diff_ab_joined = diff_ab.join();
-  auto diff_ba_joined = diff_ba.join();
+    auto diff_ab_joined = diff_ab.join();
+    auto diff_ba_joined = diff_ba.join();
 
-  size_t ab_len = diff_ab_joined.length();
-  size_t ba_len = diff_ba_joined.length();
-  size_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.length();
+    size_t ba_len = diff_ba_joined.length();
+    size_t sect_len = intersect.length();
 
-  // string length sect+ab <-> sect and sect+ba <-> sect
-  size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-  size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    // string length sect+ab <-> sect and sect+ba <-> sect
+    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
+    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  percent result = 0;
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
-  size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+    percent result = 0;
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    size_t dist =
+        string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
 
-  if (dist != (std::size_t)-1) {
-    result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
-  }
+    if (dist != (std::size_t)-1) {
+        result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
+    }
 
-  // exit early since the other ratios are 0
-  if (!sect_len) {
-    return result;
-  }
+    // exit early since the other ratios are 0
+    if (!sect_len) {
+        return result;
+    }
 
-  // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
-  // since only sect is similar in them the distance can be calculated based on
-  // the length difference
-  std::size_t sect_ab_dist = !!sect_len + ab_len;
-  percent sect_ab_ratio = common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+    // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
+    // since only sect is similar in them the distance can be calculated based on
+    // the length difference
+    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    percent sect_ab_ratio =
+        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-  std::size_t sect_ba_dist = !!sect_len + ba_len;
-  percent sect_ba_ratio = common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    percent sect_ba_ratio =
+        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
-  return std::max({result, sect_ab_ratio, sect_ba_ratio});
+    return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
 } // namespace detail
 
 template <typename Sentence1, typename Sentence2>
 percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return detail::token_set_ratio(
-    common::sorted_split(s1),
-    common::sorted_split(s2),
-    score_cutoff
-  );
+    return detail::token_set_ratio(common::sorted_split(s1), common::sorted_split(s2),
+                                   score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 CachedTokenSetRatio<Sentence1>::CachedTokenSetRatio(const Sentence1& s1)
- : tokens_s1(common::sorted_split(s1)) {}
+    : tokens_s1(common::sorted_split(s1))
+{}
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedTokenSetRatio<Sentence1>::ratio(
-  const Sentence2& s2, percent score_cutoff) const
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return detail::token_set_ratio(tokens_s1, common::sorted_split(s2), score_cutoff);
+    return detail::token_set_ratio(tokens_s1, common::sorted_split(s2), score_cutoff);
 }
-
 
 /**********************************************
  *          partial_token_set_ratio
@@ -5451,50 +5468,47 @@ double CachedTokenSetRatio<Sentence1>::ratio(
 
 namespace detail {
 template <typename CharT1, typename CharT2>
-percent partial_token_set_ratio(
-  const SplittedSentenceView<CharT1>& tokens_a, const SplittedSentenceView<CharT2>& tokens_b,
-  const percent score_cutoff)
+percent partial_token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
+                                const SplittedSentenceView<CharT2>& tokens_b,
+                                const percent score_cutoff)
 {
-  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-  if (tokens_a.empty() || tokens_a.empty())
-  {
-    return 0;
-  }
+    /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+    if (tokens_a.empty() || tokens_a.empty()) {
+        return 0;
+    }
 
-  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
+    auto decomposition = common::set_decomposition(tokens_a, tokens_b);
 
-  // exit early when there is a common word in both sequences
-  if (!decomposition.intersection.empty()) return 100;
+    // exit early when there is a common word in both sequences
+    if (!decomposition.intersection.empty()) return 100;
 
-  return partial_ratio(decomposition.difference_ab.join(), decomposition.difference_ba.join(),
-                       score_cutoff);
+    return partial_ratio(decomposition.difference_ab.join(), decomposition.difference_ba.join(),
+                         score_cutoff);
 }
 } // namespace detail
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2,
-                                      percent score_cutoff)
+percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return detail::partial_token_set_ratio(
-    common::sorted_split(s1), common::sorted_split(s2), score_cutoff
-  );
+    return detail::partial_token_set_ratio(common::sorted_split(s1), common::sorted_split(s2),
+                                           score_cutoff);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 CachedPartialTokenSetRatio<Sentence1>::CachedPartialTokenSetRatio(const Sentence1& s1)
- : tokens_s1(common::sorted_split(s1)) {}
+    : tokens_s1(common::sorted_split(s1))
+{}
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedPartialTokenSetRatio<Sentence1>::ratio(
-  const Sentence2& s2, percent score_cutoff) const
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedPartialTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  return detail::partial_token_set_ratio(tokens_s1, common::sorted_split(s2), score_cutoff);
+    return detail::partial_token_set_ratio(tokens_s1, common::sorted_split(s2), score_cutoff);
 }
 
 /**********************************************
@@ -5504,185 +5518,195 @@ double CachedPartialTokenSetRatio<Sentence1>::ratio(
 template <typename Sentence1, typename Sentence2>
 percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  auto tokens_a = common::sorted_split(s1);
-  auto tokens_b = common::sorted_split(s2);
+    auto tokens_a = common::sorted_split(s1);
+    auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
-  auto intersect = decomposition.intersection;
-  auto diff_ab = decomposition.difference_ab;
-  auto diff_ba = decomposition.difference_ba;
+    auto decomposition = common::set_decomposition(tokens_a, tokens_b);
+    auto intersect = decomposition.intersection;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-  if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-    return 100;
-  }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
+        return 100;
+    }
 
-  auto diff_ab_joined = diff_ab.join();
-  auto diff_ba_joined = diff_ba.join();
+    auto diff_ab_joined = diff_ab.join();
+    auto diff_ba_joined = diff_ba.join();
 
-  size_t ab_len = diff_ab_joined.length();
-  size_t ba_len = diff_ba_joined.length();
-  size_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.length();
+    size_t ba_len = diff_ba_joined.length();
+    size_t sect_len = intersect.length();
 
-  percent result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
+    percent result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
-  // string length sect+ab <-> sect and sect+ba <-> sect
-  size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-  size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    // string length sect+ab <-> sect and sect+ba <-> sect
+    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
+    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
-  size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
-  if (dist != (std::size_t)-1) {
-    result = std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
-  }
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    size_t dist =
+        string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+    if (dist != (std::size_t)-1) {
+        result =
+            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+    }
 
-  // exit early since the other ratios are 0
-  if (!sect_len) {
-    return result;
-  }
+    // exit early since the other ratios are 0
+    if (!sect_len) {
+        return result;
+    }
 
-  // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
-  // since only sect is similar in them the distance can be calculated based on
-  // the length difference
-  std::size_t sect_ab_dist = !!sect_len + ab_len;
-  percent sect_ab_ratio = common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+    // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
+    // since only sect is similar in them the distance can be calculated based on
+    // the length difference
+    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    percent sect_ab_ratio =
+        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-  std::size_t sect_ba_dist = !!sect_len + ba_len;
-  percent sect_ba_ratio = common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    percent sect_ba_ratio =
+        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
-  return std::max({result, sect_ab_ratio, sect_ba_ratio});
+    return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
 
 namespace detail {
 template <typename CharT1, typename CachedSentence1, typename Sentence2>
-percent token_ratio(
-  const SplittedSentenceView<CharT1>& s1_tokens,
-  const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted,
-  const Sentence2& s2, percent score_cutoff)
+percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
+                    const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted, const Sentence2& s2,
+                    percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  auto s2_tokens = common::sorted_split(s2);
+    auto s2_tokens = common::sorted_split(s2);
 
-  auto decomposition = common::set_decomposition(s1_tokens, s2_tokens);
-  auto intersect = decomposition.intersection;
-  auto diff_ab = decomposition.difference_ab;
-  auto diff_ba = decomposition.difference_ba;
+    auto decomposition = common::set_decomposition(s1_tokens, s2_tokens);
+    auto intersect = decomposition.intersection;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-  if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-    return 100;
-  }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
+        return 100;
+    }
 
-  auto diff_ab_joined = diff_ab.join();
-  auto diff_ba_joined = diff_ba.join();
+    auto diff_ab_joined = diff_ab.join();
+    auto diff_ba_joined = diff_ba.join();
 
-  size_t ab_len = diff_ab_joined.length();
-  size_t ba_len = diff_ba_joined.length();
-  size_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.length();
+    size_t ba_len = diff_ba_joined.length();
+    size_t sect_len = intersect.length();
 
-  percent result = cached_ratio_s1_sorted.ratio(s2_tokens.join(), score_cutoff);
+    percent result = cached_ratio_s1_sorted.ratio(s2_tokens.join(), score_cutoff);
 
-  // string length sect+ab <-> sect and sect+ba <-> sect
-  size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-  size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    // string length sect+ab <-> sect and sect+ba <-> sect
+    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
+    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
-  size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
-  if (dist != (std::size_t)-1) {
-    result = std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
-  }
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    size_t dist =
+        string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+    if (dist != (std::size_t)-1) {
+        result =
+            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+    }
 
-  // exit early since the other ratios are 0
-  if (!sect_len) {
-    return result;
-  }
+    // exit early since the other ratios are 0
+    if (!sect_len) {
+        return result;
+    }
 
-  // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
-  // since only sect is similar in them the distance can be calculated based on
-  // the length difference
-  std::size_t sect_ab_dist = !!sect_len + ab_len;
-  percent sect_ab_ratio = common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+    // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
+    // since only sect is similar in them the distance can be calculated based on
+    // the length difference
+    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    percent sect_ab_ratio =
+        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-  std::size_t sect_ba_dist = !!sect_len + ba_len;
-  percent sect_ba_ratio = common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    percent sect_ba_ratio =
+        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
-  return std::max({result, sect_ab_ratio, sect_ba_ratio});
+    return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename BlockPatternCharT, typename Sentence2>
-percent token_ratio(
-  const std::basic_string<CharT1>& s1_sorted, const SplittedSentenceView<CharT1>& tokens_s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1_sorted,
-  const Sentence2& s2, percent score_cutoff)
+percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
+                    const SplittedSentenceView<CharT1>& tokens_s1,
+                    const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1_sorted,
+                    const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  auto tokens_b = common::sorted_split(s2);
+    auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = common::set_decomposition(tokens_s1, tokens_b);
-  auto intersect = decomposition.intersection;
-  auto diff_ab = decomposition.difference_ab;
-  auto diff_ba = decomposition.difference_ba;
+    auto decomposition = common::set_decomposition(tokens_s1, tokens_b);
+    auto intersect = decomposition.intersection;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-  if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-    return 100;
-  }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
+        return 100;
+    }
 
-  auto diff_ab_joined = diff_ab.join();
-  auto diff_ba_joined = diff_ba.join();
+    auto diff_ab_joined = diff_ab.join();
+    auto diff_ba_joined = diff_ba.join();
 
-  size_t ab_len = diff_ab_joined.length();
-  size_t ba_len = diff_ba_joined.length();
-  size_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.length();
+    size_t ba_len = diff_ba_joined.length();
+    size_t sect_len = intersect.length();
 
-  percent result = 0;
-  auto s2_sorted = tokens_b.join();
-  if (s1_sorted.size() < 65) {
-    result = string_metric::detail::normalized_weighted_levenshtein(
-      common::to_string_view(s2_sorted),
-      blockmap_s1_sorted, common::to_string_view(s1_sorted),
-      score_cutoff);
-  } else {
-    result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
-  }
+    percent result = 0;
+    auto s2_sorted = tokens_b.join();
+    if (s1_sorted.size() < 65) {
+        result = string_metric::detail::normalized_weighted_levenshtein(
+            common::to_string_view(s2_sorted), blockmap_s1_sorted,
+            common::to_string_view(s1_sorted), score_cutoff);
+    }
+    else {
+        result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
+    }
 
-  // string length sect+ab <-> sect and sect+ba <-> sect
-  size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-  size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    // string length sect+ab <-> sect and sect+ba <-> sect
+    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
+    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
-  size_t dist = string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
-  if (dist != (std::size_t)-1) {
-    result = std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
-  }
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    size_t dist =
+        string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
+    if (dist != (std::size_t)-1) {
+        result =
+            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+    }
 
-  // exit early since the other ratios are 0
-  if (!sect_len) {
-    return result;
-  }
+    // exit early since the other ratios are 0
+    if (!sect_len) {
+        return result;
+    }
 
-  // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
-  // since only sect is similar in them the distance can be calculated based on
-  // the length difference
-  std::size_t sect_ab_dist = !!sect_len + ab_len;
-  percent sect_ab_ratio = common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+    // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
+    // since only sect is similar in them the distance can be calculated based on
+    // the length difference
+    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    percent sect_ab_ratio =
+        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-  std::size_t sect_ba_dist = !!sect_len + ba_len;
-  percent sect_ba_ratio = common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    percent sect_ba_ratio =
+        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
-  return std::max({result, sect_ab_ratio, sect_ba_ratio});
+    return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
 } // namespace detail
 
-template<typename Sentence1>
-template<typename Sentence2>
+template <typename Sentence1>
+template <typename Sentence2>
 double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  return detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, s2, score_cutoff);
+    return detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, s2, score_cutoff);
 }
-
 
 /**********************************************
  *            partial_token_ratio
@@ -5691,77 +5715,76 @@ double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cut
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  auto tokens_a = common::sorted_split(s1);
-  auto tokens_b = common::sorted_split(s2);
+    auto tokens_a = common::sorted_split(s1);
+    auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = common::set_decomposition(tokens_a, tokens_b);
+    auto decomposition = common::set_decomposition(tokens_a, tokens_b);
 
-  // exit early when there is a common word in both sequences
-  if (!decomposition.intersection.empty()) return 100;
+    // exit early when there is a common word in both sequences
+    if (!decomposition.intersection.empty()) return 100;
 
-  auto diff_ab = decomposition.difference_ab;
-  auto diff_ba = decomposition.difference_ba;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-  percent result = partial_ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
+    percent result = partial_ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
-  // do not calculate the same partial_ratio twice
-  if (tokens_a.word_count() == diff_ab.word_count() &&
-      tokens_b.word_count() == diff_ba.word_count()) {
-    return result;
-  }
+    // do not calculate the same partial_ratio twice
+    if (tokens_a.word_count() == diff_ab.word_count() &&
+        tokens_b.word_count() == diff_ba.word_count()) {
+        return result;
+    }
 
-  score_cutoff = std::max(score_cutoff, result);
-  return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
+    score_cutoff = std::max(score_cutoff, result);
+    return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
 }
 
 namespace detail {
 template <typename CharT1, typename Sentence2>
-percent partial_token_ratio(
-  const std::basic_string<CharT1>& s1_sorted, const SplittedSentenceView<CharT1>& tokens_s1,
-  const Sentence2& s2, percent score_cutoff)
+percent partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
+                            const SplittedSentenceView<CharT1>& tokens_s1, const Sentence2& s2,
+                            percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  auto tokens_b = common::sorted_split(s2);
+    auto tokens_b = common::sorted_split(s2);
 
-  auto decomposition = common::set_decomposition(tokens_s1, tokens_b);
+    auto decomposition = common::set_decomposition(tokens_s1, tokens_b);
 
-  // exit early when there is a common word in both sequences
-  if (!decomposition.intersection.empty()) return 100;
+    // exit early when there is a common word in both sequences
+    if (!decomposition.intersection.empty()) return 100;
 
-  auto diff_ab = decomposition.difference_ab;
-  auto diff_ba = decomposition.difference_ba;
+    auto diff_ab = decomposition.difference_ab;
+    auto diff_ba = decomposition.difference_ba;
 
-  percent result = partial_ratio(s1_sorted, tokens_b.join(), score_cutoff);
+    percent result = partial_ratio(s1_sorted, tokens_b.join(), score_cutoff);
 
-  // do not calculate the same partial_ratio twice
-  if (tokens_s1.word_count() == diff_ab.word_count() &&
-      tokens_b.word_count() == diff_ba.word_count()) {
-    return result;
-  }
+    // do not calculate the same partial_ratio twice
+    if (tokens_s1.word_count() == diff_ab.word_count() &&
+        tokens_b.word_count() == diff_ba.word_count()) {
+        return result;
+    }
 
-  score_cutoff = std::max(score_cutoff, result);
-  return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
+    score_cutoff = std::max(score_cutoff, result);
+    return std::max(result, partial_ratio(diff_ab.join(), diff_ba.join(), score_cutoff));
 }
 
 } // namespace detail
 
-template<typename Sentence1>
+template <typename Sentence1>
 CachedPartialTokenRatio<Sentence1>::CachedPartialTokenRatio(const Sentence1& s1)
- : tokens_s1(common::sorted_split(s1))
+    : tokens_s1(common::sorted_split(s1))
 {
-  s1_sorted = tokens_s1.join();
+    s1_sorted = tokens_s1.join();
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
+template <typename Sentence1>
+template <typename Sentence2>
 double CachedPartialTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  return detail::partial_token_ratio(s1_sorted, tokens_s1, s2, score_cutoff);
+    return detail::partial_token_ratio(s1_sorted, tokens_s1, s2, score_cutoff);
 }
-
 
 /**********************************************
  *                  WRatio
@@ -5770,93 +5793,92 @@ double CachedPartialTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent sc
 template <typename Sentence1, typename Sentence2>
 percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  if (score_cutoff > 100) return 0;
+    if (score_cutoff > 100) return 0;
 
-  constexpr double UNBASE_SCALE = 0.95;
+    constexpr double UNBASE_SCALE = 0.95;
 
-  auto s1_view = common::to_string_view(s1);
-  auto s2_view = common::to_string_view(s2);
+    auto s1_view = common::to_string_view(s1);
+    auto s2_view = common::to_string_view(s2);
 
-  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-  if (s1_view.empty() || s2_view.empty())
-  {
-    return 0;
-  }
+    /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+    if (s1_view.empty() || s2_view.empty()) {
+        return 0;
+    }
 
-  size_t len_a = s1_view.length();
-  size_t len_b = s2_view.length();
-  double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
-                                     : static_cast<double>(len_b) / static_cast<double>(len_a);
+    size_t len_a = s1_view.length();
+    size_t len_b = s2_view.length();
+    double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
+                                       : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-  percent end_ratio = ratio(s1, s2, score_cutoff);
+    percent end_ratio = ratio(s1, s2, score_cutoff);
 
-  if (len_ratio < 1.5) {
+    if (len_ratio < 1.5) {
+        score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
+        return std::max(end_ratio, token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE);
+    }
+
+    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
+
+    score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
+    end_ratio = std::max(end_ratio, partial_ratio(s1, s2, score_cutoff) * PARTIAL_SCALE);
+
     score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
-    return std::max(end_ratio, token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE);
-  }
-
-  const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
-
-  score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
-  end_ratio = std::max(end_ratio, partial_ratio(s1, s2, score_cutoff) * PARTIAL_SCALE);
-
-  score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
-  return std::max(end_ratio,
-                  partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
+    return std::max(end_ratio,
+                    partial_token_ratio(s1, s2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
 }
 
-template<typename Sentence1>
+template <typename Sentence1>
 CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
- : cached_partial_ratio(s1), tokens_s1(common::sorted_split(s1)) 
+    : cached_partial_ratio(s1), tokens_s1(common::sorted_split(s1))
 {
-  s1_view = common::to_string_view(s1);
-  s1_sorted = tokens_s1.join();
+    s1_view = common::to_string_view(s1);
+    s1_sorted = tokens_s1.join();
 
-  blockmap_s1_sorted.insert(common::to_string_view(s1_sorted));
+    blockmap_s1_sorted.insert(common::to_string_view(s1_sorted));
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
-double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const {
-  if (score_cutoff > 100) return 0;
+template <typename Sentence1>
+template <typename Sentence2>
+double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+{
+    if (score_cutoff > 100) return 0;
 
-  constexpr double UNBASE_SCALE = 0.95;
+    constexpr double UNBASE_SCALE = 0.95;
 
-  auto s2_view = common::to_string_view(s2);
+    auto s2_view = common::to_string_view(s2);
 
-  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-  if (s1_view.empty() || s2_view.empty())
-  {
-    return 0;
-  }
+    /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+    if (s1_view.empty() || s2_view.empty()) {
+        return 0;
+    }
 
-  size_t len_a = s1_view.length();
-  size_t len_b = s2_view.length();
-  double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
-                                     : static_cast<double>(len_b) / static_cast<double>(len_a);
+    size_t len_a = s1_view.length();
+    size_t len_b = s2_view.length();
+    double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
+                                       : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-  percent end_ratio = cached_partial_ratio.cached_ratio.ratio(s2_view, score_cutoff);
+    percent end_ratio = cached_partial_ratio.cached_ratio.ratio(s2_view, score_cutoff);
 
-  if (len_ratio < 1.5) {
+    if (len_ratio < 1.5) {
+        score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
+        // use pre calculated values
+        auto r =
+            detail::token_ratio(s1_sorted, tokens_s1, blockmap_s1_sorted, s2_view, score_cutoff);
+        return std::max(end_ratio, r * UNBASE_SCALE);
+    }
+
+    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
+
+    score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
+    end_ratio =
+        std::max(end_ratio, cached_partial_ratio.ratio(s2_view, score_cutoff) * PARTIAL_SCALE);
+
     score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
-    // use pre calculated values
-    auto r = detail::token_ratio(s1_sorted, tokens_s1, blockmap_s1_sorted, s2_view, score_cutoff);
-    return std::max(end_ratio, r * UNBASE_SCALE);
-  }
-
-  const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
-
-  score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
-  end_ratio = std::max(end_ratio, cached_partial_ratio.ratio(s2_view, score_cutoff) * PARTIAL_SCALE);
-  
-  score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
-  auto r = detail::partial_token_ratio(s1_sorted, tokens_s1, s2_view, score_cutoff);
-  return std::max(end_ratio, r * UNBASE_SCALE * PARTIAL_SCALE);
-
+    auto r = detail::partial_token_ratio(s1_sorted, tokens_s1, s2_view, score_cutoff);
+    return std::max(end_ratio, r * UNBASE_SCALE * PARTIAL_SCALE);
 }
-
 
 /**********************************************
  *                QRatio
@@ -5865,35 +5887,174 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 {
-  auto s1_view = common::to_string_view(s1);
-  auto s2_view = common::to_string_view(s2);
+    auto s1_view = common::to_string_view(s1);
+    auto s2_view = common::to_string_view(s2);
 
-  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-  if (s1_view.empty() || s2_view.empty())
-  {
-    return 0;
-  }
+    /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+    if (s1_view.empty() || s2_view.empty()) {
+        return 0;
+    }
 
-  return ratio(s1_view, s2_view, score_cutoff);
+    return ratio(s1_view, s2_view, score_cutoff);
 }
 
-template<typename Sentence1>
-template<typename Sentence2>
+template <typename Sentence1>
+template <typename Sentence2>
 double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
 {
-  auto s2_view = common::to_string_view(s2);
+    auto s2_view = common::to_string_view(s2);
 
-  /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-   * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-  if (s1_view.empty() || s2_view.empty())
-  {
-    return 0;
-  }
+    /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
+     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+    if (s1_view.empty() || s2_view.empty()) {
+        return 0;
+    }
 
-  return cached_ratio.ratio(s2_view, score_cutoff);
+    return cached_ratio.ratio(s2_view, score_cutoff);
 }
 
 } // namespace fuzz
+} // namespace rapidfuzz
+
+
+#include <cmath>
+#include <tuple>
+#include <vector>
+
+namespace rapidfuzz {
+namespace utils {
+
+/**
+ * @defgroup Utils Utils
+ * Utility functions
+ * @{
+ */
+
+/**
+ * @brief removes any non alphanumeric characters, trim whitespaces from
+ * beginning/end and lowercase the string. Currently this only supports
+ * Ascii. Characters outside of the ascii spec are not changed. This
+ * will be changed in the future to support full unicode. In case this has
+ * has a noticable effect on the performance an additional `ascii_default_process`
+ * function will be provided, that keeps this behaviour
+ *
+ * @tparam CharT char type of the string
+ *
+ * @param s string to process
+ *
+ * @return returns the processed string
+ */
+
+template <
+    typename Sentence, typename CharT = char_type<Sentence>,
+    typename = enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
+std::basic_string<CharT> default_process(Sentence&& s);
+
+template <
+    typename Sentence, typename CharT = char_type<Sentence>,
+    typename = enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
+                           has_data_and_size<Sentence>::value>>
+std::basic_string<CharT> default_process(Sentence s);
+
+template <typename CharT>
+std::size_t default_process(CharT* str, std::size_t len);
+
+/**@}*/
+
+} // namespace utils
+} // namespace rapidfuzz
+
+
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <cwctype>
+#include <limits>
+
+
+namespace rapidfuzz {
+
+template <typename CharT>
+std::size_t utils::default_process(CharT* str, std::size_t len)
+{
+    /* mapping converting
+     * - non alphanumeric characters to whitespace (32)
+     * - alphanumeric characters to lowercase
+     *
+     * generated using
+     * `[ord(chr(x).lower()) if chr(x).isalnum() else 0x20 for x in range(256)]`
+     * in Python3.9
+     */
+    static const int extended_ascii_mapping[256] = {
+        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
+        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
+        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  48,  49,  50,  51,  52,  53,
+        54,  55,  56,  57,  32,  32,  32,  32,  32,  32,  32,  97,  98,  99,  100, 101, 102, 103,
+        104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+        122, 32,  32,  32,  32,  32,  32,  97,  98,  99,  100, 101, 102, 103, 104, 105, 106, 107,
+        108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 32,  32,  32,
+        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
+        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
+        32,  32,  32,  32,  32,  32,  32,  32,  170, 32,  32,  32,  32,  32,  32,  32,  178, 179,
+        32,  181, 32,  32,  32,  185, 186, 32,  188, 189, 190, 32,  224, 225, 226, 227, 228, 229,
+        230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 32,
+        248, 249, 250, 251, 252, 253, 254, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
+        234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 32,  248, 249, 250, 251,
+        252, 253, 254, 255};
+
+    std::transform(str, str + len, str, [](CharT ch) {
+        /* irrelevant cases for a given char type are removed at compile time by any decent compiler
+         */
+        if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
+            return ch;
+        }
+        else if (ch < 256) {
+            return static_cast<CharT>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);
+        }
+        else {
+            // this requires sources to compiled, while the current version for C++ is header only
+            // this will be added to the C++ version later on.
+#ifdef RAPIDFUZZ_PYTHON
+            return static_cast<CharT>(Unicode::UnicodeDefaultProcess(static_cast<uint32_t>(ch)));
+#else
+      return ch;
+#endif
+        }
+    });
+
+    while (len > 0 && str[len - 1] == ' ') {
+        len--;
+    }
+
+    std::size_t prefix = 0;
+    while (len > 0 && str[prefix] == ' ') {
+        len--;
+        prefix++;
+    }
+
+    if (prefix != 0) {
+        std::copy(str + prefix, str + prefix + len, str);
+    }
+
+    return len;
+}
+
+template <typename Sentence, typename CharT, typename>
+std::basic_string<CharT> utils::default_process(Sentence&& s)
+{
+    std::basic_string<CharT> str(std::forward<Sentence>(s));
+
+    std::size_t len = default_process(&str[0], str.size());
+    str.resize(len);
+    return str;
+}
+
+template <typename Sentence, typename CharT, typename>
+std::basic_string<CharT> utils::default_process(Sentence s)
+{
+    return default_process(std::basic_string<CharT>(s.data(), s.size()));
+}
+
 } // namespace rapidfuzz
 #endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED

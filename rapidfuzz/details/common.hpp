@@ -2,29 +2,29 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
+#include <array>
+#include <cmath>
+#include <cstring>
 #include <rapidfuzz/details/SplittedSentenceView.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
-#include <cmath>
 #include <tuple>
-#include <vector>
-#include <array>
 #include <unordered_map>
-#include <cstring>
+#include <vector>
 
 namespace rapidfuzz {
 
 template <typename CharT1, typename CharT2, typename CharT3>
 struct DecomposedSet {
-  SplittedSentenceView<CharT1> difference_ab;
-  SplittedSentenceView<CharT2> difference_ba;
-  SplittedSentenceView<CharT3> intersection;
-  DecomposedSet(SplittedSentenceView<CharT1> diff_ab, SplittedSentenceView<CharT2> diff_ba,
-                SplittedSentenceView<CharT3> intersect)
-      : difference_ab(std::move(diff_ab)),
-        difference_ba(std::move(diff_ba)),
-        intersection(std::move(intersect))
-  {}
+    SplittedSentenceView<CharT1> difference_ab;
+    SplittedSentenceView<CharT2> difference_ba;
+    SplittedSentenceView<CharT3> intersection;
+    DecomposedSet(SplittedSentenceView<CharT1> diff_ab, SplittedSentenceView<CharT2> diff_ba,
+                  SplittedSentenceView<CharT3> intersect)
+        : difference_ab(std::move(diff_ab)),
+          difference_ba(std::move(diff_ba)),
+          intersection(std::move(intersect))
+    {}
 };
 
 namespace common {
@@ -118,187 +118,197 @@ std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view
 template <typename CharT1, typename CharT2>
 std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
-
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
-template<typename T>
+template <typename T>
 constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
 {
     return typename std::make_unsigned<T>::type(value);
 }
 
-template<typename T>
+template <typename T>
 constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
 {
     return typename std::make_signed<T>::type(value);
 }
 
 template <typename T, typename U>
-bool mixed_sign_equal(const T a, const U b) {
-  // prevent conditional expression is constant on MSVC
-  static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
-  if (is_same_sign) {
-    return a == b;
-  } else {
-    // They can't be equal if 'a' or 'b' is negative.
-    return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
-  }
+bool mixed_sign_equal(const T a, const U b)
+{
+    // prevent conditional expression is constant on MSVC
+    static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
+    if (is_same_sign) {
+        return a == b;
+    }
+    else {
+        // They can't be equal if 'a' or 'b' is negative.
+        return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
+    }
 }
 
 template <typename T, typename U>
-bool mixed_sign_unequal(const T a, const U b) {
-  return !mixed_sign_equal(a, b);
+bool mixed_sign_unequal(const T a, const U b)
+{
+    return !mixed_sign_equal(a, b);
 }
 
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
  */
 template <typename T, typename U>
-bool CanTypeFitValue(const U value) {
-  const intmax_t botT = intmax_t(std::numeric_limits<T>::min() );
-  const intmax_t botU = intmax_t(std::numeric_limits<U>::min() );
-  const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max() );
-  const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max() );
-  return !( (botT > botU && value < static_cast<U> (botT)) || (topT < topU && value > static_cast<U> (topT)) );
+bool CanTypeFitValue(const U value)
+{
+    const intmax_t botT = intmax_t(std::numeric_limits<T>::min());
+    const intmax_t botU = intmax_t(std::numeric_limits<U>::min());
+    const uintmax_t topT = uintmax_t(std::numeric_limits<T>::max());
+    const uintmax_t topU = uintmax_t(std::numeric_limits<U>::max());
+    return !((botT > botU && value < static_cast<U>(botT)) ||
+             (topT < topU && value > static_cast<U>(topT)));
 }
 
-template <typename CharT1, std::size_t size=sizeof(CharT1)>
+template <typename CharT1, std::size_t size = sizeof(CharT1)>
 struct PatternMatchVector;
 
 template <typename CharT1, std::size_t size>
 struct PatternMatchVector {
-  std::array<CharT1, 128> m_key;
-  std::array<uint64_t, 128> m_val;
+    std::array<CharT1, 128> m_key;
+    std::array<uint64_t, 128> m_val;
 
-  PatternMatchVector()
-    : m_key(), m_val() {}
+    PatternMatchVector() : m_key(), m_val()
+    {}
 
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_key(), m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = ch;
-
-    /* Since a maximum of 64 elements is in here m_val[hash] will be empty
-     * after a maximum of 64 checks
-     * it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (uint8_t)(hash + 1) % 128;
+    PatternMatchVector(basic_string_view<CharT1> s) : m_key(), m_val()
+    {
+        for (std::size_t i = 0; i < s.size(); i++) {
+            insert(s[i], static_cast<int>(i));
+        }
     }
 
-    m_key[hash] = key;
-    m_val[hash] |= 1ull << pos;
-  }
+    void insert(CharT1 ch, int pos)
+    {
+        auto uch = to_unsigned(ch);
+        uint8_t hash = uch % 128;
+        CharT1 key = ch;
 
-  template <typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (!CanTypeFitValue<CharT1>(ch)) {
-      return 0;
+        /* Since a maximum of 64 elements is in here m_val[hash] will be empty
+         * after a maximum of 64 checks
+         * it is important to search for an empty value instead of an empty key,
+         * since 0 is a valid key
+         */
+        while (m_val[hash] && m_key[hash] != key) {
+            hash = (uint8_t)(hash + 1) % 128;
+        }
+
+        m_key[hash] = key;
+        m_val[hash] |= 1ull << pos;
     }
 
-    auto uch = to_unsigned(ch);
-    uint8_t hash = uch % 128;
-    CharT1 key = (CharT1)uch;
+    template <typename CharT2>
+    uint64_t get(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return 0;
+        }
 
-    /* it is important to search for an empty value instead of an empty key,
-     * since 0 is a valid key
-     */
-    while (m_val[hash] && m_key[hash] != key) {
-      hash = (uint8_t)(hash + 1) % 128;
+        auto uch = to_unsigned(ch);
+        uint8_t hash = uch % 128;
+        CharT1 key = (CharT1)uch;
+
+        /* it is important to search for an empty value instead of an empty key,
+         * since 0 is a valid key
+         */
+        while (m_val[hash] && m_key[hash] != key) {
+            hash = (uint8_t)(hash + 1) % 128;
+        }
+
+        return m_val[hash];
     }
-
-    return m_val[hash];
-  }
 };
 
 template <typename CharT1>
 struct PatternMatchVector<CharT1, 1> {
-  std::array<uint64_t, 256> m_val;
+    std::array<uint64_t, 256> m_val;
 
-  PatternMatchVector()
-    : m_val() {}
+    PatternMatchVector() : m_val()
+    {}
 
-  PatternMatchVector(basic_string_view<CharT1> s)
-    : m_val()
-  {
-    for (std::size_t i = 0; i < s.size(); i++){
-      insert(s[i], static_cast<int>(i));
-    }
-  }
-
-  void insert(CharT1 ch, int pos) {
-    m_val[uint8_t(ch)] |= 1ull << pos;
-  }
-
-  template<typename CharT2>
-  uint64_t get(CharT2 ch) const {
-    if (!CanTypeFitValue<CharT1>(ch)) {
-      return 0;
+    PatternMatchVector(basic_string_view<CharT1> s) : m_val()
+    {
+        for (std::size_t i = 0; i < s.size(); i++) {
+            insert(s[i], static_cast<int>(i));
+        }
     }
 
-    return m_val[uint8_t(ch)];
-  }
+    void insert(CharT1 ch, int pos)
+    {
+        m_val[uint8_t(ch)] |= 1ull << pos;
+    }
+
+    template <typename CharT2>
+    uint64_t get(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return 0;
+        }
+
+        return m_val[uint8_t(ch)];
+    }
 };
 
 template <typename CharT1>
 struct BlockPatternMatchVector {
-  std::vector<PatternMatchVector<CharT1>> m_val;
+    std::vector<PatternMatchVector<CharT1>> m_val;
 
-  BlockPatternMatchVector() {}
+    BlockPatternMatchVector()
+    {}
 
-  BlockPatternMatchVector(basic_string_view<CharT1> s)
-  {
-    insert(s);
-  }
-
-  void insert(std::size_t block, CharT1 ch, int pos) {
-    auto* be = &m_val[block];
-    be->insert(ch, pos);
-  }
-
-  void insert(basic_string_view<CharT1> s) {
-    std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
-    m_val.resize(nr);
-
-    for (std::size_t i = 0; i < s.size(); i++){
-      auto* be = &m_val[i/64];
-      be->insert(s[i], static_cast<int>(i%64));
+    BlockPatternMatchVector(basic_string_view<CharT1> s)
+    {
+        insert(s);
     }
-  }
 
-  template<typename CharT2>
-  uint64_t get(std::size_t block, CharT2 ch) const {
-    auto* be = &m_val[block];
-    return be->get(ch);
-  }
+    void insert(std::size_t block, CharT1 ch, int pos)
+    {
+        auto* be = &m_val[block];
+        be->insert(ch, pos);
+    }
+
+    void insert(basic_string_view<CharT1> s)
+    {
+        std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
+        m_val.resize(nr);
+
+        for (std::size_t i = 0; i < s.size(); i++) {
+            auto* be = &m_val[i / 64];
+            be->insert(s[i], static_cast<int>(i % 64));
+        }
+    }
+
+    template <typename CharT2>
+    uint64_t get(std::size_t block, CharT2 ch) const
+    {
+        auto* be = &m_val[block];
+        return be->get(ch);
+    }
 };
 
-template <typename CharT1, typename ValueType, std::size_t size=sizeof(CharT1)>
+template <typename CharT1, typename ValueType, std::size_t size = sizeof(CharT1)>
 struct CharHashTable;
 
 template <typename CharT1, typename ValueType>
-struct CharHashTable<CharT1, ValueType, 1>
-{
+struct CharHashTable<CharT1, ValueType, 1> {
     using UCharT1 = typename std::make_unsigned<CharT1>::type;
 
     std::array<ValueType, std::numeric_limits<UCharT1>::max() + 1> m_val;
     ValueType m_default;
 
-    CharHashTable()
-        : m_val{}, m_default{} {}
+    CharHashTable() : m_val{}, m_default{}
+    {}
 
-    template<typename CharT2>
-    ValueType& operator[](CharT2 ch) {
+    template <typename CharT2>
+    ValueType& operator[](CharT2 ch)
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
@@ -306,8 +316,9 @@ struct CharHashTable<CharT1, ValueType, 1>
         return m_val[UCharT1(ch)];
     }
 
-    template<typename CharT2>
-    const ValueType& operator[](CharT2 ch) const {
+    template <typename CharT2>
+    const ValueType& operator[](CharT2 ch) const
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
@@ -317,38 +328,37 @@ struct CharHashTable<CharT1, ValueType, 1>
 };
 
 template <typename CharT1, typename ValueType, std::size_t size>
-struct CharHashTable
-{
+struct CharHashTable {
     std::unordered_map<CharT1, ValueType> m_val;
     ValueType m_default;
 
-    CharHashTable()
-        : m_val{}, m_default{} {}
+    CharHashTable() : m_val{}, m_default{}
+    {}
 
-    template<typename CharT2>
-    ValueType& operator[](CharT2 ch) {
+    template <typename CharT2>
+    ValueType& operator[](CharT2 ch)
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
 
         auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end())
-        {
+        if (search == m_val.end()) {
             return m_default;
         }
 
         return search->second;
     }
 
-    template<typename CharT2>
-    const ValueType& operator[](CharT2 ch) const {
+    template <typename CharT2>
+    const ValueType& operator[](CharT2 ch) const
+    {
         if (!CanTypeFitValue<CharT1>(ch)) {
             return m_default;
         }
 
         auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end())
-        {
+        if (search == m_val.end()) {
             return m_default;
         }
 

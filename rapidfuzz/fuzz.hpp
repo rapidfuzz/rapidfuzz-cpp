@@ -44,19 +44,19 @@ template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // TODO documentation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view) {}
+    CachedRatio(const Sentence1& s1) : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1;
 };
 
 /**
@@ -89,22 +89,22 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
 percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // todo add real implementation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedPartialRatio {
-  template<typename> friend class CachedWRatio;
-  using CharT1 = char_type<Sentence1>;
+    template <typename>
+    friend class CachedWRatio;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedPartialRatio(const Sentence1& s1);
+    CachedPartialRatio(const Sentence1& s1);
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  common::CharHashTable<CharT1, bool> s1_char_map;
-  CachedRatio<Sentence1> cached_ratio;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    common::CharHashTable<CharT1, bool> s1_char_map;
+    CachedRatio<Sentence1> cached_ratio;
 };
-
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -137,21 +137,21 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
 percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 // todo CachedRatio speed for equal strings vs original implementation
 // TODO documentation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedTokenSortRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedTokenSortRatio(const Sentence1& s1)
-    : s1_sorted(common::sorted_split(s1).join()), cached_ratio(s1_sorted) {}
+    CachedTokenSortRatio(const Sentence1& s1)
+        : s1_sorted(common::sorted_split(s1).join()), cached_ratio(s1_sorted)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  std::basic_string<CharT1> s1_sorted;
-  CachedRatio<Sentence1> cached_ratio;
+    std::basic_string<CharT1> s1_sorted;
+    CachedRatio<Sentence1> cached_ratio;
 };
-
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -179,19 +179,20 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
                                  percent score_cutoff = 0);
 
 // TODO documentation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedPartialTokenSortRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedPartialTokenSortRatio(const Sentence1& s1)
-   : s1_sorted(common::sorted_split(s1).join()), cached_partial_ratio(s1_sorted) {}
+    CachedPartialTokenSortRatio(const Sentence1& s1)
+        : s1_sorted(common::sorted_split(s1).join()), cached_partial_ratio(s1_sorted)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  std::basic_string<CharT1> s1_sorted;
-  CachedPartialRatio<Sentence1> cached_partial_ratio;
+    std::basic_string<CharT1> s1_sorted;
+    CachedPartialRatio<Sentence1> cached_partial_ratio;
 };
 
 /**
@@ -226,17 +227,17 @@ template <typename Sentence1, typename Sentence2>
 percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // TODO documentation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedTokenSetRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedTokenSetRatio(const Sentence1& s1);
+    CachedTokenSetRatio(const Sentence1& s1);
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  SplittedSentenceView<CharT1> tokens_s1;
+    SplittedSentenceView<CharT1> tokens_s1;
 };
 
 /**
@@ -263,17 +264,17 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
 percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // TODO documentation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedPartialTokenSetRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedPartialTokenSetRatio(const Sentence1& s1);
+    CachedPartialTokenSetRatio(const Sentence1& s1);
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  SplittedSentenceView<CharT1> tokens_s1;
+    SplittedSentenceView<CharT1> tokens_s1;
 };
 
 /**
@@ -299,23 +300,24 @@ template <typename Sentence1, typename Sentence2>
 percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // todo add real implementation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedTokenRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedTokenRatio(const Sentence1& s1)
-    : s1_tokens(common::sorted_split(s1)), s1_sorted(s1_tokens.join()),
-      cached_ratio_s1_sorted(s1_sorted) {}
+    CachedTokenRatio(const Sentence1& s1)
+        : s1_tokens(common::sorted_split(s1)),
+          s1_sorted(s1_tokens.join()),
+          cached_ratio_s1_sorted(s1_sorted)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  SplittedSentenceView<CharT1> s1_tokens;
-  std::basic_string<CharT1> s1_sorted;
-  CachedRatio<Sentence1> cached_ratio_s1_sorted;
+    SplittedSentenceView<CharT1> s1_tokens;
+    std::basic_string<CharT1> s1_sorted;
+    CachedRatio<Sentence1> cached_ratio_s1_sorted;
 };
-
 
 /**
  * @brief Helper method that returns the maximum of
@@ -342,20 +344,19 @@ template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Se
 percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // todo add real implementation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedPartialTokenRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedPartialTokenRatio(const Sentence1& s1);
+    CachedPartialTokenRatio(const Sentence1& s1);
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  SplittedSentenceView<CharT1> tokens_s1;
-  std::basic_string<CharT1> s1_sorted;
+    SplittedSentenceView<CharT1> tokens_s1;
+    std::basic_string<CharT1> s1_sorted;
 };
-
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -382,23 +383,23 @@ template <typename Sentence1, typename Sentence2>
 percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
 // todo add real implementation
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedWRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedWRatio(const Sentence1& s1);
+    CachedWRatio(const Sentence1& s1);
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-// todo somehow implement this using other ratios with creating PatternMatchVector
-// multiple times
-  CachedPartialRatio<Sentence1> cached_partial_ratio;
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  SplittedSentenceView<CharT1> tokens_s1;
-  std::basic_string<CharT1> s1_sorted;
-  common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
+    // todo somehow implement this using other ratios with creating PatternMatchVector
+    // multiple times
+    CachedPartialRatio<Sentence1> cached_partial_ratio;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    SplittedSentenceView<CharT1> tokens_s1;
+    std::basic_string<CharT1> s1_sorted;
+    common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
 };
 
 /**
@@ -425,19 +426,19 @@ private:
 template <typename Sentence1, typename Sentence2>
 percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0);
 
-template<typename Sentence1>
+template <typename Sentence1>
 struct CachedQRatio {
-  using CharT1 = char_type<Sentence1>;
+    using CharT1 = char_type<Sentence1>;
 
-  CachedQRatio(const Sentence1& s1)
-    : s1_view(common::to_string_view(s1)), cached_ratio(s1) {}
+    CachedQRatio(const Sentence1& s1) : s1_view(common::to_string_view(s1)), cached_ratio(s1)
+    {}
 
-  template<typename Sentence2>
-  double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
+    template <typename Sentence2>
+    double ratio(const Sentence2& s2, percent score_cutoff = 0) const;
 
 private:
-  rapidfuzz::basic_string_view<CharT1> s1_view;
-  CachedRatio<Sentence1> cached_ratio;
+    rapidfuzz::basic_string_view<CharT1> s1_view;
+    CachedRatio<Sentence1> cached_ratio;
 };
 
 /**@}*/

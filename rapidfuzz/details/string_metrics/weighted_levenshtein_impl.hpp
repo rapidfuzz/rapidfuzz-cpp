@@ -4,10 +4,10 @@
 #include <rapidfuzz/details/common.hpp>
 
 #include <algorithm>
-#include <stdexcept>
-#include <string>
 #include <array>
 #include <limits>
+#include <stdexcept>
+#include <string>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -33,62 +33,68 @@ namespace detail {
  * 0xA -> INS + INS
  */
 static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
-  /* max edit distance 1 */
-  {0}, /* case does not occur */        /* len_diff 0 */
-  {0x01},                               /* len_diff 1 */
-  /* max edit distance 2 */
-  {0x09, 0x06},                         /* len_diff 0 */
-  {0x01},                               /* len_diff 1 */
-  {0x05},                               /* len_diff 2 */
-  /* max edit distance 3 */
-  {0x09, 0x06},                         /* len_diff 0 */
-  {0x25, 0x19, 0x16},                   /* len_diff 1 */
-  {0x05},                               /* len_diff 2 */
-  {0x15},                               /* len_diff 3 */
-  /* max edit distance 4 */
-  {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
-  {0x25, 0x19, 0x16},                   /* len_diff 1 */
-  {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
-  {0x15},                               /* len_diff 3 */
-  {0x55},                               /* len_diff 4 */
+    /* max edit distance 1 */
+    {0},
+    /* case does not occur */ /* len_diff 0 */
+    {0x01},                   /* len_diff 1 */
+    /* max edit distance 2 */
+    {0x09, 0x06}, /* len_diff 0 */
+    {0x01},       /* len_diff 1 */
+    {0x05},       /* len_diff 2 */
+    /* max edit distance 3 */
+    {0x09, 0x06},       /* len_diff 0 */
+    {0x25, 0x19, 0x16}, /* len_diff 1 */
+    {0x05},             /* len_diff 2 */
+    {0x15},             /* len_diff 3 */
+    /* max edit distance 4 */
+    {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
+    {0x25, 0x19, 0x16},                   /* len_diff 1 */
+    {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
+    {0x15},                               /* len_diff 3 */
+    {0x55},                               /* len_diff 4 */
 };
 
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
+                                             basic_string_view<CharT2> s2, std::size_t max)
 {
-  if (s1.size() < s2.size()) {
-    return weighted_levenshtein_mbleven2018(s2, s1, max);
-  }
-
-  std::size_t len_diff = s1.size() - s2.size();
-  auto possible_ops = weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-  std::size_t dist = max + 1;
-
-  for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-    int ops = possible_ops[pos];
-    std::size_t s1_pos = 0;
-    std::size_t s2_pos = 0;
-    std::size_t cur_dist = 0;
-
-    while (s1_pos < s1.size() && s2_pos < s2.size()) {
-      if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
-        cur_dist++;
-
-        if (!ops) break;
-        if (ops & 1) s1_pos++;
-        else if (ops & 2) s2_pos++;
-        ops >>= 2;
-      } else {
-        s1_pos++;
-        s2_pos++;
-      }
+    if (s1.size() < s2.size()) {
+        return weighted_levenshtein_mbleven2018(s2, s1, max);
     }
 
-    cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
-    dist = std::min(dist, cur_dist);
-  }
+    std::size_t len_diff = s1.size() - s2.size();
+    auto possible_ops =
+        weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
+    std::size_t dist = max + 1;
 
-  return (dist > max) ? (std::size_t)-1 : dist;
+    for (int pos = 0; possible_ops[pos] != 0; ++pos) {
+        int ops = possible_ops[pos];
+        std::size_t s1_pos = 0;
+        std::size_t s2_pos = 0;
+        std::size_t cur_dist = 0;
+
+        while (s1_pos < s1.size() && s2_pos < s2.size()) {
+            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+                cur_dist++;
+
+                if (!ops) break;
+                if (ops & 1)
+                    s1_pos++;
+                else if (ops & 2)
+                    s2_pos++;
+                ops >>= 2;
+            }
+            else {
+                s1_pos++;
+                s2_pos++;
+            }
+        }
+
+        cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
+        dist = std::min(dist, cur_dist);
+    }
+
+    return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 /*
@@ -98,15 +104,16 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic
  */
 static inline std::size_t popcount64(uint64_t x)
 {
-  const uint64_t m1  = 0x5555555555555555; //binary: 0101...
-  const uint64_t m2  = 0x3333333333333333; //binary: 00110011..
-  const uint64_t m4  = 0x0f0f0f0f0f0f0f0f; //binary:  4 zeros,  4 ones ...
-  const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
+    const uint64_t m1 = 0x5555555555555555;  // binary: 0101...
+    const uint64_t m2 = 0x3333333333333333;  // binary: 00110011..
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;  // binary:  4 zeros,  4 ones ...
+    const uint64_t h01 = 0x0101010101010101; // the sum of 256 to the power of 0,1,2,3...
 
-  x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
-  x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
-  x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
-  return static_cast<std::size_t>((x * h01) >> 56);  //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
+    x -= (x >> 1) & m1;             // put count of each 2 bits into those 2 bits
+    x = (x & m2) + ((x >> 2) & m2); // put count of each 4 bits into those 4 bits
+    x = (x + (x >> 4)) & m4;        // put count of each 8 bits into those 8 bits
+    return static_cast<std::size_t>(
+        (x * h01) >> 56); // returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
 }
 
 /*
@@ -114,424 +121,422 @@ static inline std::size_t popcount64(uint64_t x)
  */
 static inline uint64_t set_bits(int n)
 {
-  uint64_t result = (uint64_t)-1;
-  // shifting by 64 bits would be undefined behavior
-  if (n < 64) {
-    result += (uint64_t)1 << n;
-  }
-  return result;
+    uint64_t result = (uint64_t)-1;
+    // shifting by 64 bits would be undefined behavior
+    if (n < 64) {
+        result += (uint64_t)1 << n;
+    }
+    return result;
 }
 
 template <typename CharT1, typename BlockPatternCharT>
-static inline std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
-  const common::PatternMatchVector<BlockPatternCharT>& block, std::size_t s2_len)
+static inline std::size_t
+weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
+                            const common::PatternMatchVector<BlockPatternCharT>& block,
+                            std::size_t s2_len)
 {
-  uint64_t DHneg1 = ~0x0ull;
-  uint64_t DHzero = 0;
-  uint64_t DHpos1 = 0;
+    uint64_t DHneg1 = ~0x0ull;
+    uint64_t DHzero = 0;
+    uint64_t DHpos1 = 0;
 
-  for (auto ch2 : s1)
-  {
-    const uint64_t Matches = block.get(ch2);
-    const uint64_t NotMatches = ~Matches;
+    for (auto ch2 : s1) {
+        const uint64_t Matches = block.get(ch2);
+        const uint64_t NotMatches = ~Matches;
 
-    const uint64_t INITpos1s = DHneg1 & Matches;
-    const uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
+        const uint64_t INITpos1s = DHneg1 & Matches;
+        const uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
 
-    const uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
-    const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+        const uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
+        const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
 
-    const uint64_t INITzeros = (DHzero & DVpos1shiftorMatch) ;
-    const uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
+        const uint64_t INITzeros = (DHzero & DVpos1shiftorMatch);
+        const uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
 
-    const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-    DHzero &= NotMatches;
-    const uint64_t DHpos1orMatch = DHpos1| Matches;
-    DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
-    DHpos1 = (DVneg1shift & DHpos1orMatch);
-    DHneg1 = ~(DHzero | DHpos1);
-  }
+        const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+        DHzero &= NotMatches;
+        const uint64_t DHpos1orMatch = DHpos1 | Matches;
+        DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
+        DHpos1 = (DVneg1shift & DHpos1orMatch);
+        DHneg1 = ~(DHzero | DHpos1);
+    }
 
-  std::size_t dist = s1.size() + s2_len;
-  uint64_t bitmask = set_bits(static_cast<int>(s2_len));
+    std::size_t dist = s1.size() + s2_len;
+    uint64_t bitmask = set_bits(static_cast<int>(s2_len));
 
-  dist -= popcount64(DHzero & bitmask);
-  dist -= popcount64(DHpos1 & bitmask) * 2;
+    dist -= popcount64(DHzero & bitmask);
+    dist -= popcount64(DHpos1 & bitmask) * 2;
 
-  return dist;
+    return dist;
 }
-
 
 template <typename T, typename U>
 constexpr T bit_clear(T val, U bit)
 {
-  return val & ~(1ull << bit);
+    return val & ~(1ull << bit);
 }
 
 template <typename T, typename U>
 constexpr T bit_check(T val, U bit)
 {
-  return (val >> bit) & 0x1;
+    return (val >> bit) & 0x1;
 }
 
-
 template <typename CharT1, typename BlockPatternCharT>
-std::size_t weighted_levenshtein_bitpal_blockwise(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, std::size_t s2_len)
+std::size_t weighted_levenshtein_bitpal_blockwise(
+    basic_string_view<CharT1> s1, const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+    std::size_t s2_len)
 {
-  struct HorizontalDelta {
-    uint64_t DHpos1;
-    uint64_t DHzero;
-    uint64_t DHneg1;
+    struct HorizontalDelta {
+        uint64_t DHpos1;
+        uint64_t DHzero;
+        uint64_t DHneg1;
 
-    HorizontalDelta()
-      : DHpos1(0), DHzero(0), DHneg1(~0x0ull) {}
-  };
+        HorizontalDelta() : DHpos1(0), DHzero(0), DHneg1(~0x0ull)
+        {}
+    };
 
-  std::size_t words = block.m_val.size();
-  std::vector<HorizontalDelta> DH(words);
+    std::size_t words = block.m_val.size();
+    std::vector<HorizontalDelta> DH(words);
 
-  //recursion
-  for (const auto& ch1 : s1)
-  {
-    //initialize OverFlow
-    uint64_t OverFlow0 = 0;
-    uint64_t OverFlow1 = 0;
-    uint64_t INITzerosprevbit = 0;
+    // recursion
+    for (const auto& ch1 : s1) {
+        // initialize OverFlow
+        uint64_t OverFlow0 = 0;
+        uint64_t OverFlow1 = 0;
+        uint64_t INITzerosprevbit = 0;
 
-    // manually unroll the loop iteration for the first word
-    // since there can not be a overflow before the first iteration
-    {
-      uint64_t DHpos1temp    = DH[0].DHpos1;
-      uint64_t DHzerotemp    = DH[0].DHzero;
-      uint64_t DHneg1temp    = DH[0].DHneg1;
+        // manually unroll the loop iteration for the first word
+        // since there can not be a overflow before the first iteration
+        {
+            uint64_t DHpos1temp = DH[0].DHpos1;
+            uint64_t DHzerotemp = DH[0].DHzero;
+            uint64_t DHneg1temp = DH[0].DHneg1;
 
-      const uint64_t Matches = block.get(0, ch1);
+            const uint64_t Matches = block.get(0, ch1);
 
-      //Complement Matches
-      const uint64_t NotMatches = ~Matches;
-      //Finding the vertical values
-      //Find 1s
-      const uint64_t INITpos1s = DHneg1temp & Matches;
+            // Complement Matches
+            const uint64_t NotMatches = ~Matches;
+            // Finding the vertical values
+            // Find 1s
+            const uint64_t INITpos1s = DHneg1temp & Matches;
 
-      uint64_t sum = INITpos1s;
-      sum += DHneg1temp;
-      OverFlow0 = sum < DHneg1temp;
-      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+            uint64_t sum = INITpos1s;
+            sum += DHneg1temp;
+            OverFlow0 = sum < DHneg1temp;
+            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
 
-      //set RemainingDHneg1
-      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-      //combine 1s and Matches
-      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+            // set RemainingDHneg1
+            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+            // combine 1s and Matches
+            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
 
-      //Find 0s
-      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-      uint64_t initval = (INITzeros << 1);
-      INITzerosprevbit = INITzeros >> 63;
+            // Find 0s
+            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+            uint64_t initval = (INITzeros << 1);
+            INITzerosprevbit = INITzeros >> 63;
 
-      sum = initval;
-      sum += RemainDHneg1;
-      OverFlow0 |= sum < RemainDHneg1;
-      const uint64_t DVzeroshift = initval ^ RemainDHneg1;
+            sum = initval;
+            sum += RemainDHneg1;
+            OverFlow0 |= sum < RemainDHneg1;
+            const uint64_t DVzeroshift = initval ^ RemainDHneg1;
 
-      //Find -1s
-      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+            // Find -1s
+            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
 
-      //Finding the horizontal values
-      //Remove matches from DH values except 1
-      DHzerotemp &= NotMatches;
-      //combine 1s and Matches
-      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-      //Find 0s
-      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-      //Find 1s
-      DHpos1temp = DVneg1shift & DHpos1orMatch;
-      //Find -1s
-      DHneg1temp = ~(DHzerotemp | DHpos1temp);
+            // Finding the horizontal values
+            // Remove matches from DH values except 1
+            DHzerotemp &= NotMatches;
+            // combine 1s and Matches
+            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
+            // Find 0s
+            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+            // Find 1s
+            DHpos1temp = DVneg1shift & DHpos1orMatch;
+            // Find -1s
+            DHneg1temp = ~(DHzerotemp | DHpos1temp);
 
-      DH[0].DHpos1 = DHpos1temp;
-      DH[0].DHzero = DHzerotemp;
-      DH[0].DHneg1 = DHneg1temp;
+            DH[0].DHpos1 = DHpos1temp;
+            DH[0].DHzero = DHzerotemp;
+            DH[0].DHneg1 = DHneg1temp;
+        }
+
+        for (std::size_t word = 1; word < words - 1; ++word) {
+            uint64_t DHpos1temp = DH[word].DHpos1;
+            uint64_t DHzerotemp = DH[word].DHzero;
+            uint64_t DHneg1temp = DH[word].DHneg1;
+
+            const uint64_t Matches = block.get(word, ch1);
+
+            // Complement Matches
+            const uint64_t NotMatches = ~Matches;
+            // Finding the vertical values
+            // Find 1s
+            const uint64_t INITpos1s = DHneg1temp & Matches;
+
+            uint64_t sum = INITpos1s;
+            sum += OverFlow0;
+            OverFlow0 = sum < OverFlow0;
+            sum += DHneg1temp;
+            OverFlow0 |= sum < DHneg1temp;
+            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+
+            // set RemainingDHneg1
+            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+            // combine 1s and Matches
+            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+            // Find 0s
+            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+            uint64_t initval = INITzerosprevbit;
+            INITzerosprevbit = INITzeros >> 63;
+            initval = (INITzeros << 1) | initval;
+
+            sum = initval;
+            sum += OverFlow1;
+            OverFlow1 = sum < OverFlow1;
+            sum += RemainDHneg1;
+            OverFlow0 |= sum < RemainDHneg1;
+            const uint64_t DVzeroshift = sum ^ RemainDHneg1;
+
+            // Find -1s
+            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+
+            // Finding the horizontal values
+            // Remove matches from DH values except 1
+            DHzerotemp &= NotMatches;
+            // combine 1s and Matches
+            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
+            // Find 0s
+            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+            // Find 1s
+            DHpos1temp = DVneg1shift & DHpos1orMatch;
+            // Find -1s
+            DHneg1temp = ~(DHzerotemp | DHpos1temp);
+
+            DH[word].DHpos1 = DHpos1temp;
+            DH[word].DHzero = DHzerotemp;
+            DH[word].DHneg1 = DHneg1temp;
+        }
+
+        // manually unroll the loop iteration for the last word
+        // since we do not have to calculate any overflows anymore
+        if (words > 1) {
+            uint64_t DHpos1temp = DH[words - 1].DHpos1;
+            uint64_t DHzerotemp = DH[words - 1].DHzero;
+            uint64_t DHneg1temp = DH[words - 1].DHneg1;
+
+            const uint64_t Matches = block.get(words - 1, ch1);
+
+            // Complement Matches
+            const uint64_t NotMatches = ~Matches;
+            // Finding the vertical values
+            // Find 1s
+            const uint64_t INITpos1s = DHneg1temp & Matches;
+
+            uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
+            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
+
+            // set RemainingDHneg1
+            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
+            // combine 1s and Matches
+            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
+
+            // Find 0s
+            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
+            uint64_t initval = (INITzeros << 1) | INITzerosprevbit;
+
+            sum = initval + RemainDHneg1 + OverFlow1;
+            const uint64_t DVzeroshift = sum ^ RemainDHneg1;
+
+            // Find -1s
+            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
+
+            // Finding the horizontal values
+            // Remove matches from DH values except 1
+            DHzerotemp &= NotMatches;
+            // combine 1s and Matches
+            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
+            // Find 0s
+            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
+            // Find 1s
+            DHpos1temp = DVneg1shift & DHpos1orMatch;
+            // Find -1s
+            DHneg1temp = ~(DHzerotemp | DHpos1temp);
+
+            DH[words - 1].DHpos1 = DHpos1temp;
+            DH[words - 1].DHzero = DHzerotemp;
+            DH[words - 1].DHneg1 = DHneg1temp;
+        }
     }
 
-    for (std::size_t word = 1; word < words - 1; ++word) {
-      uint64_t DHpos1temp    = DH[word].DHpos1;
-      uint64_t DHzerotemp    = DH[word].DHzero;
-      uint64_t DHneg1temp    = DH[word].DHneg1;
+    // find scores in last row
+    std::size_t dist = s1.size() + s2_len;
 
-      const uint64_t Matches = block.get(word, ch1);
-
-      //Complement Matches
-      const uint64_t NotMatches = ~Matches;
-      //Finding the vertical values
-      //Find 1s
-      const uint64_t INITpos1s = DHneg1temp & Matches;
-
-
-      uint64_t sum = INITpos1s;
-      sum += OverFlow0;
-      OverFlow0 = sum < OverFlow0;
-      sum += DHneg1temp;
-      OverFlow0 |= sum < DHneg1temp;
-      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-      //set RemainingDHneg1
-      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-      //combine 1s and Matches
-      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-      //Find 0s
-      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-      uint64_t initval = INITzerosprevbit;
-      INITzerosprevbit = INITzeros >> 63;
-      initval = (INITzeros << 1) | initval;
-
-
-      sum = initval;
-      sum += OverFlow1;
-      OverFlow1 = sum < OverFlow1;
-      sum += RemainDHneg1;
-      OverFlow0 |= sum < RemainDHneg1;
-      const uint64_t DVzeroshift = sum ^ RemainDHneg1;
-
-      //Find -1s
-      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-      //Finding the horizontal values
-      //Remove matches from DH values except 1
-      DHzerotemp &= NotMatches;
-      //combine 1s and Matches
-      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-      //Find 0s
-      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-      //Find 1s
-      DHpos1temp = DVneg1shift & DHpos1orMatch;
-      //Find -1s
-      DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-      DH[word].DHpos1 = DHpos1temp;
-      DH[word].DHzero = DHzerotemp;
-      DH[word].DHneg1 = DHneg1temp;
+    for (std::size_t word = 0; word < words - 1; ++word) {
+        dist -= popcount64(DH[word].DHzero);
+        dist -= popcount64(DH[word].DHpos1) * 2;
     }
 
-    // manually unroll the loop iteration for the last word
-    // since we do not have to calculate any overflows anymore
-    if (words > 1) {
-      uint64_t DHpos1temp    = DH[words - 1].DHpos1;
-      uint64_t DHzerotemp    = DH[words - 1].DHzero;
-      uint64_t DHneg1temp    = DH[words - 1].DHneg1;
+    uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
+    dist -= popcount64(DH.back().DHzero & bitmask);
+    dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
 
-      const uint64_t Matches = block.get(words - 1, ch1);
-
-      //Complement Matches
-      const uint64_t NotMatches = ~Matches;
-      //Finding the vertical values
-      //Find 1s
-      const uint64_t INITpos1s = DHneg1temp & Matches;
-
-      uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-      const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-      //set RemainingDHneg1
-      const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-      //combine 1s and Matches
-      const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-      //Find 0s
-      const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-      uint64_t initval = (INITzeros << 1) | INITzerosprevbit;
-
-      sum = initval + RemainDHneg1 + OverFlow1;
-      const uint64_t DVzeroshift = sum ^ RemainDHneg1;
-
-      //Find -1s
-      const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-      //Finding the horizontal values
-      //Remove matches from DH values except 1
-      DHzerotemp &= NotMatches;
-      //combine 1s and Matches
-      const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-      //Find 0s
-      DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-      //Find 1s
-      DHpos1temp = DVneg1shift & DHpos1orMatch;
-      //Find -1s
-      DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-      DH[words - 1].DHpos1 = DHpos1temp;
-      DH[words - 1].DHzero = DHzerotemp;
-      DH[words - 1].DHneg1 = DHneg1temp;
-    }
-  }
-
-  //find scores in last row
-  std::size_t dist = s1.size() + s2_len;
-
-  for (std::size_t word = 0; word < words-1; ++word)
-  {
-    dist -= popcount64(DH[word].DHzero);
-    dist -= popcount64(DH[word].DHpos1) * 2;
-  }
-
-  uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
-  dist -= popcount64(DH.back().DHzero & bitmask);
-  dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
-
-  return dist;
+    return dist;
 }
 
 template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-  if (s2.size() < 65) {
-    return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
-  } else {
-    return weighted_levenshtein_bitpal_blockwise(
-      s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
-  }
+    if (s2.size() < 65) {
+        return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+    }
+    else {
+        return weighted_levenshtein_bitpal_blockwise(
+            s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
+    }
 }
 
-//TODO this implementation needs some cleanup
+// TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2, typename BlockPatternCharT>
 std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
-  std::size_t max)
+                                 const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                                 basic_string_view<CharT2> s2, std::size_t max)
 {
-  // when no differences are allowed a direct comparision is sufficient
-  if (max == 0) {
-    if (s1.size() != s2.size()) {
-      return (std::size_t)-1;
-    }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-  }
-
-  // when the strings have a similar length each difference causes
-  // at least a edit distance of 2, so a direct comparision is sufficient
-  if (max == 1) {
-    if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-    }
-  }
-
-  // at least length difference insertions/deletions required
-  std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
-  if (len_diff > max) {
-    return (std::size_t)-1;
-  }
-
-  // important to catch, since this causes block.m_val to be empty -> raises exception on access
-  if (s2.empty()) {
-    return s1.size();
-  }
-
-  // do this first, since we can not remove any affix in encoded form
-  if (max >= 5) {
-    std::size_t dist = 0;
-    if (s2.size() < 65) {
-      dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
-    } else {
-      dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
+    // when no differences are allowed a direct comparision is sufficient
+    if (max == 0) {
+        if (s1.size() != s2.size()) {
+            return (std::size_t)-1;
+        }
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
     }
 
-    return (dist > max) ? (std::size_t)-1 : dist;
-  }
+    // when the strings have a similar length each difference causes
+    // at least a edit distance of 2, so a direct comparision is sufficient
+    if (max == 1) {
+        if (s1.size() == s2.size()) {
+            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        }
+    }
 
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  common::remove_common_affix(s1, s2);
+    // at least length difference insertions/deletions required
+    std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
+    if (len_diff > max) {
+        return (std::size_t)-1;
+    }
 
-  if (s2.empty()) {
-    return s1.size();
-  }
+    // important to catch, since this causes block.m_val to be empty -> raises exception on access
+    if (s2.empty()) {
+        return s1.size();
+    }
 
-  if (s1.empty()) {
-    return s2.size();
-  }
+    // do this first, since we can not remove any affix in encoded form
+    if (max >= 5) {
+        std::size_t dist = 0;
+        if (s2.size() < 65) {
+            dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
+        }
+        else {
+            dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
+        }
 
-  return weighted_levenshtein_mbleven2018(s1, s2, max);
+        return (dist > max) ? (std::size_t)-1 : dist;
+    }
+
+    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
+    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
+    // time
+    common::remove_common_affix(s1, s2);
+
+    if (s2.empty()) {
+        return s1.size();
+    }
+
+    if (s1.empty()) {
+        return s2.size();
+    }
+
+    return weighted_levenshtein_mbleven2018(s1, s2, max);
 }
 
-
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                 std::size_t max)
 {
-  // Swapping the strings so the second string is shorter
-  if (s1.size() < s2.size()) {
-    return weighted_levenshtein(s2, s1, max);
-  }
-
-  // when no differences are allowed a direct comparision is sufficient
-  if (max == 0) {
-    if (s1.size() != s2.size()) {
-      return (std::size_t)-1;
+    // Swapping the strings so the second string is shorter
+    if (s1.size() < s2.size()) {
+        return weighted_levenshtein(s2, s1, max);
     }
-    return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
-  }
 
-  // when the strings have a similar length each difference causes
-  // at least a edit distance of 2, so a direct comparision is sufficient
-  if (max == 1) {
-    if (s1.size() == s2.size()) {
-      return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+    // when no differences are allowed a direct comparision is sufficient
+    if (max == 0) {
+        if (s1.size() != s2.size()) {
+            return (std::size_t)-1;
+        }
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
     }
-  }
 
-  // at least length difference insertions/deletions required
-  if (s1.size() - s2.size() > max) {
-    return (std::size_t)-1;
-  }
+    // when the strings have a similar length each difference causes
+    // at least a edit distance of 2, so a direct comparision is sufficient
+    if (max == 1) {
+        if (s1.size() == s2.size()) {
+            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        }
+    }
 
-  // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-  // is similar to the distance between <string1> and <string2>, so they can be removed in linear time
-  common::remove_common_affix(s1, s2);
+    // at least length difference insertions/deletions required
+    if (s1.size() - s2.size() > max) {
+        return (std::size_t)-1;
+    }
 
-  if (s2.empty()) {
-    return s1.size();
-  }
+    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
+    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
+    // time
+    common::remove_common_affix(s1, s2);
 
-  if (max < 5) {
-    return weighted_levenshtein_mbleven2018(s1, s2, max);
-  }
+    if (s2.empty()) {
+        return s1.size();
+    }
 
-  std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
-  return (dist > max) ? (std::size_t)-1 : dist;
+    if (max < 5) {
+        return weighted_levenshtein_mbleven2018(s1, s2, max);
+    }
+
+    std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
+    return (dist > max) ? (std::size_t)-1 : dist;
 }
 
 template <typename CharT1, typename CharT2, typename BlockPatternCharT>
-double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-  const common::BlockPatternMatchVector<BlockPatternCharT>& block, basic_string_view<CharT2> s2,
-  const double score_cutoff)
+double
+normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
+                                const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                                basic_string_view<CharT2> s2, const double score_cutoff)
 {
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
 
-  std::size_t lensum = s1.size() + s2.size();
+    std::size_t lensum = s1.size() + s2.size();
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
-  std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, lensum, score_cutoff)
-    : 0.0;
+    std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 template <typename CharT1, typename CharT2>
-double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, const double score_cutoff)
+double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                       const double score_cutoff)
 {
-  if (s1.empty() || s2.empty()) {
-    return 100.0 * static_cast<double>(s1.empty() && s2.empty());
-  }
+    if (s1.empty() || s2.empty()) {
+        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+    }
 
-  std::size_t lensum = s1.size() + s2.size();
+    std::size_t lensum = s1.size() + s2.size();
 
-  auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
+    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
-  std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
-  return (dist != (std::size_t)-1)
-    ? common::norm_distance(dist, lensum, score_cutoff)
-    : 0.0;
+    std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
+    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 } // namespace detail
