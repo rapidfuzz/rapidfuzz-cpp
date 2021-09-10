@@ -43,7 +43,7 @@ std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1,
         size_t temp = i;
 
         for (const auto& char2 : s2) {
-            temp = std::min({temp + 1, *prev + (char1 != char2), *(prev + 1) + 1});
+            temp = std::min({temp + 1, *prev + common::mixed_sign_unequal(char1, char2), *(prev + 1) + 1});
             *cur = temp;
             cur++;
             prev++;
@@ -75,7 +75,7 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 
     while (row || col) {
         /* horizontal == current and character similar -> no-operation */
-        if (row && col && (*cur == *(cur - cols - 1)) && s1[row - 1] == s2[col - 1]) {
+        if (row && col && (*cur == *(cur - cols - 1)) && common::mixed_sign_equal(s1[row - 1], s2[col - 1])) {
             row--;
             col--;
             cur -= cols + 1;

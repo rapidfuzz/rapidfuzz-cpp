@@ -89,7 +89,8 @@ public:
                 }
             }
 
-            std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
+            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
+                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low &&

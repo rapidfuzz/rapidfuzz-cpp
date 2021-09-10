@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-09-09 13:21:44.323838
+//  Generated: 2021-09-10 15:11:52.834163
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2063,10 +2063,14 @@ constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
 template <typename T, typename U>
 bool mixed_sign_equal(const T a, const U b)
 {
-    // prevent conditional expression is constant on MSVC
-    static constexpr bool is_same_sign = std::is_signed<T>::value == std::is_signed<U>::value;
-    if (is_same_sign) {
-        return a == b;
+    // prevent compiler warnings by casting
+    static constexpr bool both_signed = std::is_signed<T>::value && std::is_signed<U>::value;
+    static constexpr bool both_unsigned = std::is_unsigned<T>::value && std::is_unsigned<U>::value;
+    if (both_signed) {
+        return to_signed(a) == to_signed(b);
+    }
+    else if (both_unsigned) {
+        return to_unsigned(a) == to_unsigned(b);
     }
     else {
         // They can't be equal if 'a' or 'b' is negative.
@@ -2649,7 +2653,7 @@ percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cu
 template <typename Sentence1>
 struct CachedPartialRatio {
     template <typename>
-    friend class CachedWRatio;
+    friend struct CachedWRatio;
     using CharT1 = char_type<Sentence1>;
 
     CachedPartialRatio(const Sentence1& s1);
@@ -3093,7 +3097,8 @@ public:
                 }
             }
 
-            std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
+            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
+                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low &&
@@ -3370,7 +3375,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying, basic_string_view<CharT2> y
     // adjust for similarities in nonmatched characters
 
     // Main weight computation.
-    double weight = common_chars / ((double)ying.size()) +
+    double weight = (double)common_chars / ((double)ying.size()) +
                     (double)common_chars / ((double)yang.size()) +
                     ((double)(common_chars - trans_count)) / ((double)common_chars);
     weight /= 3.0;
@@ -3450,7 +3455,7 @@ std::vector<std::size_t> levenshtein_matrix(basic_string_view<CharT1> s1,
         size_t temp = i;
 
         for (const auto& char2 : s2) {
-            temp = std::min({temp + 1, *prev + (char1 != char2), *(prev + 1) + 1});
+            temp = std::min({temp + 1, *prev + common::mixed_sign_unequal(char1, char2), *(prev + 1) + 1});
             *cur = temp;
             cur++;
             prev++;
@@ -3482,7 +3487,7 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 
     while (row || col) {
         /* horizontal == current and character similar -> no-operation */
-        if (row && col && (*cur == *(cur - cols - 1)) && s1[row - 1] == s2[col - 1]) {
+        if (row && col && (*cur == *(cur - cols - 1)) && common::mixed_sign_equal(s1[row - 1], s2[col - 1])) {
             row--;
             col--;
             cur -= cols + 1;

@@ -84,7 +84,7 @@ double _jaro_winkler(basic_string_view<CharT1> ying, basic_string_view<CharT2> y
     // adjust for similarities in nonmatched characters
 
     // Main weight computation.
-    double weight = common_chars / ((double)ying.size()) +
+    double weight = (double)common_chars / ((double)ying.size()) +
                     (double)common_chars / ((double)yang.size()) +
                     ((double)(common_chars - trans_count)) / ((double)common_chars);
     weight /= 3.0;
