@@ -64,12 +64,25 @@ public:
 
         // Find longest junk free match
         {
-            for (size_t i = a_low; i < a_high; ++i) {
+            for(size_t i = a_low; i < a_high; ++i) {
+                auto search = b2j_.find(a_[i]);
+                if (search == b2j_.end())
+                {
+                    continue;
+                }
+                const auto& indexes = search->second;
+                size_t pos = 0;
                 std::size_t next_val = 0;
-                const auto& indexes = b2j_[a_[i]];
-                for (size_t pos = 0; pos < indexes.size(); pos++) {
-                    std::size_t j = indexes[pos];
+                for (; pos < indexes.size(); pos++) {
+                    size_t j = indexes[pos];
                     if (j < b_low) continue;
+
+                    next_val = j2len_[j];
+                    break;
+                }
+
+                for (; pos < indexes.size(); pos++) {
+                    size_t j = indexes[pos];
                     if (j >= b_high) break;
 
                     size_t k = next_val + 1;
