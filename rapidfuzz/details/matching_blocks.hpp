@@ -46,7 +46,7 @@ namespace difflib {
 template <typename CharT1, typename CharT2>
 class SequenceMatcher {
 public:
-    using match_t = std::tuple<size_t, size_t, size_t>;
+    using match_t = std::tuple<std::size_t, std::size_t, std::size_t>;
 
     SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b) : a_(a), b_(b)
     {
@@ -56,25 +56,20 @@ public:
         }
     }
 
-    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high)
+    match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low, std::size_t b_high)
     {
-        size_t best_i = a_low;
-        size_t best_j = b_low;
-        size_t best_size = 0;
+        std::size_t best_i = a_low;
+        std::size_t best_j = b_low;
+        std::size_t best_size = 0;
 
         // Find longest junk free match
         {
-            for(size_t i = a_low; i < a_high; ++i) {
-                auto search = b2j_.find(a_[i]);
-                if (search == b2j_.end())
-                {
-                    continue;
-                }
-                const auto& indexes = search->second;
-                size_t pos = 0;
+            for (std::size_t i = a_low; i < a_high; ++i) {
+                const auto& indexes = b2j_[a_[i]];
+                std::size_t pos = 0;
                 std::size_t next_val = 0;
                 for (; pos < indexes.size(); pos++) {
-                    size_t j = indexes[pos];
+                    std::size_t j = indexes[pos];
                     if (j < b_low) continue;
 
                     next_val = j2len_[j];
@@ -82,10 +77,10 @@ public:
                 }
 
                 for (; pos < indexes.size(); pos++) {
-                    size_t j = indexes[pos];
+                    std::size_t j = indexes[pos];
                     if (j >= b_high) break;
 
-                    size_t k = next_val + 1;
+                    std::size_t k = next_val + 1;
 
                     /* the next value might be overwritten below
                      * so cache it */
@@ -102,8 +97,8 @@ public:
                 }
             }
 
-            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
-                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
+            std::fill(j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_low),
+                      j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low &&
@@ -125,7 +120,7 @@ public:
     std::vector<MatchingBlock> get_matching_blocks()
     {
         // The following are tuple extracting aliases
-        std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
+        std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
         std::size_t queue_head = 0;
@@ -133,7 +128,7 @@ public:
         queue.emplace_back(0, a_.size(), 0, b_.size());
 
         while (queue_head < queue.size()) {
-            size_t a_low, a_high, b_low, b_high;
+            std::size_t a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
             std::size_t spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
@@ -153,7 +148,7 @@ public:
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-        size_t i1, j1, k1;
+        std::size_t i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
@@ -181,7 +176,7 @@ protected:
 
 private:
     // Cache to avoid reallocations
-    std::vector<size_t> j2len_;
+    std::vector<std::size_t> j2len_;
     common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
 };
 } // namespace difflib
