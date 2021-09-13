@@ -58,18 +58,18 @@ public:
 
     match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low, std::size_t b_high)
     {
-		std::size_t best_i = a_low;
-		std::size_t best_j = b_low;
-		std::size_t best_size = 0;
+        std::size_t best_i = a_low;
+        std::size_t best_j = b_low;
+        std::size_t best_size = 0;
 
         // Find longest junk free match
         {
             for (std::size_t i = a_low; i < a_high; ++i) {
                 const auto& indexes = b2j_[a_[i]];
-				std::size_t pos = 0;
+                std::size_t pos = 0;
                 std::size_t next_val = 0;
                 for (; pos < indexes.size(); pos++) {
-					std::size_t j = indexes[pos];
+                    std::size_t j = indexes[pos];
                     if (j < b_low) continue;
 
                     next_val = j2len_[j];
@@ -77,10 +77,10 @@ public:
                 }
 
                 for (; pos < indexes.size(); pos++) {
-					std::size_t j = indexes[pos];
+                    std::size_t j = indexes[pos];
                     if (j >= b_high) break;
 
-					std::size_t k = next_val + 1;
+                    std::size_t k = next_val + 1;
 
                     /* the next value might be overwritten below
                      * so cache it */
@@ -128,7 +128,7 @@ public:
         queue.emplace_back(0, a_.size(), 0, b_.size());
 
         while (queue_head < queue.size()) {
-			std::size_t a_low, a_high, b_low, b_high;
+            std::size_t a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
             std::size_t spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
@@ -148,7 +148,7 @@ public:
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-		std::size_t i1, j1, k1;
+        std::size_t i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
