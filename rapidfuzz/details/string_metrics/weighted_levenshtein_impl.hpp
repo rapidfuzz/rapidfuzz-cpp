@@ -116,282 +116,63 @@ static inline std::size_t popcount64(uint64_t x)
         (x * h01) >> 56); // returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
 }
 
-/*
- * returns a 64 bit integer with the first n bits set to 1
- */
-static inline uint64_t set_bits(int n)
+template <typename CharT1, typename BlockPatternCharT>
+static inline std::size_t
+longest_common_subsequence(basic_string_view<CharT1> s1,
+                            const common::PatternMatchVector<BlockPatternCharT>& block,
+                            std::size_t s2_len)
 {
-    uint64_t result = (uint64_t)-1;
-    // shifting by 64 bits would be undefined behavior
-    if (n < 64) {
-        result += (uint64_t)1 << n;
+    std::uint64_t S = ~0x0ull;
+    for (const auto& ch1 : s1) {
+        uint64_t Matches = block.get(ch1);
+        uint64_t u = S & Matches;
+        S = (S + u) | (S - u);
     }
-    return result;
+    std::size_t res = popcount64(~S);
+    return s1.size() + s2_len - 2 * res;
 }
 
 template <typename CharT1, typename BlockPatternCharT>
 static inline std::size_t
-weighted_levenshtein_bitpal(basic_string_view<CharT1> s1,
-                            const common::PatternMatchVector<BlockPatternCharT>& block,
+longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
+                            const common::BlockPatternMatchVector<BlockPatternCharT>& block,
                             std::size_t s2_len)
 {
-    uint64_t DHneg1 = ~0x0ull;
-    uint64_t DHzero = 0;
-    uint64_t DHpos1 = 0;
-
-    for (auto ch2 : s1) {
-        const uint64_t Matches = block.get(ch2);
-        const uint64_t NotMatches = ~Matches;
-
-        const uint64_t INITpos1s = DHneg1 & Matches;
-        const uint64_t DVpos1shift = (((INITpos1s + DHneg1) ^ DHneg1) ^ INITpos1s);
-
-        const uint64_t RemainDHneg1 = DHneg1 ^ (DVpos1shift >> 1);
-        const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-        const uint64_t INITzeros = (DHzero & DVpos1shiftorMatch);
-        const uint64_t DVzeroshift = ((INITzeros << 1) + RemainDHneg1) ^ RemainDHneg1;
-
-        const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-        DHzero &= NotMatches;
-        const uint64_t DHpos1orMatch = DHpos1 | Matches;
-        DHzero = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzero);
-        DHpos1 = (DVneg1shift & DHpos1orMatch);
-        DHneg1 = ~(DHzero | DHpos1);
-    }
-
-    std::size_t dist = s1.size() + s2_len;
-    uint64_t bitmask = set_bits(static_cast<int>(s2_len));
-
-    dist -= popcount64(DHzero & bitmask);
-    dist -= popcount64(DHpos1 & bitmask) * 2;
-
-    return dist;
-}
-
-template <typename T, typename U>
-constexpr T bit_clear(T val, U bit)
-{
-    return val & ~(1ull << bit);
-}
-
-template <typename T, typename U>
-constexpr T bit_check(T val, U bit)
-{
-    return (val >> bit) & 0x1;
-}
-
-template <typename CharT1, typename BlockPatternCharT>
-std::size_t weighted_levenshtein_bitpal_blockwise(
-    basic_string_view<CharT1> s1, const common::BlockPatternMatchVector<BlockPatternCharT>& block,
-    std::size_t s2_len)
-{
-    struct HorizontalDelta {
-        uint64_t DHpos1;
-        uint64_t DHzero;
-        uint64_t DHneg1;
-
-        HorizontalDelta() : DHpos1(0), DHzero(0), DHneg1(~0x0ull)
-        {}
-    };
-
     std::size_t words = block.m_val.size();
-    std::vector<HorizontalDelta> DH(words);
+    std::vector<std::uint64_t> S(words, ~0x0ull);
 
-    // recursion
     for (const auto& ch1 : s1) {
-        // initialize OverFlow
-        uint64_t OverFlow0 = 0;
-        uint64_t OverFlow1 = 0;
-        uint64_t INITzerosprevbit = 0;
-
-        // manually unroll the loop iteration for the first word
-        // since there can not be a overflow before the first iteration
-        {
-            uint64_t DHpos1temp = DH[0].DHpos1;
-            uint64_t DHzerotemp = DH[0].DHzero;
-            uint64_t DHneg1temp = DH[0].DHneg1;
-
-            const uint64_t Matches = block.get(0, ch1);
-
-            // Complement Matches
-            const uint64_t NotMatches = ~Matches;
-            // Finding the vertical values
-            // Find 1s
-            const uint64_t INITpos1s = DHneg1temp & Matches;
-
-            uint64_t sum = INITpos1s;
-            sum += DHneg1temp;
-            OverFlow0 = sum < DHneg1temp;
-            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-            // set RemainingDHneg1
-            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-            // combine 1s and Matches
-            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-            // Find 0s
-            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-            uint64_t initval = (INITzeros << 1);
-            INITzerosprevbit = INITzeros >> 63;
-
-            sum = initval;
-            sum += RemainDHneg1;
-            OverFlow0 |= sum < RemainDHneg1;
-            const uint64_t DVzeroshift = initval ^ RemainDHneg1;
-
-            // Find -1s
-            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-            // Finding the horizontal values
-            // Remove matches from DH values except 1
-            DHzerotemp &= NotMatches;
-            // combine 1s and Matches
-            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-            // Find 0s
-            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-            // Find 1s
-            DHpos1temp = DVneg1shift & DHpos1orMatch;
-            // Find -1s
-            DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-            DH[0].DHpos1 = DHpos1temp;
-            DH[0].DHzero = DHzerotemp;
-            DH[0].DHneg1 = DHneg1temp;
-        }
-
-        for (std::size_t word = 1; word < words - 1; ++word) {
-            uint64_t DHpos1temp = DH[word].DHpos1;
-            uint64_t DHzerotemp = DH[word].DHzero;
-            uint64_t DHneg1temp = DH[word].DHneg1;
-
+        uint64_t overflow = 0;
+        for (std::size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, ch1);
+            uint64_t Stemp = S[word];
 
-            // Complement Matches
-            const uint64_t NotMatches = ~Matches;
-            // Finding the vertical values
-            // Find 1s
-            const uint64_t INITpos1s = DHneg1temp & Matches;
+            uint64_t u = Stemp & Matches;
 
-            uint64_t sum = INITpos1s;
-            sum += OverFlow0;
-            OverFlow0 = sum < OverFlow0;
-            sum += DHneg1temp;
-            OverFlow0 |= sum < DHneg1temp;
-            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-            // set RemainingDHneg1
-            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-            // combine 1s and Matches
-            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-            // Find 0s
-            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-            uint64_t initval = INITzerosprevbit;
-            INITzerosprevbit = INITzeros >> 63;
-            initval = (INITzeros << 1) | initval;
-
-            sum = initval;
-            sum += OverFlow1;
-            OverFlow1 = sum < OverFlow1;
-            sum += RemainDHneg1;
-            OverFlow0 |= sum < RemainDHneg1;
-            const uint64_t DVzeroshift = sum ^ RemainDHneg1;
-
-            // Find -1s
-            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-            // Finding the horizontal values
-            // Remove matches from DH values except 1
-            DHzerotemp &= NotMatches;
-            // combine 1s and Matches
-            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-            // Find 0s
-            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-            // Find 1s
-            DHpos1temp = DVneg1shift & DHpos1orMatch;
-            // Find -1s
-            DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-            DH[word].DHpos1 = DHpos1temp;
-            DH[word].DHzero = DHzerotemp;
-            DH[word].DHneg1 = DHneg1temp;
-        }
-
-        // manually unroll the loop iteration for the last word
-        // since we do not have to calculate any overflows anymore
-        if (words > 1) {
-            uint64_t DHpos1temp = DH[words - 1].DHpos1;
-            uint64_t DHzerotemp = DH[words - 1].DHzero;
-            uint64_t DHneg1temp = DH[words - 1].DHneg1;
-
-            const uint64_t Matches = block.get(words - 1, ch1);
-
-            // Complement Matches
-            const uint64_t NotMatches = ~Matches;
-            // Finding the vertical values
-            // Find 1s
-            const uint64_t INITpos1s = DHneg1temp & Matches;
-
-            uint64_t sum = (INITpos1s + DHneg1temp) + OverFlow0;
-            const uint64_t DVpos1shift = (sum ^ DHneg1temp) ^ INITpos1s;
-
-            // set RemainingDHneg1
-            const uint64_t RemainDHneg1 = DHneg1temp ^ INITpos1s;
-            // combine 1s and Matches
-            const uint64_t DVpos1shiftorMatch = DVpos1shift | Matches;
-
-            // Find 0s
-            const uint64_t INITzeros = (DHzerotemp & DVpos1shiftorMatch);
-            uint64_t initval = (INITzeros << 1) | INITzerosprevbit;
-
-            sum = initval + RemainDHneg1 + OverFlow1;
-            const uint64_t DVzeroshift = sum ^ RemainDHneg1;
-
-            // Find -1s
-            const uint64_t DVneg1shift = ~(DVpos1shift | DVzeroshift);
-
-            // Finding the horizontal values
-            // Remove matches from DH values except 1
-            DHzerotemp &= NotMatches;
-            // combine 1s and Matches
-            const uint64_t DHpos1orMatch = DHpos1temp | Matches;
-            // Find 0s
-            DHzerotemp = (DVzeroshift & DHpos1orMatch) | (DVneg1shift & DHzerotemp);
-            // Find 1s
-            DHpos1temp = DVneg1shift & DHpos1orMatch;
-            // Find -1s
-            DHneg1temp = ~(DHzerotemp | DHpos1temp);
-
-            DH[words - 1].DHpos1 = DHpos1temp;
-            DH[words - 1].DHzero = DHzerotemp;
-            DH[words - 1].DHneg1 = DHneg1temp;
+            uint64_t x = Stemp + overflow;
+            overflow = x < overflow;
+            x += u;
+            overflow |= x < u;
+            S[word] = x | (Stemp - u);
         }
     }
 
-    // find scores in last row
-    std::size_t dist = s1.size() + s2_len;
-
-    for (std::size_t word = 0; word < words - 1; ++word) {
-        dist -= popcount64(DH[word].DHzero);
-        dist -= popcount64(DH[word].DHpos1) * 2;
+    std::size_t res = 0;
+    for (uint64_t Stemp : S) {
+        res += popcount64(~Stemp);
     }
 
-    uint64_t bitmask = set_bits(static_cast<int>(s2_len - (words - 1) * 64));
-    dist -= popcount64(DH.back().DHzero & bitmask);
-    dist -= popcount64(DH.back().DHpos1 & bitmask) * 2;
-
-    return dist;
+    return s1.size() + s2_len - 2 * res;
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_bitpal(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
     if (s2.size() < 65) {
-        return weighted_levenshtein_bitpal(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+        return longest_common_subsequence(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
     }
     else {
-        return weighted_levenshtein_bitpal_blockwise(
+        return longest_common_subsequence_blockwise(
             s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
     }
 }
@@ -433,10 +214,10 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
     if (max >= 5) {
         std::size_t dist = 0;
         if (s2.size() < 65) {
-            dist = weighted_levenshtein_bitpal(s1, block.m_val[0], s2.size());
+            dist = longest_common_subsequence(s1, block.m_val[0], s2.size());
         }
         else {
-            dist = weighted_levenshtein_bitpal_blockwise(s1, block, s2.size());
+            dist = longest_common_subsequence_blockwise(s1, block, s2.size());
         }
 
         return (dist > max) ? (std::size_t)-1 : dist;
@@ -501,7 +282,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
         return weighted_levenshtein_mbleven2018(s1, s2, max);
     }
 
-    std::size_t dist = weighted_levenshtein_bitpal(s1, s2);
+    std::size_t dist = longest_common_subsequence(s1, s2);
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 

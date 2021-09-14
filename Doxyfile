@@ -74,7 +74,7 @@ SHOW_FILES             = NO
 # LATEX_BIB_STYLE. To use this feature you need bibtex and perl available in the
 # search path. See also \cite for info how to create references.
 
-CITE_BIB_FILES         = docs/literature/bitpal_2014 \
+CITE_BIB_FILES         = docs/literature/hyrro_lcs_2004 \
                          docs/literature/hyrro_2002  \
                          docs/literature/hyrro_2004  \
                          docs/literature/myers_1999  \

@@ -113,15 +113,15 @@ namespace string_metric {
  *      The time complexity of this algorithm is ``O(N)``.
  *
  *    - If the length of the shorter string is ≤ 64 after removing the common affix
- *      the BitPAl algorithm is used, which calculates the Levenshtein distance in
- *      parallel. The algorithm is described by @cite bitpal_2014 and is extended with support
+ *      Hyyrös' lcs algorithm is used, which calculates the InDel distance in
+ *      parallel. The algorithm is described by @cite hyrro_lcs_2004 and is extended with support
  *      for UTF32 in this implementation. The time complexity of this
  *      algorithm is ``O(N)``.
  *
  *    - If the length of the shorter string is ≥ 64 after removing the common affix
- *      a blockwise implementation of the BitPAl algorithm is used, which calculates
+ *      a blockwise implementation of Hyyrös' lcs algorithm is used, which calculates
  *      the Levenshtein distance in parallel (64 characters at a time).
- *      The algorithm is described by @cite bitpal_2014. The time complexity of this
+ *      The algorithm is described by @cite hyrro_lcs_2004. The time complexity of this
  *      algorithm is ``O([N/64]M)``.
  *
  * <b>Other weights:</b>
