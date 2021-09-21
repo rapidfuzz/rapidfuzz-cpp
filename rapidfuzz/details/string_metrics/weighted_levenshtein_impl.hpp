@@ -113,7 +113,6 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     for (const auto& ch1 : s1) {
 
         uint64_t carry = 0;
-        uint64_t overflow = 0;
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
@@ -152,43 +151,6 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
             uint64_t u = Stemp & Matches;
 
             uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
-            S[word] = x | (Stemp - u);
-        }
-    }
-
-    std::size_t res = 0;
-    for (uint64_t Stemp : S) {
-        res += intrinsics::popcount64(~Stemp);
-    }
-
-    return s1.size() + s2_len - 2 * res;
-}
-
-template <std::size_t N, typename CharT1, typename BlockPatternCharT>
-static inline std::size_t
-longest_common_subsequence_blockwise_known_size(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector<BlockPatternCharT>& block,
-                            std::size_t s2_len)
-{
-    std::size_t words = block.m_val.size();
-    std::array<std::uint64_t, N> S;
-    for (std::size_t i = 0; i < N; ++i)
-    {
-        S[i] = ~0x0ull;
-    }
-
-    for (const auto& ch1 : s1) {
-        uint64_t overflow = 0;
-        for (std::size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, ch1);
-            uint64_t Stemp = S[word];
-
-            uint64_t u = Stemp & Matches;
-
-            uint64_t x = Stemp + overflow;
-            overflow = x < overflow;
-            x += u;
-            overflow |= x < u;
             S[word] = x | (Stemp - u);
         }
     }

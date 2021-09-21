@@ -26,7 +26,7 @@ static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t
 {
 #if defined(RAPIDFUZZ_BUILTIN__ENABLE_X86)
     unsigned long long res;
-    *carryout = _addcarry_u64(carryin, a, b, &res);
+    *carryout = (uint64_t)_addcarry_u64((unsigned char)carryin, a, b, &res);
     return res;
 #else
     a += carryin;
