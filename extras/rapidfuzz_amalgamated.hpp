@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-09-21 22:53:06.253707
+//  Generated: 2021-09-22 00:14:32.424330
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2105,8 +2105,9 @@ template <typename CharT1, std::size_t size>
 struct PatternMatchVector {
     std::array<CharT1, 128> m_key;
     std::array<uint64_t, 128> m_val;
+    std::array<uint64_t, 256> m_extendedAscii;
 
-    PatternMatchVector() : m_key(), m_val()
+    PatternMatchVector() : m_key(), m_val(), m_extendedAscii()
     {}
 
     PatternMatchVector(basic_string_view<CharT1> s) : m_key(), m_val()
@@ -2119,6 +2120,12 @@ struct PatternMatchVector {
     void insert(CharT1 ch, int pos)
     {
         auto uch = to_unsigned(ch);
+
+        if (uch < 256) {
+            m_extendedAscii[ch] |= 1ull << pos;
+            return;
+        }
+
         uint8_t hash = uch % 128;
         CharT1 key = ch;
 
@@ -2143,6 +2150,11 @@ struct PatternMatchVector {
         }
 
         auto uch = to_unsigned(ch);
+
+        if (uch < 256) {
+            return m_extendedAscii[uch];
+        }
+
         uint8_t hash = uch % 128;
         CharT1 key = (CharT1)uch;
 
@@ -3547,22 +3559,6 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 #include <limits>
 #include <numeric>
 
-#include <immintrin.h>
-
-#if defined(_MSC_VER)
-#  include <intrin.h>
-#endif
-
-#if defined(__i386) || defined(_M_IX86) || \
-  defined(__amd64) || defined(_M_AMD64) || defined(__x86_64)
-#  if defined(_MSC_VER)
-#    define RAPIDFUZZ_BUILTIN__ENABLE_X86
-#  elif defined(__GNUC__)
-#    define RAPIDFUZZ_BUILTIN__ENABLE_X86
-#    include <x86intrin.h>
-#  endif
-#endif
-
 namespace intrinsics {
 
 /* Builtins and Intrinsics
@@ -4594,12 +4590,12 @@ psnip_builtin_bswap64(psnip_uint64_t v) {
 #define PSNIP_BUILTIN__BITREVERSE_DEFINE_PORTABLE(f_n, b_l, T)	\
   PSNIP_BUILTIN__FUNCTION					\
   T psnip_builtin_##f_n##b_l(T v) {				\
-    v = ((v & ((T) 0xf0f0f0f0f0f0f0f0ULL)) >> 4) |		\
-        ((v & ((T) 0x0f0f0f0f0f0f0f0fULL)) << 4);		\
-    v = ((v & ((T) 0xccccccccccccccccULL)) >> 2) |		\
-        ((v & ((T) 0x3333333333333333ULL)) << 2);		\
-    v = ((v & ((T) 0xaaaaaaaaaaaaaaaaULL)) >> 1) |		\
-        ((v & ((T) 0x5555555555555555ULL)) << 1);		\
+    v = ((T) ((v & ((T) 0xf0f0f0f0f0f0f0f0ULL)) >> 4)) |	\
+        ((T) ((v & ((T) 0x0f0f0f0f0f0f0f0fULL)) << 4));		\
+    v = ((T) ((v & ((T) 0xccccccccccccccccULL)) >> 2)) |	\
+        ((T) ((v & ((T) 0x3333333333333333ULL)) << 2));		\
+    v = ((T) ((v & ((T) 0xaaaaaaaaaaaaaaaaULL)) >> 1)) |	\
+        ((T) ((v & ((T) 0x5555555555555555ULL)) << 1));		\
     return psnip_builtin_bswap##b_l(v);				\
   }
 
@@ -4803,7 +4799,7 @@ unsigned char psnip_intrin_BitScanForward(unsigned long* Index, psnip_uint32_t M
 #else
 PSNIP_BUILTIN__FUNCTION
 unsigned char psnip_intrin_BitScanForward(unsigned long* Index, psnip_uint32_t Mask) {
-  return PSNIP_BUILTIN_UNLIKELY(Mask == 0) ? 0 : ((*Index = psnip_builtin_ctz32 (Mask)), 1);
+  return PSNIP_BUILTIN_UNLIKELY(Mask == 0) ? (unsigned char)0 : ((*Index = psnip_builtin_ctz32 (Mask)), (unsigned char)1);
 }
 
 #  if defined(PSNIP_BUILTIN_EMULATE_NATIVE)
@@ -4817,7 +4813,7 @@ unsigned char psnip_intrin_BitScanForward(unsigned long* Index, psnip_uint32_t M
 #else
 PSNIP_BUILTIN__FUNCTION
 unsigned char psnip_intrin_BitScanForward64(unsigned long* Index, psnip_uint64_t Mask) {
-  return PSNIP_BUILTIN_UNLIKELY(Mask == 0) ? 0 : ((*Index = psnip_builtin_ctz64 (Mask)), 1);
+  return PSNIP_BUILTIN_UNLIKELY(Mask == 0) ? (unsigned char)0 : ((*Index = psnip_builtin_ctz64 (Mask)), (unsigned char)1);
 }
 
 #  if defined(PSNIP_BUILTIN_EMULATE_NATIVE)
@@ -4837,7 +4833,7 @@ unsigned char psnip_intrin_BitScanReverse(unsigned long* Index, psnip_uint32_t M
 #else
 PSNIP_BUILTIN__FUNCTION
 unsigned char psnip_intrin_BitScanReverse(unsigned long* Index, psnip_uint32_t Mask) {
-  return (PSNIP_BUILTIN_UNLIKELY(Mask == 0)) ? 0 : ((*Index = ((sizeof(Mask) * CHAR_BIT) - 1) - psnip_builtin_clz32 (Mask)), 1);
+  return (PSNIP_BUILTIN_UNLIKELY(Mask == 0)) ? (unsigned char)0 : ((*Index = ((sizeof(Mask) * CHAR_BIT) - 1) - psnip_builtin_clz32 (Mask)), (unsigned char)1);
 }
 
 #  if defined(PSNIP_BUILTIN_EMULATE_NATIVE)
@@ -4851,7 +4847,7 @@ unsigned char psnip_intrin_BitScanReverse(unsigned long* Index, psnip_uint32_t M
 #else
 PSNIP_BUILTIN__FUNCTION
 unsigned char psnip_intrin_BitScanReverse64(unsigned long* Index, psnip_uint64_t Mask) {
-  return (PSNIP_BUILTIN_UNLIKELY(Mask == 0)) ? 0 : ((*Index = ((sizeof(Mask) * CHAR_BIT) - 1) - psnip_builtin_clz64 (Mask)), 1);
+  return (PSNIP_BUILTIN_UNLIKELY(Mask == 0)) ? (unsigned char)0 : ((*Index = ((sizeof(Mask) * CHAR_BIT) - 1) - psnip_builtin_clz64 (Mask)), (unsigned char)1);
 }
 
 #  if defined(PSNIP_BUILTIN_EMULATE_NATIVE)
@@ -5068,27 +5064,14 @@ psnip_uint64_t psnip_intrin_shiftright128(psnip_uint64_t LowPart, psnip_uint64_t
 
 static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
-#if defined(RAPIDFUZZ_BUILTIN__ENABLE_X86)
-    unsigned long long res;
-    *carryout = _addcarry_u64(carryin, a, b, &res);
-    return res;
-#else
-    a += carryin;
-    *carryout = a < carryin;
-    a += b;
-    *carryout |= a < b;
-    return a;
-#endif
+    /* todo should use _addcarry_u64 when available */
+    return psnip_builtin_addc64(a, b, carryin, carryout);
 }
 
-/*
- * count the number of bits set in a 64 bit integer
- */
 static inline std::size_t popcount64(uint64_t x)
 {
     return psnip_builtin_popcount64(x);
 }
-
 };
 
 namespace rapidfuzz {
@@ -5668,7 +5651,6 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     for (const auto& ch1 : s1) {
 
         uint64_t carry = 0;
-        uint64_t overflow = 0;
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
@@ -5707,43 +5689,6 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
             uint64_t u = Stemp & Matches;
 
             uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
-            S[word] = x | (Stemp - u);
-        }
-    }
-
-    std::size_t res = 0;
-    for (uint64_t Stemp : S) {
-        res += intrinsics::popcount64(~Stemp);
-    }
-
-    return s1.size() + s2_len - 2 * res;
-}
-
-template <std::size_t N, typename CharT1, typename BlockPatternCharT>
-static inline std::size_t
-longest_common_subsequence_blockwise_known_size(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector<BlockPatternCharT>& block,
-                            std::size_t s2_len)
-{
-    std::size_t words = block.m_val.size();
-    std::array<std::uint64_t, N> S;
-    for (std::size_t i = 0; i < N; ++i)
-    {
-        S[i] = ~0x0ull;
-    }
-
-    for (const auto& ch1 : s1) {
-        uint64_t overflow = 0;
-        for (std::size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, ch1);
-            uint64_t Stemp = S[word];
-
-            uint64_t u = Stemp & Matches;
-
-            uint64_t x = Stemp + overflow;
-            overflow = x < overflow;
-            x += u;
-            overflow |= x < u;
             S[word] = x | (Stemp - u);
         }
     }
