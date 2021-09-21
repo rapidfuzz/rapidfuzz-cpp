@@ -6,6 +6,7 @@
 #include <limits>
 #include <numeric>
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/intrinsics.hpp>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -103,10 +104,6 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
-    if (s1_len < 64) {
-        VP += (uint64_t)1 << s1_len;
-    }
-
     uint64_t VN = 0;
     std::size_t currDist = s1_len;
 
@@ -165,6 +162,44 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
             }
             --maxMisses;
         }
+
+        /* Step 4: Computing Vp and VN */
+        X = (HP << 1) | 1;
+        VP = (HN << 1) | ~(D0 | X);
+        VN = X & D0;
+    }
+
+    return currDist;
+}
+
+template <typename CharT1, typename BlockPatternCharT>
+std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
+                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   std::size_t s1_len)
+{
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = (uint64_t)-1;
+    uint64_t VN = 0;
+    std::size_t currDist = s1_len;
+
+    /* mask used when computing D[m,j] in the paper 10^(m-1) */
+    uint64_t mask = (uint64_t)1 << (s1_len - 1);
+
+    /* Searching */
+    for (const auto& ch2 : s2) {
+        /* Step 1: Computing D0 */
+        uint64_t PM_j = PM.get(ch2);
+        uint64_t X = PM_j | VN;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        // modification: early exit using maxMisses
+        currDist += !!(HP & mask);
+        currDist -= !!(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         X = (HP << 1) | 1;
@@ -314,7 +349,12 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
     if (max >= 4) {
         std::size_t dist = 0;
         if (s2.size() < 65) {
-            dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
+            if (max == (size_t)-1) {
+                dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size());
+            }
+            else {
+                dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
+            }
         }
         else {
             dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
@@ -378,8 +418,13 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (s2.size() < 65) {
-        std::size_t dist =
-            levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+        std::size_t dist;
+        if (max == (size_t)-1) {
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+        }
+        else {
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+        }
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 

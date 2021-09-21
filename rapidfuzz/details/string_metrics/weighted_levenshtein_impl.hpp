@@ -2,6 +2,7 @@
 /* Copyright © 2021 Max Bachmann */
 
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/intrinsics.hpp>
 
 #include <algorithm>
 #include <array>
@@ -97,24 +98,6 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-/*
- * count the number of bits set in a 64 bit integer
- * The code uses wikipedia's 64-bit popcount implementation:
- * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
- */
-static inline std::size_t popcount64(uint64_t x)
-{
-    const uint64_t m1 = 0x5555555555555555;
-    const uint64_t m2 = 0x3333333333333333;
-    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;
-    const uint64_t h01 = 0x0101010101010101;
-
-    x -= (x >> 1) & m1;
-    x = (x & m2) + ((x >> 2) & m2);
-    x = (x + (x >> 4)) & m4;
-    return static_cast<std::size_t>((x * h01) >> 56);
-}
-
 template <std::size_t N, typename CharT1, typename BlockPatternCharT>
 static inline std::size_t
 longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
@@ -128,6 +111,8 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     }
 
     for (const auto& ch1 : s1) {
+
+        uint64_t carry = 0;
         uint64_t overflow = 0;
         std::uint64_t Matches[N];
         std::uint64_t u[N];
@@ -136,11 +121,7 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
         {
             Matches[i] = block[i].get(ch1);
             u[i] = S[i] & Matches[i];
- 
-            x[i] = S[i] + overflow;
-            overflow = x[i] < overflow;
-            x[i] += u[i];
-            overflow |= x[i] < u[i];
+            x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
             S[i] = x[i] | (S[i] - u[i]);
         }
     }
@@ -148,7 +129,7 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     std::size_t res = 0;
     for (std::size_t i = 0; i < N; ++i)
     {
-        res += __builtin_popcountll(~S[i]);
+        res += intrinsics::popcount64(~S[i]);
     }
     return s1.size() + s2_len - 2 * res;
 }
@@ -163,24 +144,21 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
     std::vector<std::uint64_t> S(words, ~0x0ull);
 
     for (const auto& ch1 : s1) {
-        uint64_t overflow = 0;
+        uint64_t carry = 0;
         for (std::size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, ch1);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
 
-            uint64_t x = Stemp + overflow;
-            overflow = x < overflow;
-            x += u;
-            overflow |= x < u;
+            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
         }
     }
 
     std::size_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += intrinsics::popcount64(~Stemp);
     }
 
     return s1.size() + s2_len - 2 * res;
@@ -217,7 +195,7 @@ longest_common_subsequence_blockwise_known_size(basic_string_view<CharT1> s1,
 
     std::size_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += intrinsics::popcount64(~Stemp);
     }
 
     return s1.size() + s2_len - 2 * res;
