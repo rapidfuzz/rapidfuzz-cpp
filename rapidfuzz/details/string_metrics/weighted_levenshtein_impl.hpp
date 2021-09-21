@@ -309,7 +309,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
 
     // do this first, since we can not remove any affix in encoded form
     if (max >= 5) {
-        std::size_t dist= longest_common_subsequence_blockwise(s1, block, s2.size());
+        std::size_t dist = longest_common_subsequence(s1, block, s2.size());
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
