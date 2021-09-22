@@ -2,6 +2,7 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
+namespace rapidfuzz {
 namespace intrinsics {
 
 #include <rapidfuzz/details/builtin.h>
@@ -16,4 +17,6 @@ static inline std::size_t popcount64(uint64_t x)
 {
     return psnip_builtin_popcount64(x);
 }
-};
+    
+} // namespace intrinsics
+} // namespace rapidfuzz
