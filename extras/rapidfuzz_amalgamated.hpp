@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-09-14 23:59:41.306908
+//  Generated: 2021-09-22 15:26:00.033364
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3054,7 +3054,7 @@ namespace difflib {
 template <typename CharT1, typename CharT2>
 class SequenceMatcher {
 public:
-    using match_t = std::tuple<size_t, size_t, size_t>;
+    using match_t = std::tuple<std::size_t, std::size_t, std::size_t>;
 
     SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b) : a_(a), b_(b)
     {
@@ -3064,23 +3064,31 @@ public:
         }
     }
 
-    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high)
+    match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low, std::size_t b_high)
     {
-        size_t best_i = a_low;
-        size_t best_j = b_low;
-        size_t best_size = 0;
+        std::size_t best_i = a_low;
+        std::size_t best_j = b_low;
+        std::size_t best_size = 0;
 
         // Find longest junk free match
         {
-            for (size_t i = a_low; i < a_high; ++i) {
-                std::size_t next_val = 0;
+            for (std::size_t i = a_low; i < a_high; ++i) {
                 const auto& indexes = b2j_[a_[i]];
-                for (size_t pos = 0; pos < indexes.size(); pos++) {
+                std::size_t pos = 0;
+                std::size_t next_val = 0;
+                for (; pos < indexes.size(); pos++) {
                     std::size_t j = indexes[pos];
                     if (j < b_low) continue;
+
+                    next_val = j2len_[j];
+                    break;
+                }
+
+                for (; pos < indexes.size(); pos++) {
+                    std::size_t j = indexes[pos];
                     if (j >= b_high) break;
 
-                    size_t k = next_val + 1;
+                    std::size_t k = next_val + 1;
 
                     /* the next value might be overwritten below
                      * so cache it */
@@ -3097,8 +3105,8 @@ public:
                 }
             }
 
-            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
-                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
+            std::fill(j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_low),
+                      j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low &&
@@ -3120,7 +3128,7 @@ public:
     std::vector<MatchingBlock> get_matching_blocks()
     {
         // The following are tuple extracting aliases
-        std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
+        std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
         std::size_t queue_head = 0;
@@ -3128,7 +3136,7 @@ public:
         queue.emplace_back(0, a_.size(), 0, b_.size());
 
         while (queue_head < queue.size()) {
-            size_t a_low, a_high, b_low, b_high;
+            std::size_t a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
             std::size_t spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
@@ -3148,7 +3156,7 @@ public:
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-        size_t i1, j1, k1;
+        std::size_t i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
@@ -3176,7 +3184,7 @@ protected:
 
 private:
     // Cache to avoid reallocations
-    std::vector<size_t> j2len_;
+    std::vector<std::size_t> j2len_;
     common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
 };
 } // namespace difflib
@@ -3414,6 +3422,7 @@ double jaro_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2>
 } // namespace string_metric
 } // namespace rapidfuzz
 
+#include <cassert>
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -3532,10 +3541,40 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
+
 #include <algorithm>
 #include <array>
 #include <limits>
 #include <numeric>
+
+namespace rapidfuzz {
+namespace intrinsics {
+
+static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+{
+    /* todo should use _addcarry_u64 when available */
+    a += carryin;
+    *carryout = a < carryin;
+    a += b;
+    *carryout |= a < b;
+    return a;
+}
+
+static inline std::size_t popcount64(uint64_t x)
+{
+    const uint64_t m1 = 0x5555555555555555;
+    const uint64_t m2 = 0x3333333333333333;
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;
+    const uint64_t h01 = 0x0101010101010101;
+
+    x -= (x >> 1) & m1;
+    x = (x & m2) + ((x >> 2) & m2);
+    x = (x + (x >> 4)) & m4;
+    return static_cast<std::size_t>((x * h01) >> 56);
+}
+    
+} // namespace intrinsics
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -3633,10 +3672,6 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
-    if (s1_len < 64) {
-        VP += (uint64_t)1 << s1_len;
-    }
-
     uint64_t VN = 0;
     std::size_t currDist = s1_len;
 
@@ -3695,6 +3730,44 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
             }
             --maxMisses;
         }
+
+        /* Step 4: Computing Vp and VN */
+        X = (HP << 1) | 1;
+        VP = (HN << 1) | ~(D0 | X);
+        VN = X & D0;
+    }
+
+    return currDist;
+}
+
+template <typename CharT1, typename BlockPatternCharT>
+std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
+                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   std::size_t s1_len)
+{
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = (uint64_t)-1;
+    uint64_t VN = 0;
+    std::size_t currDist = s1_len;
+
+    /* mask used when computing D[m,j] in the paper 10^(m-1) */
+    uint64_t mask = (uint64_t)1 << (s1_len - 1);
+
+    /* Searching */
+    for (const auto& ch2 : s2) {
+        /* Step 1: Computing D0 */
+        uint64_t PM_j = PM.get(ch2);
+        uint64_t X = PM_j | VN;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        // modification: early exit using maxMisses
+        currDist += !!(HP & mask);
+        currDist -= !!(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         X = (HP << 1) | 1;
@@ -3844,7 +3917,12 @@ std::size_t levenshtein(basic_string_view<CharT1> s1,
     if (max >= 4) {
         std::size_t dist = 0;
         if (s2.size() < 65) {
-            dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
+            if (max == (size_t)-1) {
+                dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size());
+            }
+            else {
+                dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
+            }
         }
         else {
             dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
@@ -3908,8 +3986,13 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (s2.size() < 65) {
-        std::size_t dist =
-            levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+        std::size_t dist;
+        if (max == (size_t)-1) {
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+        }
+        else {
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+        }
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
@@ -4055,38 +4138,38 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-/*
- * count the number of bits set in a 64 bit integer
- * The code uses wikipedia's 64-bit popcount implementation:
- * http://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
- */
-static inline std::size_t popcount64(uint64_t x)
-{
-    const uint64_t m1 = 0x5555555555555555;  // binary: 0101...
-    const uint64_t m2 = 0x3333333333333333;  // binary: 00110011..
-    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;  // binary:  4 zeros,  4 ones ...
-    const uint64_t h01 = 0x0101010101010101; // the sum of 256 to the power of 0,1,2,3...
-
-    x -= (x >> 1) & m1;             // put count of each 2 bits into those 2 bits
-    x = (x & m2) + ((x >> 2) & m2); // put count of each 4 bits into those 4 bits
-    x = (x + (x >> 4)) & m4;        // put count of each 8 bits into those 8 bits
-    return static_cast<std::size_t>(
-        (x * h01) >> 56); // returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
-}
-
-template <typename CharT1, typename BlockPatternCharT>
+template <std::size_t N, typename CharT1, typename BlockPatternCharT>
 static inline std::size_t
-longest_common_subsequence(basic_string_view<CharT1> s1,
-                            const common::PatternMatchVector<BlockPatternCharT>& block,
+longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
+                            const common::PatternMatchVector<BlockPatternCharT>* block,
                             std::size_t s2_len)
 {
-    std::uint64_t S = ~0x0ull;
-    for (const auto& ch1 : s1) {
-        uint64_t Matches = block.get(ch1);
-        uint64_t u = S & Matches;
-        S = (S + u) | (S - u);
+    std::uint64_t S[N];
+    for (std::size_t i = 0; i < N; ++i)
+    {
+        S[i] = ~0x0ull;
     }
-    std::size_t res = popcount64(~S);
+
+    for (const auto& ch1 : s1) {
+
+        uint64_t carry = 0;
+        std::uint64_t Matches[N];
+        std::uint64_t u[N];
+        std::uint64_t x[N];
+        for (std::size_t i = 0; i < N; ++i)
+        {
+            Matches[i] = block[i].get(ch1);
+            u[i] = S[i] & Matches[i];
+            x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
+            S[i] = x[i] | (S[i] - u[i]);
+        }
+    }
+
+    std::size_t res = 0;
+    for (std::size_t i = 0; i < N; ++i)
+    {
+        res += intrinsics::popcount64(~S[i]);
+    }
     return s1.size() + s2_len - 2 * res;
 }
 
@@ -4100,40 +4183,98 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
     std::vector<std::uint64_t> S(words, ~0x0ull);
 
     for (const auto& ch1 : s1) {
-        uint64_t overflow = 0;
+        uint64_t carry = 0;
         for (std::size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, ch1);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
 
-            uint64_t x = Stemp + overflow;
-            overflow = x < overflow;
-            x += u;
-            overflow |= x < u;
+            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
         }
     }
 
     std::size_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += intrinsics::popcount64(~Stemp);
     }
 
     return s1.size() + s2_len - 2 * res;
 }
 
+template <typename CharT1, typename BlockPatternCharT>
+std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
+                            const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                            std::size_t s2_len)
+{
+    switch(s2_len / 64)
+    {
+    case 0:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
+    case 1:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
+    case 2:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
+    case 3:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
+    case 4:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
+    case 5:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
+    case 6:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
+    case 7:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
+    default: return longest_common_subsequence_blockwise(s1, block, s2_len);
+    }
+}
+
 template <typename CharT1, typename CharT2>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-    if (s2.size() < 65) {
-        return longest_common_subsequence(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+    switch(s2.size() / 64)
+    {
+    case 0:
+    {
+        auto block = common::PatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<1>(s1, &block, s2.size());
     }
-    else {
-        return longest_common_subsequence_blockwise(
-            s1, common::BlockPatternMatchVector<CharT2>(s2), s2.size());
+    case 1:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2.size());
+    }
+    case 2:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2.size());
+    }
+    case 3:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2.size());
+    }
+    case 4:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2.size());
+    }
+    case 5:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2.size());
+    }
+    case 6:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2.size());
+    }
+    case 7:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2.size());
+    }
+    default:
+    {
+        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        return longest_common_subsequence_blockwise(s1, block, s2.size());
+    }
     }
 }
+
 
 // TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2, typename BlockPatternCharT>
@@ -4170,14 +4311,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
 
     // do this first, since we can not remove any affix in encoded form
     if (max >= 5) {
-        std::size_t dist = 0;
-        if (s2.size() < 65) {
-            dist = longest_common_subsequence(s1, block.m_val[0], s2.size());
-        }
-        else {
-            dist = longest_common_subsequence_blockwise(s1, block, s2.size());
-        }
-
+        std::size_t dist = longest_common_subsequence(s1, block, s2.size());
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
