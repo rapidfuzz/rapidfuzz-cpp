@@ -243,7 +243,7 @@ struct CachedLevenshtein {
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    common::BlockPatternMatchVector blockmap_s1;
     LevenshteinWeightTable weights;
 };
 
@@ -376,7 +376,7 @@ struct CachedNormalizedLevenshtein {
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    common::BlockPatternMatchVector blockmap_s1;
     LevenshteinWeightTable weights;
 };
 

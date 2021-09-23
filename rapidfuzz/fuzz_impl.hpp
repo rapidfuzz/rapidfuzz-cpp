@@ -526,10 +526,10 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 }
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
-template <typename CharT1, typename BlockPatternCharT, typename Sentence2>
+template <typename CharT1, typename Sentence2>
 percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
                     const SplittedSentenceView<CharT1>& tokens_s1,
-                    const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1_sorted,
+                    const common::BlockPatternMatchVector& blockmap_s1_sorted,
                     const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) return 0;

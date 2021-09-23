@@ -97,9 +97,9 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  *
  * @return returns the levenshtein distance between s1 and s2
  */
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   const common::PatternMatchVector& PM,
                                    std::size_t s1_len, std::size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
@@ -172,9 +172,9 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
     return currDist;
 }
 
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   const common::PatternMatchVector& PM,
                                    std::size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
@@ -210,10 +210,10 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
     return currDist;
 }
 
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t
 levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-                            const common::BlockPatternMatchVector<BlockPatternCharT>& PM,
+                            const common::BlockPatternMatchVector& PM,
                             std::size_t s1_len, std::size_t max)
 {
     struct Vectors {
@@ -321,9 +321,9 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
     return currDist;
 }
 
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+template <typename CharT1, typename CharT2>
 std::size_t levenshtein(basic_string_view<CharT1> s1,
-                        const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                        const common::BlockPatternMatchVector& block,
                         basic_string_view<CharT2> s2, std::size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
@@ -420,23 +420,23 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
     if (s2.size() < 65) {
         std::size_t dist;
         if (max == (size_t)-1) {
-            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size());
         }
         else {
-            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size(), max);
         }
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
-    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector<CharT2>(s2),
+    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2),
                                                    s2.size(), max);
 
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+template <typename CharT1, typename CharT2>
 double normalized_levenshtein(basic_string_view<CharT1> s1,
-                              const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                              const common::BlockPatternMatchVector& block,
                               basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {

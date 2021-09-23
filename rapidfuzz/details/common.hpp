@@ -171,126 +171,107 @@ bool CanTypeFitValue(const U value)
              (topT < topU && value > static_cast<U>(topT)));
 }
 
-template <typename CharT1, std::size_t size = sizeof(CharT1)>
-struct PatternMatchVector;
-
-template <typename CharT1, std::size_t size>
 struct PatternMatchVector {
-    std::array<CharT1, 128> m_key;
-    std::array<uint64_t, 128> m_val;
+    struct MapElem {
+        uint64_t key   = 0;
+        uint64_t value = 0;
+    };
+    std::array<MapElem, 128> m_map;
+    std::array<uint64_t, 256> m_extendedAscii;
 
-    PatternMatchVector() : m_key(), m_val()
+    PatternMatchVector()
+        : m_map(), m_extendedAscii()
     {}
 
-    PatternMatchVector(basic_string_view<CharT1> s) : m_key(), m_val()
+    template <typename CharT>
+    PatternMatchVector(basic_string_view<CharT> s)
+        : m_map(), m_extendedAscii()
     {
         for (std::size_t i = 0; i < s.size(); i++) {
-            insert(s[i], static_cast<int>(i));
+            insert(s[i], i);
         }
     }
 
-    void insert(CharT1 ch, int pos)
+    template <typename CharT>
+    void insert(CharT key, std::size_t pos)
     {
-        auto uch = to_unsigned(ch);
-        uint8_t hash = uch % 128;
-        CharT1 key = ch;
-
-        /* Since a maximum of 64 elements is in here m_val[hash] will be empty
-         * after a maximum of 64 checks
-         * it is important to search for an empty value instead of an empty key,
-         * since 0 is a valid key
-         */
-        while (m_val[hash] && m_key[hash] != key) {
-            hash = (uint8_t)(hash + 1) % 128;
+        if (key >= 0 && key <= 255) {
+            m_extendedAscii[key] |= 1ull << pos;
+        } else {
+            size_t i = lookup((uint64_t)key);
+            m_map[i].key = key;
+            m_map[i].value |= 1ull << pos;
         }
-
-        m_key[hash] = key;
-        m_val[hash] |= 1ull << pos;
     }
 
-    template <typename CharT2>
-    uint64_t get(CharT2 ch) const
+    template <typename CharT>
+    uint64_t get(CharT key) const
     {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return 0;
+        if (key >= 0 && key <= 255) {
+            return m_extendedAscii[key];
+        } else {
+            return m_map[lookup((uint64_t)key)].value;
+        }
+    }
+
+private:
+    /**
+     * lookup key inside the hasmap using a similar collision resolution
+     * strategy to CPython and Ruby
+     */
+    std::size_t lookup(uint64_t key) const
+    {
+        std::size_t i = key % 128;
+
+        if (!m_map[i].value || m_map[i].key == key) {
+            return i;
         }
 
-        auto uch = to_unsigned(ch);
-        uint8_t hash = uch % 128;
-        CharT1 key = (CharT1)uch;
+        size_t perturb = key;
+        while (true) {
+            i = ((i * 5) + perturb + 1) % 128;
+            if (!m_map[i].value || m_map[i].key == key) {
+                return i;
+            }
 
-        /* it is important to search for an empty value instead of an empty key,
-         * since 0 is a valid key
-         */
-        while (m_val[hash] && m_key[hash] != key) {
-            hash = (uint8_t)(hash + 1) % 128;
+            perturb >>= 5;
         }
-
-        return m_val[hash];
     }
 };
 
-template <typename CharT1>
-struct PatternMatchVector<CharT1, 1> {
-    std::array<uint64_t, 256> m_val;
-
-    PatternMatchVector() : m_val()
-    {}
-
-    PatternMatchVector(basic_string_view<CharT1> s) : m_val()
-    {
-        for (std::size_t i = 0; i < s.size(); i++) {
-            insert(s[i], static_cast<int>(i));
-        }
-    }
-
-    void insert(CharT1 ch, int pos)
-    {
-        m_val[uint8_t(ch)] |= 1ull << pos;
-    }
-
-    template <typename CharT2>
-    uint64_t get(CharT2 ch) const
-    {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return 0;
-        }
-
-        return m_val[uint8_t(ch)];
-    }
-};
-
-template <typename CharT1>
 struct BlockPatternMatchVector {
-    std::vector<PatternMatchVector<CharT1>> m_val;
+    std::vector<PatternMatchVector> m_val;
 
     BlockPatternMatchVector()
     {}
 
-    BlockPatternMatchVector(basic_string_view<CharT1> s)
+    template <typename CharT>
+    BlockPatternMatchVector(basic_string_view<CharT> s)
     {
         insert(s);
     }
 
-    void insert(std::size_t block, CharT1 ch, int pos)
+    template <typename CharT>
+    void insert(std::size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
     }
 
-    void insert(basic_string_view<CharT1> s)
+    template <typename CharT>
+    void insert(basic_string_view<CharT> s)
     {
         std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
         m_val.resize(nr);
 
         for (std::size_t i = 0; i < s.size(); i++) {
             auto* be = &m_val[i / 64];
-            be->insert(s[i], static_cast<int>(i % 64));
+            be->insert(s[i], i % 64);
         }
     }
 
-    template <typename CharT2>
-    uint64_t get(std::size_t block, CharT2 ch) const
+    template <typename CharT>
+    uint64_t get(std::size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
