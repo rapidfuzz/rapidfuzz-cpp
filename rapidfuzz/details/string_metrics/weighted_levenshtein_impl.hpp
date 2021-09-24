@@ -168,16 +168,16 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
                             const common::BlockPatternMatchVector& block,
                             std::size_t s2_len)
 {
-    switch(s2_len / 64)
+    switch(block.m_val.size())
     {
-    case 0:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
-    case 1:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
-    case 2:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
-    case 3:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
-    case 4:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
-    case 5:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
-    case 6:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
-    case 7:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
+    case 1:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
+    case 2:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
+    case 3:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
+    case 4:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
+    case 5:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
+    case 6:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
+    case 7:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
+    case 8:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
     default: return longest_common_subsequence_blockwise(s1, block, s2_len);
     }
 }
@@ -185,44 +185,45 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
 template <typename CharT1, typename CharT2>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-    switch(s2.size() / 64)
+    std::size_t nr = (s2.size() / 64) + (std::size_t)((s2.size() % 64) > 0);
+    switch(nr)
     {
-    case 0:
+    case 1:
     {
         auto block = common::PatternMatchVector(s2);
         return longest_common_subsequence_unroll<1>(s1, &block, s2.size());
     }
-    case 1:
+    case 2:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2.size());
     }
-    case 2:
+    case 3:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2.size());
     }
-    case 3:
+    case 4:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2.size());
     }
-    case 4:
+    case 5:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2.size());
     }
-    case 5:
+    case 6:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2.size());
     }
-    case 6:
+    case 7:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2.size());
     }
-    case 7:
+    case 8:
     {
         auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2.size());
