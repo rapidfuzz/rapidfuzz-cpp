@@ -52,7 +52,7 @@ public:
     {
         j2len_.resize(b.size() + 1);
         for (std::size_t i = 0; i < b.size(); ++i) {
-            b2j_[b[i]].push_back(i);
+            b2j_.create(b[i]).push_back(i);
         }
     }
 

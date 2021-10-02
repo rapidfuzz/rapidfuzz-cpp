@@ -291,13 +291,8 @@ struct CharHashTable<CharT1, ValueType, 1> {
     CharHashTable() : m_val{}, m_default{}
     {}
 
-    template <typename CharT2>
-    ValueType& operator[](CharT2 ch)
+    ValueType& create(CharT1 ch)
     {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
-        }
-
         return m_val[UCharT1(ch)];
     }
 
@@ -320,19 +315,9 @@ struct CharHashTable {
     CharHashTable() : m_val{}, m_default{}
     {}
 
-    template <typename CharT2>
-    ValueType& operator[](CharT2 ch)
+    ValueType& create(CharT1 ch)
     {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
-        }
-
-        auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end()) {
-            return m_default;
-        }
-
-        return search->second;
+        return m_val[ch];
     }
 
     template <typename CharT2>

@@ -109,7 +109,7 @@ percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, per
 
     common::CharHashTable<CharT1, bool> s1_char_map;
     for (const CharT1& ch : s1_view) {
-        s1_char_map[ch] = true;
+        s1_char_map.create(ch) = true;
     }
 
     return partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2, score_cutoff);
@@ -146,7 +146,6 @@ percent partial_ratio_long_needle(const Sentence1& s1,
         auto long_substr = s2_view.substr(long_start, s1_view.length());
 
         double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
-
         if (ls_ratio > max_ratio) {
             score_cutoff = max_ratio = ls_ratio;
         }
@@ -197,7 +196,7 @@ CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1)
     : s1_view(common::to_string_view(s1)), cached_ratio(s1)
 {
     for (const CharT1& ch : s1_view) {
-        s1_char_map[ch] = true;
+        s1_char_map.create(ch) = true;
     }
 }
 

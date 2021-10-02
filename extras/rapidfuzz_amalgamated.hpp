@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-09-22 15:26:00.033364
+//  Generated: 2021-10-02 09:22:10.665735
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2098,126 +2098,107 @@ bool CanTypeFitValue(const U value)
              (topT < topU && value > static_cast<U>(topT)));
 }
 
-template <typename CharT1, std::size_t size = sizeof(CharT1)>
-struct PatternMatchVector;
-
-template <typename CharT1, std::size_t size>
 struct PatternMatchVector {
-    std::array<CharT1, 128> m_key;
-    std::array<uint64_t, 128> m_val;
+    struct MapElem {
+        uint64_t key   = 0;
+        uint64_t value = 0;
+    };
+    std::array<MapElem, 128> m_map;
+    std::array<uint64_t, 256> m_extendedAscii;
 
-    PatternMatchVector() : m_key(), m_val()
+    PatternMatchVector()
+        : m_map(), m_extendedAscii()
     {}
 
-    PatternMatchVector(basic_string_view<CharT1> s) : m_key(), m_val()
+    template <typename CharT>
+    PatternMatchVector(basic_string_view<CharT> s)
+        : m_map(), m_extendedAscii()
     {
         for (std::size_t i = 0; i < s.size(); i++) {
-            insert(s[i], static_cast<int>(i));
+            insert(s[i], i);
         }
     }
 
-    void insert(CharT1 ch, int pos)
+    template <typename CharT>
+    void insert(CharT key, std::size_t pos)
     {
-        auto uch = to_unsigned(ch);
-        uint8_t hash = uch % 128;
-        CharT1 key = ch;
-
-        /* Since a maximum of 64 elements is in here m_val[hash] will be empty
-         * after a maximum of 64 checks
-         * it is important to search for an empty value instead of an empty key,
-         * since 0 is a valid key
-         */
-        while (m_val[hash] && m_key[hash] != key) {
-            hash = (uint8_t)(hash + 1) % 128;
+        if (key >= 0 && key <= 255) {
+            m_extendedAscii[key] |= 1ull << pos;
+        } else {
+            size_t i = lookup((uint64_t)key);
+            m_map[i].key = key;
+            m_map[i].value |= 1ull << pos;
         }
-
-        m_key[hash] = key;
-        m_val[hash] |= 1ull << pos;
     }
 
-    template <typename CharT2>
-    uint64_t get(CharT2 ch) const
+    template <typename CharT>
+    uint64_t get(CharT key) const
     {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return 0;
+        if (key >= 0 && key <= 255) {
+            return m_extendedAscii[key];
+        } else {
+            return m_map[lookup((uint64_t)key)].value;
+        }
+    }
+
+private:
+    /**
+     * lookup key inside the hasmap using a similar collision resolution
+     * strategy to CPython and Ruby
+     */
+    std::size_t lookup(uint64_t key) const
+    {
+        std::size_t i = key % 128;
+
+        if (!m_map[i].value || m_map[i].key == key) {
+            return i;
         }
 
-        auto uch = to_unsigned(ch);
-        uint8_t hash = uch % 128;
-        CharT1 key = (CharT1)uch;
+        size_t perturb = key;
+        while (true) {
+            i = ((i * 5) + perturb + 1) % 128;
+            if (!m_map[i].value || m_map[i].key == key) {
+                return i;
+            }
 
-        /* it is important to search for an empty value instead of an empty key,
-         * since 0 is a valid key
-         */
-        while (m_val[hash] && m_key[hash] != key) {
-            hash = (uint8_t)(hash + 1) % 128;
+            perturb >>= 5;
         }
-
-        return m_val[hash];
     }
 };
 
-template <typename CharT1>
-struct PatternMatchVector<CharT1, 1> {
-    std::array<uint64_t, 256> m_val;
-
-    PatternMatchVector() : m_val()
-    {}
-
-    PatternMatchVector(basic_string_view<CharT1> s) : m_val()
-    {
-        for (std::size_t i = 0; i < s.size(); i++) {
-            insert(s[i], static_cast<int>(i));
-        }
-    }
-
-    void insert(CharT1 ch, int pos)
-    {
-        m_val[uint8_t(ch)] |= 1ull << pos;
-    }
-
-    template <typename CharT2>
-    uint64_t get(CharT2 ch) const
-    {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return 0;
-        }
-
-        return m_val[uint8_t(ch)];
-    }
-};
-
-template <typename CharT1>
 struct BlockPatternMatchVector {
-    std::vector<PatternMatchVector<CharT1>> m_val;
+    std::vector<PatternMatchVector> m_val;
 
     BlockPatternMatchVector()
     {}
 
-    BlockPatternMatchVector(basic_string_view<CharT1> s)
+    template <typename CharT>
+    BlockPatternMatchVector(basic_string_view<CharT> s)
     {
         insert(s);
     }
 
-    void insert(std::size_t block, CharT1 ch, int pos)
+    template <typename CharT>
+    void insert(std::size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
     }
 
-    void insert(basic_string_view<CharT1> s)
+    template <typename CharT>
+    void insert(basic_string_view<CharT> s)
     {
         std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
         m_val.resize(nr);
 
         for (std::size_t i = 0; i < s.size(); i++) {
             auto* be = &m_val[i / 64];
-            be->insert(s[i], static_cast<int>(i % 64));
+            be->insert(s[i], i % 64);
         }
     }
 
-    template <typename CharT2>
-    uint64_t get(std::size_t block, CharT2 ch) const
+    template <typename CharT>
+    uint64_t get(std::size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
@@ -2237,13 +2218,8 @@ struct CharHashTable<CharT1, ValueType, 1> {
     CharHashTable() : m_val{}, m_default{}
     {}
 
-    template <typename CharT2>
-    ValueType& operator[](CharT2 ch)
+    ValueType& create(CharT1 ch)
     {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
-        }
-
         return m_val[UCharT1(ch)];
     }
 
@@ -2266,19 +2242,9 @@ struct CharHashTable {
     CharHashTable() : m_val{}, m_default{}
     {}
 
-    template <typename CharT2>
-    ValueType& operator[](CharT2 ch)
+    ValueType& create(CharT1 ch)
     {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
-        }
-
-        auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end()) {
-            return m_default;
-        }
-
-        return search->second;
+        return m_val[ch];
     }
 
     template <typename CharT2>
@@ -2617,7 +2583,7 @@ struct CachedRatio {
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    common::BlockPatternMatchVector blockmap_s1;
 };
 
 /**
@@ -2960,7 +2926,7 @@ private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
     SplittedSentenceView<CharT1> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
-    common::BlockPatternMatchVector<CharT1> blockmap_s1_sorted;
+    common::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
 /**
@@ -3060,7 +3026,7 @@ public:
     {
         j2len_.resize(b.size() + 1);
         for (std::size_t i = 0; i < b.size(); ++i) {
-            b2j_[b[i]].push_back(i);
+            b2j_.create(b[i]).push_back(i);
         }
     }
 
@@ -3665,9 +3631,9 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  *
  * @return returns the levenshtein distance between s1 and s2
  */
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   const common::PatternMatchVector& PM,
                                    std::size_t s1_len, std::size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
@@ -3740,9 +3706,9 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
     return currDist;
 }
 
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector<BlockPatternCharT>& PM,
+                                   const common::PatternMatchVector& PM,
                                    std::size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
@@ -3778,10 +3744,10 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
     return currDist;
 }
 
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t
 levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-                            const common::BlockPatternMatchVector<BlockPatternCharT>& PM,
+                            const common::BlockPatternMatchVector& PM,
                             std::size_t s1_len, std::size_t max)
 {
     struct Vectors {
@@ -3889,9 +3855,9 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
     return currDist;
 }
 
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+template <typename CharT1, typename CharT2>
 std::size_t levenshtein(basic_string_view<CharT1> s1,
-                        const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                        const common::BlockPatternMatchVector& block,
                         basic_string_view<CharT2> s2, std::size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
@@ -3988,23 +3954,23 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
     if (s2.size() < 65) {
         std::size_t dist;
         if (max == (size_t)-1) {
-            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size());
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size());
         }
         else {
-            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector<CharT2>(s2), s2.size(), max);
+            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size(), max);
         }
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
-    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector<CharT2>(s2),
+    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2),
                                                    s2.size(), max);
 
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+template <typename CharT1, typename CharT2>
 double normalized_levenshtein(basic_string_view<CharT1> s1,
-                              const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                              const common::BlockPatternMatchVector& block,
                               basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
@@ -4138,10 +4104,10 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-template <std::size_t N, typename CharT1, typename BlockPatternCharT>
+template <std::size_t N, typename CharT1>
 static inline std::size_t
 longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
-                            const common::PatternMatchVector<BlockPatternCharT>* block,
+                            const common::PatternMatchVector* block,
                             std::size_t s2_len)
 {
     std::uint64_t S[N];
@@ -4173,10 +4139,10 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     return s1.size() + s2_len - 2 * res;
 }
 
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 static inline std::size_t
 longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                            const common::BlockPatternMatchVector& block,
                             std::size_t s2_len)
 {
     std::size_t words = block.m_val.size();
@@ -4203,21 +4169,21 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
     return s1.size() + s2_len - 2 * res;
 }
 
-template <typename CharT1, typename BlockPatternCharT>
+template <typename CharT1>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                            const common::BlockPatternMatchVector& block,
                             std::size_t s2_len)
 {
-    switch(s2_len / 64)
+    switch(block.m_val.size())
     {
-    case 0:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
-    case 1:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
-    case 2:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
-    case 3:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
-    case 4:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
-    case 5:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
-    case 6:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
-    case 7:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
+    case 1:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
+    case 2:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
+    case 3:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
+    case 4:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
+    case 5:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
+    case 6:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
+    case 7:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
+    case 8:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
     default: return longest_common_subsequence_blockwise(s1, block, s2_len);
     }
 }
@@ -4225,51 +4191,52 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
 template <typename CharT1, typename CharT2>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-    switch(s2.size() / 64)
+    std::size_t nr = (s2.size() / 64) + (std::size_t)((s2.size() % 64) > 0);
+    switch(nr)
     {
-    case 0:
-    {
-        auto block = common::PatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<1>(s1, &block, s2.size());
-    }
     case 1:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2.size());
+        auto block = common::PatternMatchVector(s2);
+        return longest_common_subsequence_unroll<1>(s1, &block, s2.size());
     }
     case 2:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2.size());
+        auto block = common::BlockPatternMatchVector(s2);
+        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2.size());
     }
     case 3:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2.size());
+        auto block = common::BlockPatternMatchVector(s2);
+        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2.size());
     }
     case 4:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2.size());
+        auto block = common::BlockPatternMatchVector(s2);
+        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2.size());
     }
     case 5:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2.size());
+        auto block = common::BlockPatternMatchVector(s2);
+        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2.size());
     }
     case 6:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
-        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2.size());
+        auto block = common::BlockPatternMatchVector(s2);
+        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2.size());
     }
     case 7:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        auto block = common::BlockPatternMatchVector(s2);
+        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2.size());
+    }
+    case 8:
+    {
+        auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2.size());
     }
     default:
     {
-        auto block = common::BlockPatternMatchVector<CharT2>(s2);
+        auto block = common::BlockPatternMatchVector(s2);
         return longest_common_subsequence_blockwise(s1, block, s2.size());
     }
     }
@@ -4277,9 +4244,9 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_strin
 
 
 // TODO this implementation needs some cleanup
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+template <typename CharT1, typename CharT2>
 std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-                                 const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                                 const common::BlockPatternMatchVector& block,
                                  basic_string_view<CharT2> s2, std::size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
@@ -4378,10 +4345,10 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
     return (dist > max) ? (std::size_t)-1 : dist;
 }
 
-template <typename CharT1, typename CharT2, typename BlockPatternCharT>
+template <typename CharT1, typename CharT2>
 double
 normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-                                const common::BlockPatternMatchVector<BlockPatternCharT>& block,
+                                const common::BlockPatternMatchVector& block,
                                 basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
@@ -4650,7 +4617,7 @@ struct CachedLevenshtein {
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    common::BlockPatternMatchVector blockmap_s1;
     LevenshteinWeightTable weights;
 };
 
@@ -4783,7 +4750,7 @@ struct CachedNormalizedLevenshtein {
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector<CharT1> blockmap_s1;
+    common::BlockPatternMatchVector blockmap_s1;
     LevenshteinWeightTable weights;
 };
 
@@ -5135,7 +5102,7 @@ percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, per
 
     common::CharHashTable<CharT1, bool> s1_char_map;
     for (const CharT1& ch : s1_view) {
-        s1_char_map[ch] = true;
+        s1_char_map.create(ch) = true;
     }
 
     return partial_ratio_short_needle(s1_view, cached_ratio, s1_char_map, s2, score_cutoff);
@@ -5172,7 +5139,6 @@ percent partial_ratio_long_needle(const Sentence1& s1,
         auto long_substr = s2_view.substr(long_start, s1_view.length());
 
         double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
-
         if (ls_ratio > max_ratio) {
             score_cutoff = max_ratio = ls_ratio;
         }
@@ -5223,7 +5189,7 @@ CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1)
     : s1_view(common::to_string_view(s1)), cached_ratio(s1)
 {
     for (const CharT1& ch : s1_view) {
-        s1_char_map[ch] = true;
+        s1_char_map.create(ch) = true;
     }
 }
 
@@ -5552,10 +5518,10 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 }
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
-template <typename CharT1, typename BlockPatternCharT, typename Sentence2>
+template <typename CharT1, typename Sentence2>
 percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
                     const SplittedSentenceView<CharT1>& tokens_s1,
-                    const common::BlockPatternMatchVector<BlockPatternCharT>& blockmap_s1_sorted,
+                    const common::BlockPatternMatchVector& blockmap_s1_sorted,
                     const Sentence2& s2, percent score_cutoff)
 {
     if (score_cutoff > 100) return 0;
