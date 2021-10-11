@@ -187,16 +187,10 @@ struct PatternMatchVector {
     PatternMatchVector(basic_string_view<CharT> s)
         : m_map(), m_extendedAscii()
     {
-        std::size_t i = 0;
         uint64_t mask = 1;
-        for (; i < s.size()-1; i+=2) {
+        for (std::size_t i = 0; i < s.size(); ++i) {
             insert_mask(s[i], mask);
             mask <<= 1;
-            insert_mask(s[i+1], mask);
-            mask <<= 1;
-        }
-        if (i < s.size()) {
-            insert_mask(s[i], mask);
         }
     }
 
