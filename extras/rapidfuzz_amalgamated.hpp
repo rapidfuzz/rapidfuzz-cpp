@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-10-02 09:22:10.665735
+//  Generated: 2021-10-12 06:36:45.411609
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2114,21 +2114,23 @@ struct PatternMatchVector {
     PatternMatchVector(basic_string_view<CharT> s)
         : m_map(), m_extendedAscii()
     {
-        for (std::size_t i = 0; i < s.size(); i++) {
-            insert(s[i], i);
+        insert(s);
+    }
+
+    template <typename CharT>
+    void insert(std::basic_string_view<CharT> s)
+    {
+        uint64_t mask = 1;
+        for (std::size_t i = 0; i < s.size(); ++i) {
+            insert_mask(s[i], mask);
+            mask <<= 1;
         }
     }
 
     template <typename CharT>
     void insert(CharT key, std::size_t pos)
     {
-        if (key >= 0 && key <= 255) {
-            m_extendedAscii[key] |= 1ull << pos;
-        } else {
-            size_t i = lookup((uint64_t)key);
-            m_map[i].key = key;
-            m_map[i].value |= 1ull << pos;
-        }
+        insert_mask(key, 1ull << pos);
     }
 
     template <typename CharT>
@@ -2142,6 +2144,18 @@ struct PatternMatchVector {
     }
 
 private:
+    template <typename CharT>
+    void insert_mask(CharT key, uint64_t mask)
+    {
+        if (key >= 0 && key <= 255) {
+            m_extendedAscii[key] |= mask;
+        } else {
+            size_t i = lookup((uint64_t)key);
+            m_map[i].key = key;
+            m_map[i].value |= mask;
+        }
+    }
+
     /**
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
@@ -2188,12 +2202,12 @@ struct BlockPatternMatchVector {
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
-        std::size_t nr = (s.size() / 64) + (std::size_t)((s.size() % 64) > 0);
-        m_val.resize(nr);
+        std::size_t block_count = (s.size() / 64) + (std::size_t)((s.size() % 64) != 0);
+        m_val.resize(block_count);
 
-        for (std::size_t i = 0; i < s.size(); i++) {
-            auto* be = &m_val[i / 64];
-            be->insert(s[i], i % 64);
+        for (std::size_t block = 0; block < block_count; ++block)
+        {
+            m_val[block].insert(s.substr(block * 64, 64));
         }
     }
 

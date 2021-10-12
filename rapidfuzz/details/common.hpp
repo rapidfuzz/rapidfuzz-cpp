@@ -187,6 +187,12 @@ struct PatternMatchVector {
     PatternMatchVector(basic_string_view<CharT> s)
         : m_map(), m_extendedAscii()
     {
+        insert(s);
+    }
+
+    template <typename CharT>
+    void insert(std::basic_string_view<CharT> s)
+    {
         uint64_t mask = 1;
         for (std::size_t i = 0; i < s.size(); ++i) {
             insert_mask(s[i], mask);
@@ -222,7 +228,7 @@ private:
             m_map[i].value |= mask;
         }
     }
-    
+
     /**
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
@@ -274,7 +280,7 @@ struct BlockPatternMatchVector {
 
         for (std::size_t block = 0; block < block_count; ++block)
         {
-            m_val[block].insert(s.substr(block * 64, 64);
+            m_val[block].insert(s.substr(block * 64, 64));
         }
     }
 
