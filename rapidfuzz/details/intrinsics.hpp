@@ -51,13 +51,16 @@ T blsr(T x)
 }
 
 /**
- * Compute the bitwise NOT of a and then AND with b.
+ * Sets all the lower bits of the result to 1 up to and including lowest set bit (=1) in a.
+ * If a is zero, blsmsk sets all bits to 1.
  */
 template <typename T>
-T andnot(T a, T b)
+T blsmsk(T a)
 {
-    return ~a & b;
+    return a ^ (a - 1);
 }
+    
+ 
 
 #if defined(_MSC_VER) && !defined(__clang__)
 static inline int lzcnt(uint32_t x) {
