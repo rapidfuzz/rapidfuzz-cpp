@@ -59,24 +59,22 @@ T blsmsk(T a)
 {
     return a ^ (a - 1);
 }
-    
- 
 
 #if defined(_MSC_VER) && !defined(__clang__)
-static inline int lzcnt(uint32_t x) {
+static inline int tzcnt(uint32_t x) {
     unsigned long trailing_zero = 0;
     _BitScanForward(&trailing_zero, x);
     return trailing_zero;
 }
 
 #if defined(_M_ARM) || defined(_M_X64)
-static inline int lzcnt(uint64_t x) {
+static inline int tzcnt(uint64_t x) {
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
 #else
-int lzcnt(uint64_t x) {
+int tzcnt(uint64_t x) {
     uint32_t msh = (uint32_t)(value >> 32);
     uint32_t lsh = (uint32_t)(value & 0xFFFFFFFF);
     if (lsh != 0) {
@@ -87,12 +85,12 @@ int lzcnt(uint64_t x) {
 #endif
 
 #else /*  gcc / clang */
-int lzcnt(uint32_t x)
+int tzcnt(uint32_t x)
 {
     return __builtin_ctz(x);
 }
 
-int lzcnt(uint64_t x)
+int tzcnt(uint64_t x)
 {
     return __builtin_ctzll(x);
 }
