@@ -5,6 +5,10 @@
 namespace rapidfuzz {
 namespace intrinsics {
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#endif
+
 static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */
@@ -27,6 +31,53 @@ static inline std::size_t popcount64(uint64_t x)
     x = (x + (x >> 4)) & m4;
     return static_cast<std::size_t>((x * h01) >> 56);
 }
+
+static inline uint64_t blsi(uint64_t x)
+{
+    return x & -x;
+}
+
+static inline uint64_t blsr(uint64_t x)
+{
+    return x & (x - 1);
+}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+static inline int lzcnt(uint32_t x) {
+    unsigned long trailing_zero = 0;
+    _BitScanForward(&trailing_zero, x);
+    return trailing_zero;
+}
+
+#if defined(_M_ARM) || defined(_M_X64)
+static inline int lzcnt(uint64_t x) {
+    unsigned long trailing_zero = 0;
+    _BitScanForward64(&trailing_zero, x);
+    return trailing_zero;
+}
+#else
+int lzcnt(uint64_t x) {
+    uint32_t msh = (uint32_t)(value >> 32);
+    uint32_t lsh = (uint32_t)(value & 0xFFFFFFFF);
+    if (lsh != 0) {
+        return lzcnt(lsh);
+    }
+    return 32 + lzcnt(msh);
+}
+#endif
+
+#else /*  gcc / clang */
+int lzcnt(uint32_t x)
+{
+    return __builtin_ctz(x);
+}
+
+int lzcnt(uint64_t x)
+{
+    return __builtin_ctzll(x);
+}
+#endif
+
     
 } // namespace intrinsics
 } // namespace rapidfuzz
