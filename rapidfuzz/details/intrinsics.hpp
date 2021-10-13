@@ -32,14 +32,31 @@ static inline std::size_t popcount64(uint64_t x)
     return static_cast<std::size_t>((x * h01) >> 56);
 }
 
-static inline uint64_t blsi(uint64_t x)
+/**
+ * Extract the lowest set bit from a. If no bits are set in a returns 0.
+ */
+template <typename T>
+T blsi(T a)
 {
-    return x & -x;
+    return a & -a;
 }
 
-static inline uint64_t blsr(uint64_t x)
+/**
+ * Clear the lowest set bit in a.
+ */
+template <typename T>
+T blsr(T x)
 {
     return x & (x - 1);
+}
+
+/**
+ * Compute the bitwise NOT of a and then AND with b.
+ */
+template <typename T>
+T andnot(T a, T b)
+{
+    return ~a & b;
 }
 
 #if defined(_MSC_VER) && !defined(__clang__)
