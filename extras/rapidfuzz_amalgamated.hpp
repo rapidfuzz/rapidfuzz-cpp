@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-10-12 06:36:45.411609
+//  Generated: 2021-10-16 15:30:18.558458
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2118,7 +2118,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(std::basic_string_view<CharT> s)
+    void insert(basic_string_view<CharT> s)
     {
         uint64_t mask = 1;
         for (std::size_t i = 0; i < s.size(); ++i) {
@@ -3527,8 +3527,15 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 #include <limits>
 #include <numeric>
 
+
+#include <cstdint>
+
 namespace rapidfuzz {
 namespace intrinsics {
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#endif
 
 static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
@@ -3552,6 +3559,71 @@ static inline std::size_t popcount64(uint64_t x)
     x = (x + (x >> 4)) & m4;
     return static_cast<std::size_t>((x * h01) >> 56);
 }
+
+/**
+ * Extract the lowest set bit from a. If no bits are set in a returns 0.
+ */
+template <typename T>
+T blsi(T a)
+{
+    return a & -a;
+}
+
+/**
+ * Clear the lowest set bit in a.
+ */
+template <typename T>
+T blsr(T x)
+{
+    return x & (x - 1);
+}
+
+/**
+ * Sets all the lower bits of the result to 1 up to and including lowest set bit (=1) in a.
+ * If a is zero, blsmsk sets all bits to 1.
+ */
+template <typename T>
+T blsmsk(T a)
+{
+    return a ^ (a - 1);
+}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+static inline int tzcnt(uint32_t x) {
+    unsigned long trailing_zero = 0;
+    _BitScanForward(&trailing_zero, x);
+    return trailing_zero;
+}
+
+#if defined(_M_ARM) || defined(_M_X64)
+static inline int tzcnt(uint64_t x) {
+    unsigned long trailing_zero = 0;
+    _BitScanForward64(&trailing_zero, x);
+    return trailing_zero;
+}
+#else
+int tzcnt(uint64_t x) {
+    uint32_t msh = (uint32_t)(value >> 32);
+    uint32_t lsh = (uint32_t)(value & 0xFFFFFFFF);
+    if (lsh != 0) {
+        return lzcnt(lsh);
+    }
+    return 32 + lzcnt(msh);
+}
+#endif
+
+#else /*  gcc / clang */
+int tzcnt(uint32_t x)
+{
+    return __builtin_ctz(x);
+}
+
+int tzcnt(uint64_t x)
+{
+    return __builtin_ctzll(x);
+}
+#endif
+
     
 } // namespace intrinsics
 } // namespace rapidfuzz

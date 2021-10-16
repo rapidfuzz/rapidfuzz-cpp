@@ -191,7 +191,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(std::basic_string_view<CharT> s)
+    void insert(basic_string_view<CharT> s)
     {
         uint64_t mask = 1;
         for (std::size_t i = 0; i < s.size(); ++i) {
