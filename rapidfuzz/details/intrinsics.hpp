@@ -2,6 +2,9 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
+
+#include <cstdint>
+
 namespace rapidfuzz {
 namespace intrinsics {
 
