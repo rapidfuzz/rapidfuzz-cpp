@@ -21,7 +21,7 @@ void validate_bitvector_word(const std::vector<int>& a, std::bitset<64> b)
  */
 TEST_CASE("JaroWinklerTest")
 {
-    std::array<std::string, 20> names = {
+    std::array<std::string, 19> names = {
         "james",
         "robert",
         "john",
