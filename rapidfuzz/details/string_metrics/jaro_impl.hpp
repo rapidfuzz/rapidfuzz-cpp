@@ -2,121 +2,269 @@
 /* Copyright © 2021 Max Bachmann */
 
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/intrinsics.hpp>
 
 namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
-#define NOTNUM(c) ((c > 57) || (c < 48))
-
-/* For now this implementation is ported from
- * https://github.com/jamesturk/cjellyfish
- *
- * this is only a placeholder which should be replaced by a faster implementation
- * in the future
- */
-template <typename CharT1, typename CharT2>
-double _jaro_winkler(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang, int winklerize,
-                     double prefix_weight = 0.1)
+template<typename CharT>
+bool isnum(CharT val)
 {
-    std::size_t min_len;
-    std::size_t search_range;
-    std::size_t trans_count, common_chars;
+    return (val >= '0') && (val <= '9');
+}
 
-    // ensure that neither string is blank
-    if (!ying.size() || !yang.size()) return 0;
+template <typename CharT1, typename CharT2>
+static inline percent jaro_calculate_similarity(
+    basic_string_view<CharT1> P, basic_string_view<CharT2> T,
+    size_t CommonChars, size_t Transpositions
+)
+{
+    Transpositions /= 2;
+    double Sim = (double)CommonChars / (double)P.size() +
+                 (double)CommonChars / (double)T.size() +
+                 (double)(CommonChars - Transpositions) / (double)CommonChars;
+    Sim /= 3.0;
+    return Sim * 100;
+}
 
-    if (ying.size() > yang.size()) {
-        search_range = ying.size();
-        min_len = yang.size();
-    }
-    else {
-        search_range = yang.size();
-        min_len = ying.size();
-    }
+template <typename CharT1, typename CharT2>
+static inline bool jaro_length_filter(
+    basic_string_view<CharT1> P, basic_string_view<CharT2> T, percent score_cutoff
+)
+{
+    if (!T.size() || !P.size()) return false;
 
-    // Blank out the flags
-    std::vector<int> ying_flag(ying.size() + 1);
-    std::vector<int> yang_flag(yang.size() + 1);
+    double min_len = (double)std::min(P.size(), T.size());
+    double Sim = (double)min_len / (double)P.size() +
+                 (double)min_len / (double)T.size() +
+                 1.0;
+    Sim /= 3.0;
+    return Sim * 100 >= score_cutoff;
+}
 
-    search_range = (search_range / 2);
-    if (search_range > 0) search_range--;
+template <typename CharT1, typename CharT2>
+static inline bool jaro_common_char_filter(
+    basic_string_view<CharT1> P, basic_string_view<CharT2> T, size_t CommonChars, percent score_cutoff
+)
+{
+    if (!CommonChars) return false;
 
-    // Looking only within the search range, count and flag the matched pairs.
-    common_chars = 0;
-    for (std::size_t i = 0; i < ying.size(); i++) {
-        std::size_t lowlim = (i >= search_range) ? i - search_range : 0;
-        std::size_t hilim =
-            (i + search_range <= yang.size() - 1) ? (i + search_range) : yang.size() - 1;
+    double Sim = (double)CommonChars / (double)P.size() +
+                 (double)CommonChars / (double)T.size() +
+                 1.0;
+    Sim /= 3.0;
+    return Sim * 100 >= score_cutoff;
+}
+
+struct FlaggedCharsOriginal {
+  std::vector<int> P_flag;
+  std::vector<int> T_flag;
+  std::size_t CommonChars;
+};
+
+template <typename CharT1, typename CharT2>
+static inline FlaggedCharsOriginal flag_similar_characters_original(
+    basic_string_view<CharT1> P, basic_string_view<CharT2> T
+)
+{
+    std::vector<int> P_flag(P.size() + 1);
+    std::vector<int> T_flag(T.size() + 1);
+
+    std::size_t Bound = std::max(P.size(), T.size()) / 2;
+    if (Bound > 0) Bound--;
+
+    std::size_t CommonChars = 0;
+    for (std::size_t i = 0; i < T.size(); i++) {
+        std::size_t lowlim = (i >= Bound) ? i - Bound : 0;
+        std::size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
         for (std::size_t j = lowlim; j <= hilim; j++) {
-            if (!yang_flag[j] && common::mixed_sign_equal(yang[j], ying[i])) {
-                yang_flag[j] = 1;
-                ying_flag[i] = 1;
-                common_chars++;
+            if (!P_flag[j] && common::mixed_sign_equal(P[j], T[i])) {
+                T_flag[i] = 1;
+                P_flag[j] = 1;
+                CommonChars++;
                 break;
             }
         }
     }
 
-    // If no characters in common - return
-    if (!common_chars) {
-        return 0;
+    return {P_flag, T_flag, CommonChars};
+}
+
+struct FlaggedCharsWord {
+  uint64_t P_flag;
+  uint64_t T_flag;
+  std::size_t CommonChars;
+};
+
+template <typename CharT1, typename CharT2>
+static inline FlaggedCharsWord flag_similar_characters_word(
+  const common::PatternMatchVector& PM, basic_string_view<CharT1> P, basic_string_view<CharT2> T
+)
+{
+    using namespace intrinsics;
+    assert(P.size() <= 64);
+    assert(T.size() <= 64);
+
+    uint64_t P_flag = 0;
+    uint64_t T_flag = 0;
+    uint64_t Bound = std::max(P.size(), T.size()) / 2 - 1;
+    uint64_t BoundMask = (1ull << 1 << Bound) - 1;
+
+    int j = 0;
+    for (; j < std::min(Bound, T.size()); ++j)
+    {
+        uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
+
+        P_flag |= blsi(PM_j);
+        T_flag |= (uint64_t)(PM_j != 0) << j;
+
+        BoundMask = (BoundMask << 1) | 1;
     }
 
+    for (; j < std::min(T.size(), P.size() + Bound); ++j)
+    {
+        uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
+
+        P_flag |= blsi(PM_j);
+        T_flag |= (uint64_t)(PM_j != 0) << j;
+
+        BoundMask <<= 1;
+    }
+
+    return {P_flag, T_flag, popcount64(P_flag)};
+}
+
+template <typename CharT>
+static inline size_t count_transpositions_word(
+  const common::PatternMatchVector& PM, uint64_t P_mapped,
+  basic_string_view<CharT> T, uint64_t T_mapped
+)
+{
+    using namespace intrinsics;
+    size_t Transpositions = 0;
+    while (T_mapped)
+    {
+        uint64_t PatternFlagMask = blsi(P_mapped);
+        
+
+        Transpositions += !(PM.get(T[tzcnt(T_mapped)]) & PatternFlagMask);
+
+        T_mapped = blsr(T_mapped);
+        P_mapped ^= PatternFlagMask;
+    }
+
+    return Transpositions;
+}
+
+
+template <typename CharT1, typename CharT2>
+double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT2> T, percent score_cutoff)
+{
+    if (!jaro_length_filter(P, T, score_cutoff))
+    {
+        return 0.0;
+    }
+
+    common::PatternMatchVector PM(P);
+
+    auto flagged = flag_similar_characters_word(PM, P, T);
+
+    if (!jaro_common_char_filter(P, T, flagged.CommonChars, score_cutoff))
+    {
+        return 0.0;
+    }
+
+    size_t Transpositions = count_transpositions_word(PM, flagged.P_flag, T, flagged.T_flag);
+
+    return common::result_cutoff(jaro_calculate_similarity(P, T, flagged.CommonChars, Transpositions), score_cutoff);
+}
+
+template <typename CharT1, typename CharT2>
+percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<CharT1> T, percent score_cutoff)
+{
+    if (!jaro_length_filter(P, T, score_cutoff))
+    {
+        return 0.0;
+    }
+
+    auto flagged = flag_similar_characters_original(P, T);
+
+    if (!jaro_common_char_filter(P, T, flagged.CommonChars, score_cutoff))
+    {
+        return 0.0;
+    }
     // Count the number of transpositions
-    std::size_t k = trans_count = 0;
-    for (std::size_t i = 0; i < ying.size(); i++) {
-        if (ying_flag[i]) {
+    std::size_t Transpositions = 0;
+    std::size_t k = 0;
+    for (std::size_t i = 0; i < T.size(); i++) {
+        if (flagged.T_flag[i]) {
             std::size_t j = k;
-            for (; j < yang.size(); j++) {
-                if (yang_flag[j]) {
+            for (; j < P.size(); j++) {
+                if (flagged.P_flag[j]) {
                     k = j + 1;
                     break;
                 }
             }
-            if (common::mixed_sign_unequal(ying[i], yang[j])) {
-                trans_count++;
+            if (common::mixed_sign_unequal(T[i], P[j])) {
+                Transpositions++;
             }
         }
     }
-    trans_count /= 2;
 
-    // adjust for similarities in nonmatched characters
+    return common::result_cutoff(jaro_calculate_similarity(P, T, flagged.CommonChars, Transpositions), score_cutoff);
+}
 
-    // Main weight computation.
-    double weight = (double)common_chars / ((double)ying.size()) +
-                    (double)common_chars / ((double)yang.size()) +
-                    ((double)(common_chars - trans_count)) / ((double)common_chars);
-    weight /= 3.0;
+template <typename CharT1, typename CharT2>
+percent jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T, percent score_cutoff)
+{
+    if (P.size() <= 64 && P.size() <= 64)
+    {
+        return jaro_similarity_word(P, T, score_cutoff);
+    }
+    else
+    {
+        return jaro_similarity_original(P, T, score_cutoff);
+    }
+}
 
-    // Continue to boost the weight if the strings are similar
-    if (winklerize && weight > 0.7) {
-        // Adjust for having up to the first 4 characters in common
-        std::size_t j = (min_len >= 4) ? 4 : min_len;
-        std::size_t i = 0;
-        for (i = 0; ((i < j) && common::mixed_sign_equal(ying[i], yang[i]) && (NOTNUM(ying[i])));
-             i++)
-            ;
-        if (i) {
-            weight += (double)i * prefix_weight * (1.0 - weight);
+template <typename CharT1, typename CharT2>
+percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T, double prefix_weight, percent score_cutoff)
+{
+    std::size_t min_len = std::min(P.size(), T.size());
+    std::size_t prefix = 0;
+    std::size_t max_prefix = (min_len >= 4) ? 4 : min_len;
+
+    for (; prefix < max_prefix; ++prefix)
+    {
+        if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix]))
+        {
+            break;
         }
     }
 
-    return weight;
-}
+    double jaro_score_cutoff = score_cutoff;
+    if (jaro_score_cutoff > 70)
+    {
+        double prefix_sim = prefix * prefix_weight * 100;
 
-template <typename CharT1, typename CharT2>
-double jaro_winkler_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang,
-                               double prefix_weight, percent score_cutoff)
-{
-    return common::result_cutoff(_jaro_winkler(ying, yang, 1, prefix_weight) * 100, score_cutoff);
-}
+        if (prefix_sim == 100)
+        {
+            jaro_score_cutoff = 70;
+        }
+        else
+        {
+            jaro_score_cutoff = std::max(70.0, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 100.0));
+        }
+    }
 
-template <typename CharT1, typename CharT2>
-double jaro_similarity(basic_string_view<CharT1> ying, basic_string_view<CharT2> yang,
-                       percent score_cutoff)
-{
-    return common::result_cutoff(_jaro_winkler(ying, yang, 0) * 100, score_cutoff);
+    double Sim = jaro_similarity(P, T, jaro_score_cutoff);
+    if (Sim > 70)
+    {
+        Sim += prefix * prefix_weight * (100 - Sim);
+    }
+
+    return common::result_cutoff(Sim, score_cutoff);;
 }
 
 } // namespace detail
