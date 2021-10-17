@@ -57,6 +57,8 @@ TEST_CASE("JaroWinklerTest")
                 auto flagged_original = string_metric::detail::flag_similar_characters_original(P, T);
                 auto flagged_bitparallel = string_metric::detail::flag_similar_characters_word(PM, P, T);
 
+                INFO("Name1: " << name1 << ", Name2: " << name2);
+
                 validate_bitvector_word(flagged_original.P_flag, flagged_bitparallel.P_flag);
                 validate_bitvector_word(flagged_original.T_flag, flagged_bitparallel.T_flag);
                 REQUIRE(flagged_original.CommonChars == flagged_bitparallel.CommonChars);
@@ -77,6 +79,7 @@ TEST_CASE("JaroWinklerTest")
                 double Sim_original = string_metric::detail::jaro_similarity_original(P, T, 0);
                 double Sim_bitparallel = string_metric::detail::jaro_similarity_word(P, T, 0);
 
+                INFO("Name1: " << name1 << ", Name2: " << name2);
                 REQUIRE(Sim_original == Sim_bitparallel);
             }    
         }
@@ -95,6 +98,7 @@ TEST_CASE("JaroWinklerTest")
                 double Sim_original = string_metric::detail::jaro_similarity_original(P, T, 90);
                 double Sim_bitparallel = string_metric::detail::jaro_similarity_word(P, T, 90);
 
+                INFO("Name1: " << name1 << ", Name2: " << name2);
                 REQUIRE(Sim_original == Sim_bitparallel);
             }    
         }
