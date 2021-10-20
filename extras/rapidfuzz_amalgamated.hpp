@@ -3357,23 +3357,23 @@ static inline int tzcnt(uint64_t x) {
     return trailing_zero;
 }
 #else
-int tzcnt(uint64_t x) {
-    uint32_t msh = (uint32_t)(value >> 32);
-    uint32_t lsh = (uint32_t)(value & 0xFFFFFFFF);
+static inline int tzcnt(uint64_t x) {
+    uint32_t msh = (uint32_t)(x >> 32);
+    uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
     if (lsh != 0) {
-        return lzcnt(lsh);
+        return tzcnt(lsh);
     }
-    return 32 + lzcnt(msh);
+    return 32 + tzcnt(msh);
 }
 #endif
 
 #else /*  gcc / clang */
-int tzcnt(uint32_t x)
+static inline int tzcnt(uint32_t x)
 {
     return __builtin_ctz(x);
 }
 
-int tzcnt(uint64_t x)
+static inline int tzcnt(uint64_t x)
 {
     return __builtin_ctzll(x);
 }
