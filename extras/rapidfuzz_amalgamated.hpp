@@ -3285,12 +3285,13 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
 
 #include <cstdint>
 
-namespace rapidfuzz {
-namespace intrinsics {
-
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <intrin.h>
 #endif
+
+
+namespace rapidfuzz {
+namespace intrinsics {
 
 static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
