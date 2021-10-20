@@ -111,7 +111,7 @@ static inline FlaggedCharsWord flag_similar_characters_word(
     uint64_t Bound = std::max(P.size(), T.size()) / 2 - 1;
     uint64_t BoundMask = (1ull << 1 << Bound) - 1;
 
-    int j = 0;
+    std::size_t j = 0;
     for (; j < std::min(Bound, (uint64_t)T.size()); ++j)
     {
         uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
@@ -122,7 +122,7 @@ static inline FlaggedCharsWord flag_similar_characters_word(
         BoundMask = (BoundMask << 1) | 1;
     }
 
-    for (; j < std::min(T.size(), P.size() + Bound); ++j)
+    for (; j < std::min((uint64_t)T.size(), (uint64_t)P.size() + Bound); ++j)
     {
         uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
 
