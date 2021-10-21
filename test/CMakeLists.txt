@@ -8,6 +8,6 @@ function(rapidfuzz_add_test NAME SOURCE)
 endfunction()
 
 rapidfuzz_add_test(fuzz tests-fuzz.cpp)
-rapidfuzz_add_test(levenshtein tests-levenshtein.cpp)
+rapidfuzz_add_test(string-metric tests-string-metric.cpp)
 rapidfuzz_add_test(common tests-common.cpp)
 rapidfuzz_add_test(jaro-winkler tests-jaro-winkler.cpp)
