@@ -61,3 +61,26 @@ TEST_CASE("hamming", "[string_view]")
     REQUIRE_THROWS_AS(string_metric::hamming(test, diff_len), std::invalid_argument);
   }
 };
+
+TEST_CASE("editops", "[string_view]")
+{
+  rapidfuzz::string_view s = "Lorem ipsum.";
+  rapidfuzz::string_view d = "XYZLorem ABC iPsum";
+
+  std::vector<rapidfuzz::LevenshteinEditOp> editops = string_metric::levenshtein_editops(s, d);
+  std::vector<rapidfuzz::LevenshteinEditOp> correct_editops(9);
+  correct_editops[0] = {rapidfuzz::LevenshteinEditType::Insert, 0, 0};
+  correct_editops[1] = {rapidfuzz::LevenshteinEditType::Insert, 0, 1};
+  correct_editops[2] = {rapidfuzz::LevenshteinEditType::Insert, 0, 2};
+  correct_editops[3] = {rapidfuzz::LevenshteinEditType::Insert, 5, 8};
+  correct_editops[4] = {rapidfuzz::LevenshteinEditType::Insert, 5, 9};
+  correct_editops[5] = {rapidfuzz::LevenshteinEditType::Insert, 5, 10};
+  correct_editops[6] = {rapidfuzz::LevenshteinEditType::Insert, 5, 11};
+  correct_editops[7] = {rapidfuzz::LevenshteinEditType::Replace, 7, 14};
+  correct_editops[8] = {rapidfuzz::LevenshteinEditType::Delete, 11, 18};
+
+  REQUIRE(editops == correct_editops);
+};
+
+
+

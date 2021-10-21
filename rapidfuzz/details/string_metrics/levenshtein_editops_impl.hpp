@@ -85,20 +85,20 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
         /* horizontal + 1 == current -> replacement */
         else if (row && col && (*cur == *(cur - cols - 1) + 1)) {
             dist--;
+            row--;
+            col--;
             editops[dist].type = LevenshteinEditType::Replace;
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
-            row--;
-            col--;
             cur -= cols + 1;
         }
         /* left + 1 == current -> insertion */
         else if (col && (*cur == *(cur - 1) + 1)) {
             dist--;
+            col--;
             editops[dist].type = LevenshteinEditType::Insert;
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
-            col--;
             cur--;
         }
         /* above + 1 == current -> deletion */
@@ -107,10 +107,10 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
             assert((row && (*cur == *(cur - cols) + 1)));
 
             dist--;
+            row--;
             editops[dist].type = LevenshteinEditType::Delete;
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
-            row--;
             cur -= cols;
         }
     }

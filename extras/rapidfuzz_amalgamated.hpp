@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-10-17 18:56:47.336938
+//  Generated: 2021-10-21 19:11:02.305347
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1698,6 +1698,10 @@ struct LevenshteinEditOp {
     std::size_t dest_pos;     /**< index into the destination string */
 };
 
+bool operator ==(LevenshteinEditOp a, LevenshteinEditOp b) {
+	return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
+}
+
 } // namespace rapidfuzz
 #include <string>
 
@@ -3289,7 +3293,6 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
 #include <intrin.h>
 #endif
 
-
 namespace rapidfuzz {
 namespace intrinsics {
 
@@ -3734,20 +3737,20 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
         /* horizontal + 1 == current -> replacement */
         else if (row && col && (*cur == *(cur - cols - 1) + 1)) {
             dist--;
+            row--;
+            col--;
             editops[dist].type = LevenshteinEditType::Replace;
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
-            row--;
-            col--;
             cur -= cols + 1;
         }
         /* left + 1 == current -> insertion */
         else if (col && (*cur == *(cur - 1) + 1)) {
             dist--;
+            col--;
             editops[dist].type = LevenshteinEditType::Insert;
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
-            col--;
             cur--;
         }
         /* above + 1 == current -> deletion */
@@ -3756,10 +3759,10 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
             assert((row && (*cur == *(cur - cols) + 1)));
 
             dist--;
+            row--;
             editops[dist].type = LevenshteinEditType::Delete;
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
-            row--;
             cur -= cols;
         }
     }
