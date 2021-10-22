@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-10-21 19:11:02.305347
+//  Generated: 2021-10-22 10:38:28.302968
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1698,7 +1698,7 @@ struct LevenshteinEditOp {
     std::size_t dest_pos;     /**< index into the destination string */
 };
 
-bool operator ==(LevenshteinEditOp a, LevenshteinEditOp b) {
+static inline bool operator ==(LevenshteinEditOp a, LevenshteinEditOp b) {
 	return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
 

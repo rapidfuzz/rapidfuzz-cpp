@@ -53,7 +53,7 @@ struct LevenshteinEditOp {
     std::size_t dest_pos;     /**< index into the destination string */
 };
 
-bool operator ==(LevenshteinEditOp a, LevenshteinEditOp b) {
+static inline bool operator ==(LevenshteinEditOp a, LevenshteinEditOp b) {
 	return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
 
