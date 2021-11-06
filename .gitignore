@@ -5,3 +5,4 @@ build/
 *.so
 *.o
 *.out
+tools/unicode/data

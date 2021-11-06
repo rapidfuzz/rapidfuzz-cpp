@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT */
-/* Copyright © 2020 Max Bachmann */
+/* Copyright (c) 2020 Max Bachmann */
 
 #pragma once
 

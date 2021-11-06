@@ -104,7 +104,7 @@ def generate_cpp():
 
 
 generate_header()
-#generate_cpp()
+generate_cpp()
 
 
 # Notes:

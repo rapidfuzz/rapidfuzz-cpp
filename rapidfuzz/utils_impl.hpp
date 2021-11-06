@@ -50,13 +50,7 @@ std::size_t utils::default_process(CharT* str, std::size_t len)
             return static_cast<CharT>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);
         }
         else {
-            // this requires sources to compiled, while the current version for C++ is header only
-            // this will be added to the C++ version later on.
-#ifdef RAPIDFUZZ_PYTHON
             return static_cast<CharT>(Unicode::UnicodeDefaultProcess(static_cast<uint32_t>(ch)));
-#else
-      return ch;
-#endif
         }
     });
 
