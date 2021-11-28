@@ -232,7 +232,7 @@ extract(const Sentence1& query, const Iterable& choices, const percent score_cut
 }
 ```
 
-Note that the scorers are not threadsafe and do not take ownership of the data you pass them.
+Note that the scorers do not take ownership of the data you pass them.
 Internally they fully operate on string_views. This is especially important for the cached implementations,
 since it might be tempting to pass the first string to the constructor of the cached scorer and delete it afterwards.
 
