@@ -189,22 +189,23 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
     for (const auto& ch2 : s2) {
         /* Step 1: Computing D0 */
         uint64_t PM_j = PM.get(ch2);
-        uint64_t X = PM_j | VN;
-        uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
+        uint64_t X = PM_j;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
         /* Step 2: Computing HP and HN */
         uint64_t HP = VN | ~(D0 | VP);
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        // modification: early exit using maxMisses
         currDist += !!(HP & mask);
         currDist -= !!(HN & mask);
 
         /* Step 4: Computing Vp and VN */
-        X = (HP << 1) | 1;
-        VP = (HN << 1) | ~(D0 | X);
-        VN = X & D0;
+        HP = (HP << 1) | 1;
+        HN = (HN << 1);
+
+        VP = HN | ~(D0 | HP);
+        VN = HP & D0;
     }
 
     return currDist;
@@ -217,10 +218,10 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
                             std::size_t s1_len, std::size_t max)
 {
     struct Vectors {
-        uint64_t Mv;
-        uint64_t Pv;
+        uint64_t VP;
+        uint64_t VN;
 
-        Vectors() : Mv(0), Pv(~0x0ull)
+        Vectors() : VP(~0x0ull), VN(0)
         {}
     };
 
@@ -253,54 +254,63 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
     std::vector<Vectors> vecs(words);
     const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
+    /* Searching */
     for (std::size_t i = 0; i < s2.size(); i++) {
-        uint64_t Pb = 1;
-        uint64_t Mb = 0;
+        uint64_t HP_carry = 1;
+        uint64_t HN_carry = 0;
 
         for (std::size_t word = 0; word < words - 1; word++) {
-            const uint64_t PM_j = PM.get(word, s2[i]);
-            const uint64_t Mv = vecs[word].Mv;
-            const uint64_t Pv = vecs[word].Pv;
+            /* Step 1: Computing D0 */
+            uint64_t PM_j = PM.get(word, s2[i]);
+            uint64_t VN = vecs[word].VN;
+            uint64_t VP = vecs[word].VP;
 
-            const uint64_t Xv = PM_j | Mv;
-            const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
+            uint64_t X = PM_j | HN_carry;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
-            uint64_t Ph = Mv | ~(Xh | Pv);
-            uint64_t Mh = Pv & Xh;
+            /* Step 2: Computing HP and HN */
+            uint64_t HP = VN | ~(D0 | VP);
+            uint64_t HN = D0 & VP;
 
-            const uint64_t PbTemp = Pb;
-            Pb = Ph >> 63;
-            Ph = (Ph << 1) | PbTemp;
+            /* Step 3: Computing the value D[m,j] */
+            // only required for last vector
 
-            const uint64_t MbTemp = Mb;
-            Mb = Mh >> 63;
-            Mh = (Mh << 1) | MbTemp;
+            /* Step 4: Computing Vp and VN */
+            uint64_t HP_carry_temp = HP_carry;
+            HP_carry = HP >> 63;
+            HP = (HP << 1) | HP_carry_temp;
 
-            vecs[word].Pv = Mh | ~(Xv | Ph);
-            vecs[word].Mv = Ph & Xv;
+            uint64_t HN_carry_temp = HN_carry;
+            HN_carry = HN >> 63;
+            HN = (HN << 1) | HN_carry_temp;
+
+            vecs[word].VP = HN | ~(D0 | HP);
+            vecs[word].VN = HP & D0;
         }
 
-        // distance only has to be incremented/decremented in the last word
         {
-            const uint64_t PM_j = PM.get(words - 1, s2[i]);
-            const uint64_t Mv = vecs[words - 1].Mv;
-            const uint64_t Pv = vecs[words - 1].Pv;
+            /* Step 1: Computing D0 */
+            uint64_t PM_j = PM.get(words - 1, s2[i]);
+            uint64_t VN = vecs[words - 1].VN;
+            uint64_t VP = vecs[words - 1].VP;
 
-            const uint64_t Xv = PM_j | Mv;
-            const uint64_t Xh = ((((PM_j | Mb) & Pv) + Pv) ^ Pv) | PM_j | Mb;
+            uint64_t X = PM_j | HN_carry;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
-            uint64_t Ph = Mv | ~(Xh | Pv);
-            uint64_t Mh = Pv & Xh;
+            /* Step 2: Computing HP and HN */
+            uint64_t HP = VN | ~(D0 | VP);
+            uint64_t HN = D0 & VP;
 
+            /* Step 3: Computing the value D[m,j] */
             // modification: early exit using maxMisses
-            if (Ph & Last) {
+            if (HP & Last) {
                 currDist++;
                 if (maxMisses < 2) {
                     return (std::size_t)-1;
                 }
                 maxMisses -= 2;
             }
-            else if (Mh & Last) {
+            else if (HN & Last) {
                 currDist--;
             }
             else {
@@ -310,11 +320,12 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
                 --maxMisses;
             }
 
-            Ph = (Ph << 1) | Pb;
-            Mh = (Mh << 1) | Mb;
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | HP_carry;
+            HN = (HN << 1) | HN_carry;
 
-            vecs[words - 1].Pv = Mh | ~(Xv | Ph);
-            vecs[words - 1].Mv = Ph & Xv;
+            vecs[words - 1].VP = HN | ~(D0 | HP);
+            vecs[words - 1].VN = HP & D0;
         }
     }
 
