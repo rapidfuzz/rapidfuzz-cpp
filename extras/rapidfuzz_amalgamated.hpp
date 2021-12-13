@@ -3833,7 +3833,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
-            matrix.dist -= !!(HP & Last);
+            matrix.dist += !!(HP & Last);
             matrix.dist -= !!(HN & Last);
 
             /* Step 4: Computing Vp and VN */
