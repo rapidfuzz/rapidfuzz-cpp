@@ -45,7 +45,7 @@ namespace string_metric {
  * @param max
  *   Maximum Levenshtein distance between s1 and s2, that is
  *   considered as a result. If the distance is bigger than max,
- *   -1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   max + 1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
  *   which deactivates this behaviour.
  *
  * @return returns the levenshtein distance between s1 and s2
@@ -142,7 +142,7 @@ namespace string_metric {
  * Setting a maximum distance allows the implementation to select
  * a more efficient implementation:
  * @code{.cpp}
- * // dist is -1
+ * // dist is 2
  * std::size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 1);
  * @endcode
  *
@@ -174,7 +174,7 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
                 max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
             const std::size_t distance =
                 detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
-            return (distance <= max) ? distance : (std::size_t)-1;
+            return (distance <= max) ? distance : max + 1;
         }
         /*
          * when replace_cost >= insert_cost + delete_cost no substitutions are performed
@@ -186,7 +186,7 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
                 max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
             const std::size_t distance =
                 detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
-            return (distance <= max) ? distance : (std::size_t)-1;
+            return (distance <= max) ? distance : max + 1;
         }
     }
 
@@ -221,7 +221,7 @@ struct CachedLevenshtein {
                 const std::size_t distance =
                     detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
                     weights.insert_cost;
-                return (distance <= max) ? distance : (std::size_t)-1;
+                return (distance <= max) ? distance : max + 1;
             }
             /*
              * when replace_cost >= insert_cost + delete_cost no substitutions are performed
@@ -234,7 +234,7 @@ struct CachedLevenshtein {
                 const std::size_t distance =
                     detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
                     weights.insert_cost;
-                return (distance <= max) ? distance : (std::size_t)-1;
+                return (distance <= max) ? distance : max + 1;
             }
         }
 
@@ -423,7 +423,7 @@ std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Se
  * @param max
  *   Maximum Hamming distance between s1 and s2, that is
  *   considered as a result. If the distance is bigger than max,
- *   -1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   max + 1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
  *   which deactivates this behaviour.
  *
  * @return Hamming distance between s1 and s2
@@ -447,7 +447,7 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return hamm > max ? (std::size_t)-1 : hamm;
+    return hamm > max ? max + 1 : hamm;
 }
 
 template <typename Sentence1>
