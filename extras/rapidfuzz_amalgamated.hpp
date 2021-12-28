@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-12-19 15:00:02.186896
+//  Generated: 2021-12-28 22:32:09.613879
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5729,7 +5729,7 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
 
-    if (dist != (std::size_t)-1) {
+    if (dist <= cutoff_distance) {
         result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
     }
 
@@ -5862,7 +5862,7 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
-    if (dist != (std::size_t)-1) {
+    if (dist <= cutoff_distance) {
         result =
             std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
@@ -5921,7 +5921,7 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
-    if (dist != (std::size_t)-1) {
+    if (dist <= cutoff_distance) {
         result =
             std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
@@ -5990,7 +5990,7 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
-    if (dist != (std::size_t)-1) {
+    if (dist <= cutoff_distance) {
         result =
             std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
