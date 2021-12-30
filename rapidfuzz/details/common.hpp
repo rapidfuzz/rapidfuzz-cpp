@@ -39,14 +39,33 @@ template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                                         SplittedSentenceView<CharT2> b);
 
-constexpr percent result_cutoff(double result, percent score_cutoff);
+constexpr double result_cutoff(double result, percent score_cutoff)
+{
+    return (result >= score_cutoff) ? result : 0;
+}
 
-constexpr percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
+template <int Max = 1>
+constexpr percent norm_distance(std::size_t dist, std::size_t lensum, double score_cutoff = 0)
+{
+    double max = static_cast<double>(Max);
+    return result_cutoff(
+        (lensum > 0) ? (max - max * dist / lensum)
+                     : max,
+        score_cutoff);
+}
 
-static inline std::size_t score_cutoff_to_distance(percent score_cutoff, std::size_t lensum);
+template <int Max = 1>
+static inline std::size_t score_cutoff_to_distance(double score_cutoff, std::size_t lensum)
+{
+    return static_cast<std::size_t>(
+        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+}
 
 template <typename T>
-constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
+constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
+{
+    return std::fabs(a) <= tolerance;
+}
 
 /**
  * @brief Get a string view to the object passed as parameter

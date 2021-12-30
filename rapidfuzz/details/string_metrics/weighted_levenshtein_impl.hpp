@@ -340,13 +340,12 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 }
 
 template <typename CharT1, typename CharT2>
-double
-normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
+double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
                                 const common::BlockPatternMatchVector& block,
                                 basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     std::size_t lensum = s1.size() + s2.size();
@@ -354,7 +353,7 @@ normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
     std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 template <typename CharT1, typename CharT2>
@@ -362,7 +361,7 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
                                        const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     std::size_t lensum = s1.size() + s2.size();
@@ -370,7 +369,7 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
     std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 } // namespace detail

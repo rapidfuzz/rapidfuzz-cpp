@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-12-28 22:32:09.613879
+//  Generated: 2021-12-30 23:34:23.741179
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1970,14 +1970,33 @@ template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                                         SplittedSentenceView<CharT2> b);
 
-constexpr percent result_cutoff(double result, percent score_cutoff);
+constexpr double result_cutoff(double result, percent score_cutoff)
+{
+    return (result >= score_cutoff) ? result : 0;
+}
 
-constexpr percent norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff = 0);
+template <int Max = 1>
+constexpr percent norm_distance(std::size_t dist, std::size_t lensum, double score_cutoff = 0)
+{
+    double max = static_cast<double>(Max);
+    return result_cutoff(
+        (lensum > 0) ? (max - max * dist / lensum)
+                     : max,
+        score_cutoff);
+}
 
-static inline std::size_t score_cutoff_to_distance(percent score_cutoff, std::size_t lensum);
+template <int Max = 1>
+static inline std::size_t score_cutoff_to_distance(double score_cutoff, std::size_t lensum)
+{
+    return static_cast<std::size_t>(
+        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+}
 
 template <typename T>
-constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon());
+constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
+{
+    return std::fabs(a) <= tolerance;
+}
 
 /**
  * @brief Get a string view to the object passed as parameter
@@ -2428,31 +2447,6 @@ DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentence
     }
 
     return {difference_ab, difference_ba, intersection};
-}
-
-constexpr percent common::result_cutoff(double result, percent score_cutoff)
-{
-    return (result >= score_cutoff) ? result : 0;
-}
-
-constexpr percent common::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
-{
-    return result_cutoff(
-        (lensum > 0) ? (100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum))
-                     : 100.0,
-        score_cutoff);
-}
-
-static inline std::size_t common::score_cutoff_to_distance(percent score_cutoff, std::size_t lensum)
-{
-    return static_cast<std::size_t>(
-        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100)));
-}
-
-template <typename T>
-constexpr bool common::is_zero(T a, T tolerance)
-{
-    return std::fabs(a) <= tolerance;
 }
 
 template <typename Sentence, typename CharT, typename>
@@ -3255,7 +3249,7 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
                                       LevenshteinWeightTable weights, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     // calculate the maximum possible edit distance from the weights
@@ -3407,8 +3401,7 @@ static inline percent jaro_calculate_similarity(
     double Sim = (double)CommonChars / (double)P.size() +
                  (double)CommonChars / (double)T.size() +
                  (double)(CommonChars - Transpositions) / (double)CommonChars;
-    Sim /= 3.0;
-    return Sim * 100;
+    return Sim / 3.0;
 }
 
 template <typename CharT1, typename CharT2>
@@ -3423,7 +3416,7 @@ static inline bool jaro_length_filter(
                  (double)min_len / (double)T.size() +
                  1.0;
     Sim /= 3.0;
-    return Sim * 100 >= score_cutoff;
+    return Sim >= score_cutoff;
 }
 
 template <typename CharT1, typename CharT2>
@@ -3437,7 +3430,7 @@ static inline bool jaro_common_char_filter(
                  (double)CommonChars / (double)T.size() +
                  1.0;
     Sim /= 3.0;
-    return Sim * 100 >= score_cutoff;
+    return Sim >= score_cutoff;
 }
 
 struct FlaggedCharsOriginal {
@@ -3627,24 +3620,24 @@ percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<C
     }
 
     double jaro_score_cutoff = score_cutoff;
-    if (jaro_score_cutoff > 70)
+    if (jaro_score_cutoff > 0.7)
     {
-        double prefix_sim = prefix * prefix_weight * 100;
+        double prefix_sim = prefix * prefix_weight;
 
-        if (prefix_sim == 100)
+        if (prefix_sim == 1.0)
         {
-            jaro_score_cutoff = 70;
+            jaro_score_cutoff = 0.7;
         }
         else
         {
-            jaro_score_cutoff = std::max(70.0, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 100.0));
+            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
         }
     }
 
     double Sim = jaro_similarity(P, T, jaro_score_cutoff);
-    if (Sim > 70)
+    if (Sim > 0.7)
     {
-        Sim += prefix * prefix_weight * (100 - Sim);
+        Sim += prefix * prefix_weight * (1.0 - Sim);
     }
 
     return common::result_cutoff(Sim, score_cutoff);;
@@ -4402,7 +4395,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1,
                               basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     /* calculate the maximum possible edit distance with
@@ -4412,7 +4405,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1,
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
     std::size_t dist = levenshtein(s1, block, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
 template <typename CharT1, typename CharT2>
@@ -4420,7 +4413,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
                               const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     /* calculate the maximum possible edit distance with
@@ -4430,7 +4423,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
     std::size_t dist = levenshtein(s1, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
 } // namespace detail
@@ -4774,13 +4767,12 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 }
 
 template <typename CharT1, typename CharT2>
-double
-normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
+double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
                                 const common::BlockPatternMatchVector& block,
                                 basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     std::size_t lensum = s1.size() + s2.size();
@@ -4788,7 +4780,7 @@ normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
     std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 template <typename CharT1, typename CharT2>
@@ -4796,7 +4788,7 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
                                        const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     std::size_t lensum = s1.size() + s2.size();
@@ -4804,7 +4796,7 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
     std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 } // namespace detail
@@ -5067,12 +5059,12 @@ private:
  *   (insertion, deletion, substitution). Default is {1, 1, 1},
  *   which gives all three operations a weight of 1.
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return Normalized weighted levenshtein distance between s1 and s2
- *   as a double between 0 and 100
+ *   as a double between 0 and 1.0
  *
  * @see levenshtein()
  *
@@ -5093,7 +5085,7 @@ private:
  *     dist_{max},                                 & \text{if } len(s1) = len(s2)
  *   \end{cases}\\[10pt]
  *
- *   ratio &= 100 \cdot \frac{distance(s1, s2)}{dist_{max}}
+ *   ratio &= \frac{distance(s1, s2)}{dist_{max}}
  * \f}
  * @endparblock
  *
@@ -5287,12 +5279,12 @@ private:
  * @param s2
  *   string to compare with s1 (for type info check Template parameters above)
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return Normalized hamming distance between s1 and s2
- *   as a float between 0 and 100
+ *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
 double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
@@ -5335,12 +5327,12 @@ private:
  *   Weight used for the common prefix of the two strings.
  *   Has to be between 0 and 0.25. Default is 0.1.
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return jaro winkler similarity between s1 and s2
- *   as a float between 0 and 100
+ *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
@@ -5388,12 +5380,12 @@ private:
  * @param s2
  *   string to compare with s1 (for type info check Template parameters above)
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return jaro similarity between s1 and s2
- *   as a float between 0 and 100
+ *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
 double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
@@ -5442,7 +5434,7 @@ namespace fuzz {
 template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
-    return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff);
+    return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff / 100) * 100;
 }
 
 template <typename Sentence1>
@@ -5452,7 +5444,7 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
     auto s2_view = common::to_string_view(s2);
 
     return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                                  score_cutoff);
+                                                                  score_cutoff / 100) * 100;
 }
 
 /**********************************************
@@ -5725,12 +5717,12 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
     percent result = 0;
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
 
     if (dist <= cutoff_distance) {
-        result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
+        result = common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff);
     }
 
     // exit early since the other ratios are 0
@@ -5743,11 +5735,11 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -5859,12 +5851,12 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
         result =
-            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -5877,11 +5869,11 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -5918,12 +5910,12 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
         result =
-            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -5936,11 +5928,11 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -5977,7 +5969,7 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     if (s1_sorted.size() < 65) {
         result = string_metric::detail::normalized_weighted_levenshtein(
             common::to_string_view(s2_sorted), blockmap_s1_sorted,
-            common::to_string_view(s1_sorted), score_cutoff);
+            common::to_string_view(s1_sorted), score_cutoff / 100) * 100;
     }
     else {
         result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
@@ -5987,12 +5979,12 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
         result =
-            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -6005,11 +5997,11 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }

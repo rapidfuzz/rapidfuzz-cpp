@@ -21,7 +21,7 @@ namespace fuzz {
 template <typename Sentence1, typename Sentence2>
 percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
 {
-    return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff);
+    return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff / 100) * 100;
 }
 
 template <typename Sentence1>
@@ -31,7 +31,7 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
     auto s2_view = common::to_string_view(s2);
 
     return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                                  score_cutoff);
+                                                                  score_cutoff / 100) * 100;
 }
 
 /**********************************************
@@ -304,12 +304,12 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
     percent result = 0;
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
 
     if (dist <= cutoff_distance) {
-        result = common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
+        result = common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff);
     }
 
     // exit early since the other ratios are 0
@@ -322,11 +322,11 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -438,12 +438,12 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
         result =
-            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -456,11 +456,11 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -497,12 +497,12 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
         result =
-            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -515,11 +515,11 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -556,7 +556,7 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     if (s1_sorted.size() < 65) {
         result = string_metric::detail::normalized_weighted_levenshtein(
             common::to_string_view(s2_sorted), blockmap_s1_sorted,
-            common::to_string_view(s1_sorted), score_cutoff);
+            common::to_string_view(s1_sorted), score_cutoff / 100) * 100;
     }
     else {
         result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
@@ -566,12 +566,12 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     size_t sect_ab_len = sect_len + !!sect_len + ab_len;
     size_t sect_ba_len = sect_len + !!sect_len + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
         result =
-            std::max(result, common::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
+            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -584,11 +584,11 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // the length difference
     std::size_t sect_ab_dist = !!sect_len + ab_len;
     percent sect_ab_ratio =
-        common::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = !!sect_len + ba_len;
     percent sect_ba_ratio =
-        common::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }

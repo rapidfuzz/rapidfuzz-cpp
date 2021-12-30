@@ -50,31 +50,6 @@ DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentence
     return {difference_ab, difference_ba, intersection};
 }
 
-constexpr percent common::result_cutoff(double result, percent score_cutoff)
-{
-    return (result >= score_cutoff) ? result : 0;
-}
-
-constexpr percent common::norm_distance(std::size_t dist, std::size_t lensum, percent score_cutoff)
-{
-    return result_cutoff(
-        (lensum > 0) ? (100.0 - 100 * static_cast<double>(dist) / static_cast<double>(lensum))
-                     : 100.0,
-        score_cutoff);
-}
-
-static inline std::size_t common::score_cutoff_to_distance(percent score_cutoff, std::size_t lensum)
-{
-    return static_cast<std::size_t>(
-        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100)));
-}
-
-template <typename T>
-constexpr bool common::is_zero(T a, T tolerance)
-{
-    return std::fabs(a) <= tolerance;
-}
-
 template <typename Sentence, typename CharT, typename>
 basic_string_view<CharT> common::to_string_view(Sentence&& str)
 {

@@ -24,8 +24,7 @@ static inline percent jaro_calculate_similarity(
     double Sim = (double)CommonChars / (double)P.size() +
                  (double)CommonChars / (double)T.size() +
                  (double)(CommonChars - Transpositions) / (double)CommonChars;
-    Sim /= 3.0;
-    return Sim * 100;
+    return Sim / 3.0;
 }
 
 template <typename CharT1, typename CharT2>
@@ -40,7 +39,7 @@ static inline bool jaro_length_filter(
                  (double)min_len / (double)T.size() +
                  1.0;
     Sim /= 3.0;
-    return Sim * 100 >= score_cutoff;
+    return Sim >= score_cutoff;
 }
 
 template <typename CharT1, typename CharT2>
@@ -54,7 +53,7 @@ static inline bool jaro_common_char_filter(
                  (double)CommonChars / (double)T.size() +
                  1.0;
     Sim /= 3.0;
-    return Sim * 100 >= score_cutoff;
+    return Sim >= score_cutoff;
 }
 
 struct FlaggedCharsOriginal {
@@ -244,24 +243,24 @@ percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<C
     }
 
     double jaro_score_cutoff = score_cutoff;
-    if (jaro_score_cutoff > 70)
+    if (jaro_score_cutoff > 0.7)
     {
-        double prefix_sim = prefix * prefix_weight * 100;
+        double prefix_sim = prefix * prefix_weight;
 
-        if (prefix_sim == 100)
+        if (prefix_sim == 1.0)
         {
-            jaro_score_cutoff = 70;
+            jaro_score_cutoff = 0.7;
         }
         else
         {
-            jaro_score_cutoff = std::max(70.0, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 100.0));
+            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
         }
     }
 
     double Sim = jaro_similarity(P, T, jaro_score_cutoff);
-    if (Sim > 70)
+    if (Sim > 0.7)
     {
-        Sim += prefix * prefix_weight * (100 - Sim);
+        Sim += prefix * prefix_weight * (1.0 - Sim);
     }
 
     return common::result_cutoff(Sim, score_cutoff);;

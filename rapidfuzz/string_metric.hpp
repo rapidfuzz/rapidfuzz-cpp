@@ -265,12 +265,12 @@ private:
  *   (insertion, deletion, substitution). Default is {1, 1, 1},
  *   which gives all three operations a weight of 1.
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return Normalized weighted levenshtein distance between s1 and s2
- *   as a double between 0 and 100
+ *   as a double between 0 and 1.0
  *
  * @see levenshtein()
  *
@@ -291,7 +291,7 @@ private:
  *     dist_{max},                                 & \text{if } len(s1) = len(s2)
  *   \end{cases}\\[10pt]
  *
- *   ratio &= 100 \cdot \frac{distance(s1, s2)}{dist_{max}}
+ *   ratio &= \frac{distance(s1, s2)}{dist_{max}}
  * \f}
  * @endparblock
  *
@@ -485,12 +485,12 @@ private:
  * @param s2
  *   string to compare with s1 (for type info check Template parameters above)
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return Normalized hamming distance between s1 and s2
- *   as a float between 0 and 100
+ *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
 double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
@@ -533,12 +533,12 @@ private:
  *   Weight used for the common prefix of the two strings.
  *   Has to be between 0 and 0.25. Default is 0.1.
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return jaro winkler similarity between s1 and s2
- *   as a float between 0 and 100
+ *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
@@ -586,12 +586,12 @@ private:
  * @param s2
  *   string to compare with s1 (for type info check Template parameters above)
  * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 100.
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
  *   For ratio < score_cutoff 0 is returned instead. Default is 0,
  *   which deactivates this behaviour.
  *
  * @return jaro similarity between s1 and s2
- *   as a float between 0 and 100
+ *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
 double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)

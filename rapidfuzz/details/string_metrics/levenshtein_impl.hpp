@@ -451,7 +451,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1,
                               basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     /* calculate the maximum possible edit distance with
@@ -461,7 +461,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1,
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
     std::size_t dist = levenshtein(s1, block, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
 template <typename CharT1, typename CharT2>
@@ -469,7 +469,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
                               const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     /* calculate the maximum possible edit distance with
@@ -479,7 +479,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
     std::size_t dist = levenshtein(s1, s2, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+    return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
 } // namespace detail

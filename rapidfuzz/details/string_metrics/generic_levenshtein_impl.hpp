@@ -73,7 +73,7 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
                                       LevenshteinWeightTable weights, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
-        return 100.0 * static_cast<double>(s1.empty() && s2.empty());
+        return static_cast<double>(s1.empty() && s2.empty());
     }
 
     // calculate the maximum possible edit distance from the weights
