@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2021-12-30 23:34:23.741179
+//  Generated: 2022-01-03 20:24:19.935358
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3659,9 +3659,7 @@ namespace detail {
 template<typename T>
 struct MatrixVectorView {
     explicit MatrixVectorView(T* vector)
-    {
-        m_vector = vector;
-    }
+        : m_vector(vector) {}
 
     T& operator[](uint64_t col)
     {
@@ -3670,6 +3668,23 @@ struct MatrixVectorView {
 
 private:
     T* m_vector;
+};
+
+template<typename T>
+struct ConstMatrixVectorView {
+    explicit ConstMatrixVectorView(const T* vector)
+        : m_vector(vector) {}
+
+    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+        : m_vector(other.m_vector) {}
+
+    const T& operator[](uint64_t col)
+    {
+        return m_vector[col];
+    }
+
+private:
+    const T* m_vector;
 };
 
 template<typename T>
@@ -3699,6 +3714,11 @@ struct Matrix {
         return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols]);
     }
 
+    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
+    {
+        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols]);
+    }
+
 private:
     uint64_t m_rows;
     uint64_t m_cols;
@@ -3713,6 +3733,7 @@ struct LevenshteinBitMatrix {
     Matrix<uint64_t> D0;
     Matrix<uint64_t> VP;
     Matrix<uint64_t> HP;
+
     size_t dist;
 };
 
@@ -3756,7 +3777,6 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
 
     return matrix;
 }
-
 
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT1> s2,
@@ -3872,7 +3892,7 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);
-    LevenshteinBitMatrix matrix = levenshtein_matrix(s1, s2);
+    const LevenshteinBitMatrix matrix = levenshtein_matrix(s1, s2);
     size_t dist = matrix.dist;
     std::vector<LevenshteinEditOp> editops(dist);
 
@@ -3937,7 +3957,7 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
         row--;
         editops[dist].type = LevenshteinEditType::Delete;
         editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;  
+        editops[dist].dest_pos = col + affix.prefix_len;
     }
 
     return editops;
