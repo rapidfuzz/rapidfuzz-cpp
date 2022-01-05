@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-03 20:24:19.935358
+//  Generated: 2022-01-05 13:38:08.650877
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3909,11 +3909,13 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
         col_pos = col_pos % 64;
         uint64_t mask = 1ull << col_pos;
 
-        /* horizontal == current and character similar -> no-operation */
-        if ((matrix.D0[row - 1][col_word] & mask) && common::mixed_sign_equal(s1[row - 1], s2[col - 1])) {
+        /* above + 1 == current -> deletion */
+        if (matrix.HP[row - 1][col_word] & mask) {
+            dist--;
             row--;
-            col--;
-            continue;
+            editops[dist].type = LevenshteinEditType::Delete;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
         }
         /* left + 1 == current -> insertion */
         else if (matrix.VP[row - 1][col_word] & mask) {
@@ -3923,13 +3925,11 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
         }
-        /* above + 1 == current -> deletion */
-        else if (matrix.HP[row - 1][col_word] & mask) {
-            dist--;
+        /* horizontal == current and character similar -> no-operation */
+        else if ((matrix.D0[row - 1][col_word] & mask)) {
             row--;
-            editops[dist].type = LevenshteinEditType::Delete;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
+            col--;
+            continue;
         }
         /* -> replace */
         else {

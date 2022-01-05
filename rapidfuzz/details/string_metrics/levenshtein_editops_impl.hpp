@@ -265,11 +265,13 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
         col_pos = col_pos % 64;
         uint64_t mask = 1ull << col_pos;
 
-        /* horizontal == current and character similar -> no-operation */
-        if ((matrix.D0[row - 1][col_word] & mask) && common::mixed_sign_equal(s1[row - 1], s2[col - 1])) {
+        /* above + 1 == current -> deletion */
+        if (matrix.HP[row - 1][col_word] & mask) {
+            dist--;
             row--;
-            col--;
-            continue;
+            editops[dist].type = LevenshteinEditType::Delete;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
         }
         /* left + 1 == current -> insertion */
         else if (matrix.VP[row - 1][col_word] & mask) {
@@ -279,13 +281,11 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
             editops[dist].src_pos = row + affix.prefix_len;
             editops[dist].dest_pos = col + affix.prefix_len;
         }
-        /* above + 1 == current -> deletion */
-        else if (matrix.HP[row - 1][col_word] & mask) {
-            dist--;
+        /* horizontal == current and character similar -> no-operation */
+        else if ((matrix.D0[row - 1][col_word] & mask)) {
             row--;
-            editops[dist].type = LevenshteinEditType::Delete;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
+            col--;
+            continue;
         }
         /* -> replace */
         else {
