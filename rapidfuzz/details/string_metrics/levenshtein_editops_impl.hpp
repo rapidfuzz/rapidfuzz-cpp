@@ -45,14 +45,14 @@ private:
 
 template<typename T>
 struct Matrix {
-    Matrix(uint64_t rows, uint64_t cols)
+    Matrix(uint64_t rows, uint64_t cols, uint64_t val)
     {
         m_rows = rows;
         m_cols = cols;
         if (rows * cols > 0)
         {
             m_matrix = new T[rows * cols];
-            memset(m_matrix, 0, rows * cols * sizeof(T));
+            std::fill_n(m_matrix, rows * cols, val);
         }
         else
         {
@@ -83,15 +83,98 @@ private:
 
 struct LevenshteinBitMatrix {
     LevenshteinBitMatrix(uint64_t rows, uint64_t cols)
-        : D0(rows, cols), VP(rows, cols), HP(rows, cols), dist(0)
+        : VP(rows, cols, (uint64_t)-1), VN(rows, cols, 0), dist(0)
     {}
 
-    Matrix<uint64_t> D0;
     Matrix<uint64_t> VP;
-    Matrix<uint64_t> HP;
+    Matrix<uint64_t> VN;
 
     size_t dist;
 };
+
+/**
+ * @brief recover alignment from bitparallel Levenshtein matrix
+ */
+template <typename CharT1, typename CharT2>
+std::vector<LevenshteinEditOp> recover_alignment(
+    basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+    const Matrix<uint64_t>& delta1, const Matrix<uint64_t>& delta2,
+    size_t dist, size_t prefix_len
+)
+{
+    std::vector<LevenshteinEditOp> editops(dist);
+
+    if (dist == 0) {
+        return editops;
+    }
+
+    size_t row = s1.size();
+    size_t col = s2.size();
+
+    while (row && col) {
+        uint64_t col_pos = col - 1;
+        uint64_t col_word = col_pos / 64;
+        col_pos = col_pos % 64;
+        uint64_t mask = 1ull << col_pos;
+
+        /* Insertion */
+        if (delta1[row - 1][col_word] & mask)
+        {
+            dist--;
+            col--;
+            editops[dist].type = LevenshteinEditType::Insert;
+            editops[dist].src_pos = row + prefix_len;
+            editops[dist].dest_pos = col + prefix_len;
+        }
+        else {
+            row--;
+
+            /* Insertion */
+            if (row && delta2[row - 1][col_word] & mask)
+            {
+                dist--;
+                editops[dist].type = LevenshteinEditType::Delete;
+                editops[dist].src_pos = row + prefix_len;
+                editops[dist].dest_pos = col + prefix_len;
+            }
+            /* Match/Mismatch */
+            else
+            {
+                col--;
+
+                /* Replace (Matches are not recorded) */
+                if (s1[row] != s2[col])
+                {
+                    dist--;
+                    editops[dist].type = LevenshteinEditType::Replace;
+                    editops[dist].src_pos = row + prefix_len;
+                    editops[dist].dest_pos = col + prefix_len;
+                }
+            }
+        }
+    }
+
+    while (col)
+    {
+        dist--;
+        col--;
+        editops[dist].type = LevenshteinEditType::Insert;
+        editops[dist].src_pos = row + prefix_len;
+        editops[dist].dest_pos = col + prefix_len;
+    }
+
+    while (row)
+    {
+        dist--;
+        row--;
+        editops[dist].type = LevenshteinEditType::Delete;
+        editops[dist].src_pos = row + prefix_len;
+        editops[dist].dest_pos = col + prefix_len;
+    }
+
+    return editops;
+}
+
 
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
@@ -113,10 +196,10 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
         /* Step 1: Computing D0 */
         uint64_t PM_j = PM.get(s2[i]);
         uint64_t X = PM_j;
-        uint64_t D0 = matrix.D0[i][0] = (((X & VP) + VP) ^ VP) | X | VN;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
         /* Step 2: Computing HP and HN */
-        uint64_t HP = matrix.HP[i][0] = VN | ~(D0 | VP);
+        uint64_t HP = VN | ~(D0 | VP);
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
@@ -128,7 +211,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
         HN = (HN << 1);
 
         VP = matrix.VP[i][0] = HN | ~(D0 | HP);
-        VN = HP & D0;
+        VN = matrix.VN[i][0] = HP & D0;
     }
 
     return matrix;
@@ -139,6 +222,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
                                           const common::BlockPatternMatchVector& PM,
                                           size_t s1_len)
 {
+    /* todo could be replaced with access to matrix which would slightly
+     * reduce memory usage */
     struct Vectors {
         uint64_t VP;
         uint64_t VN;
@@ -166,10 +251,10 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t VP = vecs[word].VP;
 
             uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = matrix.D0[i][word] = (((X & VP) + VP) ^ VP) | X | VN;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
             /* Step 2: Computing HP and HN */
-            uint64_t HP = matrix.HP[i][word] = VN | ~(D0 | VP);
+            uint64_t HP = VN | ~(D0 | VP);
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
@@ -185,7 +270,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             HN = (HN << 1) | HN_carry_temp;
 
             vecs[word].VP = matrix.VP[i][word] = HN | ~(D0 | HP);
-            vecs[word].VN = HP & D0;
+            vecs[word].VN = matrix.VN[i][word] = HP & D0;
         }
 
         {
@@ -195,10 +280,10 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t VP = vecs[words - 1].VP;
 
             uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = matrix.D0[i][words - 1] = (((X & VP) + VP) ^ VP) | X | VN;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
             /* Step 2: Computing HP and HN */
-            uint64_t HP = matrix.HP[i][words - 1] = VN | ~(D0 | VP);
+            uint64_t HP = VN | ~(D0 | VP);
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
@@ -210,7 +295,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             HN = (HN << 1) | HN_carry;
 
             vecs[words - 1].VP = matrix.VP[i][words - 1] = HN | ~(D0 | HP);
-            vecs[words - 1].VN = HP & D0;
+            vecs[words - 1].VN = matrix.VN[i][words - 1] = HP & D0;
         }
     }
 
@@ -251,72 +336,8 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
     const LevenshteinBitMatrix matrix = levenshtein_matrix(s1, s2);
     size_t dist = matrix.dist;
     std::vector<LevenshteinEditOp> editops(dist);
-
-    if (dist == 0) {
-        return editops;
-    }
-
-    size_t row = s1.size();
-    size_t col = s2.size();
-
-    while (row && col) {
-        uint64_t col_pos = col - 1;
-        uint64_t col_word = col_pos / 64;
-        col_pos = col_pos % 64;
-        uint64_t mask = 1ull << col_pos;
-
-        /* above + 1 == current -> deletion */
-        if (matrix.HP[row - 1][col_word] & mask) {
-            dist--;
-            row--;
-            editops[dist].type = LevenshteinEditType::Delete;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-        /* left + 1 == current -> insertion */
-        else if (matrix.VP[row - 1][col_word] & mask) {
-            dist--;
-            col--;
-            editops[dist].type = LevenshteinEditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-        /* horizontal == current and character similar -> no-operation */
-        else if ((matrix.D0[row - 1][col_word] & mask)) {
-            row--;
-            col--;
-            continue;
-        }
-        /* -> replace */
-        else {
-            dist--;
-            row--;
-            col--;
-            editops[dist].type = LevenshteinEditType::Replace;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-    }
-
-    while (col)
-    {
-        dist--;
-        col--;
-        editops[dist].type = LevenshteinEditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
-    }
-
-    while (row)
-    {
-        dist--;
-        row--;
-        editops[dist].type = LevenshteinEditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
-    }
-
-    return editops;
+    
+    return recover_alignment(s1, s2, matrix.VP, matrix.VN, dist, affix.prefix_len);
 }
 
 } // namespace detail
