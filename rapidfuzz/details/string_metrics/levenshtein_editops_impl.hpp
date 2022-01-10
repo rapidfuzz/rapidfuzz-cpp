@@ -12,82 +12,13 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
-template<typename T>
-struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector)
-        : m_vector(vector) {}
-
-    T& operator[](uint64_t col)
-    {
-        return m_vector[col];
-    }
-
-private:
-    T* m_vector;
-};
-
-template<typename T>
-struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector)
-        : m_vector(vector) {}
-
-    ConstMatrixVectorView(const MatrixVectorView<T>& other)
-        : m_vector(other.m_vector) {}
-
-    const T& operator[](uint64_t col)
-    {
-        return m_vector[col];
-    }
-
-private:
-    const T* m_vector;
-};
-
-template<typename T>
-struct Matrix {
-    Matrix(uint64_t rows, uint64_t cols, uint64_t val)
-    {
-        m_rows = rows;
-        m_cols = cols;
-        if (rows * cols > 0)
-        {
-            m_matrix = new T[rows * cols];
-            std::fill_n(m_matrix, rows * cols, val);
-        }
-        else
-        {
-            m_matrix = nullptr;
-        }
-    }
-
-    ~Matrix()
-    {
-        delete[] m_matrix;
-    }
-
-    MatrixVectorView<uint64_t> operator[](uint64_t row)
-    {
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols]);
-    }
-
-    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
-    {
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols]);
-    }
-
-private:
-    uint64_t m_rows;
-    uint64_t m_cols;
-    T* m_matrix;
-};
-
 struct LevenshteinBitMatrix {
     LevenshteinBitMatrix(uint64_t rows, uint64_t cols)
         : VP(rows, cols, (uint64_t)-1), VN(rows, cols, 0), dist(0)
     {}
 
-    Matrix<uint64_t> VP;
-    Matrix<uint64_t> VN;
+    common::Matrix<uint64_t> VP;
+    common::Matrix<uint64_t> VN;
 
     size_t dist;
 };
@@ -98,10 +29,10 @@ struct LevenshteinBitMatrix {
 template <typename CharT1, typename CharT2>
 std::vector<LevenshteinEditOp> recover_alignment(
     basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-    const Matrix<uint64_t>& delta1, const Matrix<uint64_t>& delta2,
-    size_t dist, size_t prefix_len
+    const LevenshteinBitMatrix& matrix, size_t prefix_len
 )
 {
+    size_t dist = matrix.dist;
     std::vector<LevenshteinEditOp> editops(dist);
 
     if (dist == 0) {
@@ -118,7 +49,7 @@ std::vector<LevenshteinEditOp> recover_alignment(
         uint64_t mask = 1ull << col_pos;
 
         /* Insertion */
-        if (delta1[row - 1][col_word] & mask)
+        if (matrix.VP[row - 1][col_word] & mask)
         {
             dist--;
             col--;
@@ -129,8 +60,8 @@ std::vector<LevenshteinEditOp> recover_alignment(
         else {
             row--;
 
-            /* Insertion */
-            if (row && delta2[row - 1][col_word] & mask)
+            /* Deletion */
+            if (row && matrix.VN[row - 1][col_word] & mask)
             {
                 dist--;
                 editops[dist].type = LevenshteinEditType::Delete;
@@ -333,11 +264,8 @@ std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);
-    const LevenshteinBitMatrix matrix = levenshtein_matrix(s1, s2);
-    size_t dist = matrix.dist;
-    std::vector<LevenshteinEditOp> editops(dist);
-    
-    return recover_alignment(s1, s2, matrix.VP, matrix.VN, dist, affix.prefix_len);
+
+    return recover_alignment(s1, s2, levenshtein_matrix(s1, s2), affix.prefix_len);
 }
 
 } // namespace detail

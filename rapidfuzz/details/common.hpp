@@ -369,6 +369,82 @@ struct CharHashTable {
     }
 };
 
+template<typename T>
+struct MatrixVectorView {
+    explicit MatrixVectorView(T* vector, size_t cols)
+        : m_vector(vector), m_cols(cols) {}
+
+    T& operator[](uint64_t col)
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+private:
+    T* m_vector;
+    size_t m_cols;
+};
+
+template<typename T>
+struct ConstMatrixVectorView {
+    explicit ConstMatrixVectorView(const T* vector, size_t cols)
+        : m_vector(vector), m_cols(cols) {}
+
+    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+        : m_vector(other.m_vector) {}
+
+    const T& operator[](uint64_t col)
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+private:
+    const T* m_vector;
+    size_t m_cols;
+};
+
+template<typename T>
+struct Matrix {
+    Matrix(uint64_t rows, uint64_t cols, uint64_t val)
+    {
+        m_rows = rows;
+        m_cols = cols;
+        if (rows * cols > 0)
+        {
+            m_matrix = new T[rows * cols];
+            std::fill_n(m_matrix, rows * cols, val);
+        }
+        else
+        {
+            m_matrix = nullptr;
+        }
+    }
+
+    ~Matrix()
+    {
+        delete[] m_matrix;
+    }
+
+    MatrixVectorView<uint64_t> operator[](uint64_t row)
+    {
+        assert(row < m_rows);
+        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+    }
+
+    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
+    {
+        assert(row < m_rows);
+        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+    }
+
+private:
+    uint64_t m_rows;
+    uint64_t m_cols;
+    T* m_matrix;
+};
+
+
 /**@}*/
 
 } // namespace common

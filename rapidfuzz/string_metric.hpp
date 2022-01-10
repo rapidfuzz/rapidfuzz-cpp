@@ -8,6 +8,7 @@
 #include <rapidfuzz/details/string_metrics/levenshtein_editops_impl.hpp>
 #include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
+#include <rapidfuzz/details/string_metrics/llcs_editops_impl.hpp>
 
 #include <cmath>
 #include <numeric>
@@ -403,6 +404,16 @@ std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Se
 
     return detail::levenshtein_editops(sentence1, sentence2);
 }
+
+template <typename Sentence1, typename Sentence2>
+std::vector<LevenshteinEditOp> llcs_editops(const Sentence1& s1, const Sentence2& s2)
+{
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
+
+    return detail::llcs_editops(sentence1, sentence2);
+}
+
 
 /**
  * @brief Calculates the Hamming distance between two strings.
