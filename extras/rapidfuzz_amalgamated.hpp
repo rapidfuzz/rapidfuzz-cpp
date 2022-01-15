@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-15 19:50:44.888974
+//  Generated: 2022-01-15 20:54:45.019223
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -19,6 +19,7 @@
 
 #include <type_traits>
 #include <vector>
+#include <algorithm>
 
 // Copyright 2017-2020 by Martin Moene
 //
@@ -1886,6 +1887,13 @@ public:
         return ed_slice;
     }
 
+    Editops reverse() const
+    {
+        Editops reversed = *this;
+        std::reverse(reversed.begin(), reversed.end());
+        return reversed;
+    }
+
     size_type get_src_len() const { return src_len; }
     void set_src_len(size_type len) { src_len = len; }
     size_type get_dest_len() const { return dest_len; }
@@ -2016,6 +2024,13 @@ public:
         Opcodes ed_slice;
         detail::vector_slice(ed_slice, *this, start, stop, step);
         return ed_slice;
+    }
+
+    Opcodes reverse() const
+    {
+        Opcodes reversed = *this;
+        std::reverse(reversed.begin(), reversed.end());
+        return reversed;
     }
 
     size_type get_src_len() const { return src_len; }

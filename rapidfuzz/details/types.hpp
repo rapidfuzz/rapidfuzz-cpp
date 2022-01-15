@@ -5,6 +5,7 @@
 
 #include <type_traits>
 #include <vector>
+#include <algorithm>
 
 #include <rapidfuzz/details/string_view.hpp>
 
@@ -241,6 +242,13 @@ public:
         return ed_slice;
     }
 
+    Editops reverse() const
+    {
+        Editops reversed = *this;
+        std::reverse(reversed.begin(), reversed.end());
+        return reversed;
+    }
+
     size_type get_src_len() const { return src_len; }
     void set_src_len(size_type len) { src_len = len; }
     size_type get_dest_len() const { return dest_len; }
@@ -371,6 +379,13 @@ public:
         Opcodes ed_slice;
         detail::vector_slice(ed_slice, *this, start, stop, step);
         return ed_slice;
+    }
+
+    Opcodes reverse() const
+    {
+        Opcodes reversed = *this;
+        std::reverse(reversed.begin(), reversed.end());
+        return reversed;
     }
 
     size_type get_src_len() const { return src_len; }
