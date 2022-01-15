@@ -239,6 +239,8 @@ public:
     {
         Editops ed_slice;
         detail::vector_slice(ed_slice, *this, start, stop, step);
+        ed_slice.src_len = src_len;
+        ed_slice.dest_len = dest_len;
         return ed_slice;
     }
 
@@ -378,6 +380,8 @@ public:
     {
         Opcodes ed_slice;
         detail::vector_slice(ed_slice, *this, start, stop, step);
+        ed_slice.src_len = src_len;
+        ed_slice.dest_len = dest_len;
         return ed_slice;
     }
 

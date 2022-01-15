@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-15 20:54:45.019223
+//  Generated: 2022-01-15 21:33:24.879464
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1884,6 +1884,8 @@ public:
     {
         Editops ed_slice;
         detail::vector_slice(ed_slice, *this, start, stop, step);
+        ed_slice.src_len = src_len;
+        ed_slice.dest_len = dest_len;
         return ed_slice;
     }
 
@@ -2023,6 +2025,8 @@ public:
     {
         Opcodes ed_slice;
         detail::vector_slice(ed_slice, *this, start, stop, step);
+        ed_slice.src_len = src_len;
+        ed_slice.dest_len = dest_len;
         return ed_slice;
     }
 
@@ -4232,13 +4236,13 @@ struct LevenshteinBitMatrix {
 template <typename CharT1, typename CharT2>
 Editops recover_alignment(
     basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-    const LevenshteinBitMatrix& matrix, size_t prefix_len
+    const LevenshteinBitMatrix& matrix, StringAffix affix
 )
 {
     size_t dist = matrix.dist;
     Editops editops(dist);
-    editops.set_src_len(s1.size());
-    editops.set_dest_len(s2.size());
+    editops.set_src_len(s1.size() + affix.prefix_len + affix.suffix_len);
+    editops.set_dest_len(s2.size() + affix.prefix_len + affix.suffix_len);
 
     if (dist == 0) {
         return editops;
@@ -4259,8 +4263,8 @@ Editops recover_alignment(
             dist--;
             col--;
             editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + prefix_len;
-            editops[dist].dest_pos = col + prefix_len;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
         }
         else {
             row--;
@@ -4270,8 +4274,8 @@ Editops recover_alignment(
             {
                 dist--;
                 editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + prefix_len;
-                editops[dist].dest_pos = col + prefix_len;
+                editops[dist].src_pos = row + affix.prefix_len;
+                editops[dist].dest_pos = col + affix.prefix_len;
             }
             /* Match/Mismatch */
             else
@@ -4283,8 +4287,8 @@ Editops recover_alignment(
                 {
                     dist--;
                     editops[dist].type = EditType::Replace;
-                    editops[dist].src_pos = row + prefix_len;
-                    editops[dist].dest_pos = col + prefix_len;
+                    editops[dist].src_pos = row + affix.prefix_len;
+                    editops[dist].dest_pos = col + affix.prefix_len;
                 }
             }
         }
@@ -4295,8 +4299,8 @@ Editops recover_alignment(
         dist--;
         col--;
         editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + prefix_len;
-        editops[dist].dest_pos = col + prefix_len;
+        editops[dist].src_pos = row + affix.prefix_len;
+        editops[dist].dest_pos = col + affix.prefix_len;
     }
 
     while (row)
@@ -4304,8 +4308,8 @@ Editops recover_alignment(
         dist--;
         row--;
         editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + prefix_len;
-        editops[dist].dest_pos = col + prefix_len;
+        editops[dist].src_pos = row + affix.prefix_len;
+        editops[dist].dest_pos = col + affix.prefix_len;
     }
 
     return editops;
@@ -4472,7 +4476,7 @@ Editops levenshtein_editops(basic_string_view<CharT1> s1,
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);
 
-    return recover_alignment(s1, s2, levenshtein_matrix(s1, s2), affix.prefix_len);
+    return recover_alignment(s1, s2, levenshtein_matrix(s1, s2), affix);
 }
 
 } // namespace detail
@@ -5443,13 +5447,13 @@ struct LLCSBitMatrix {
 template <typename CharT1, typename CharT2>
 Editops recover_alignment(
     basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-    const LLCSBitMatrix& matrix, size_t prefix_len
+    const LLCSBitMatrix& matrix, StringAffix affix
 )
 {
     size_t dist = matrix.dist;
     Editops editops(dist);
-    editops.set_src_len(s1.size());
-    editops.set_dest_len(s2.size());
+    editops.set_src_len(s1.size() + affix.prefix_len + affix.suffix_len);
+    editops.set_dest_len(s2.size() + affix.prefix_len + affix.suffix_len);
 
     if (dist == 0) {
         return editops;
@@ -5470,8 +5474,8 @@ Editops recover_alignment(
             dist--;
             col--;
             editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + prefix_len;
-            editops[dist].dest_pos = col + prefix_len;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
         }
         else {
             row--;
@@ -5481,8 +5485,8 @@ Editops recover_alignment(
             {
                 dist--;
                 editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + prefix_len;
-                editops[dist].dest_pos = col + prefix_len;
+                editops[dist].src_pos = row + affix.prefix_len;
+                editops[dist].dest_pos = col + affix.prefix_len;
             }
             /* Match */
             else
@@ -5498,8 +5502,8 @@ Editops recover_alignment(
         dist--;
         col--;
         editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + prefix_len;
-        editops[dist].dest_pos = col + prefix_len;
+        editops[dist].src_pos = row + affix.prefix_len;
+        editops[dist].dest_pos = col + affix.prefix_len;
     }
 
     while (row)
@@ -5507,8 +5511,8 @@ Editops recover_alignment(
         dist--;
         row--;
         editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + prefix_len;
-        editops[dist].dest_pos = col + prefix_len;
+        editops[dist].src_pos = row + affix.prefix_len;
+        editops[dist].dest_pos = col + affix.prefix_len;
     }
 
     return editops;
@@ -5633,7 +5637,7 @@ Editops llcs_editops(basic_string_view<CharT1> s1,
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);
 
-    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix.prefix_len);
+    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
 }
 
 } // namespace detail
