@@ -99,14 +99,12 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
 }
 
 template <std::size_t N, typename CharT1>
-static inline std::size_t
-longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
-                            const common::PatternMatchVector* block,
-                            std::size_t s2_len)
+static inline std::size_t longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
+                                                            const common::PatternMatchVector* block,
+                                                            std::size_t s2_len)
 {
     std::uint64_t S[N];
-    for (std::size_t i = 0; i < N; ++i)
-    {
+    for (std::size_t i = 0; i < N; ++i) {
         S[i] = ~0x0ull;
     }
 
@@ -116,8 +114,7 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
-        for (std::size_t i = 0; i < N; ++i)
-        {
+        for (std::size_t i = 0; i < N; ++i) {
             Matches[i] = block[i].get(ch1);
             u[i] = S[i] & Matches[i];
             x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
@@ -126,18 +123,15 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     }
 
     std::size_t res = 0;
-    for (std::size_t i = 0; i < N; ++i)
-    {
+    for (std::size_t i = 0; i < N; ++i) {
         res += intrinsics::popcount64(~S[i]);
     }
     return s1.size() + s2_len - 2 * res;
 }
 
 template <typename CharT1>
-static inline std::size_t
-longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector& block,
-                            std::size_t s2_len)
+static inline std::size_t longest_common_subsequence_blockwise(
+    basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block, std::size_t s2_len)
 {
     std::size_t words = block.m_val.size();
     std::vector<std::uint64_t> S(words, ~0x0ull);
@@ -165,20 +159,28 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
 
 template <typename CharT1>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector& block,
-                            std::size_t s2_len)
+                                       const common::BlockPatternMatchVector& block,
+                                       std::size_t s2_len)
 {
-    switch(block.m_val.size())
-    {
-    case 1:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
-    case 2:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
-    case 3:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
-    case 4:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
-    case 5:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
-    case 6:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
-    case 7:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
-    case 8:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
-    default: return longest_common_subsequence_blockwise(s1, block, s2_len);
+    switch (block.m_val.size()) {
+    case 1:
+        return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
+    case 2:
+        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
+    case 3:
+        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
+    case 4:
+        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
+    case 5:
+        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
+    case 6:
+        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
+    case 7:
+        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
+    case 8:
+        return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
+    default:
+        return longest_common_subsequence_blockwise(s1, block, s2_len);
     }
 }
 
@@ -186,8 +188,7 @@ template <typename CharT1, typename CharT2>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
     std::size_t nr = (s2.size() / 64) + (std::size_t)((s2.size() % 64) > 0);
-    switch(nr)
-    {
+    switch (nr) {
     case 1:
     {
         auto block = common::PatternMatchVector(s2);
@@ -235,7 +236,6 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_strin
     }
     }
 }
-
 
 // TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2>
@@ -341,8 +341,8 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 
 template <typename CharT1, typename CharT2>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-                                const common::BlockPatternMatchVector& block,
-                                basic_string_view<CharT2> s2, const double score_cutoff)
+                                       const common::BlockPatternMatchVector& block,
+                                       basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
         return static_cast<double>(s1.empty() && s2.empty());

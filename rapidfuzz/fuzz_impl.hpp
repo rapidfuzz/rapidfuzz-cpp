@@ -31,7 +31,8 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
     auto s2_view = common::to_string_view(s2);
 
     return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                                  score_cutoff / 100) * 100;
+                                                                  score_cutoff / 100) *
+           100;
 }
 
 /**********************************************
@@ -442,8 +443,8 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
-        result =
-            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(
+            result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -501,8 +502,8 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
-        result =
-            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(
+            result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -528,8 +529,8 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 template <typename CharT1, typename Sentence2>
 percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
                     const SplittedSentenceView<CharT1>& tokens_s1,
-                    const common::BlockPatternMatchVector& blockmap_s1_sorted,
-                    const Sentence2& s2, percent score_cutoff)
+                    const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
+                    percent score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -555,8 +556,9 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
         result = string_metric::detail::normalized_weighted_levenshtein(
-            common::to_string_view(s2_sorted), blockmap_s1_sorted,
-            common::to_string_view(s1_sorted), score_cutoff / 100) * 100;
+                     common::to_string_view(s2_sorted), blockmap_s1_sorted,
+                     common::to_string_view(s1_sorted), score_cutoff / 100) *
+                 100;
     }
     else {
         result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
@@ -570,8 +572,8 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
-        result =
-            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(
+            result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0

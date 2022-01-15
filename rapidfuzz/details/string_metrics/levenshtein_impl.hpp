@@ -99,8 +99,8 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  */
 template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM,
-                                   std::size_t s1_len, std::size_t max)
+                                   const common::PatternMatchVector& PM, std::size_t s1_len,
+                                   std::size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -174,8 +174,8 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 
 template <typename CharT1>
 std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
-                                   const common::BlockPatternMatchVector& PM,
-                                   size_t s1_len, std::size_t max)
+                                              const common::BlockPatternMatchVector& PM,
+                                              size_t s1_len, std::size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -219,8 +219,7 @@ std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
 
         uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
 
-        if (word + 1 < words)
-        {
+        if (word + 1 < words) {
             /* avoid shifting by 64 */
             PM_j |= PM.get(word + 1, s2[i]) << 1 << (63 - word_pos);
         }
@@ -247,8 +246,7 @@ std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
 
 template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM,
-                                   std::size_t s1_len)
+                                   const common::PatternMatchVector& PM, std::size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -285,10 +283,9 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1>
-std::size_t
-levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-                            const common::BlockPatternMatchVector& PM,
-                            std::size_t s1_len, std::size_t max)
+std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
+                                        const common::BlockPatternMatchVector& PM,
+                                        std::size_t s1_len, std::size_t max)
 {
     struct Vectors {
         uint64_t VP;
@@ -406,8 +403,7 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t levenshtein(basic_string_view<CharT1> s1,
-                        const common::BlockPatternMatchVector& block,
+std::size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block,
                         basic_string_view<CharT2> s2, std::size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
@@ -517,13 +513,13 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
     // todo max
     if (max <= 31) {
         std::size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
-                                   //common::BlockPatternMatchVector(s2),
-                                                   s2.size(), max);
+                                                             // common::BlockPatternMatchVector(s2),
+                                                             s2.size(), max);
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
-    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2),
-                                                   s2.size(), max);
+    std::size_t dist =
+        levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2), s2.size(), max);
 
     return (dist > max) ? (std::size_t)-1 : dist;
 }

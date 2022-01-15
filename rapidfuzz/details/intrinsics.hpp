@@ -3,10 +3,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #if defined(_MSC_VER) && !defined(__clang__)
-#include <intrin.h>
+#    include <intrin.h>
 #endif
 
 namespace rapidfuzz {
@@ -64,20 +65,23 @@ T blsmsk(T a)
 }
 
 #if defined(_MSC_VER) && !defined(__clang__)
-static inline int tzcnt(uint32_t x) {
+static inline int tzcnt(uint32_t x)
+{
     unsigned long trailing_zero = 0;
     _BitScanForward(&trailing_zero, x);
     return trailing_zero;
 }
 
-#if defined(_M_ARM) || defined(_M_X64)
-static inline int tzcnt(uint64_t x) {
+#    if defined(_M_ARM) || defined(_M_X64)
+static inline int tzcnt(uint64_t x)
+{
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
-#else
-static inline int tzcnt(uint64_t x) {
+#    else
+static inline int tzcnt(uint64_t x)
+{
     uint32_t msh = (uint32_t)(x >> 32);
     uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
     if (lsh != 0) {
@@ -85,7 +89,7 @@ static inline int tzcnt(uint64_t x) {
     }
     return 32 + tzcnt(msh);
 }
-#endif
+#    endif
 
 #else /*  gcc / clang */
 static inline int tzcnt(uint32_t x)
@@ -99,6 +103,5 @@ static inline int tzcnt(uint64_t x)
 }
 #endif
 
-    
 } // namespace intrinsics
 } // namespace rapidfuzz

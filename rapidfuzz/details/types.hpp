@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cstddef>
 #include <type_traits>
 #include <vector>
-#include <algorithm>
 
 #include <rapidfuzz/details/string_view.hpp>
 
@@ -49,13 +50,21 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type; /**< type of the edit operation */
-    std::size_t src_pos;      /**< index into the source string */
-    std::size_t dest_pos;     /**< index into the destination string */
+    EditType type;        /**< type of the edit operation */
+    std::size_t src_pos;  /**< index into the source string */
+    std::size_t dest_pos; /**< index into the destination string */
+
+    EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
+    {}
+
+    EditOp(EditType type_, std::size_t src_pos_, std::size_t dest_pos_)
+        : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
+    {}
 };
 
-static inline bool operator==(EditOp a, EditOp b) {
-	return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
+static inline bool operator==(EditOp a, EditOp b)
+{
+    return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
 
 /**
@@ -72,91 +81,88 @@ static inline bool operator==(EditOp a, EditOp b) {
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type; /**< type of the edit operation */
-    std::size_t src_begin;    /**< index into the source string */
-    std::size_t src_end;      /**< index into the source string */
-    std::size_t dest_begin;   /**< index into the destination string */
-    std::size_t dest_end;     /**< index into the destination string */
+    EditType type;          /**< type of the edit operation */
+    std::size_t src_begin;  /**< index into the source string */
+    std::size_t src_end;    /**< index into the source string */
+    std::size_t dest_begin; /**< index into the destination string */
+    std::size_t dest_end;   /**< index into the destination string */
+
+    Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
+    {}
+
+    Opcode(EditType type_, std::size_t src_begin_, std::size_t src_end_, std::size_t dest_begin_,
+           std::size_t dest_end_)
+        : type(type_),
+          src_begin(src_begin_),
+          src_end(src_end_),
+          dest_begin(dest_begin_),
+          dest_end(dest_end_)
+    {}
 };
 
-static inline bool operator==(Opcode a, Opcode b) {
-	return (a.type == b.type)
-        && (a.src_begin == b.src_begin)&& (a.src_end == b.src_end)
-        && (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
+static inline bool operator==(Opcode a, Opcode b)
+{
+    return (a.type == b.type) && (a.src_begin == b.src_begin) && (a.src_end == b.src_end) &&
+           (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
 }
 
 namespace detail {
 template <typename T>
 void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start, int stop, int step)
 {
-    if (step > 0)
-    {
-        if (start < 0)
-        {
+    if (step > 0) {
+        if (start < 0) {
             start = std::max((int)(start + vec.size()), 0);
         }
-        else if (start > vec.size())
-        {
+        else if (start > vec.size()) {
             start = vec.size();
         }
 
-        if (stop < 0)
-        {
+        if (stop < 0) {
             stop = std::max((int)(stop + vec.size()), 0);
         }
-        else if (stop > vec.size())
-        {
+        else if (stop > vec.size()) {
             stop = vec.size();
         }
 
-        if (start >= stop)
-        {
+        if (start >= stop) {
             return;
         }
 
         int count = (stop - 1 - start) / step + 1;
         new_vec.reserve(count);
 
-        for (int i = start; i < stop; i += step)
-        {
+        for (int i = start; i < stop; i += step) {
             new_vec.push_back(vec[i]);
         }
     }
-    else if (step < 0)
-    {
-        if (start < 0)
-        {
+    else if (step < 0) {
+        if (start < 0) {
             start = std::max((int)(start + vec.size()), -1);
         }
-        else if (start >= vec.size())
-        {
+        else if (start >= vec.size()) {
             start = vec.size() - 1;
         }
 
-        if (stop < 0)
-        {
+        if (stop < 0) {
             stop = std::max((int)(stop + vec.size()), -1);
         }
-        else if (stop >= vec.size())
-        {
+        else if (stop >= vec.size()) {
             stop = vec.size() - 1;
         }
 
-        if (start <= stop)
-        {
+        if (start <= stop) {
             return;
         }
 
         int count = (stop + 1 - start) / step + 1;
         new_vec.reserve(count);
 
-        for (int i = start; i > stop; i += step)
-        {
+        for (int i = start; i > stop; i += step) {
             new_vec.push_back(vec[i]);
         }
     }
-    else
-    {
+    else {
         throw std::invalid_argument("slice step cannot be zero");
     }
 }
@@ -164,23 +170,23 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
 
 class Opcodes;
 
-class Editops : private std::vector<EditOp>
-{
+class Editops : private std::vector<EditOp> {
 public:
     using std::vector<EditOp>::size_type;
 
-    Editops()
-        : src_len(0), dest_len(0) {}
+    Editops() : src_len(0), dest_len(0)
+    {}
 
     Editops(size_type count, const EditOp& value)
-        : std::vector<EditOp>(count, value), src_len(0), dest_len(0) {}
+        : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
+    {}
 
-    explicit Editops(size_type count)
-        : std::vector<EditOp>(count), src_len(0), dest_len(0) {}
+    explicit Editops(size_type count) : std::vector<EditOp>(count), src_len(0), dest_len(0)
+    {}
 
     Editops(const Editops& other)
-        : src_len(other.src_len), dest_len(other.dest_len),
-          std::vector<EditOp>(other) {}
+        : src_len(other.src_len), dest_len(other.dest_len), std::vector<EditOp>(other)
+    {}
 
     Editops(const Opcodes& other);
 
@@ -229,7 +235,8 @@ public:
     using std::vector<EditOp>::emplace_back;
     using std::vector<EditOp>::pop_back;
 
-    void swap(Editops& rhs) noexcept {
+    void swap(Editops& rhs) noexcept
+    {
         std::swap(src_len, rhs.src_len);
         std::swap(dest_len, rhs.dest_len);
         std::vector<EditOp>::swap(rhs);
@@ -251,24 +258,33 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const { return src_len; }
-    void set_src_len(size_type len) { src_len = len; }
-    size_type get_dest_len() const { return dest_len; }
-    void set_dest_len(size_type len) { dest_len = len; }
+    size_type get_src_len() const
+    {
+        return src_len;
+    }
+    void set_src_len(size_type len)
+    {
+        src_len = len;
+    }
+    size_type get_dest_len() const
+    {
+        return dest_len;
+    }
+    void set_dest_len(size_type len)
+    {
+        dest_len = len;
+    }
 
     Editops inverse() const
     {
         Editops inv_ops = *this;
         std::swap(inv_ops.src_len, inv_ops.dest_len);
-        for (auto& op : inv_ops)
-        {
+        for (auto& op : inv_ops) {
             std::swap(op.src_pos, op.dest_pos);
-            if (op.type == EditType::Delete)
-            {
+            if (op.type == EditType::Delete) {
                 op.type = EditType::Insert;
             }
-            else if (op.type == EditType::Insert)
-            {
+            else if (op.type == EditType::Insert) {
                 op.type = EditType::Delete;
             }
         }
@@ -282,13 +298,11 @@ private:
 
 bool operator==(const Editops& lhs, const Editops& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
-    {
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
     }
 
-    if (lhs.size() != rhs.size())
-    {
+    if (lhs.size() != rhs.size()) {
         return false;
     }
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
@@ -304,25 +318,24 @@ void swap(Editops& lhs, Editops& rhs)
     lhs.swap(rhs);
 }
 
-
-class Opcodes : private std::vector<Opcode>
-{
+class Opcodes : private std::vector<Opcode> {
 public:
     using std::vector<Opcode>::size_type;
 
-    Opcodes()
-        : src_len(0), dest_len(0) {}
+    Opcodes() : src_len(0), dest_len(0)
+    {}
 
     Opcodes(size_type count, const Opcode& value)
-        : std::vector<Opcode>(count, value), src_len(0), dest_len(0) {}
+        : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
+    {}
 
-    explicit Opcodes(size_type count)
-        : std::vector<Opcode>(count), src_len(0), dest_len(0) {}
+    explicit Opcodes(size_type count) : std::vector<Opcode>(count), src_len(0), dest_len(0)
+    {}
 
     Opcodes(const Opcodes& other)
-        : src_len(other.src_len), dest_len(other.dest_len),
-          std::vector<Opcode>(other) {}
-    
+        : src_len(other.src_len), dest_len(other.dest_len), std::vector<Opcode>(other)
+    {}
+
     Opcodes(const Editops& other);
 
     Opcodes(Opcodes&& other) noexcept
@@ -370,7 +383,8 @@ public:
     using std::vector<Opcode>::emplace_back;
     using std::vector<Opcode>::pop_back;
 
-    void swap(Opcodes& rhs) noexcept {
+    void swap(Opcodes& rhs) noexcept
+    {
         std::swap(src_len, rhs.src_len);
         std::swap(dest_len, rhs.dest_len);
         std::vector<Opcode>::swap(rhs);
@@ -392,25 +406,34 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const { return src_len; }
-    void set_src_len(size_type len) { src_len = len; }
-    size_type get_dest_len() const { return dest_len; }
-    void set_dest_len(size_type len) { dest_len = len; }
+    size_type get_src_len() const
+    {
+        return src_len;
+    }
+    void set_src_len(size_type len)
+    {
+        src_len = len;
+    }
+    size_type get_dest_len() const
+    {
+        return dest_len;
+    }
+    void set_dest_len(size_type len)
+    {
+        dest_len = len;
+    }
 
     Opcodes inverse() const
     {
         Opcodes inv_ops = *this;
         std::swap(inv_ops.src_len, inv_ops.dest_len);
-        for (auto& op : inv_ops)
-        {
+        for (auto& op : inv_ops) {
             std::swap(op.src_begin, op.dest_begin);
             std::swap(op.src_end, op.dest_end);
-            if (op.type == EditType::Delete)
-            {
+            if (op.type == EditType::Delete) {
                 op.type = EditType::Insert;
             }
-            else if (op.type == EditType::Insert)
-            {
+            else if (op.type == EditType::Insert) {
                 op.type = EditType::Delete;
             }
         }
@@ -424,13 +447,11 @@ private:
 
 bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
-    {
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
     }
 
-    if (lhs.size() != rhs.size())
-    {
+    if (lhs.size() != rhs.size()) {
         return false;
     }
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
@@ -448,40 +469,26 @@ void swap(Opcodes& lhs, Opcodes& rhs)
 
 Editops::Editops(const Opcodes& other)
 {
-    for (const auto& op : other)
-    {
-        switch(op.type)
-        {
+    for (const auto& op : other) {
+        switch (op.type) {
         case EditType::None:
             break;
 
         case EditType::Replace:
             for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
-                push_back({
-                    EditType::Replace,
-                    op.src_begin + j,
-                    op.dest_begin + j
-                });
+                push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
             }
             break;
 
         case EditType::Insert:
             for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
-                push_back({
-                    EditType::Insert,
-                    op.src_begin,
-                    op.dest_begin + j
-                });
+                push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
             }
             break;
 
         case EditType::Delete:
             for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
-                push_back({
-                    EditType::Delete,
-                    op.src_begin + j,
-                    op.dest_begin
-                });
+                push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
             }
             break;
         }
@@ -492,15 +499,9 @@ Opcodes::Opcodes(const Editops& other)
 {
     size_t src_pos = 0;
     size_t dest_pos = 0;
-    for (size_t i = 0; i < other.size();)
-    {
-        if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos)
-        {
-            push_back({
-                EditType::None,
-                src_pos, other[i].src_pos,
-                dest_pos, other[i].dest_pos
-            });
+    for (size_t i = 0; i < other.size();) {
+        if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
+            push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
             src_pos = other[i].src_pos;
             dest_pos = other[i].dest_pos;
         }
@@ -508,10 +509,8 @@ Opcodes::Opcodes(const Editops& other)
         size_t src_begin = src_pos;
         size_t dest_begin = dest_pos;
         EditType type = other[i].type;
-        do
-        {
-            switch(type)
-            {
+        do {
+            switch (type) {
             case EditType::None:
                 break;
 
@@ -529,18 +528,14 @@ Opcodes::Opcodes(const Editops& other)
                 break;
             }
             i++;
-        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos && dest_pos == other[i].dest_pos);
+        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos &&
+                 dest_pos == other[i].dest_pos);
 
         push_back({type, src_begin, src_pos, dest_begin, dest_pos});
     }
 
-    if (src_pos < other.get_src_len() || dest_pos < other.get_dest_len())
-    {
-        push_back({
-            EditType::None,
-            src_pos, other.get_src_len(),
-            dest_pos, other.get_dest_len()
-        });
+    if (src_pos < other.get_src_len() || dest_pos < other.get_dest_len()) {
+        push_back({EditType::None, src_pos, other.get_src_len(), dest_pos, other.get_dest_len()});
     }
 }
 

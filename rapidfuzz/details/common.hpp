@@ -48,10 +48,7 @@ template <int Max = 1>
 constexpr percent norm_distance(std::size_t dist, std::size_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
-    return result_cutoff(
-        (lensum > 0) ? (max - max * dist / lensum)
-                     : max,
-        score_cutoff);
+    return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
 }
 
 template <int Max = 1>
@@ -192,19 +189,17 @@ bool CanTypeFitValue(const U value)
 
 struct PatternMatchVector {
     struct MapElem {
-        uint64_t key   = 0;
+        uint64_t key = 0;
         uint64_t value = 0;
     };
     std::array<MapElem, 128> m_map;
     std::array<uint64_t, 256> m_extendedAscii;
 
-    PatternMatchVector()
-        : m_map(), m_extendedAscii()
+    PatternMatchVector() : m_map(), m_extendedAscii()
     {}
 
     template <typename CharT>
-    PatternMatchVector(basic_string_view<CharT> s)
-        : m_map(), m_extendedAscii()
+    PatternMatchVector(basic_string_view<CharT> s) : m_map(), m_extendedAscii()
     {
         insert(s);
     }
@@ -230,7 +225,8 @@ struct PatternMatchVector {
     {
         if (key >= 0 && key <= 255) {
             return m_extendedAscii[key];
-        } else {
+        }
+        else {
             return m_map[lookup((uint64_t)key)].value;
         }
     }
@@ -241,7 +237,8 @@ private:
     {
         if (key >= 0 && key <= 255) {
             m_extendedAscii[key] |= mask;
-        } else {
+        }
+        else {
             size_t i = lookup((uint64_t)key);
             m_map[i].key = key;
             m_map[i].value |= mask;
@@ -297,8 +294,7 @@ struct BlockPatternMatchVector {
         std::size_t block_count = (s.size() / 64) + (std::size_t)((s.size() % 64) != 0);
         m_val.resize(block_count);
 
-        for (std::size_t block = 0; block < block_count; ++block)
-        {
+        for (std::size_t block = 0; block < block_count; ++block) {
             m_val[block].insert(s.substr(block * 64, 64));
         }
     }
@@ -369,10 +365,10 @@ struct CharHashTable {
     }
 };
 
-template<typename T>
+template <typename T>
 struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector, size_t cols)
-        : m_vector(vector), m_cols(cols) {}
+    explicit MatrixVectorView(T* vector, size_t cols) : m_vector(vector), m_cols(cols)
+    {}
 
     T& operator[](uint64_t col)
     {
@@ -385,13 +381,13 @@ private:
     size_t m_cols;
 };
 
-template<typename T>
+template <typename T>
 struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector, size_t cols)
-        : m_vector(vector), m_cols(cols) {}
+    explicit ConstMatrixVectorView(const T* vector, size_t cols) : m_vector(vector), m_cols(cols)
+    {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other)
-        : m_vector(other.m_vector) {}
+    ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
+    {}
 
     const T& operator[](uint64_t col)
     {
@@ -404,19 +400,17 @@ private:
     size_t m_cols;
 };
 
-template<typename T>
+template <typename T>
 struct Matrix {
     Matrix(uint64_t rows, uint64_t cols, uint64_t val)
     {
         m_rows = rows;
         m_cols = cols;
-        if (rows * cols > 0)
-        {
+        if (rows * cols > 0) {
             m_matrix = new T[rows * cols];
             std::fill_n(m_matrix, rows * cols, val);
         }
-        else
-        {
+        else {
             m_matrix = nullptr;
         }
     }
@@ -443,7 +437,6 @@ private:
     uint64_t m_cols;
     T* m_matrix;
 };
-
 
 /**@}*/
 

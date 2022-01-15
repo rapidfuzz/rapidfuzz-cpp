@@ -27,10 +27,8 @@ struct LevenshteinBitMatrix {
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename CharT1, typename CharT2>
-Editops recover_alignment(
-    basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-    const LevenshteinBitMatrix& matrix, StringAffix affix
-)
+Editops recover_alignment(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                          const LevenshteinBitMatrix& matrix, StringAffix affix)
 {
     size_t dist = matrix.dist;
     Editops editops(dist);
@@ -51,8 +49,7 @@ Editops recover_alignment(
         uint64_t mask = 1ull << col_pos;
 
         /* Insertion */
-        if (matrix.VP[row - 1][col_word] & mask)
-        {
+        if (matrix.VP[row - 1][col_word] & mask) {
             dist--;
             col--;
             editops[dist].type = EditType::Insert;
@@ -63,21 +60,18 @@ Editops recover_alignment(
             row--;
 
             /* Deletion */
-            if (row && matrix.VN[row - 1][col_word] & mask)
-            {
+            if (row && matrix.VN[row - 1][col_word] & mask) {
                 dist--;
                 editops[dist].type = EditType::Delete;
                 editops[dist].src_pos = row + affix.prefix_len;
                 editops[dist].dest_pos = col + affix.prefix_len;
             }
             /* Match/Mismatch */
-            else
-            {
+            else {
                 col--;
 
                 /* Replace (Matches are not recorded) */
-                if (s1[row] != s2[col])
-                {
+                if (s1[row] != s2[col]) {
                     dist--;
                     editops[dist].type = EditType::Replace;
                     editops[dist].src_pos = row + affix.prefix_len;
@@ -87,8 +81,7 @@ Editops recover_alignment(
         }
     }
 
-    while (col)
-    {
+    while (col) {
         dist--;
         col--;
         editops[dist].type = EditType::Insert;
@@ -96,8 +89,7 @@ Editops recover_alignment(
         editops[dist].dest_pos = col + affix.prefix_len;
     }
 
-    while (row)
-    {
+    while (row) {
         dist--;
         row--;
         editops[dist].type = EditType::Delete;
@@ -108,11 +100,10 @@ Editops recover_alignment(
     return editops;
 }
 
-
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM,
-                                   size_t s1_len)
+                                                   const common::PatternMatchVector& PM,
+                                                   size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -152,8 +143,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
 
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT1> s2,
-                                          const common::BlockPatternMatchVector& PM,
-                                          size_t s1_len)
+                                                         const common::BlockPatternMatchVector& PM,
+                                                         size_t s1_len)
 {
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
@@ -177,7 +168,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        //uint64_t PM_j = PM.get(0, s2[i]);
+        // uint64_t PM_j = PM.get(0, s2[i]);
 
         for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
@@ -240,31 +231,27 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
 template <typename CharT1, typename CharT2>
 LevenshteinBitMatrix levenshtein_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-    if (s2.empty())
-    {
+    if (s2.empty()) {
         LevenshteinBitMatrix matrix(0, 0);
         matrix.dist = s1.size();
         return matrix;
     }
-    else if (s1.empty())
-    {
+    else if (s1.empty()) {
         LevenshteinBitMatrix matrix(0, 0);
         matrix.dist = s2.size();
         return matrix;
     }
-    else if (s2.size() <= 64)
-    {
+    else if (s2.size() <= 64) {
         return levenshtein_matrix_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size());
     }
-    else
-    {
-        return levenshtein_matrix_hyrroe2003_block(s1, common::BlockPatternMatchVector(s2), s2.size());
+    else {
+        return levenshtein_matrix_hyrroe2003_block(s1, common::BlockPatternMatchVector(s2),
+                                                   s2.size());
     }
 }
 
 template <typename CharT1, typename CharT2>
-Editops levenshtein_editops(basic_string_view<CharT1> s1,
-                                                   basic_string_view<CharT2> s2)
+Editops levenshtein_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);

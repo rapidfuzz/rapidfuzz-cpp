@@ -7,8 +7,8 @@
 #include <rapidfuzz/details/string_metrics/jaro_impl.hpp>
 #include <rapidfuzz/details/string_metrics/levenshtein_editops_impl.hpp>
 #include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
-#include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/llcs_editops_impl.hpp>
+#include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 
 #include <cmath>
 #include <numeric>
@@ -411,7 +411,6 @@ Editops llcs_editops(const Sentence1& s1, const Sentence2& s2)
 
     return detail::llcs_editops(sentence1, sentence2);
 }
-
 
 /**
  * @brief Calculates the Hamming distance between two strings.

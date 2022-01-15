@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-15 21:33:24.879464
+//  Generated: 2022-01-15 23:02:28.327785
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -17,9 +17,10 @@
 #include <algorithm>
 
 
+#include <algorithm>
+#include <cstddef>
 #include <type_traits>
 #include <vector>
-#include <algorithm>
 
 // Copyright 2017-2020 by Martin Moene
 //
@@ -1694,13 +1695,21 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type; /**< type of the edit operation */
-    std::size_t src_pos;      /**< index into the source string */
-    std::size_t dest_pos;     /**< index into the destination string */
+    EditType type;        /**< type of the edit operation */
+    std::size_t src_pos;  /**< index into the source string */
+    std::size_t dest_pos; /**< index into the destination string */
+
+    EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
+    {}
+
+    EditOp(EditType type_, std::size_t src_pos_, std::size_t dest_pos_)
+        : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
+    {}
 };
 
-static inline bool operator==(EditOp a, EditOp b) {
-	return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
+static inline bool operator==(EditOp a, EditOp b)
+{
+    return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
 
 /**
@@ -1717,91 +1726,88 @@ static inline bool operator==(EditOp a, EditOp b) {
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type; /**< type of the edit operation */
-    std::size_t src_begin;    /**< index into the source string */
-    std::size_t src_end;      /**< index into the source string */
-    std::size_t dest_begin;   /**< index into the destination string */
-    std::size_t dest_end;     /**< index into the destination string */
+    EditType type;          /**< type of the edit operation */
+    std::size_t src_begin;  /**< index into the source string */
+    std::size_t src_end;    /**< index into the source string */
+    std::size_t dest_begin; /**< index into the destination string */
+    std::size_t dest_end;   /**< index into the destination string */
+
+    Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
+    {}
+
+    Opcode(EditType type_, std::size_t src_begin_, std::size_t src_end_, std::size_t dest_begin_,
+           std::size_t dest_end_)
+        : type(type_),
+          src_begin(src_begin_),
+          src_end(src_end_),
+          dest_begin(dest_begin_),
+          dest_end(dest_end_)
+    {}
 };
 
-static inline bool operator==(Opcode a, Opcode b) {
-	return (a.type == b.type)
-        && (a.src_begin == b.src_begin)&& (a.src_end == b.src_end)
-        && (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
+static inline bool operator==(Opcode a, Opcode b)
+{
+    return (a.type == b.type) && (a.src_begin == b.src_begin) && (a.src_end == b.src_end) &&
+           (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
 }
 
 namespace detail {
 template <typename T>
 void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start, int stop, int step)
 {
-    if (step > 0)
-    {
-        if (start < 0)
-        {
+    if (step > 0) {
+        if (start < 0) {
             start = std::max((int)(start + vec.size()), 0);
         }
-        else if (start > vec.size())
-        {
+        else if (start > vec.size()) {
             start = vec.size();
         }
 
-        if (stop < 0)
-        {
+        if (stop < 0) {
             stop = std::max((int)(stop + vec.size()), 0);
         }
-        else if (stop > vec.size())
-        {
+        else if (stop > vec.size()) {
             stop = vec.size();
         }
 
-        if (start >= stop)
-        {
+        if (start >= stop) {
             return;
         }
 
         int count = (stop - 1 - start) / step + 1;
         new_vec.reserve(count);
 
-        for (int i = start; i < stop; i += step)
-        {
+        for (int i = start; i < stop; i += step) {
             new_vec.push_back(vec[i]);
         }
     }
-    else if (step < 0)
-    {
-        if (start < 0)
-        {
+    else if (step < 0) {
+        if (start < 0) {
             start = std::max((int)(start + vec.size()), -1);
         }
-        else if (start >= vec.size())
-        {
+        else if (start >= vec.size()) {
             start = vec.size() - 1;
         }
 
-        if (stop < 0)
-        {
+        if (stop < 0) {
             stop = std::max((int)(stop + vec.size()), -1);
         }
-        else if (stop >= vec.size())
-        {
+        else if (stop >= vec.size()) {
             stop = vec.size() - 1;
         }
 
-        if (start <= stop)
-        {
+        if (start <= stop) {
             return;
         }
 
         int count = (stop + 1 - start) / step + 1;
         new_vec.reserve(count);
 
-        for (int i = start; i > stop; i += step)
-        {
+        for (int i = start; i > stop; i += step) {
             new_vec.push_back(vec[i]);
         }
     }
-    else
-    {
+    else {
         throw std::invalid_argument("slice step cannot be zero");
     }
 }
@@ -1809,23 +1815,23 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
 
 class Opcodes;
 
-class Editops : private std::vector<EditOp>
-{
+class Editops : private std::vector<EditOp> {
 public:
     using std::vector<EditOp>::size_type;
 
-    Editops()
-        : src_len(0), dest_len(0) {}
+    Editops() : src_len(0), dest_len(0)
+    {}
 
     Editops(size_type count, const EditOp& value)
-        : std::vector<EditOp>(count, value), src_len(0), dest_len(0) {}
+        : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
+    {}
 
-    explicit Editops(size_type count)
-        : std::vector<EditOp>(count), src_len(0), dest_len(0) {}
+    explicit Editops(size_type count) : std::vector<EditOp>(count), src_len(0), dest_len(0)
+    {}
 
     Editops(const Editops& other)
-        : src_len(other.src_len), dest_len(other.dest_len),
-          std::vector<EditOp>(other) {}
+        : src_len(other.src_len), dest_len(other.dest_len), std::vector<EditOp>(other)
+    {}
 
     Editops(const Opcodes& other);
 
@@ -1874,7 +1880,8 @@ public:
     using std::vector<EditOp>::emplace_back;
     using std::vector<EditOp>::pop_back;
 
-    void swap(Editops& rhs) noexcept {
+    void swap(Editops& rhs) noexcept
+    {
         std::swap(src_len, rhs.src_len);
         std::swap(dest_len, rhs.dest_len);
         std::vector<EditOp>::swap(rhs);
@@ -1896,24 +1903,33 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const { return src_len; }
-    void set_src_len(size_type len) { src_len = len; }
-    size_type get_dest_len() const { return dest_len; }
-    void set_dest_len(size_type len) { dest_len = len; }
+    size_type get_src_len() const
+    {
+        return src_len;
+    }
+    void set_src_len(size_type len)
+    {
+        src_len = len;
+    }
+    size_type get_dest_len() const
+    {
+        return dest_len;
+    }
+    void set_dest_len(size_type len)
+    {
+        dest_len = len;
+    }
 
     Editops inverse() const
     {
         Editops inv_ops = *this;
         std::swap(inv_ops.src_len, inv_ops.dest_len);
-        for (auto& op : inv_ops)
-        {
+        for (auto& op : inv_ops) {
             std::swap(op.src_pos, op.dest_pos);
-            if (op.type == EditType::Delete)
-            {
+            if (op.type == EditType::Delete) {
                 op.type = EditType::Insert;
             }
-            else if (op.type == EditType::Insert)
-            {
+            else if (op.type == EditType::Insert) {
                 op.type = EditType::Delete;
             }
         }
@@ -1927,13 +1943,11 @@ private:
 
 bool operator==(const Editops& lhs, const Editops& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
-    {
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
     }
 
-    if (lhs.size() != rhs.size())
-    {
+    if (lhs.size() != rhs.size()) {
         return false;
     }
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
@@ -1949,25 +1963,24 @@ void swap(Editops& lhs, Editops& rhs)
     lhs.swap(rhs);
 }
 
-
-class Opcodes : private std::vector<Opcode>
-{
+class Opcodes : private std::vector<Opcode> {
 public:
     using std::vector<Opcode>::size_type;
 
-    Opcodes()
-        : src_len(0), dest_len(0) {}
+    Opcodes() : src_len(0), dest_len(0)
+    {}
 
     Opcodes(size_type count, const Opcode& value)
-        : std::vector<Opcode>(count, value), src_len(0), dest_len(0) {}
+        : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
+    {}
 
-    explicit Opcodes(size_type count)
-        : std::vector<Opcode>(count), src_len(0), dest_len(0) {}
+    explicit Opcodes(size_type count) : std::vector<Opcode>(count), src_len(0), dest_len(0)
+    {}
 
     Opcodes(const Opcodes& other)
-        : src_len(other.src_len), dest_len(other.dest_len),
-          std::vector<Opcode>(other) {}
-    
+        : src_len(other.src_len), dest_len(other.dest_len), std::vector<Opcode>(other)
+    {}
+
     Opcodes(const Editops& other);
 
     Opcodes(Opcodes&& other) noexcept
@@ -2015,7 +2028,8 @@ public:
     using std::vector<Opcode>::emplace_back;
     using std::vector<Opcode>::pop_back;
 
-    void swap(Opcodes& rhs) noexcept {
+    void swap(Opcodes& rhs) noexcept
+    {
         std::swap(src_len, rhs.src_len);
         std::swap(dest_len, rhs.dest_len);
         std::vector<Opcode>::swap(rhs);
@@ -2037,25 +2051,34 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const { return src_len; }
-    void set_src_len(size_type len) { src_len = len; }
-    size_type get_dest_len() const { return dest_len; }
-    void set_dest_len(size_type len) { dest_len = len; }
+    size_type get_src_len() const
+    {
+        return src_len;
+    }
+    void set_src_len(size_type len)
+    {
+        src_len = len;
+    }
+    size_type get_dest_len() const
+    {
+        return dest_len;
+    }
+    void set_dest_len(size_type len)
+    {
+        dest_len = len;
+    }
 
     Opcodes inverse() const
     {
         Opcodes inv_ops = *this;
         std::swap(inv_ops.src_len, inv_ops.dest_len);
-        for (auto& op : inv_ops)
-        {
+        for (auto& op : inv_ops) {
             std::swap(op.src_begin, op.dest_begin);
             std::swap(op.src_end, op.dest_end);
-            if (op.type == EditType::Delete)
-            {
+            if (op.type == EditType::Delete) {
                 op.type = EditType::Insert;
             }
-            else if (op.type == EditType::Insert)
-            {
+            else if (op.type == EditType::Insert) {
                 op.type = EditType::Delete;
             }
         }
@@ -2069,13 +2092,11 @@ private:
 
 bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
-    {
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
     }
 
-    if (lhs.size() != rhs.size())
-    {
+    if (lhs.size() != rhs.size()) {
         return false;
     }
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
@@ -2093,40 +2114,26 @@ void swap(Opcodes& lhs, Opcodes& rhs)
 
 Editops::Editops(const Opcodes& other)
 {
-    for (const auto& op : other)
-    {
-        switch(op.type)
-        {
+    for (const auto& op : other) {
+        switch (op.type) {
         case EditType::None:
             break;
 
         case EditType::Replace:
             for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
-                push_back({
-                    EditType::Replace,
-                    op.src_begin + j,
-                    op.dest_begin + j
-                });
+                push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
             }
             break;
 
         case EditType::Insert:
             for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
-                push_back({
-                    EditType::Insert,
-                    op.src_begin,
-                    op.dest_begin + j
-                });
+                push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
             }
             break;
 
         case EditType::Delete:
             for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
-                push_back({
-                    EditType::Delete,
-                    op.src_begin + j,
-                    op.dest_begin
-                });
+                push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
             }
             break;
         }
@@ -2137,15 +2144,9 @@ Opcodes::Opcodes(const Editops& other)
 {
     size_t src_pos = 0;
     size_t dest_pos = 0;
-    for (size_t i = 0; i < other.size();)
-    {
-        if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos)
-        {
-            push_back({
-                EditType::None,
-                src_pos, other[i].src_pos,
-                dest_pos, other[i].dest_pos
-            });
+    for (size_t i = 0; i < other.size();) {
+        if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
+            push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
             src_pos = other[i].src_pos;
             dest_pos = other[i].dest_pos;
         }
@@ -2153,10 +2154,8 @@ Opcodes::Opcodes(const Editops& other)
         size_t src_begin = src_pos;
         size_t dest_begin = dest_pos;
         EditType type = other[i].type;
-        do
-        {
-            switch(type)
-            {
+        do {
+            switch (type) {
             case EditType::None:
                 break;
 
@@ -2174,18 +2173,14 @@ Opcodes::Opcodes(const Editops& other)
                 break;
             }
             i++;
-        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos && dest_pos == other[i].dest_pos);
+        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos &&
+                 dest_pos == other[i].dest_pos);
 
         push_back({type, src_begin, src_pos, dest_begin, dest_pos});
     }
 
-    if (src_pos < other.get_src_len() || dest_pos < other.get_dest_len())
-    {
-        push_back({
-            EditType::None,
-            src_pos, other.get_src_len(),
-            dest_pos, other.get_dest_len()
-        });
+    if (src_pos < other.get_src_len() || dest_pos < other.get_dest_len()) {
+        push_back({EditType::None, src_pos, other.get_src_len(), dest_pos, other.get_dest_len()});
     }
 }
 
@@ -2466,10 +2461,7 @@ template <int Max = 1>
 constexpr percent norm_distance(std::size_t dist, std::size_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
-    return result_cutoff(
-        (lensum > 0) ? (max - max * dist / lensum)
-                     : max,
-        score_cutoff);
+    return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
 }
 
 template <int Max = 1>
@@ -2610,19 +2602,17 @@ bool CanTypeFitValue(const U value)
 
 struct PatternMatchVector {
     struct MapElem {
-        uint64_t key   = 0;
+        uint64_t key = 0;
         uint64_t value = 0;
     };
     std::array<MapElem, 128> m_map;
     std::array<uint64_t, 256> m_extendedAscii;
 
-    PatternMatchVector()
-        : m_map(), m_extendedAscii()
+    PatternMatchVector() : m_map(), m_extendedAscii()
     {}
 
     template <typename CharT>
-    PatternMatchVector(basic_string_view<CharT> s)
-        : m_map(), m_extendedAscii()
+    PatternMatchVector(basic_string_view<CharT> s) : m_map(), m_extendedAscii()
     {
         insert(s);
     }
@@ -2648,7 +2638,8 @@ struct PatternMatchVector {
     {
         if (key >= 0 && key <= 255) {
             return m_extendedAscii[key];
-        } else {
+        }
+        else {
             return m_map[lookup((uint64_t)key)].value;
         }
     }
@@ -2659,7 +2650,8 @@ private:
     {
         if (key >= 0 && key <= 255) {
             m_extendedAscii[key] |= mask;
-        } else {
+        }
+        else {
             size_t i = lookup((uint64_t)key);
             m_map[i].key = key;
             m_map[i].value |= mask;
@@ -2715,8 +2707,7 @@ struct BlockPatternMatchVector {
         std::size_t block_count = (s.size() / 64) + (std::size_t)((s.size() % 64) != 0);
         m_val.resize(block_count);
 
-        for (std::size_t block = 0; block < block_count; ++block)
-        {
+        for (std::size_t block = 0; block < block_count; ++block) {
             m_val[block].insert(s.substr(block * 64, 64));
         }
     }
@@ -2787,10 +2778,10 @@ struct CharHashTable {
     }
 };
 
-template<typename T>
+template <typename T>
 struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector, size_t cols)
-        : m_vector(vector), m_cols(cols) {}
+    explicit MatrixVectorView(T* vector, size_t cols) : m_vector(vector), m_cols(cols)
+    {}
 
     T& operator[](uint64_t col)
     {
@@ -2803,13 +2794,13 @@ private:
     size_t m_cols;
 };
 
-template<typename T>
+template <typename T>
 struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector, size_t cols)
-        : m_vector(vector), m_cols(cols) {}
+    explicit ConstMatrixVectorView(const T* vector, size_t cols) : m_vector(vector), m_cols(cols)
+    {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other)
-        : m_vector(other.m_vector) {}
+    ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
+    {}
 
     const T& operator[](uint64_t col)
     {
@@ -2822,19 +2813,17 @@ private:
     size_t m_cols;
 };
 
-template<typename T>
+template <typename T>
 struct Matrix {
     Matrix(uint64_t rows, uint64_t cols, uint64_t val)
     {
         m_rows = rows;
         m_cols = cols;
-        if (rows * cols > 0)
-        {
+        if (rows * cols > 0) {
             m_matrix = new T[rows * cols];
             std::fill_n(m_matrix, rows * cols, val);
         }
-        else
-        {
+        else {
             m_matrix = nullptr;
         }
     }
@@ -2861,7 +2850,6 @@ private:
     uint64_t m_cols;
     T* m_matrix;
 };
-
 
 /**@}*/
 
@@ -3605,7 +3593,8 @@ public:
         }
     }
 
-    match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low, std::size_t b_high)
+    match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low,
+                               std::size_t b_high)
     {
         std::size_t best_i = a_low;
         std::size_t best_j = b_low;
@@ -3646,8 +3635,9 @@ public:
                 }
             }
 
-            std::fill(j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_low),
-                      j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
+            std::fill(
+                j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_low),
+                j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low &&
@@ -3844,10 +3834,11 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
 
 
 
+#include <cstddef>
 #include <cstdint>
 
 #if defined(_MSC_VER) && !defined(__clang__)
-#include <intrin.h>
+#    include <intrin.h>
 #endif
 
 namespace rapidfuzz {
@@ -3905,20 +3896,23 @@ T blsmsk(T a)
 }
 
 #if defined(_MSC_VER) && !defined(__clang__)
-static inline int tzcnt(uint32_t x) {
+static inline int tzcnt(uint32_t x)
+{
     unsigned long trailing_zero = 0;
     _BitScanForward(&trailing_zero, x);
     return trailing_zero;
 }
 
-#if defined(_M_ARM) || defined(_M_X64)
-static inline int tzcnt(uint64_t x) {
+#    if defined(_M_ARM) || defined(_M_X64)
+static inline int tzcnt(uint64_t x)
+{
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
-#else
-static inline int tzcnt(uint64_t x) {
+#    else
+static inline int tzcnt(uint64_t x)
+{
     uint32_t msh = (uint32_t)(x >> 32);
     uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
     if (lsh != 0) {
@@ -3926,7 +3920,7 @@ static inline int tzcnt(uint64_t x) {
     }
     return 32 + tzcnt(msh);
 }
-#endif
+#    endif
 
 #else /*  gcc / clang */
 static inline int tzcnt(uint32_t x)
@@ -3940,7 +3934,6 @@ static inline int tzcnt(uint64_t x)
 }
 #endif
 
-    
 } // namespace intrinsics
 } // namespace rapidfuzz
 
@@ -3948,64 +3941,56 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
-template<typename CharT>
+template <typename CharT>
 bool isnum(CharT val)
 {
     return (val >= '0') && (val <= '9');
 }
 
 template <typename CharT1, typename CharT2>
-static inline percent jaro_calculate_similarity(
-    basic_string_view<CharT1> P, basic_string_view<CharT2> T,
-    size_t CommonChars, size_t Transpositions
-)
+static inline percent jaro_calculate_similarity(basic_string_view<CharT1> P,
+                                                basic_string_view<CharT2> T, size_t CommonChars,
+                                                size_t Transpositions)
 {
     Transpositions /= 2;
-    double Sim = (double)CommonChars / (double)P.size() +
-                 (double)CommonChars / (double)T.size() +
+    double Sim = (double)CommonChars / (double)P.size() + (double)CommonChars / (double)T.size() +
                  (double)(CommonChars - Transpositions) / (double)CommonChars;
     return Sim / 3.0;
 }
 
 template <typename CharT1, typename CharT2>
-static inline bool jaro_length_filter(
-    basic_string_view<CharT1> P, basic_string_view<CharT2> T, percent score_cutoff
-)
+static inline bool jaro_length_filter(basic_string_view<CharT1> P, basic_string_view<CharT2> T,
+                                      percent score_cutoff)
 {
     if (!T.size() || !P.size()) return false;
 
     double min_len = (double)std::min(P.size(), T.size());
-    double Sim = (double)min_len / (double)P.size() +
-                 (double)min_len / (double)T.size() +
-                 1.0;
+    double Sim = (double)min_len / (double)P.size() + (double)min_len / (double)T.size() + 1.0;
     Sim /= 3.0;
     return Sim >= score_cutoff;
 }
 
 template <typename CharT1, typename CharT2>
-static inline bool jaro_common_char_filter(
-    basic_string_view<CharT1> P, basic_string_view<CharT2> T, size_t CommonChars, percent score_cutoff
-)
+static inline bool jaro_common_char_filter(basic_string_view<CharT1> P, basic_string_view<CharT2> T,
+                                           size_t CommonChars, percent score_cutoff)
 {
     if (!CommonChars) return false;
 
-    double Sim = (double)CommonChars / (double)P.size() +
-                 (double)CommonChars / (double)T.size() +
-                 1.0;
+    double Sim =
+        (double)CommonChars / (double)P.size() + (double)CommonChars / (double)T.size() + 1.0;
     Sim /= 3.0;
     return Sim >= score_cutoff;
 }
 
 struct FlaggedCharsOriginal {
-  std::vector<int> P_flag;
-  std::vector<int> T_flag;
-  std::size_t CommonChars;
+    std::vector<int> P_flag;
+    std::vector<int> T_flag;
+    std::size_t CommonChars;
 };
 
 template <typename CharT1, typename CharT2>
-static inline FlaggedCharsOriginal flag_similar_characters_original(
-    basic_string_view<CharT1> P, basic_string_view<CharT2> T
-)
+static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string_view<CharT1> P,
+                                                                    basic_string_view<CharT2> T)
 {
     std::vector<int> P_flag(P.size() + 1);
     std::vector<int> T_flag(T.size() + 1);
@@ -4031,15 +4016,15 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(
 }
 
 struct FlaggedCharsWord {
-  uint64_t P_flag;
-  uint64_t T_flag;
-  std::size_t CommonChars;
+    uint64_t P_flag;
+    uint64_t T_flag;
+    std::size_t CommonChars;
 };
 
 template <typename CharT1, typename CharT2>
-static inline FlaggedCharsWord flag_similar_characters_word(
-  const common::PatternMatchVector& PM, basic_string_view<CharT1> P, basic_string_view<CharT2> T
-)
+static inline FlaggedCharsWord flag_similar_characters_word(const common::PatternMatchVector& PM,
+                                                            basic_string_view<CharT1> P,
+                                                            basic_string_view<CharT2> T)
 {
     using namespace intrinsics;
     assert(P.size() <= 64);
@@ -4051,8 +4036,7 @@ static inline FlaggedCharsWord flag_similar_characters_word(
     uint64_t BoundMask = (1ull << 1 << Bound) - 1;
 
     std::size_t j = 0;
-    for (; j < std::min(Bound, (uint64_t)T.size()); ++j)
-    {
+    for (; j < std::min(Bound, (uint64_t)T.size()); ++j) {
         uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
 
         P_flag |= blsi(PM_j);
@@ -4061,8 +4045,7 @@ static inline FlaggedCharsWord flag_similar_characters_word(
         BoundMask = (BoundMask << 1) | 1;
     }
 
-    for (; j < std::min((uint64_t)T.size(), (uint64_t)P.size() + Bound); ++j)
-    {
+    for (; j < std::min((uint64_t)T.size(), (uint64_t)P.size() + Bound); ++j) {
         uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
 
         P_flag |= blsi(PM_j);
@@ -4075,17 +4058,14 @@ static inline FlaggedCharsWord flag_similar_characters_word(
 }
 
 template <typename CharT>
-static inline size_t count_transpositions_word(
-  const common::PatternMatchVector& PM, uint64_t P_mapped,
-  basic_string_view<CharT> T, uint64_t T_mapped
-)
+static inline size_t count_transpositions_word(const common::PatternMatchVector& PM,
+                                               uint64_t P_mapped, basic_string_view<CharT> T,
+                                               uint64_t T_mapped)
 {
     using namespace intrinsics;
     size_t Transpositions = 0;
-    while (T_mapped)
-    {
+    while (T_mapped) {
         uint64_t PatternFlagMask = blsi(P_mapped);
-        
 
         Transpositions += !(PM.get(T[tzcnt(T_mapped)]) & PatternFlagMask);
 
@@ -4096,12 +4076,11 @@ static inline size_t count_transpositions_word(
     return Transpositions;
 }
 
-
 template <typename CharT1, typename CharT2>
-double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT2> T, percent score_cutoff)
+double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT2> T,
+                            percent score_cutoff)
 {
-    if (!jaro_length_filter(P, T, score_cutoff))
-    {
+    if (!jaro_length_filter(P, T, score_cutoff)) {
         return 0.0;
     }
 
@@ -4109,28 +4088,27 @@ double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT
 
     auto flagged = flag_similar_characters_word(PM, P, T);
 
-    if (!jaro_common_char_filter(P, T, flagged.CommonChars, score_cutoff))
-    {
+    if (!jaro_common_char_filter(P, T, flagged.CommonChars, score_cutoff)) {
         return 0.0;
     }
 
     size_t Transpositions = count_transpositions_word(PM, flagged.P_flag, T, flagged.T_flag);
 
-    return common::result_cutoff(jaro_calculate_similarity(P, T, flagged.CommonChars, Transpositions), score_cutoff);
+    return common::result_cutoff(
+        jaro_calculate_similarity(P, T, flagged.CommonChars, Transpositions), score_cutoff);
 }
 
 template <typename CharT1, typename CharT2>
-percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<CharT1> T, percent score_cutoff)
+percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
+                                 percent score_cutoff)
 {
-    if (!jaro_length_filter(P, T, score_cutoff))
-    {
+    if (!jaro_length_filter(P, T, score_cutoff)) {
         return 0.0;
     }
 
     auto flagged = flag_similar_characters_original(P, T);
 
-    if (!jaro_common_char_filter(P, T, flagged.CommonChars, score_cutoff))
-    {
+    if (!jaro_common_char_filter(P, T, flagged.CommonChars, score_cutoff)) {
         return 0.0;
     }
     // Count the number of transpositions
@@ -4151,59 +4129,56 @@ percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<
         }
     }
 
-    return common::result_cutoff(jaro_calculate_similarity(P, T, flagged.CommonChars, Transpositions), score_cutoff);
+    return common::result_cutoff(
+        jaro_calculate_similarity(P, T, flagged.CommonChars, Transpositions), score_cutoff);
 }
 
 template <typename CharT1, typename CharT2>
-percent jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T, percent score_cutoff)
+percent jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
+                        percent score_cutoff)
 {
-    if (P.size() <= 64 && P.size() <= 64)
-    {
+    if (P.size() <= 64 && P.size() <= 64) {
         return jaro_similarity_word(P, T, score_cutoff);
     }
-    else
-    {
+    else {
         return jaro_similarity_original(P, T, score_cutoff);
     }
 }
 
 template <typename CharT1, typename CharT2>
-percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T, double prefix_weight, percent score_cutoff)
+percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
+                                double prefix_weight, percent score_cutoff)
 {
     std::size_t min_len = std::min(P.size(), T.size());
     std::size_t prefix = 0;
     std::size_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
-    for (; prefix < max_prefix; ++prefix)
-    {
-        if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix]))
-        {
+    for (; prefix < max_prefix; ++prefix) {
+        if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix])) {
             break;
         }
     }
 
     double jaro_score_cutoff = score_cutoff;
-    if (jaro_score_cutoff > 0.7)
-    {
+    if (jaro_score_cutoff > 0.7) {
         double prefix_sim = prefix * prefix_weight;
 
-        if (prefix_sim == 1.0)
-        {
+        if (prefix_sim == 1.0) {
             jaro_score_cutoff = 0.7;
         }
-        else
-        {
-            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
+        else {
+            jaro_score_cutoff =
+                std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
         }
     }
 
     double Sim = jaro_similarity(P, T, jaro_score_cutoff);
-    if (Sim > 0.7)
-    {
+    if (Sim > 0.7) {
         Sim += prefix * prefix_weight * (1.0 - Sim);
     }
 
-    return common::result_cutoff(Sim, score_cutoff);;
+    return common::result_cutoff(Sim, score_cutoff);
+    ;
 }
 
 } // namespace detail
@@ -4234,10 +4209,8 @@ struct LevenshteinBitMatrix {
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename CharT1, typename CharT2>
-Editops recover_alignment(
-    basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-    const LevenshteinBitMatrix& matrix, StringAffix affix
-)
+Editops recover_alignment(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                          const LevenshteinBitMatrix& matrix, StringAffix affix)
 {
     size_t dist = matrix.dist;
     Editops editops(dist);
@@ -4258,8 +4231,7 @@ Editops recover_alignment(
         uint64_t mask = 1ull << col_pos;
 
         /* Insertion */
-        if (matrix.VP[row - 1][col_word] & mask)
-        {
+        if (matrix.VP[row - 1][col_word] & mask) {
             dist--;
             col--;
             editops[dist].type = EditType::Insert;
@@ -4270,21 +4242,18 @@ Editops recover_alignment(
             row--;
 
             /* Deletion */
-            if (row && matrix.VN[row - 1][col_word] & mask)
-            {
+            if (row && matrix.VN[row - 1][col_word] & mask) {
                 dist--;
                 editops[dist].type = EditType::Delete;
                 editops[dist].src_pos = row + affix.prefix_len;
                 editops[dist].dest_pos = col + affix.prefix_len;
             }
             /* Match/Mismatch */
-            else
-            {
+            else {
                 col--;
 
                 /* Replace (Matches are not recorded) */
-                if (s1[row] != s2[col])
-                {
+                if (s1[row] != s2[col]) {
                     dist--;
                     editops[dist].type = EditType::Replace;
                     editops[dist].src_pos = row + affix.prefix_len;
@@ -4294,8 +4263,7 @@ Editops recover_alignment(
         }
     }
 
-    while (col)
-    {
+    while (col) {
         dist--;
         col--;
         editops[dist].type = EditType::Insert;
@@ -4303,8 +4271,7 @@ Editops recover_alignment(
         editops[dist].dest_pos = col + affix.prefix_len;
     }
 
-    while (row)
-    {
+    while (row) {
         dist--;
         row--;
         editops[dist].type = EditType::Delete;
@@ -4315,11 +4282,10 @@ Editops recover_alignment(
     return editops;
 }
 
-
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM,
-                                   size_t s1_len)
+                                                   const common::PatternMatchVector& PM,
+                                                   size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -4359,8 +4325,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
 
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT1> s2,
-                                          const common::BlockPatternMatchVector& PM,
-                                          size_t s1_len)
+                                                         const common::BlockPatternMatchVector& PM,
+                                                         size_t s1_len)
 {
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
@@ -4384,7 +4350,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        //uint64_t PM_j = PM.get(0, s2[i]);
+        // uint64_t PM_j = PM.get(0, s2[i]);
 
         for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
@@ -4447,31 +4413,27 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
 template <typename CharT1, typename CharT2>
 LevenshteinBitMatrix levenshtein_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-    if (s2.empty())
-    {
+    if (s2.empty()) {
         LevenshteinBitMatrix matrix(0, 0);
         matrix.dist = s1.size();
         return matrix;
     }
-    else if (s1.empty())
-    {
+    else if (s1.empty()) {
         LevenshteinBitMatrix matrix(0, 0);
         matrix.dist = s2.size();
         return matrix;
     }
-    else if (s2.size() <= 64)
-    {
+    else if (s2.size() <= 64) {
         return levenshtein_matrix_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size());
     }
-    else
-    {
-        return levenshtein_matrix_hyrroe2003_block(s1, common::BlockPatternMatchVector(s2), s2.size());
+    else {
+        return levenshtein_matrix_hyrroe2003_block(s1, common::BlockPatternMatchVector(s2),
+                                                   s2.size());
     }
 }
 
 template <typename CharT1, typename CharT2>
-Editops levenshtein_editops(basic_string_view<CharT1> s1,
-                                                   basic_string_view<CharT2> s2)
+Editops levenshtein_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);
@@ -4579,8 +4541,8 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  */
 template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM,
-                                   std::size_t s1_len, std::size_t max)
+                                   const common::PatternMatchVector& PM, std::size_t s1_len,
+                                   std::size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -4654,8 +4616,8 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 
 template <typename CharT1>
 std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
-                                   const common::BlockPatternMatchVector& PM,
-                                   size_t s1_len, std::size_t max)
+                                              const common::BlockPatternMatchVector& PM,
+                                              size_t s1_len, std::size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -4699,8 +4661,7 @@ std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
 
         uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
 
-        if (word + 1 < words)
-        {
+        if (word + 1 < words) {
             /* avoid shifting by 64 */
             PM_j |= PM.get(word + 1, s2[i]) << 1 << (63 - word_pos);
         }
@@ -4727,8 +4688,7 @@ std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
 
 template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM,
-                                   std::size_t s1_len)
+                                   const common::PatternMatchVector& PM, std::size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -4765,10 +4725,9 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1>
-std::size_t
-levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-                            const common::BlockPatternMatchVector& PM,
-                            std::size_t s1_len, std::size_t max)
+std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
+                                        const common::BlockPatternMatchVector& PM,
+                                        std::size_t s1_len, std::size_t max)
 {
     struct Vectors {
         uint64_t VP;
@@ -4886,8 +4845,7 @@ levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t levenshtein(basic_string_view<CharT1> s1,
-                        const common::BlockPatternMatchVector& block,
+std::size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block,
                         basic_string_view<CharT2> s2, std::size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
@@ -4997,13 +4955,13 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
     // todo max
     if (max <= 31) {
         std::size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
-                                   //common::BlockPatternMatchVector(s2),
-                                                   s2.size(), max);
+                                                             // common::BlockPatternMatchVector(s2),
+                                                             s2.size(), max);
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
-    std::size_t dist = levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2),
-                                                   s2.size(), max);
+    std::size_t dist =
+        levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2), s2.size(), max);
 
     return (dist > max) ? (std::size_t)-1 : dist;
 }
@@ -5043,6 +5001,217 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
 
     std::size_t dist = levenshtein(s1, s2, cutoff_distance);
     return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+}
+
+} // namespace detail
+} // namespace string_metric
+} // namespace rapidfuzz
+
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <numeric>
+
+namespace rapidfuzz {
+namespace string_metric {
+namespace detail {
+
+struct LLCSBitMatrix {
+    LLCSBitMatrix(uint64_t rows, uint64_t cols) : S(rows, cols, (uint64_t)-1), dist(0)
+    {}
+
+    common::Matrix<uint64_t> S;
+
+    size_t dist;
+};
+
+/**
+ * @brief recover alignment from bitparallel Levenshtein matrix
+ */
+template <typename CharT1, typename CharT2>
+Editops recover_alignment(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                          const LLCSBitMatrix& matrix, StringAffix affix)
+{
+    size_t dist = matrix.dist;
+    Editops editops(dist);
+    editops.set_src_len(s1.size() + affix.prefix_len + affix.suffix_len);
+    editops.set_dest_len(s2.size() + affix.prefix_len + affix.suffix_len);
+
+    if (dist == 0) {
+        return editops;
+    }
+
+    size_t row = s1.size();
+    size_t col = s2.size();
+
+    while (row && col) {
+        uint64_t col_pos = col - 1;
+        uint64_t col_word = col_pos / 64;
+        col_pos = col_pos % 64;
+        uint64_t mask = 1ull << col_pos;
+
+        /* Insertion */
+        if (matrix.S[row - 1][col_word] & mask) {
+            dist--;
+            col--;
+            editops[dist].type = EditType::Insert;
+            editops[dist].src_pos = row + affix.prefix_len;
+            editops[dist].dest_pos = col + affix.prefix_len;
+        }
+        else {
+            row--;
+
+            /* Deletion */
+            if (row && (~matrix.S[row - 1][col_word]) & mask) {
+                dist--;
+                editops[dist].type = EditType::Delete;
+                editops[dist].src_pos = row + affix.prefix_len;
+                editops[dist].dest_pos = col + affix.prefix_len;
+            }
+            /* Match */
+            else {
+                col--;
+                assert(s1[row] == s2[col]);
+            }
+        }
+    }
+
+    while (col) {
+        dist--;
+        col--;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = row + affix.prefix_len;
+        editops[dist].dest_pos = col + affix.prefix_len;
+    }
+
+    while (row) {
+        dist--;
+        row--;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = row + affix.prefix_len;
+        editops[dist].dest_pos = col + affix.prefix_len;
+    }
+
+    return editops;
+}
+
+template <std::size_t N, typename CharT1>
+LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
+                                 const common::PatternMatchVector* block, std::size_t s2_len)
+{
+    std::uint64_t S[N];
+    for (std::size_t i = 0; i < N; ++i) {
+        S[i] = ~0x0ull;
+    }
+
+    LLCSBitMatrix matrix(s1.size(), N);
+
+    for (size_t i = 0; i < s1.size(); ++i) {
+        uint64_t carry = 0;
+        std::uint64_t Matches[N];
+        std::uint64_t u[N];
+        std::uint64_t x[N];
+        for (std::size_t word = 0; word < N; ++word) {
+            Matches[word] = block[word].get(s1[i]);
+            u[word] = S[word] & Matches[word];
+            x[word] = intrinsics::addc64(S[word], u[word], carry, &carry);
+            S[word] = matrix.S[i][word] = x[word] | (S[word] - u[word]);
+        }
+    }
+
+    std::size_t res = 0;
+    for (std::size_t i = 0; i < N; ++i) {
+        res += intrinsics::popcount64(~S[i]);
+    }
+
+    matrix.dist = s1.size() + s2_len - 2 * res;
+
+    return matrix;
+}
+
+template <typename CharT1>
+LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
+                                    const common::BlockPatternMatchVector& block,
+                                    std::size_t s2_len)
+{
+    std::size_t words = block.m_val.size();
+    /* todo could be replaced with access to matrix which would slightly
+     * reduce memory usage */
+    std::vector<std::uint64_t> S(words, ~0x0ull);
+    LLCSBitMatrix matrix(s1.size(), words);
+
+    for (size_t i = 0; i < s1.size(); ++i) {
+        uint64_t carry = 0;
+        for (std::size_t word = 0; word < words; ++word) {
+            const uint64_t Matches = block.get(word, s1[i]);
+            uint64_t Stemp = S[word];
+
+            uint64_t u = Stemp & Matches;
+
+            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
+            S[word] = matrix.S[i][word] = x | (Stemp - u);
+        }
+    }
+
+    std::size_t res = 0;
+    for (uint64_t Stemp : S) {
+        res += intrinsics::popcount64(~Stemp);
+    }
+
+    matrix.dist = s1.size() + s2_len - 2 * res;
+
+    return matrix;
+}
+
+template <typename CharT1, typename CharT2>
+LLCSBitMatrix llcs_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+    if (s2.empty()) {
+        LLCSBitMatrix matrix(0, 0);
+        matrix.dist = s1.size();
+        return matrix;
+    }
+    else if (s1.empty()) {
+        LLCSBitMatrix matrix(0, 0);
+        matrix.dist = s2.size();
+        return matrix;
+    }
+    else if (s2.size() <= 64) {
+        common::PatternMatchVector block(s2);
+        return llcs_matrix_unroll<1>(s1, &block, s2.size());
+    }
+    else {
+        common::BlockPatternMatchVector block(s2);
+        switch (block.m_val.size()) {
+        case 1:
+            return llcs_matrix_unroll<1>(s1, &block.m_val[0], s2.size());
+        case 2:
+            return llcs_matrix_unroll<2>(s1, &block.m_val[0], s2.size());
+        case 3:
+            return llcs_matrix_unroll<3>(s1, &block.m_val[0], s2.size());
+        case 4:
+            return llcs_matrix_unroll<4>(s1, &block.m_val[0], s2.size());
+        case 5:
+            return llcs_matrix_unroll<5>(s1, &block.m_val[0], s2.size());
+        case 6:
+            return llcs_matrix_unroll<6>(s1, &block.m_val[0], s2.size());
+        case 7:
+            return llcs_matrix_unroll<7>(s1, &block.m_val[0], s2.size());
+        case 8:
+            return llcs_matrix_unroll<8>(s1, &block.m_val[0], s2.size());
+        default:
+            return llcs_matrix_blockwise(s1, block, s2.size());
+        }
+    }
+}
+
+template <typename CharT1, typename CharT2>
+Editops llcs_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+    /* prefix and suffix are no-ops, which do not need to be added to the editops */
+    StringAffix affix = common::remove_common_affix(s1, s2);
+
+    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
 }
 
 } // namespace detail
@@ -5145,14 +5314,12 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
 }
 
 template <std::size_t N, typename CharT1>
-static inline std::size_t
-longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
-                            const common::PatternMatchVector* block,
-                            std::size_t s2_len)
+static inline std::size_t longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
+                                                            const common::PatternMatchVector* block,
+                                                            std::size_t s2_len)
 {
     std::uint64_t S[N];
-    for (std::size_t i = 0; i < N; ++i)
-    {
+    for (std::size_t i = 0; i < N; ++i) {
         S[i] = ~0x0ull;
     }
 
@@ -5162,8 +5329,7 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
-        for (std::size_t i = 0; i < N; ++i)
-        {
+        for (std::size_t i = 0; i < N; ++i) {
             Matches[i] = block[i].get(ch1);
             u[i] = S[i] & Matches[i];
             x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
@@ -5172,18 +5338,15 @@ longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
     }
 
     std::size_t res = 0;
-    for (std::size_t i = 0; i < N; ++i)
-    {
+    for (std::size_t i = 0; i < N; ++i) {
         res += intrinsics::popcount64(~S[i]);
     }
     return s1.size() + s2_len - 2 * res;
 }
 
 template <typename CharT1>
-static inline std::size_t
-longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector& block,
-                            std::size_t s2_len)
+static inline std::size_t longest_common_subsequence_blockwise(
+    basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block, std::size_t s2_len)
 {
     std::size_t words = block.m_val.size();
     std::vector<std::uint64_t> S(words, ~0x0ull);
@@ -5211,20 +5374,28 @@ longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
 
 template <typename CharT1>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector& block,
-                            std::size_t s2_len)
+                                       const common::BlockPatternMatchVector& block,
+                                       std::size_t s2_len)
 {
-    switch(block.m_val.size())
-    {
-    case 1:  return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
-    case 2:  return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
-    case 3:  return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
-    case 4:  return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
-    case 5:  return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
-    case 6:  return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
-    case 7:  return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
-    case 8:  return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
-    default: return longest_common_subsequence_blockwise(s1, block, s2_len);
+    switch (block.m_val.size()) {
+    case 1:
+        return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
+    case 2:
+        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
+    case 3:
+        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
+    case 4:
+        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
+    case 5:
+        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
+    case 6:
+        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
+    case 7:
+        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
+    case 8:
+        return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
+    default:
+        return longest_common_subsequence_blockwise(s1, block, s2_len);
     }
 }
 
@@ -5232,8 +5403,7 @@ template <typename CharT1, typename CharT2>
 std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
     std::size_t nr = (s2.size() / 64) + (std::size_t)((s2.size() % 64) > 0);
-    switch(nr)
-    {
+    switch (nr) {
     case 1:
     {
         auto block = common::PatternMatchVector(s2);
@@ -5281,7 +5451,6 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_strin
     }
     }
 }
-
 
 // TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2>
@@ -5387,8 +5556,8 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
 
 template <typename CharT1, typename CharT2>
 double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-                                const common::BlockPatternMatchVector& block,
-                                basic_string_view<CharT2> s2, const double score_cutoff)
+                                       const common::BlockPatternMatchVector& block,
+                                       basic_string_view<CharT2> s2, const double score_cutoff)
 {
     if (s1.empty() || s2.empty()) {
         return static_cast<double>(s1.empty() && s2.empty());
@@ -5416,228 +5585,6 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
 
     std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
     return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
-}
-
-} // namespace detail
-} // namespace string_metric
-} // namespace rapidfuzz
-
-#include <algorithm>
-#include <array>
-#include <limits>
-#include <numeric>
-
-namespace rapidfuzz {
-namespace string_metric {
-namespace detail {
-
-struct LLCSBitMatrix {
-    LLCSBitMatrix(uint64_t rows, uint64_t cols)
-        : S(rows, cols, (uint64_t)-1), dist(0)
-    {}
-
-    common::Matrix<uint64_t> S;
-
-    size_t dist;
-};
-
-/**
- * @brief recover alignment from bitparallel Levenshtein matrix
- */
-template <typename CharT1, typename CharT2>
-Editops recover_alignment(
-    basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-    const LLCSBitMatrix& matrix, StringAffix affix
-)
-{
-    size_t dist = matrix.dist;
-    Editops editops(dist);
-    editops.set_src_len(s1.size() + affix.prefix_len + affix.suffix_len);
-    editops.set_dest_len(s2.size() + affix.prefix_len + affix.suffix_len);
-
-    if (dist == 0) {
-        return editops;
-    }
-
-    size_t row = s1.size();
-    size_t col = s2.size();
-
-    while (row && col) {
-        uint64_t col_pos = col - 1;
-        uint64_t col_word = col_pos / 64;
-        col_pos = col_pos % 64;
-        uint64_t mask = 1ull << col_pos;
-
-        /* Insertion */
-        if (matrix.S[row - 1][col_word] & mask)
-        {
-            dist--;
-            col--;
-            editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-        else {
-            row--;
-
-            /* Deletion */
-            if (row && (~matrix.S[row - 1][col_word]) & mask)
-            {
-                dist--;
-                editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + affix.prefix_len;
-                editops[dist].dest_pos = col + affix.prefix_len;
-            }
-            /* Match */
-            else
-            {
-                col--;
-                assert(s1[row] == s2[col]);
-            }
-        }
-    }
-
-    while (col)
-    {
-        dist--;
-        col--;
-        editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
-    }
-
-    while (row)
-    {
-        dist--;
-        row--;
-        editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
-    }
-
-    return editops;
-}
-
-
-template <std::size_t N, typename CharT1>
-LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
-                            const common::PatternMatchVector* block,
-                            std::size_t s2_len)
-{
-    std::uint64_t S[N];
-    for (std::size_t i = 0; i < N; ++i)
-    {
-        S[i] = ~0x0ull;
-    }
-
-    LLCSBitMatrix matrix(s1.size(), N);
-
-    for (size_t i = 0; i < s1.size(); ++i) {
-        uint64_t carry = 0;
-        std::uint64_t Matches[N];
-        std::uint64_t u[N];
-        std::uint64_t x[N];
-        for (std::size_t word = 0; word < N; ++word)
-        {
-            Matches[word] = block[word].get(s1[i]);
-            u[word] = S[word] & Matches[word];
-            x[word] = intrinsics::addc64(S[word], u[word], carry, &carry);
-            S[word] = matrix.S[i][word] = x[word] | (S[word] - u[word]);
-        }
-    }
-
-    std::size_t res = 0;
-    for (std::size_t i = 0; i < N; ++i)
-    {
-        res += intrinsics::popcount64(~S[i]);
-    }
-
-    matrix.dist = s1.size() + s2_len - 2 * res;
-
-    return matrix;
-}
-
-
-template <typename CharT1>
-LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector& block,
-                            std::size_t s2_len)
-{
-    std::size_t words = block.m_val.size();
-    /* todo could be replaced with access to matrix which would slightly
-     * reduce memory usage */
-    std::vector<std::uint64_t> S(words, ~0x0ull);
-    LLCSBitMatrix matrix(s1.size(), words);
-
-    for (size_t i = 0; i < s1.size(); ++i) {
-        uint64_t carry = 0;
-        for (std::size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, s1[i]);
-            uint64_t Stemp = S[word];
-
-            uint64_t u = Stemp & Matches;
-
-            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
-            S[word] = matrix.S[i][word] = x | (Stemp - u);
-        }
-    }
-
-    std::size_t res = 0;
-    for (uint64_t Stemp : S) {
-        res += intrinsics::popcount64(~Stemp);
-    }
-
-    matrix.dist = s1.size() + s2_len - 2 * res;
-
-    return matrix;
-}
-
-template <typename CharT1, typename CharT2>
-LLCSBitMatrix llcs_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
-{
-    if (s2.empty())
-    {
-        LLCSBitMatrix matrix(0, 0);
-        matrix.dist = s1.size();
-        return matrix;
-    }
-    else if (s1.empty())
-    {
-        LLCSBitMatrix matrix(0, 0);
-        matrix.dist = s2.size();
-        return matrix;
-    }
-    else if (s2.size() <= 64)
-    {
-        common::PatternMatchVector block(s2);
-        return llcs_matrix_unroll<1>(s1, &block, s2.size());
-    }
-    else
-    {
-        common::BlockPatternMatchVector block(s2);
-        switch(block.m_val.size())
-        {
-        case 1:  return llcs_matrix_unroll<1>(s1, &block.m_val[0], s2.size());
-        case 2:  return llcs_matrix_unroll<2>(s1, &block.m_val[0], s2.size());
-        case 3:  return llcs_matrix_unroll<3>(s1, &block.m_val[0], s2.size());
-        case 4:  return llcs_matrix_unroll<4>(s1, &block.m_val[0], s2.size());
-        case 5:  return llcs_matrix_unroll<5>(s1, &block.m_val[0], s2.size());
-        case 6:  return llcs_matrix_unroll<6>(s1, &block.m_val[0], s2.size());
-        case 7:  return llcs_matrix_unroll<7>(s1, &block.m_val[0], s2.size());
-        case 8:  return llcs_matrix_unroll<8>(s1, &block.m_val[0], s2.size());
-        default: return llcs_matrix_blockwise(s1, block, s2.size());
-        }
-    }
-}
-
-template <typename CharT1, typename CharT2>
-Editops llcs_editops(basic_string_view<CharT1> s1,
-                                                   basic_string_view<CharT2> s2)
-{
-    /* prefix and suffix are no-ops, which do not need to be added to the editops */
-    StringAffix affix = common::remove_common_affix(s1, s2);
-
-    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
 }
 
 } // namespace detail
@@ -6046,7 +5993,6 @@ Editops llcs_editops(const Sentence1& s1, const Sentence2& s2)
     return detail::llcs_editops(sentence1, sentence2);
 }
 
-
 /**
  * @brief Calculates the Hamming distance between two strings.
  *
@@ -6293,7 +6239,8 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
     auto s2_view = common::to_string_view(s2);
 
     return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                                  score_cutoff / 100) * 100;
+                                                                  score_cutoff / 100) *
+           100;
 }
 
 /**********************************************
@@ -6704,8 +6651,8 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
-        result =
-            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(
+            result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -6763,8 +6710,8 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
-        result =
-            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(
+            result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
@@ -6790,8 +6737,8 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 template <typename CharT1, typename Sentence2>
 percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
                     const SplittedSentenceView<CharT1>& tokens_s1,
-                    const common::BlockPatternMatchVector& blockmap_s1_sorted,
-                    const Sentence2& s2, percent score_cutoff)
+                    const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
+                    percent score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -6817,8 +6764,9 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
         result = string_metric::detail::normalized_weighted_levenshtein(
-            common::to_string_view(s2_sorted), blockmap_s1_sorted,
-            common::to_string_view(s1_sorted), score_cutoff / 100) * 100;
+                     common::to_string_view(s2_sorted), blockmap_s1_sorted,
+                     common::to_string_view(s1_sorted), score_cutoff / 100) *
+                 100;
     }
     else {
         result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
@@ -6832,8 +6780,8 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
     if (dist <= cutoff_distance) {
-        result =
-            std::max(result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(
+            result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
     }
 
     // exit early since the other ratios are 0
