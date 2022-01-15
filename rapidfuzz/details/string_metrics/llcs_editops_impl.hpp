@@ -26,13 +26,15 @@ struct LLCSBitMatrix {
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename CharT1, typename CharT2>
-std::vector<LevenshteinEditOp> recover_alignment(
+Editops recover_alignment(
     basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
     const LLCSBitMatrix& matrix, size_t prefix_len
 )
 {
     size_t dist = matrix.dist;
-    std::vector<LevenshteinEditOp> editops(dist);
+    Editops editops(dist);
+    editops.set_src_len(s1.size());
+    editops.set_dest_len(s2.size());
 
     if (dist == 0) {
         return editops;
@@ -52,7 +54,7 @@ std::vector<LevenshteinEditOp> recover_alignment(
         {
             dist--;
             col--;
-            editops[dist].type = LevenshteinEditType::Insert;
+            editops[dist].type = EditType::Insert;
             editops[dist].src_pos = row + prefix_len;
             editops[dist].dest_pos = col + prefix_len;
         }
@@ -63,7 +65,7 @@ std::vector<LevenshteinEditOp> recover_alignment(
             if (row && (~matrix.S[row - 1][col_word]) & mask)
             {
                 dist--;
-                editops[dist].type = LevenshteinEditType::Delete;
+                editops[dist].type = EditType::Delete;
                 editops[dist].src_pos = row + prefix_len;
                 editops[dist].dest_pos = col + prefix_len;
             }
@@ -80,7 +82,7 @@ std::vector<LevenshteinEditOp> recover_alignment(
     {
         dist--;
         col--;
-        editops[dist].type = LevenshteinEditType::Insert;
+        editops[dist].type = EditType::Insert;
         editops[dist].src_pos = row + prefix_len;
         editops[dist].dest_pos = col + prefix_len;
     }
@@ -89,7 +91,7 @@ std::vector<LevenshteinEditOp> recover_alignment(
     {
         dist--;
         row--;
-        editops[dist].type = LevenshteinEditType::Delete;
+        editops[dist].type = EditType::Delete;
         editops[dist].src_pos = row + prefix_len;
         editops[dist].dest_pos = col + prefix_len;
     }
@@ -210,7 +212,7 @@ LLCSBitMatrix llcs_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2
 }
 
 template <typename CharT1, typename CharT2>
-std::vector<LevenshteinEditOp> llcs_editops(basic_string_view<CharT1> s1,
+Editops llcs_editops(basic_string_view<CharT1> s1,
                                                    basic_string_view<CharT2> s2)
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */

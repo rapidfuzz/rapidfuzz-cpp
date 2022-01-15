@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-05 13:38:08.650877
+//  Generated: 2022-01-15 19:50:44.888974
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1675,7 +1675,7 @@ struct LevenshteinWeightTable {
 /**
  * @brief Edit operation types used by the Levenshtein distance
  */
-enum class LevenshteinEditType {
+enum class EditType {
     None = 0,    /**< No Operation required */
     Replace = 1, /**< Replace a character if a string by another character */
     Insert = 2,  /**< Insert a character into a string */
@@ -1692,14 +1692,482 @@ enum class LevenshteinEditType {
  * Insert:  insert character from dest_pos at src_pos
  * Delete:  delete character at src_pos
  */
-struct LevenshteinEditOp {
-    LevenshteinEditType type; /**< type of the edit operation */
+struct EditOp {
+    EditType type; /**< type of the edit operation */
     std::size_t src_pos;      /**< index into the source string */
     std::size_t dest_pos;     /**< index into the destination string */
 };
 
-static inline bool operator ==(LevenshteinEditOp a, LevenshteinEditOp b) {
+static inline bool operator==(EditOp a, EditOp b) {
 	return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
+}
+
+/**
+ * @brief Edit operations used by the Levenshtein distance
+ *
+ * This represents an edit operation of type type which is applied to
+ * the source string
+ *
+ * None:    s1[src_begin:src_end] == s1[dest_begin:dest_end]
+ * Replace: s1[i1:i2] should be replaced by s2[dest_begin:dest_end]
+ * Insert:  s2[dest_begin:dest_end] should be inserted at s1[src_begin:src_begin].
+ *          Note that src_begin==src_end in this case.
+ * Delete:  s1[src_begin:src_end] should be deleted.
+ *          Note that dest_begin==dest_end in this case.
+ */
+struct Opcode {
+    EditType type; /**< type of the edit operation */
+    std::size_t src_begin;    /**< index into the source string */
+    std::size_t src_end;      /**< index into the source string */
+    std::size_t dest_begin;   /**< index into the destination string */
+    std::size_t dest_end;     /**< index into the destination string */
+};
+
+static inline bool operator==(Opcode a, Opcode b) {
+	return (a.type == b.type)
+        && (a.src_begin == b.src_begin)&& (a.src_end == b.src_end)
+        && (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
+}
+
+namespace detail {
+template <typename T>
+void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start, int stop, int step)
+{
+    if (step > 0)
+    {
+        if (start < 0)
+        {
+            start = std::max((int)(start + vec.size()), 0);
+        }
+        else if (start > vec.size())
+        {
+            start = vec.size();
+        }
+
+        if (stop < 0)
+        {
+            stop = std::max((int)(stop + vec.size()), 0);
+        }
+        else if (stop > vec.size())
+        {
+            stop = vec.size();
+        }
+
+        if (start >= stop)
+        {
+            return;
+        }
+
+        int count = (stop - 1 - start) / step + 1;
+        new_vec.reserve(count);
+
+        for (int i = start; i < stop; i += step)
+        {
+            new_vec.push_back(vec[i]);
+        }
+    }
+    else if (step < 0)
+    {
+        if (start < 0)
+        {
+            start = std::max((int)(start + vec.size()), -1);
+        }
+        else if (start >= vec.size())
+        {
+            start = vec.size() - 1;
+        }
+
+        if (stop < 0)
+        {
+            stop = std::max((int)(stop + vec.size()), -1);
+        }
+        else if (stop >= vec.size())
+        {
+            stop = vec.size() - 1;
+        }
+
+        if (start <= stop)
+        {
+            return;
+        }
+
+        int count = (stop + 1 - start) / step + 1;
+        new_vec.reserve(count);
+
+        for (int i = start; i > stop; i += step)
+        {
+            new_vec.push_back(vec[i]);
+        }
+    }
+    else
+    {
+        throw std::invalid_argument("slice step cannot be zero");
+    }
+}
+} // namespace detail
+
+class Opcodes;
+
+class Editops : private std::vector<EditOp>
+{
+public:
+    using std::vector<EditOp>::size_type;
+
+    Editops()
+        : src_len(0), dest_len(0) {}
+
+    Editops(size_type count, const EditOp& value)
+        : std::vector<EditOp>(count, value), src_len(0), dest_len(0) {}
+
+    explicit Editops(size_type count)
+        : std::vector<EditOp>(count), src_len(0), dest_len(0) {}
+
+    Editops(const Editops& other)
+        : src_len(other.src_len), dest_len(other.dest_len),
+          std::vector<EditOp>(other) {}
+
+    Editops(const Opcodes& other);
+
+    Editops(Editops&& other) noexcept
+    {
+        swap(other);
+    }
+
+    Editops& operator=(Editops other)
+    {
+        swap(other);
+        return *this;
+    }
+
+    /* Element access */
+    using std::vector<EditOp>::at;
+    using std::vector<EditOp>::operator[];
+    using std::vector<EditOp>::front;
+    using std::vector<EditOp>::back;
+    using std::vector<EditOp>::data;
+
+    /* Iterators */
+    using std::vector<EditOp>::begin;
+    using std::vector<EditOp>::cbegin;
+    using std::vector<EditOp>::end;
+    using std::vector<EditOp>::cend;
+    using std::vector<EditOp>::rbegin;
+    using std::vector<EditOp>::crbegin;
+    using std::vector<EditOp>::rend;
+    using std::vector<EditOp>::crend;
+
+    /* Capacity */
+    using std::vector<EditOp>::empty;
+    using std::vector<EditOp>::size;
+    using std::vector<EditOp>::max_size;
+    using std::vector<EditOp>::reserve;
+    using std::vector<EditOp>::capacity;
+    using std::vector<EditOp>::shrink_to_fit;
+
+    /* Modifiers */
+    using std::vector<EditOp>::clear;
+    using std::vector<EditOp>::insert;
+    using std::vector<EditOp>::emplace;
+    using std::vector<EditOp>::erase;
+    using std::vector<EditOp>::push_back;
+    using std::vector<EditOp>::emplace_back;
+    using std::vector<EditOp>::pop_back;
+
+    void swap(Editops& rhs) noexcept {
+        std::swap(src_len, rhs.src_len);
+        std::swap(dest_len, rhs.dest_len);
+        std::vector<EditOp>::swap(rhs);
+    }
+
+    Editops slice(int start, int stop, int step = 1) const
+    {
+        Editops ed_slice;
+        detail::vector_slice(ed_slice, *this, start, stop, step);
+        return ed_slice;
+    }
+
+    size_type get_src_len() const { return src_len; }
+    void set_src_len(size_type len) { src_len = len; }
+    size_type get_dest_len() const { return dest_len; }
+    void set_dest_len(size_type len) { dest_len = len; }
+
+    Editops inverse() const
+    {
+        Editops inv_ops = *this;
+        std::swap(inv_ops.src_len, inv_ops.dest_len);
+        for (auto& op : inv_ops)
+        {
+            std::swap(op.src_pos, op.dest_pos);
+            if (op.type == EditType::Delete)
+            {
+                op.type = EditType::Insert;
+            }
+            else if (op.type == EditType::Insert)
+            {
+                op.type = EditType::Delete;
+            }
+        }
+        return inv_ops;
+    }
+
+private:
+    size_type src_len;
+    size_type dest_len;
+};
+
+bool operator==(const Editops& lhs, const Editops& rhs)
+{
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
+    {
+        return false;
+    }
+
+    if (lhs.size() != rhs.size())
+    {
+        return false;
+    }
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+bool operator!=(const Editops& lhs, const Editops& rhs)
+{
+    return !(lhs == rhs);
+}
+
+void swap(Editops& lhs, Editops& rhs)
+{
+    lhs.swap(rhs);
+}
+
+
+class Opcodes : private std::vector<Opcode>
+{
+public:
+    using std::vector<Opcode>::size_type;
+
+    Opcodes()
+        : src_len(0), dest_len(0) {}
+
+    Opcodes(size_type count, const Opcode& value)
+        : std::vector<Opcode>(count, value), src_len(0), dest_len(0) {}
+
+    explicit Opcodes(size_type count)
+        : std::vector<Opcode>(count), src_len(0), dest_len(0) {}
+
+    Opcodes(const Opcodes& other)
+        : src_len(other.src_len), dest_len(other.dest_len),
+          std::vector<Opcode>(other) {}
+    
+    Opcodes(const Editops& other);
+
+    Opcodes(Opcodes&& other) noexcept
+    {
+        swap(other);
+    }
+
+    Opcodes& operator=(Opcodes other)
+    {
+        swap(other);
+        return *this;
+    }
+
+    /* Element access */
+    using std::vector<Opcode>::at;
+    using std::vector<Opcode>::operator[];
+    using std::vector<Opcode>::front;
+    using std::vector<Opcode>::back;
+    using std::vector<Opcode>::data;
+
+    /* Iterators */
+    using std::vector<Opcode>::begin;
+    using std::vector<Opcode>::cbegin;
+    using std::vector<Opcode>::end;
+    using std::vector<Opcode>::cend;
+    using std::vector<Opcode>::rbegin;
+    using std::vector<Opcode>::crbegin;
+    using std::vector<Opcode>::rend;
+    using std::vector<Opcode>::crend;
+
+    /* Capacity */
+    using std::vector<Opcode>::empty;
+    using std::vector<Opcode>::size;
+    using std::vector<Opcode>::max_size;
+    using std::vector<Opcode>::reserve;
+    using std::vector<Opcode>::capacity;
+    using std::vector<Opcode>::shrink_to_fit;
+
+    /* Modifiers */
+    using std::vector<Opcode>::clear;
+    using std::vector<Opcode>::insert;
+    using std::vector<Opcode>::emplace;
+    using std::vector<Opcode>::erase;
+    using std::vector<Opcode>::push_back;
+    using std::vector<Opcode>::emplace_back;
+    using std::vector<Opcode>::pop_back;
+
+    void swap(Opcodes& rhs) noexcept {
+        std::swap(src_len, rhs.src_len);
+        std::swap(dest_len, rhs.dest_len);
+        std::vector<Opcode>::swap(rhs);
+    }
+
+    Opcodes slice(int start, int stop, int step = 1) const
+    {
+        Opcodes ed_slice;
+        detail::vector_slice(ed_slice, *this, start, stop, step);
+        return ed_slice;
+    }
+
+    size_type get_src_len() const { return src_len; }
+    void set_src_len(size_type len) { src_len = len; }
+    size_type get_dest_len() const { return dest_len; }
+    void set_dest_len(size_type len) { dest_len = len; }
+
+    Opcodes inverse() const
+    {
+        Opcodes inv_ops = *this;
+        std::swap(inv_ops.src_len, inv_ops.dest_len);
+        for (auto& op : inv_ops)
+        {
+            std::swap(op.src_begin, op.dest_begin);
+            std::swap(op.src_end, op.dest_end);
+            if (op.type == EditType::Delete)
+            {
+                op.type = EditType::Insert;
+            }
+            else if (op.type == EditType::Insert)
+            {
+                op.type = EditType::Delete;
+            }
+        }
+        return inv_ops;
+    }
+
+private:
+    size_type src_len;
+    size_type dest_len;
+};
+
+bool operator==(const Opcodes& lhs, const Opcodes& rhs)
+{
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
+    {
+        return false;
+    }
+
+    if (lhs.size() != rhs.size())
+    {
+        return false;
+    }
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
+{
+    return !(lhs == rhs);
+}
+
+void swap(Opcodes& lhs, Opcodes& rhs)
+{
+    lhs.swap(rhs);
+}
+
+Editops::Editops(const Opcodes& other)
+{
+    for (const auto& op : other)
+    {
+        switch(op.type)
+        {
+        case EditType::None:
+            break;
+
+        case EditType::Replace:
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
+                push_back({
+                    EditType::Replace,
+                    op.src_begin + j,
+                    op.dest_begin + j
+                });
+            }
+            break;
+
+        case EditType::Insert:
+            for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
+                push_back({
+                    EditType::Insert,
+                    op.src_begin,
+                    op.dest_begin + j
+                });
+            }
+            break;
+
+        case EditType::Delete:
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
+                push_back({
+                    EditType::Delete,
+                    op.src_begin + j,
+                    op.dest_begin
+                });
+            }
+            break;
+        }
+    }
+}
+
+Opcodes::Opcodes(const Editops& other)
+{
+    size_t src_pos = 0;
+    size_t dest_pos = 0;
+    for (size_t i = 0; i < other.size();)
+    {
+        if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos)
+        {
+            push_back({
+                EditType::None,
+                src_pos, other[i].src_pos,
+                dest_pos, other[i].dest_pos
+            });
+            src_pos = other[i].src_pos;
+            dest_pos = other[i].dest_pos;
+        }
+
+        size_t src_begin = src_pos;
+        size_t dest_begin = dest_pos;
+        EditType type = other[i].type;
+        do
+        {
+            switch(type)
+            {
+            case EditType::None:
+                break;
+
+            case EditType::Replace:
+                src_pos++;
+                dest_pos++;
+                break;
+
+            case EditType::Insert:
+                dest_pos++;
+                break;
+
+            case EditType::Delete:
+                src_pos++;
+                break;
+            }
+            i++;
+        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos && dest_pos == other[i].dest_pos);
+
+        push_back({type, src_begin, src_pos, dest_begin, dest_pos});
+    }
+
+    if (src_pos < other.get_src_len() || dest_pos < other.get_dest_len())
+    {
+        push_back({
+            EditType::None,
+            src_pos, other.get_src_len(),
+            dest_pos, other.get_dest_len()
+        });
+    }
 }
 
 } // namespace rapidfuzz
@@ -2299,6 +2767,82 @@ struct CharHashTable {
         return search->second;
     }
 };
+
+template<typename T>
+struct MatrixVectorView {
+    explicit MatrixVectorView(T* vector, size_t cols)
+        : m_vector(vector), m_cols(cols) {}
+
+    T& operator[](uint64_t col)
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+private:
+    T* m_vector;
+    size_t m_cols;
+};
+
+template<typename T>
+struct ConstMatrixVectorView {
+    explicit ConstMatrixVectorView(const T* vector, size_t cols)
+        : m_vector(vector), m_cols(cols) {}
+
+    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+        : m_vector(other.m_vector) {}
+
+    const T& operator[](uint64_t col)
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+private:
+    const T* m_vector;
+    size_t m_cols;
+};
+
+template<typename T>
+struct Matrix {
+    Matrix(uint64_t rows, uint64_t cols, uint64_t val)
+    {
+        m_rows = rows;
+        m_cols = cols;
+        if (rows * cols > 0)
+        {
+            m_matrix = new T[rows * cols];
+            std::fill_n(m_matrix, rows * cols, val);
+        }
+        else
+        {
+            m_matrix = nullptr;
+        }
+    }
+
+    ~Matrix()
+    {
+        delete[] m_matrix;
+    }
+
+    MatrixVectorView<uint64_t> operator[](uint64_t row)
+    {
+        assert(row < m_rows);
+        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+    }
+
+    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
+    {
+        assert(row < m_rows);
+        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+    }
+
+private:
+    uint64_t m_rows;
+    uint64_t m_cols;
+    T* m_matrix;
+};
+
 
 /**@}*/
 
@@ -3656,86 +4200,102 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
-template<typename T>
-struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector)
-        : m_vector(vector) {}
-
-    T& operator[](uint64_t col)
-    {
-        return m_vector[col];
-    }
-
-private:
-    T* m_vector;
-};
-
-template<typename T>
-struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector)
-        : m_vector(vector) {}
-
-    ConstMatrixVectorView(const MatrixVectorView<T>& other)
-        : m_vector(other.m_vector) {}
-
-    const T& operator[](uint64_t col)
-    {
-        return m_vector[col];
-    }
-
-private:
-    const T* m_vector;
-};
-
-template<typename T>
-struct Matrix {
-    Matrix(uint64_t rows, uint64_t cols)
-    {
-        m_rows = rows;
-        m_cols = cols;
-        if (rows * cols > 0)
-        {
-            m_matrix = new T[rows * cols];
-            memset(m_matrix, 0, rows * cols * sizeof(T));
-        }
-        else
-        {
-            m_matrix = nullptr;
-        }
-    }
-
-    ~Matrix()
-    {
-        delete[] m_matrix;
-    }
-
-    MatrixVectorView<uint64_t> operator[](uint64_t row)
-    {
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols]);
-    }
-
-    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
-    {
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols]);
-    }
-
-private:
-    uint64_t m_rows;
-    uint64_t m_cols;
-    T* m_matrix;
-};
-
 struct LevenshteinBitMatrix {
     LevenshteinBitMatrix(uint64_t rows, uint64_t cols)
-        : D0(rows, cols), VP(rows, cols), HP(rows, cols), dist(0)
+        : VP(rows, cols, (uint64_t)-1), VN(rows, cols, 0), dist(0)
     {}
 
-    Matrix<uint64_t> D0;
-    Matrix<uint64_t> VP;
-    Matrix<uint64_t> HP;
+    common::Matrix<uint64_t> VP;
+    common::Matrix<uint64_t> VN;
 
     size_t dist;
 };
+
+/**
+ * @brief recover alignment from bitparallel Levenshtein matrix
+ */
+template <typename CharT1, typename CharT2>
+Editops recover_alignment(
+    basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+    const LevenshteinBitMatrix& matrix, size_t prefix_len
+)
+{
+    size_t dist = matrix.dist;
+    Editops editops(dist);
+    editops.set_src_len(s1.size());
+    editops.set_dest_len(s2.size());
+
+    if (dist == 0) {
+        return editops;
+    }
+
+    size_t row = s1.size();
+    size_t col = s2.size();
+
+    while (row && col) {
+        uint64_t col_pos = col - 1;
+        uint64_t col_word = col_pos / 64;
+        col_pos = col_pos % 64;
+        uint64_t mask = 1ull << col_pos;
+
+        /* Insertion */
+        if (matrix.VP[row - 1][col_word] & mask)
+        {
+            dist--;
+            col--;
+            editops[dist].type = EditType::Insert;
+            editops[dist].src_pos = row + prefix_len;
+            editops[dist].dest_pos = col + prefix_len;
+        }
+        else {
+            row--;
+
+            /* Deletion */
+            if (row && matrix.VN[row - 1][col_word] & mask)
+            {
+                dist--;
+                editops[dist].type = EditType::Delete;
+                editops[dist].src_pos = row + prefix_len;
+                editops[dist].dest_pos = col + prefix_len;
+            }
+            /* Match/Mismatch */
+            else
+            {
+                col--;
+
+                /* Replace (Matches are not recorded) */
+                if (s1[row] != s2[col])
+                {
+                    dist--;
+                    editops[dist].type = EditType::Replace;
+                    editops[dist].src_pos = row + prefix_len;
+                    editops[dist].dest_pos = col + prefix_len;
+                }
+            }
+        }
+    }
+
+    while (col)
+    {
+        dist--;
+        col--;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = row + prefix_len;
+        editops[dist].dest_pos = col + prefix_len;
+    }
+
+    while (row)
+    {
+        dist--;
+        row--;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = row + prefix_len;
+        editops[dist].dest_pos = col + prefix_len;
+    }
+
+    return editops;
+}
+
 
 template <typename CharT1>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
@@ -3757,10 +4317,10 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
         /* Step 1: Computing D0 */
         uint64_t PM_j = PM.get(s2[i]);
         uint64_t X = PM_j;
-        uint64_t D0 = matrix.D0[i][0] = (((X & VP) + VP) ^ VP) | X | VN;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
         /* Step 2: Computing HP and HN */
-        uint64_t HP = matrix.HP[i][0] = VN | ~(D0 | VP);
+        uint64_t HP = VN | ~(D0 | VP);
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
@@ -3772,7 +4332,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
         HN = (HN << 1);
 
         VP = matrix.VP[i][0] = HN | ~(D0 | HP);
-        VN = HP & D0;
+        VN = matrix.VN[i][0] = HP & D0;
     }
 
     return matrix;
@@ -3783,6 +4343,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
                                           const common::BlockPatternMatchVector& PM,
                                           size_t s1_len)
 {
+    /* todo could be replaced with access to matrix which would slightly
+     * reduce memory usage */
     struct Vectors {
         uint64_t VP;
         uint64_t VN;
@@ -3803,6 +4365,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
+        //uint64_t PM_j = PM.get(0, s2[i]);
+
         for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
             uint64_t PM_j = PM.get(word, s2[i]);
@@ -3810,10 +4374,10 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t VP = vecs[word].VP;
 
             uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = matrix.D0[i][word] = (((X & VP) + VP) ^ VP) | X | VN;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
             /* Step 2: Computing HP and HN */
-            uint64_t HP = matrix.HP[i][word] = VN | ~(D0 | VP);
+            uint64_t HP = VN | ~(D0 | VP);
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
@@ -3829,7 +4393,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             HN = (HN << 1) | HN_carry_temp;
 
             vecs[word].VP = matrix.VP[i][word] = HN | ~(D0 | HP);
-            vecs[word].VN = HP & D0;
+            vecs[word].VN = matrix.VN[i][word] = HP & D0;
         }
 
         {
@@ -3839,10 +4403,10 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t VP = vecs[words - 1].VP;
 
             uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = matrix.D0[i][words - 1] = (((X & VP) + VP) ^ VP) | X | VN;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
             /* Step 2: Computing HP and HN */
-            uint64_t HP = matrix.HP[i][words - 1] = VN | ~(D0 | VP);
+            uint64_t HP = VN | ~(D0 | VP);
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
@@ -3854,7 +4418,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             HN = (HN << 1) | HN_carry;
 
             vecs[words - 1].VP = matrix.VP[i][words - 1] = HN | ~(D0 | HP);
-            vecs[words - 1].VN = HP & D0;
+            vecs[words - 1].VN = matrix.VN[i][words - 1] = HP & D0;
         }
     }
 
@@ -3887,80 +4451,13 @@ LevenshteinBitMatrix levenshtein_matrix(basic_string_view<CharT1> s1, basic_stri
 }
 
 template <typename CharT1, typename CharT2>
-std::vector<LevenshteinEditOp> levenshtein_editops(basic_string_view<CharT1> s1,
+Editops levenshtein_editops(basic_string_view<CharT1> s1,
                                                    basic_string_view<CharT2> s2)
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(s1, s2);
-    const LevenshteinBitMatrix matrix = levenshtein_matrix(s1, s2);
-    size_t dist = matrix.dist;
-    std::vector<LevenshteinEditOp> editops(dist);
 
-    if (dist == 0) {
-        return editops;
-    }
-
-    size_t row = s1.size();
-    size_t col = s2.size();
-
-    while (row && col) {
-        uint64_t col_pos = col - 1;
-        uint64_t col_word = col_pos / 64;
-        col_pos = col_pos % 64;
-        uint64_t mask = 1ull << col_pos;
-
-        /* above + 1 == current -> deletion */
-        if (matrix.HP[row - 1][col_word] & mask) {
-            dist--;
-            row--;
-            editops[dist].type = LevenshteinEditType::Delete;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-        /* left + 1 == current -> insertion */
-        else if (matrix.VP[row - 1][col_word] & mask) {
-            dist--;
-            col--;
-            editops[dist].type = LevenshteinEditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-        /* horizontal == current and character similar -> no-operation */
-        else if ((matrix.D0[row - 1][col_word] & mask)) {
-            row--;
-            col--;
-            continue;
-        }
-        /* -> replace */
-        else {
-            dist--;
-            row--;
-            col--;
-            editops[dist].type = LevenshteinEditType::Replace;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
-        }
-    }
-
-    while (col)
-    {
-        dist--;
-        col--;
-        editops[dist].type = LevenshteinEditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
-    }
-
-    while (row)
-    {
-        dist--;
-        row--;
-        editops[dist].type = LevenshteinEditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
-    }
-
-    return editops;
+    return recover_alignment(s1, s2, levenshtein_matrix(s1, s2), affix.prefix_len);
 }
 
 } // namespace detail
@@ -4131,6 +4628,79 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
         X = (HP << 1) | 1;
         VP = (HN << 1) | ~(D0 | X);
         VN = X & D0;
+    }
+
+    return currDist;
+}
+
+template <typename CharT1>
+std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
+                                   const common::BlockPatternMatchVector& PM,
+                                   size_t s1_len, std::size_t max)
+{
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = (uint64_t)-1;
+    uint64_t VN = 0;
+
+    std::size_t currDist = s1_len;
+
+    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+    // make sure a wraparound can never occur
+    std::size_t maxMisses = 0;
+    if (s1_len > s2.size()) {
+        if (s1_len - s2.size() < max) {
+            maxMisses = max - (s1_len - s2.size());
+        }
+        else {
+            // minimum is 0
+            maxMisses = 0;
+        }
+    }
+    else {
+        maxMisses = s2.size() - s1_len;
+        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+            maxMisses = max + maxMisses;
+        }
+        else {
+            // max is (size_t)-1
+            maxMisses = std::numeric_limits<std::size_t>::max();
+        }
+    }
+
+    /* mask used when computing D[m,j] in the paper 10^(m-1) */
+    uint64_t mask = (uint64_t)1 << 63;
+
+    const size_t words = PM.m_val.size();
+
+    /* Searching */
+    for (size_t i = 0; i < s2.size(); ++i) {
+        /* Step 1: Computing D0 */
+        size_t word = i / 64;
+        size_t word_pos = i % 64;
+
+        uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
+
+        if (word + 1 < words)
+        {
+            /* avoid shifting by 64 */
+            PM_j |= PM.get(word + 1, s2[i]) << 1 << (63 - word_pos);
+        }
+
+        /* Step 1: Computing D0 */
+        uint64_t X = PM_j;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        currDist += !!(HP & mask);
+        currDist -= !!(HN & mask);
+
+        /* Step 4: Computing Vp and VN */
+        VP = HN | ~((D0 >> 1) | HP);
+        VN = (D0 >> 1) & HP;
     }
 
     return currDist;
@@ -4387,6 +4957,8 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
         return s2.size();
     }
 
+    common::BlockPatternMatchVector block(s2);
+
     if (max < 4) {
         return levenshtein_mbleven2018(s1, s2, max);
     }
@@ -4400,6 +4972,14 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
         else {
             dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size(), max);
         }
+        return (dist > max) ? (std::size_t)-1 : dist;
+    }
+
+    // todo max
+    if (max <= 31) {
+        std::size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
+                                   //common::BlockPatternMatchVector(s2),
+                                                   s2.size(), max);
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 
@@ -4823,11 +5403,231 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
 } // namespace string_metric
 } // namespace rapidfuzz
 
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <numeric>
+
+namespace rapidfuzz {
+namespace string_metric {
+namespace detail {
+
+struct LLCSBitMatrix {
+    LLCSBitMatrix(uint64_t rows, uint64_t cols)
+        : S(rows, cols, (uint64_t)-1), dist(0)
+    {}
+
+    common::Matrix<uint64_t> S;
+
+    size_t dist;
+};
+
+/**
+ * @brief recover alignment from bitparallel Levenshtein matrix
+ */
+template <typename CharT1, typename CharT2>
+Editops recover_alignment(
+    basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+    const LLCSBitMatrix& matrix, size_t prefix_len
+)
+{
+    size_t dist = matrix.dist;
+    Editops editops(dist);
+    editops.set_src_len(s1.size());
+    editops.set_dest_len(s2.size());
+
+    if (dist == 0) {
+        return editops;
+    }
+
+    size_t row = s1.size();
+    size_t col = s2.size();
+
+    while (row && col) {
+        uint64_t col_pos = col - 1;
+        uint64_t col_word = col_pos / 64;
+        col_pos = col_pos % 64;
+        uint64_t mask = 1ull << col_pos;
+
+        /* Insertion */
+        if (matrix.S[row - 1][col_word] & mask)
+        {
+            dist--;
+            col--;
+            editops[dist].type = EditType::Insert;
+            editops[dist].src_pos = row + prefix_len;
+            editops[dist].dest_pos = col + prefix_len;
+        }
+        else {
+            row--;
+
+            /* Deletion */
+            if (row && (~matrix.S[row - 1][col_word]) & mask)
+            {
+                dist--;
+                editops[dist].type = EditType::Delete;
+                editops[dist].src_pos = row + prefix_len;
+                editops[dist].dest_pos = col + prefix_len;
+            }
+            /* Match */
+            else
+            {
+                col--;
+                assert(s1[row] == s2[col]);
+            }
+        }
+    }
+
+    while (col)
+    {
+        dist--;
+        col--;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = row + prefix_len;
+        editops[dist].dest_pos = col + prefix_len;
+    }
+
+    while (row)
+    {
+        dist--;
+        row--;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = row + prefix_len;
+        editops[dist].dest_pos = col + prefix_len;
+    }
+
+    return editops;
+}
+
+
+template <std::size_t N, typename CharT1>
+LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
+                            const common::PatternMatchVector* block,
+                            std::size_t s2_len)
+{
+    std::uint64_t S[N];
+    for (std::size_t i = 0; i < N; ++i)
+    {
+        S[i] = ~0x0ull;
+    }
+
+    LLCSBitMatrix matrix(s1.size(), N);
+
+    for (size_t i = 0; i < s1.size(); ++i) {
+        uint64_t carry = 0;
+        std::uint64_t Matches[N];
+        std::uint64_t u[N];
+        std::uint64_t x[N];
+        for (std::size_t word = 0; word < N; ++word)
+        {
+            Matches[word] = block[word].get(s1[i]);
+            u[word] = S[word] & Matches[word];
+            x[word] = intrinsics::addc64(S[word], u[word], carry, &carry);
+            S[word] = matrix.S[i][word] = x[word] | (S[word] - u[word]);
+        }
+    }
+
+    std::size_t res = 0;
+    for (std::size_t i = 0; i < N; ++i)
+    {
+        res += intrinsics::popcount64(~S[i]);
+    }
+
+    matrix.dist = s1.size() + s2_len - 2 * res;
+
+    return matrix;
+}
+
+
+template <typename CharT1>
+LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
+                            const common::BlockPatternMatchVector& block,
+                            std::size_t s2_len)
+{
+    std::size_t words = block.m_val.size();
+    /* todo could be replaced with access to matrix which would slightly
+     * reduce memory usage */
+    std::vector<std::uint64_t> S(words, ~0x0ull);
+    LLCSBitMatrix matrix(s1.size(), words);
+
+    for (size_t i = 0; i < s1.size(); ++i) {
+        uint64_t carry = 0;
+        for (std::size_t word = 0; word < words; ++word) {
+            const uint64_t Matches = block.get(word, s1[i]);
+            uint64_t Stemp = S[word];
+
+            uint64_t u = Stemp & Matches;
+
+            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
+            S[word] = matrix.S[i][word] = x | (Stemp - u);
+        }
+    }
+
+    std::size_t res = 0;
+    for (uint64_t Stemp : S) {
+        res += intrinsics::popcount64(~Stemp);
+    }
+
+    matrix.dist = s1.size() + s2_len - 2 * res;
+
+    return matrix;
+}
+
+template <typename CharT1, typename CharT2>
+LLCSBitMatrix llcs_matrix(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+{
+    if (s2.empty())
+    {
+        LLCSBitMatrix matrix(0, 0);
+        matrix.dist = s1.size();
+        return matrix;
+    }
+    else if (s1.empty())
+    {
+        LLCSBitMatrix matrix(0, 0);
+        matrix.dist = s2.size();
+        return matrix;
+    }
+    else if (s2.size() <= 64)
+    {
+        common::PatternMatchVector block(s2);
+        return llcs_matrix_unroll<1>(s1, &block, s2.size());
+    }
+    else
+    {
+        common::BlockPatternMatchVector block(s2);
+        switch(block.m_val.size())
+        {
+        case 1:  return llcs_matrix_unroll<1>(s1, &block.m_val[0], s2.size());
+        case 2:  return llcs_matrix_unroll<2>(s1, &block.m_val[0], s2.size());
+        case 3:  return llcs_matrix_unroll<3>(s1, &block.m_val[0], s2.size());
+        case 4:  return llcs_matrix_unroll<4>(s1, &block.m_val[0], s2.size());
+        case 5:  return llcs_matrix_unroll<5>(s1, &block.m_val[0], s2.size());
+        case 6:  return llcs_matrix_unroll<6>(s1, &block.m_val[0], s2.size());
+        case 7:  return llcs_matrix_unroll<7>(s1, &block.m_val[0], s2.size());
+        case 8:  return llcs_matrix_unroll<8>(s1, &block.m_val[0], s2.size());
+        default: return llcs_matrix_blockwise(s1, block, s2.size());
+        }
+    }
+}
+
+template <typename CharT1, typename CharT2>
+Editops llcs_editops(basic_string_view<CharT1> s1,
+                                                   basic_string_view<CharT2> s2)
+{
+    /* prefix and suffix are no-ops, which do not need to be added to the editops */
+    StringAffix affix = common::remove_common_affix(s1, s2);
+
+    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix.prefix_len);
+}
+
+} // namespace detail
+} // namespace string_metric
+} // namespace rapidfuzz
+
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
-#include <tuple>
-#include <vector>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -5195,7 +5995,7 @@ private:
 };
 
 /**
- * @brief Return list of LevenshteinEditOp describing how to turn s1 into s2.
+ * @brief Return list of EditOp describing how to turn s1 into s2.
  *
  * @tparam Sentence1 This is a string that can be converted to
  * basic_string_view<char_type>
@@ -5210,13 +6010,23 @@ private:
  * @return Edit operations required to turn s1 into s2
  */
 template <typename Sentence1, typename Sentence2>
-std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
+Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
 
     return detail::levenshtein_editops(sentence1, sentence2);
 }
+
+template <typename Sentence1, typename Sentence2>
+Editops llcs_editops(const Sentence1& s1, const Sentence2& s2)
+{
+    auto sentence1 = common::to_string_view(s1);
+    auto sentence2 = common::to_string_view(s2);
+
+    return detail::llcs_editops(sentence1, sentence2);
+}
+
 
 /**
  * @brief Calculates the Hamming distance between two strings.

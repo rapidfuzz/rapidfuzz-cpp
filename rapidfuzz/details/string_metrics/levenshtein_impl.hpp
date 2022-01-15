@@ -173,6 +173,79 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1>
+std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
+                                   const common::BlockPatternMatchVector& PM,
+                                   size_t s1_len, std::size_t max)
+{
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = (uint64_t)-1;
+    uint64_t VN = 0;
+
+    std::size_t currDist = s1_len;
+
+    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
+    // make sure a wraparound can never occur
+    std::size_t maxMisses = 0;
+    if (s1_len > s2.size()) {
+        if (s1_len - s2.size() < max) {
+            maxMisses = max - (s1_len - s2.size());
+        }
+        else {
+            // minimum is 0
+            maxMisses = 0;
+        }
+    }
+    else {
+        maxMisses = s2.size() - s1_len;
+        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+            maxMisses = max + maxMisses;
+        }
+        else {
+            // max is (size_t)-1
+            maxMisses = std::numeric_limits<std::size_t>::max();
+        }
+    }
+
+    /* mask used when computing D[m,j] in the paper 10^(m-1) */
+    uint64_t mask = (uint64_t)1 << 63;
+
+    const size_t words = PM.m_val.size();
+
+    /* Searching */
+    for (size_t i = 0; i < s2.size(); ++i) {
+        /* Step 1: Computing D0 */
+        size_t word = i / 64;
+        size_t word_pos = i % 64;
+
+        uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
+
+        if (word + 1 < words)
+        {
+            /* avoid shifting by 64 */
+            PM_j |= PM.get(word + 1, s2[i]) << 1 << (63 - word_pos);
+        }
+
+        /* Step 1: Computing D0 */
+        uint64_t X = PM_j;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        currDist += !!(HP & mask);
+        currDist -= !!(HN & mask);
+
+        /* Step 4: Computing Vp and VN */
+        VP = HN | ~((D0 >> 1) | HP);
+        VN = (D0 >> 1) & HP;
+    }
+
+    return currDist;
+}
+
+template <typename CharT1>
 std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
                                    const common::PatternMatchVector& PM,
                                    std::size_t s1_len)
@@ -423,6 +496,8 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
         return s2.size();
     }
 
+    common::BlockPatternMatchVector block(s2);
+
     if (max < 4) {
         return levenshtein_mbleven2018(s1, s2, max);
     }
@@ -436,6 +511,14 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
         else {
             dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size(), max);
         }
+        return (dist > max) ? (std::size_t)-1 : dist;
+    }
+
+    // todo max
+    if (max <= 31) {
+        std::size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
+                                   //common::BlockPatternMatchVector(s2),
+                                                   s2.size(), max);
         return (dist > max) ? (std::size_t)-1 : dist;
     }
 

@@ -13,8 +13,6 @@
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
-#include <tuple>
-#include <vector>
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -382,7 +380,7 @@ private:
 };
 
 /**
- * @brief Return list of LevenshteinEditOp describing how to turn s1 into s2.
+ * @brief Return list of EditOp describing how to turn s1 into s2.
  *
  * @tparam Sentence1 This is a string that can be converted to
  * basic_string_view<char_type>
@@ -397,7 +395,7 @@ private:
  * @return Edit operations required to turn s1 into s2
  */
 template <typename Sentence1, typename Sentence2>
-std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
+Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -406,7 +404,7 @@ std::vector<LevenshteinEditOp> levenshtein_editops(const Sentence1& s1, const Se
 }
 
 template <typename Sentence1, typename Sentence2>
-std::vector<LevenshteinEditOp> llcs_editops(const Sentence1& s1, const Sentence2& s2)
+Editops llcs_editops(const Sentence1& s1, const Sentence2& s2)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
