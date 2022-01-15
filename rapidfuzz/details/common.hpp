@@ -45,17 +45,16 @@ constexpr double result_cutoff(double result, percent score_cutoff)
 }
 
 template <int Max = 1>
-constexpr percent norm_distance(std::size_t dist, std::size_t lensum, double score_cutoff = 0)
+constexpr percent norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
     return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
 }
 
 template <int Max = 1>
-static inline std::size_t score_cutoff_to_distance(double score_cutoff, std::size_t lensum)
+static inline size_t score_cutoff_to_distance(double score_cutoff, size_t lensum)
 {
-    return static_cast<std::size_t>(
-        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+    return static_cast<size_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
 template <typename T>
@@ -129,10 +128,10 @@ template <typename CharT1, typename CharT2>
 StringAffix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename CharT1, typename CharT2>
-std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
+size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename CharT1, typename CharT2>
-std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
+size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
@@ -208,14 +207,14 @@ struct PatternMatchVector {
     void insert(basic_string_view<CharT> s)
     {
         uint64_t mask = 1;
-        for (std::size_t i = 0; i < s.size(); ++i) {
+        for (size_t i = 0; i < s.size(); ++i) {
             insert_mask(s[i], mask);
             mask <<= 1;
         }
     }
 
     template <typename CharT>
-    void insert(CharT key, std::size_t pos)
+    void insert(CharT key, size_t pos)
     {
         insert_mask(key, 1ull << pos);
     }
@@ -249,9 +248,9 @@ private:
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    std::size_t lookup(uint64_t key) const
+    size_t lookup(uint64_t key) const
     {
-        std::size_t i = key % 128;
+        size_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
@@ -282,7 +281,7 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(std::size_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
@@ -291,23 +290,23 @@ struct BlockPatternMatchVector {
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
-        std::size_t block_count = (s.size() / 64) + (std::size_t)((s.size() % 64) != 0);
+        size_t block_count = (s.size() / 64) + (size_t)((s.size() % 64) != 0);
         m_val.resize(block_count);
 
-        for (std::size_t block = 0; block < block_count; ++block) {
+        for (size_t block = 0; block < block_count; ++block) {
             m_val[block].insert(s.substr(block * 64, 64));
         }
     }
 
     template <typename CharT>
-    uint64_t get(std::size_t block, CharT ch) const
+    uint64_t get(size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, typename ValueType, std::size_t size = sizeof(CharT1)>
+template <typename CharT1, typename ValueType, size_t size = sizeof(CharT1)>
 struct CharHashTable;
 
 template <typename CharT1, typename ValueType>
@@ -336,7 +335,7 @@ struct CharHashTable<CharT1, ValueType, 1> {
     }
 };
 
-template <typename CharT1, typename ValueType, std::size_t size>
+template <typename CharT1, typename ValueType, size_t size>
 struct CharHashTable {
     std::unordered_map<CharT1, ValueType> m_val;
     ValueType m_default;

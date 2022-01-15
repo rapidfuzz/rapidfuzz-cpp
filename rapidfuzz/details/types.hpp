@@ -19,14 +19,14 @@ template <typename CharT>
 using string_view_vec = std::vector<basic_string_view<CharT>>;
 
 struct StringAffix {
-    std::size_t prefix_len;
-    std::size_t suffix_len;
+    size_t prefix_len;
+    size_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
-    std::size_t insert_cost;
-    std::size_t delete_cost;
-    std::size_t replace_cost;
+    size_t insert_cost;
+    size_t delete_cost;
+    size_t replace_cost;
 };
 
 /**
@@ -50,14 +50,14 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;        /**< type of the edit operation */
-    std::size_t src_pos;  /**< index into the source string */
-    std::size_t dest_pos; /**< index into the destination string */
+    EditType type;   /**< type of the edit operation */
+    size_t src_pos;  /**< index into the source string */
+    size_t dest_pos; /**< index into the destination string */
 
     EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
     {}
 
-    EditOp(EditType type_, std::size_t src_pos_, std::size_t dest_pos_)
+    EditOp(EditType type_, size_t src_pos_, size_t dest_pos_)
         : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
     {}
 };
@@ -81,17 +81,16 @@ static inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;          /**< type of the edit operation */
-    std::size_t src_begin;  /**< index into the source string */
-    std::size_t src_end;    /**< index into the source string */
-    std::size_t dest_begin; /**< index into the destination string */
-    std::size_t dest_end;   /**< index into the destination string */
+    EditType type;     /**< type of the edit operation */
+    size_t src_begin;  /**< index into the source string */
+    size_t src_end;    /**< index into the source string */
+    size_t dest_begin; /**< index into the destination string */
+    size_t dest_end;   /**< index into the destination string */
 
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, std::size_t src_begin_, std::size_t src_end_, std::size_t dest_begin_,
-           std::size_t dest_end_)
+    Opcode(EditType type_, size_t src_begin_, size_t src_end_, size_t dest_begin_, size_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),

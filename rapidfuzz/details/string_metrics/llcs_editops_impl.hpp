@@ -91,12 +91,12 @@ Editops recover_alignment(basic_string_view<CharT1> s1, basic_string_view<CharT2
     return editops;
 }
 
-template <std::size_t N, typename CharT1>
+template <size_t N, typename CharT1>
 LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
-                                 const common::PatternMatchVector* block, std::size_t s2_len)
+                                 const common::PatternMatchVector* block, size_t s2_len)
 {
     std::uint64_t S[N];
-    for (std::size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         S[i] = ~0x0ull;
     }
 
@@ -107,7 +107,7 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
-        for (std::size_t word = 0; word < N; ++word) {
+        for (size_t word = 0; word < N; ++word) {
             Matches[word] = block[word].get(s1[i]);
             u[word] = S[word] & Matches[word];
             x[word] = intrinsics::addc64(S[word], u[word], carry, &carry);
@@ -115,8 +115,8 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
         }
     }
 
-    std::size_t res = 0;
-    for (std::size_t i = 0; i < N; ++i) {
+    size_t res = 0;
+    for (size_t i = 0; i < N; ++i) {
         res += intrinsics::popcount64(~S[i]);
     }
 
@@ -127,10 +127,9 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
 
 template <typename CharT1>
 LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
-                                    const common::BlockPatternMatchVector& block,
-                                    std::size_t s2_len)
+                                    const common::BlockPatternMatchVector& block, size_t s2_len)
 {
-    std::size_t words = block.m_val.size();
+    size_t words = block.m_val.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     std::vector<std::uint64_t> S(words, ~0x0ull);
@@ -138,7 +137,7 @@ LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
 
     for (size_t i = 0; i < s1.size(); ++i) {
         uint64_t carry = 0;
-        for (std::size_t word = 0; word < words; ++word) {
+        for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, s1[i]);
             uint64_t Stemp = S[word];
 
@@ -149,7 +148,7 @@ LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
         }
     }
 
-    std::size_t res = 0;
+    size_t res = 0;
     for (uint64_t Stemp : S) {
         res += intrinsics::popcount64(~Stemp);
     }

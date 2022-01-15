@@ -52,7 +52,7 @@ static inline bool jaro_common_char_filter(basic_string_view<CharT1> P, basic_st
 struct FlaggedCharsOriginal {
     std::vector<int> P_flag;
     std::vector<int> T_flag;
-    std::size_t CommonChars;
+    size_t CommonChars;
 };
 
 template <typename CharT1, typename CharT2>
@@ -62,14 +62,14 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string
     std::vector<int> P_flag(P.size() + 1);
     std::vector<int> T_flag(T.size() + 1);
 
-    std::size_t Bound = std::max(P.size(), T.size()) / 2;
+    size_t Bound = std::max(P.size(), T.size()) / 2;
     if (Bound > 0) Bound--;
 
-    std::size_t CommonChars = 0;
-    for (std::size_t i = 0; i < T.size(); i++) {
-        std::size_t lowlim = (i >= Bound) ? i - Bound : 0;
-        std::size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
-        for (std::size_t j = lowlim; j <= hilim; j++) {
+    size_t CommonChars = 0;
+    for (size_t i = 0; i < T.size(); i++) {
+        size_t lowlim = (i >= Bound) ? i - Bound : 0;
+        size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
+        for (size_t j = lowlim; j <= hilim; j++) {
             if (!P_flag[j] && common::mixed_sign_equal(P[j], T[i])) {
                 T_flag[i] = 1;
                 P_flag[j] = 1;
@@ -85,7 +85,7 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string
 struct FlaggedCharsWord {
     uint64_t P_flag;
     uint64_t T_flag;
-    std::size_t CommonChars;
+    size_t CommonChars;
 };
 
 template <typename CharT1, typename CharT2>
@@ -102,7 +102,7 @@ static inline FlaggedCharsWord flag_similar_characters_word(const common::Patter
     uint64_t Bound = std::max(P.size(), T.size()) / 2 - 1;
     uint64_t BoundMask = (1ull << 1 << Bound) - 1;
 
-    std::size_t j = 0;
+    size_t j = 0;
     for (; j < std::min(Bound, (uint64_t)T.size()); ++j) {
         uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
 
@@ -179,11 +179,11 @@ percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<
         return 0.0;
     }
     // Count the number of transpositions
-    std::size_t Transpositions = 0;
-    std::size_t k = 0;
-    for (std::size_t i = 0; i < T.size(); i++) {
+    size_t Transpositions = 0;
+    size_t k = 0;
+    for (size_t i = 0; i < T.size(); i++) {
         if (flagged.T_flag[i]) {
-            std::size_t j = k;
+            size_t j = k;
             for (; j < P.size(); j++) {
                 if (flagged.P_flag[j]) {
                     k = j + 1;
@@ -216,9 +216,9 @@ template <typename CharT1, typename CharT2>
 percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
                                 double prefix_weight, percent score_cutoff)
 {
-    std::size_t min_len = std::min(P.size(), T.size());
-    std::size_t prefix = 0;
-    std::size_t max_prefix = (min_len >= 4) ? 4 : min_len;
+    size_t min_len = std::min(P.size(), T.size());
+    size_t prefix = 0;
+    size_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
     for (; prefix < max_prefix; ++prefix) {
         if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix])) {

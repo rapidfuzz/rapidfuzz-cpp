@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-15 23:02:28.327785
+//  Generated: 2022-01-15 23:09:06.305238
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1664,14 +1664,14 @@ template <typename CharT>
 using string_view_vec = std::vector<basic_string_view<CharT>>;
 
 struct StringAffix {
-    std::size_t prefix_len;
-    std::size_t suffix_len;
+    size_t prefix_len;
+    size_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
-    std::size_t insert_cost;
-    std::size_t delete_cost;
-    std::size_t replace_cost;
+    size_t insert_cost;
+    size_t delete_cost;
+    size_t replace_cost;
 };
 
 /**
@@ -1695,14 +1695,14 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;        /**< type of the edit operation */
-    std::size_t src_pos;  /**< index into the source string */
-    std::size_t dest_pos; /**< index into the destination string */
+    EditType type;   /**< type of the edit operation */
+    size_t src_pos;  /**< index into the source string */
+    size_t dest_pos; /**< index into the destination string */
 
     EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
     {}
 
-    EditOp(EditType type_, std::size_t src_pos_, std::size_t dest_pos_)
+    EditOp(EditType type_, size_t src_pos_, size_t dest_pos_)
         : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
     {}
 };
@@ -1726,17 +1726,16 @@ static inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;          /**< type of the edit operation */
-    std::size_t src_begin;  /**< index into the source string */
-    std::size_t src_end;    /**< index into the source string */
-    std::size_t dest_begin; /**< index into the destination string */
-    std::size_t dest_end;   /**< index into the destination string */
+    EditType type;     /**< type of the edit operation */
+    size_t src_begin;  /**< index into the source string */
+    size_t src_end;    /**< index into the source string */
+    size_t dest_begin; /**< index into the destination string */
+    size_t dest_end;   /**< index into the destination string */
 
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, std::size_t src_begin_, std::size_t src_end_, std::size_t dest_begin_,
-           std::size_t dest_end_)
+    Opcode(EditType type_, size_t src_begin_, size_t src_end_, size_t dest_begin_, size_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -2458,17 +2457,16 @@ constexpr double result_cutoff(double result, percent score_cutoff)
 }
 
 template <int Max = 1>
-constexpr percent norm_distance(std::size_t dist, std::size_t lensum, double score_cutoff = 0)
+constexpr percent norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
     return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
 }
 
 template <int Max = 1>
-static inline std::size_t score_cutoff_to_distance(double score_cutoff, std::size_t lensum)
+static inline size_t score_cutoff_to_distance(double score_cutoff, size_t lensum)
 {
-    return static_cast<std::size_t>(
-        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+    return static_cast<size_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
 template <typename T>
@@ -2542,10 +2540,10 @@ template <typename CharT1, typename CharT2>
 StringAffix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename CharT1, typename CharT2>
-std::size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
+size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename CharT1, typename CharT2>
-std::size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
+size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
@@ -2621,14 +2619,14 @@ struct PatternMatchVector {
     void insert(basic_string_view<CharT> s)
     {
         uint64_t mask = 1;
-        for (std::size_t i = 0; i < s.size(); ++i) {
+        for (size_t i = 0; i < s.size(); ++i) {
             insert_mask(s[i], mask);
             mask <<= 1;
         }
     }
 
     template <typename CharT>
-    void insert(CharT key, std::size_t pos)
+    void insert(CharT key, size_t pos)
     {
         insert_mask(key, 1ull << pos);
     }
@@ -2662,9 +2660,9 @@ private:
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    std::size_t lookup(uint64_t key) const
+    size_t lookup(uint64_t key) const
     {
-        std::size_t i = key % 128;
+        size_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
@@ -2695,7 +2693,7 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(std::size_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
@@ -2704,23 +2702,23 @@ struct BlockPatternMatchVector {
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
-        std::size_t block_count = (s.size() / 64) + (std::size_t)((s.size() % 64) != 0);
+        size_t block_count = (s.size() / 64) + (size_t)((s.size() % 64) != 0);
         m_val.resize(block_count);
 
-        for (std::size_t block = 0; block < block_count; ++block) {
+        for (size_t block = 0; block < block_count; ++block) {
             m_val[block].insert(s.substr(block * 64, 64));
         }
     }
 
     template <typename CharT>
-    uint64_t get(std::size_t block, CharT ch) const
+    uint64_t get(size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, typename ValueType, std::size_t size = sizeof(CharT1)>
+template <typename CharT1, typename ValueType, size_t size = sizeof(CharT1)>
 struct CharHashTable;
 
 template <typename CharT1, typename ValueType>
@@ -2749,7 +2747,7 @@ struct CharHashTable<CharT1, ValueType, 1> {
     }
 };
 
-template <typename CharT1, typename ValueType, std::size_t size>
+template <typename CharT1, typename ValueType, size_t size>
 struct CharHashTable {
     std::unordered_map<CharT1, ValueType> m_val;
     ValueType m_default;
@@ -3854,7 +3852,7 @@ static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t
     return a;
 }
 
-static inline std::size_t popcount64(uint64_t x)
+static inline size_t popcount64(uint64_t x)
 {
     const uint64_t m1 = 0x5555555555555555;
     const uint64_t m2 = 0x3333333333333333;
@@ -3864,7 +3862,7 @@ static inline std::size_t popcount64(uint64_t x)
     x -= (x >> 1) & m1;
     x = (x & m2) + ((x >> 2) & m2);
     x = (x + (x >> 4)) & m4;
-    return static_cast<std::size_t>((x * h01) >> 56);
+    return static_cast<size_t>((x * h01) >> 56);
 }
 
 /**
@@ -3985,7 +3983,7 @@ static inline bool jaro_common_char_filter(basic_string_view<CharT1> P, basic_st
 struct FlaggedCharsOriginal {
     std::vector<int> P_flag;
     std::vector<int> T_flag;
-    std::size_t CommonChars;
+    size_t CommonChars;
 };
 
 template <typename CharT1, typename CharT2>
@@ -3995,14 +3993,14 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string
     std::vector<int> P_flag(P.size() + 1);
     std::vector<int> T_flag(T.size() + 1);
 
-    std::size_t Bound = std::max(P.size(), T.size()) / 2;
+    size_t Bound = std::max(P.size(), T.size()) / 2;
     if (Bound > 0) Bound--;
 
-    std::size_t CommonChars = 0;
-    for (std::size_t i = 0; i < T.size(); i++) {
-        std::size_t lowlim = (i >= Bound) ? i - Bound : 0;
-        std::size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
-        for (std::size_t j = lowlim; j <= hilim; j++) {
+    size_t CommonChars = 0;
+    for (size_t i = 0; i < T.size(); i++) {
+        size_t lowlim = (i >= Bound) ? i - Bound : 0;
+        size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
+        for (size_t j = lowlim; j <= hilim; j++) {
             if (!P_flag[j] && common::mixed_sign_equal(P[j], T[i])) {
                 T_flag[i] = 1;
                 P_flag[j] = 1;
@@ -4018,7 +4016,7 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string
 struct FlaggedCharsWord {
     uint64_t P_flag;
     uint64_t T_flag;
-    std::size_t CommonChars;
+    size_t CommonChars;
 };
 
 template <typename CharT1, typename CharT2>
@@ -4035,7 +4033,7 @@ static inline FlaggedCharsWord flag_similar_characters_word(const common::Patter
     uint64_t Bound = std::max(P.size(), T.size()) / 2 - 1;
     uint64_t BoundMask = (1ull << 1 << Bound) - 1;
 
-    std::size_t j = 0;
+    size_t j = 0;
     for (; j < std::min(Bound, (uint64_t)T.size()); ++j) {
         uint64_t PM_j = PM.get(T[j]) & BoundMask & (~P_flag);
 
@@ -4112,11 +4110,11 @@ percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<
         return 0.0;
     }
     // Count the number of transpositions
-    std::size_t Transpositions = 0;
-    std::size_t k = 0;
-    for (std::size_t i = 0; i < T.size(); i++) {
+    size_t Transpositions = 0;
+    size_t k = 0;
+    for (size_t i = 0; i < T.size(); i++) {
         if (flagged.T_flag[i]) {
-            std::size_t j = k;
+            size_t j = k;
             for (; j < P.size(); j++) {
                 if (flagged.P_flag[j]) {
                     k = j + 1;
@@ -4149,9 +4147,9 @@ template <typename CharT1, typename CharT2>
 percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
                                 double prefix_weight, percent score_cutoff)
 {
-    std::size_t min_len = std::min(P.size(), T.size());
-    std::size_t prefix = 0;
-    std::size_t max_prefix = (min_len >= 4) ? 4 : min_len;
+    size_t min_len = std::min(P.size(), T.size());
+    size_t prefix = 0;
+    size_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
     for (; prefix < max_prefix; ++prefix) {
         if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix])) {
@@ -4485,22 +4483,22 @@ static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
 };
 
 template <typename CharT1, typename CharT2>
-std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                    std::size_t max)
+size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                               size_t max)
 {
     if (s1.size() < s2.size()) {
         return levenshtein_mbleven2018(s2, s1, max);
     }
 
-    std::size_t len_diff = s1.size() - s2.size();
+    size_t len_diff = s1.size() - s2.size();
     auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-    std::size_t dist = max + 1;
+    size_t dist = max + 1;
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
         int ops = possible_ops[pos];
-        std::size_t s1_pos = 0;
-        std::size_t s2_pos = 0;
-        std::size_t cur_dist = 0;
+        size_t s1_pos = 0;
+        size_t s2_pos = 0;
+        size_t cur_dist = 0;
         while (s1_pos < s1.size() && s2_pos < s2.size()) {
             if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
                 cur_dist++;
@@ -4518,7 +4516,7 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
         dist = std::min(dist, cur_dist);
     }
 
-    return (dist > max) ? (std::size_t)-1 : dist;
+    return (dist > max) ? (size_t)-1 : dist;
 }
 
 /**
@@ -4540,18 +4538,17 @@ std::size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_v
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename CharT1>
-std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM, std::size_t s1_len,
-                                   std::size_t max)
+size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector& PM,
+                              size_t s1_len, size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
     uint64_t VN = 0;
-    std::size_t currDist = s1_len;
+    size_t currDist = s1_len;
 
     // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
     // make sure a wraparound can never occur
-    std::size_t maxMisses = 0;
+    size_t maxMisses = 0;
     if (s1_len > s2.size()) {
         if (s1_len - s2.size() < max) {
             maxMisses = max - (s1_len - s2.size());
@@ -4563,12 +4560,12 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
     }
     else {
         maxMisses = s2.size() - s1_len;
-        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+        if (max <= std::numeric_limits<size_t>::max() - maxMisses) {
             maxMisses = max + maxMisses;
         }
         else {
             // max is (size_t)-1
-            maxMisses = std::numeric_limits<std::size_t>::max();
+            maxMisses = std::numeric_limits<size_t>::max();
         }
     }
 
@@ -4591,7 +4588,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
         if (HP & mask) {
             currDist++;
             if (maxMisses < 2) {
-                return (std::size_t)-1;
+                return (size_t)-1;
             }
             maxMisses -= 2;
         }
@@ -4600,7 +4597,7 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
         }
         else {
             if (maxMisses < 1) {
-                return (std::size_t)-1;
+                return (size_t)-1;
             }
             --maxMisses;
         }
@@ -4615,19 +4612,19 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1>
-std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
-                                              const common::BlockPatternMatchVector& PM,
-                                              size_t s1_len, std::size_t max)
+size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
+                                         const common::BlockPatternMatchVector& PM, size_t s1_len,
+                                         size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
     uint64_t VN = 0;
 
-    std::size_t currDist = s1_len;
+    size_t currDist = s1_len;
 
     // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
     // make sure a wraparound can never occur
-    std::size_t maxMisses = 0;
+    size_t maxMisses = 0;
     if (s1_len > s2.size()) {
         if (s1_len - s2.size() < max) {
             maxMisses = max - (s1_len - s2.size());
@@ -4639,12 +4636,12 @@ std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
     }
     else {
         maxMisses = s2.size() - s1_len;
-        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+        if (max <= std::numeric_limits<size_t>::max() - maxMisses) {
             maxMisses = max + maxMisses;
         }
         else {
             // max is (size_t)-1
-            maxMisses = std::numeric_limits<std::size_t>::max();
+            maxMisses = std::numeric_limits<size_t>::max();
         }
     }
 
@@ -4687,13 +4684,13 @@ std::size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1>
-std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
-                                   const common::PatternMatchVector& PM, std::size_t s1_len)
+size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector& PM,
+                              size_t s1_len)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
     uint64_t VN = 0;
-    std::size_t currDist = s1_len;
+    size_t currDist = s1_len;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = (uint64_t)1 << (s1_len - 1);
@@ -4725,9 +4722,9 @@ std::size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1>
-std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-                                        const common::BlockPatternMatchVector& PM,
-                                        std::size_t s1_len, std::size_t max)
+size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
+                                   const common::BlockPatternMatchVector& PM, size_t s1_len,
+                                   size_t max)
 {
     struct Vectors {
         uint64_t VP;
@@ -4737,12 +4734,12 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
         {}
     };
 
-    const std::size_t words = PM.m_val.size();
-    std::size_t currDist = s1_len;
+    const size_t words = PM.m_val.size();
+    size_t currDist = s1_len;
 
     // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
     // make sure a wraparound can never occur
-    std::size_t maxMisses = 0;
+    size_t maxMisses = 0;
     if (s1_len > s2.size()) {
         if (s1_len - s2.size() < max) {
             maxMisses = max - (s1_len - s2.size());
@@ -4754,12 +4751,12 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
     }
     else {
         maxMisses = s2.size() - s1_len;
-        if (max <= std::numeric_limits<std::size_t>::max() - maxMisses) {
+        if (max <= std::numeric_limits<size_t>::max() - maxMisses) {
             maxMisses = max + maxMisses;
         }
         else {
             // max is (size_t)-1
-            maxMisses = std::numeric_limits<std::size_t>::max();
+            maxMisses = std::numeric_limits<size_t>::max();
         }
     }
 
@@ -4767,11 +4764,11 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
     const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
 
     /* Searching */
-    for (std::size_t i = 0; i < s2.size(); i++) {
+    for (size_t i = 0; i < s2.size(); i++) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        for (std::size_t word = 0; word < words - 1; word++) {
+        for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
             uint64_t PM_j = PM.get(word, s2[i]);
             uint64_t VN = vecs[word].VN;
@@ -4818,7 +4815,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
             if (HP & Last) {
                 currDist++;
                 if (maxMisses < 2) {
-                    return (std::size_t)-1;
+                    return (size_t)-1;
                 }
                 maxMisses -= 2;
             }
@@ -4827,7 +4824,7 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
             }
             else {
                 if (maxMisses < 1) {
-                    return (std::size_t)-1;
+                    return (size_t)-1;
                 }
                 --maxMisses;
             }
@@ -4845,21 +4842,21 @@ std::size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block,
-                        basic_string_view<CharT2> s2, std::size_t max)
+size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block,
+                   basic_string_view<CharT2> s2, size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) {
         if (s1.size() != s2.size()) {
-            return (std::size_t)-1;
+            return (size_t)-1;
         }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
     }
 
     // at least length difference insertions/deletions required
-    std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
+    size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
     if (len_diff > max) {
-        return (std::size_t)-1;
+        return (size_t)-1;
     }
 
     // important to catch, since this causes block.m_val to be empty -> raises exception on access
@@ -4869,7 +4866,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPattern
 
     // do this first, since we can not remove any affix in encoded form
     if (max >= 4) {
-        std::size_t dist = 0;
+        size_t dist = 0;
         if (s2.size() < 65) {
             if (max == (size_t)-1) {
                 dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size());
@@ -4882,7 +4879,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPattern
             dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
         }
 
-        return (dist > max) ? (std::size_t)-1 : dist;
+        return (dist > max) ? (size_t)-1 : dist;
     }
 
     // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -4902,7 +4899,7 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPattern
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, std::size_t max)
+size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, size_t max)
 {
     /* Swapping the strings so the first string is shorter.
      * Swapping has no effect on the score since Insertion and Deletion have the
@@ -4914,14 +4911,14 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) {
         if (s1.size() != s2.size()) {
-            return (std::size_t)-1;
+            return (size_t)-1;
         }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
     }
 
     // at least length difference insertions/deletions required
     if (s2.size() - s1.size() > max) {
-        return (std::size_t)-1;
+        return (size_t)-1;
     }
 
     /* The Levenshtein distance between
@@ -4942,28 +4939,28 @@ std::size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> 
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (s2.size() < 65) {
-        std::size_t dist;
+        size_t dist;
         if (max == (size_t)-1) {
             dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size());
         }
         else {
             dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size(), max);
         }
-        return (dist > max) ? (std::size_t)-1 : dist;
+        return (dist > max) ? (size_t)-1 : dist;
     }
 
     // todo max
     if (max <= 31) {
-        std::size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
-                                                             // common::BlockPatternMatchVector(s2),
-                                                             s2.size(), max);
-        return (dist > max) ? (std::size_t)-1 : dist;
+        size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
+                                                        // common::BlockPatternMatchVector(s2),
+                                                        s2.size(), max);
+        return (dist > max) ? (size_t)-1 : dist;
     }
 
-    std::size_t dist =
+    size_t dist =
         levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2), s2.size(), max);
 
-    return (dist > max) ? (std::size_t)-1 : dist;
+    return (dist > max) ? (size_t)-1 : dist;
 }
 
 template <typename CharT1, typename CharT2>
@@ -4977,11 +4974,11 @@ double normalized_levenshtein(basic_string_view<CharT1> s1,
 
     /* calculate the maximum possible edit distance with
      * Insertion/Deletion/Substitution = 1 */
-    std::size_t max_dist = std::max(s1.size(), s2.size());
+    size_t max_dist = std::max(s1.size(), s2.size());
 
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
-    std::size_t dist = levenshtein(s1, block, s2, cutoff_distance);
+    size_t dist = levenshtein(s1, block, s2, cutoff_distance);
     return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
@@ -4995,11 +4992,11 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
 
     /* calculate the maximum possible edit distance with
      * Insertion/Deletion/Substitution = 1 */
-    std::size_t max_dist = std::max(s1.size(), s2.size());
+    size_t max_dist = std::max(s1.size(), s2.size());
 
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
-    std::size_t dist = levenshtein(s1, s2, cutoff_distance);
+    size_t dist = levenshtein(s1, s2, cutoff_distance);
     return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
@@ -5095,12 +5092,12 @@ Editops recover_alignment(basic_string_view<CharT1> s1, basic_string_view<CharT2
     return editops;
 }
 
-template <std::size_t N, typename CharT1>
+template <size_t N, typename CharT1>
 LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
-                                 const common::PatternMatchVector* block, std::size_t s2_len)
+                                 const common::PatternMatchVector* block, size_t s2_len)
 {
     std::uint64_t S[N];
-    for (std::size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         S[i] = ~0x0ull;
     }
 
@@ -5111,7 +5108,7 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
-        for (std::size_t word = 0; word < N; ++word) {
+        for (size_t word = 0; word < N; ++word) {
             Matches[word] = block[word].get(s1[i]);
             u[word] = S[word] & Matches[word];
             x[word] = intrinsics::addc64(S[word], u[word], carry, &carry);
@@ -5119,8 +5116,8 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
         }
     }
 
-    std::size_t res = 0;
-    for (std::size_t i = 0; i < N; ++i) {
+    size_t res = 0;
+    for (size_t i = 0; i < N; ++i) {
         res += intrinsics::popcount64(~S[i]);
     }
 
@@ -5131,10 +5128,9 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
 
 template <typename CharT1>
 LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
-                                    const common::BlockPatternMatchVector& block,
-                                    std::size_t s2_len)
+                                    const common::BlockPatternMatchVector& block, size_t s2_len)
 {
-    std::size_t words = block.m_val.size();
+    size_t words = block.m_val.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     std::vector<std::uint64_t> S(words, ~0x0ull);
@@ -5142,7 +5138,7 @@ LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
 
     for (size_t i = 0; i < s1.size(); ++i) {
         uint64_t carry = 0;
-        for (std::size_t word = 0; word < words; ++word) {
+        for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, s1[i]);
             uint64_t Stemp = S[word];
 
@@ -5153,7 +5149,7 @@ LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
         }
     }
 
-    std::size_t res = 0;
+    size_t res = 0;
     for (uint64_t Stemp : S) {
         res += intrinsics::popcount64(~Stemp);
     }
@@ -5271,23 +5267,23 @@ static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
 };
 
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
-                                             basic_string_view<CharT2> s2, std::size_t max)
+size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                        size_t max)
 {
     if (s1.size() < s2.size()) {
         return weighted_levenshtein_mbleven2018(s2, s1, max);
     }
 
-    std::size_t len_diff = s1.size() - s2.size();
+    size_t len_diff = s1.size() - s2.size();
     auto possible_ops =
         weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-    std::size_t dist = max + 1;
+    size_t dist = max + 1;
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
         int ops = possible_ops[pos];
-        std::size_t s1_pos = 0;
-        std::size_t s2_pos = 0;
-        std::size_t cur_dist = 0;
+        size_t s1_pos = 0;
+        size_t s2_pos = 0;
+        size_t cur_dist = 0;
 
         while (s1_pos < s1.size() && s2_pos < s2.size()) {
             if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
@@ -5310,16 +5306,16 @@ std::size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1,
         dist = std::min(dist, cur_dist);
     }
 
-    return (dist > max) ? (std::size_t)-1 : dist;
+    return (dist > max) ? (size_t)-1 : dist;
 }
 
-template <std::size_t N, typename CharT1>
-static inline std::size_t longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
-                                                            const common::PatternMatchVector* block,
-                                                            std::size_t s2_len)
+template <size_t N, typename CharT1>
+static inline size_t longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
+                                                       const common::PatternMatchVector* block,
+                                                       size_t s2_len)
 {
     std::uint64_t S[N];
-    for (std::size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         S[i] = ~0x0ull;
     }
 
@@ -5329,7 +5325,7 @@ static inline std::size_t longest_common_subsequence_unroll(basic_string_view<Ch
         std::uint64_t Matches[N];
         std::uint64_t u[N];
         std::uint64_t x[N];
-        for (std::size_t i = 0; i < N; ++i) {
+        for (size_t i = 0; i < N; ++i) {
             Matches[i] = block[i].get(ch1);
             u[i] = S[i] & Matches[i];
             x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
@@ -5337,23 +5333,24 @@ static inline std::size_t longest_common_subsequence_unroll(basic_string_view<Ch
         }
     }
 
-    std::size_t res = 0;
-    for (std::size_t i = 0; i < N; ++i) {
+    size_t res = 0;
+    for (size_t i = 0; i < N; ++i) {
         res += intrinsics::popcount64(~S[i]);
     }
     return s1.size() + s2_len - 2 * res;
 }
 
 template <typename CharT1>
-static inline std::size_t longest_common_subsequence_blockwise(
-    basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block, std::size_t s2_len)
+static inline size_t
+longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
+                                     const common::BlockPatternMatchVector& block, size_t s2_len)
 {
-    std::size_t words = block.m_val.size();
+    size_t words = block.m_val.size();
     std::vector<std::uint64_t> S(words, ~0x0ull);
 
     for (const auto& ch1 : s1) {
         uint64_t carry = 0;
-        for (std::size_t word = 0; word < words; ++word) {
+        for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, ch1);
             uint64_t Stemp = S[word];
 
@@ -5364,7 +5361,7 @@ static inline std::size_t longest_common_subsequence_blockwise(
         }
     }
 
-    std::size_t res = 0;
+    size_t res = 0;
     for (uint64_t Stemp : S) {
         res += intrinsics::popcount64(~Stemp);
     }
@@ -5373,9 +5370,8 @@ static inline std::size_t longest_common_subsequence_blockwise(
 }
 
 template <typename CharT1>
-std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
-                                       const common::BlockPatternMatchVector& block,
-                                       std::size_t s2_len)
+size_t longest_common_subsequence(basic_string_view<CharT1> s1,
+                                  const common::BlockPatternMatchVector& block, size_t s2_len)
 {
     switch (block.m_val.size()) {
     case 1:
@@ -5400,9 +5396,9 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1,
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
+size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 {
-    std::size_t nr = (s2.size() / 64) + (std::size_t)((s2.size() % 64) > 0);
+    size_t nr = (s2.size() / 64) + (size_t)((s2.size() % 64) > 0);
     switch (nr) {
     case 1:
     {
@@ -5454,30 +5450,30 @@ std::size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_strin
 
 // TODO this implementation needs some cleanup
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-                                 const common::BlockPatternMatchVector& block,
-                                 basic_string_view<CharT2> s2, std::size_t max)
+size_t weighted_levenshtein(basic_string_view<CharT1> s1,
+                            const common::BlockPatternMatchVector& block,
+                            basic_string_view<CharT2> s2, size_t max)
 {
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) {
         if (s1.size() != s2.size()) {
-            return (std::size_t)-1;
+            return (size_t)-1;
         }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
     }
 
     // when the strings have a similar length each difference causes
     // at least a edit distance of 2, so a direct comparision is sufficient
     if (max == 1) {
         if (s1.size() == s2.size()) {
-            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
         }
     }
 
     // at least length difference insertions/deletions required
-    std::size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
+    size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
     if (len_diff > max) {
-        return (std::size_t)-1;
+        return (size_t)-1;
     }
 
     // important to catch, since this causes block.m_val to be empty -> raises exception on access
@@ -5487,8 +5483,8 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
 
     // do this first, since we can not remove any affix in encoded form
     if (max >= 5) {
-        std::size_t dist = longest_common_subsequence(s1, block, s2.size());
-        return (dist > max) ? (std::size_t)-1 : dist;
+        size_t dist = longest_common_subsequence(s1, block, s2.size());
+        return (dist > max) ? (size_t)-1 : dist;
     }
 
     // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -5508,8 +5504,7 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1,
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                 std::size_t max)
+size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, size_t max)
 {
     // Swapping the strings so the second string is shorter
     if (s1.size() < s2.size()) {
@@ -5519,22 +5514,22 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) {
         if (s1.size() != s2.size()) {
-            return (std::size_t)-1;
+            return (size_t)-1;
         }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
     }
 
     // when the strings have a similar length each difference causes
     // at least a edit distance of 2, so a direct comparision is sufficient
     if (max == 1) {
         if (s1.size() == s2.size()) {
-            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (std::size_t)-1;
+            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
         }
     }
 
     // at least length difference insertions/deletions required
     if (s1.size() - s2.size() > max) {
-        return (std::size_t)-1;
+        return (size_t)-1;
     }
 
     // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
@@ -5550,8 +5545,8 @@ std::size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view
         return weighted_levenshtein_mbleven2018(s1, s2, max);
     }
 
-    std::size_t dist = longest_common_subsequence(s1, s2);
-    return (dist > max) ? (std::size_t)-1 : dist;
+    size_t dist = longest_common_subsequence(s1, s2);
+    return (dist > max) ? (size_t)-1 : dist;
 }
 
 template <typename CharT1, typename CharT2>
@@ -5563,11 +5558,11 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
         return static_cast<double>(s1.empty() && s2.empty());
     }
 
-    std::size_t lensum = s1.size() + s2.size();
+    size_t lensum = s1.size() + s2.size();
 
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
-    std::size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
+    size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
     return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
@@ -5579,11 +5574,11 @@ double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_strin
         return static_cast<double>(s1.empty() && s2.empty());
     }
 
-    std::size_t lensum = s1.size() + s2.size();
+    size_t lensum = s1.size() + s2.size();
 
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
 
-    std::size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
+    size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
     return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
@@ -5625,7 +5620,7 @@ namespace string_metric {
  * @param max
  *   Maximum Levenshtein distance between s1 and s2, that is
  *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
  *   which deactivates this behaviour.
  *
  * @return returns the levenshtein distance between s1 and s2
@@ -5716,27 +5711,27 @@ namespace string_metric {
  * Find the Levenshtein distance between two strings:
  * @code{.cpp}
  * // dist is 2
- * std::size_t dist = levenshtein("lewenstein", "levenshtein");
+ * size_t dist = levenshtein("lewenstein", "levenshtein");
  * @endcode
  *
  * Setting a maximum distance allows the implementation to select
  * a more efficient implementation:
  * @code{.cpp}
  * // dist is 2
- * std::size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 1);
+ * size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 1);
  * @endcode
  *
  * It is possible to select different weights by passing a `weight` struct.
  * @code{.cpp}
  * // dist is 3
- * std::size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 2});
+ * size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 2});
  * @endcode
  * @endparblock
  */
 template <typename Sentence1, typename Sentence2>
-std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
-                        LevenshteinWeightTable weights = {1, 1, 1},
-                        std::size_t max = std::numeric_limits<std::size_t>::max())
+size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
+                   LevenshteinWeightTable weights = {1, 1, 1},
+                   size_t max = std::numeric_limits<size_t>::max())
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -5750,9 +5745,9 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
             // max can make use of the common divisor of the three weights
-            const std::size_t new_max =
-                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-            const std::size_t distance =
+            const size_t new_max =
+                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+            const size_t distance =
                 detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -5762,9 +5757,9 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
-            const std::size_t new_max =
-                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-            const std::size_t distance =
+            const size_t new_max =
+                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+            const size_t distance =
                 detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -5782,8 +5777,7 @@ struct CachedLevenshtein {
     {}
 
     template <typename Sentence2>
-    std::size_t distance(const Sentence2& s2,
-                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    size_t distance(const Sentence2& s2, size_t max = std::numeric_limits<size_t>::max()) const
     {
         auto s2_view = common::to_string_view(s2);
 
@@ -5796,9 +5790,9 @@ struct CachedLevenshtein {
             /* uniform Levenshtein multiplied with the common factor */
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
-                const std::size_t new_max =
-                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-                const std::size_t distance =
+                const size_t new_max =
+                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+                const size_t distance =
                     detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
                     weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
@@ -5809,9 +5803,9 @@ struct CachedLevenshtein {
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
-                const std::size_t new_max =
-                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-                const std::size_t distance =
+                const size_t new_max =
+                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+                const size_t distance =
                     detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
                     weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
@@ -6012,14 +6006,14 @@ Editops llcs_editops(const Sentence1& s1, const Sentence2& s2)
  * @param max
  *   Maximum Hamming distance between s1 and s2, that is
  *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
  *   which deactivates this behaviour.
  *
  * @return Hamming distance between s1 and s2
  */
 template <typename Sentence1, typename Sentence2>
-std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
-                    std::size_t max = std::numeric_limits<std::size_t>::max())
+size_t hamming(const Sentence1& s1, const Sentence2& s2,
+               size_t max = std::numeric_limits<size_t>::max())
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -6028,9 +6022,9 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
         throw std::invalid_argument("s1 and s2 are not the same length.");
     }
 
-    std::size_t hamm = 0;
+    size_t hamm = 0;
 
-    for (std::size_t i = 0; i < sentence1.length(); i++) {
+    for (size_t i = 0; i < sentence1.length(); i++) {
         if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
             hamm++;
         }
@@ -6047,8 +6041,7 @@ struct CachedHamming {
     {}
 
     template <typename Sentence2>
-    std::size_t distance(const Sentence2& s2,
-                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    size_t distance(const Sentence2& s2, size_t max = std::numeric_limits<size_t>::max()) const
     {
         return hamming(s1_view, s2, max);
     }

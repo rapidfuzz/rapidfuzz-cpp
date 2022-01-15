@@ -44,7 +44,7 @@ namespace string_metric {
  * @param max
  *   Maximum Levenshtein distance between s1 and s2, that is
  *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
  *   which deactivates this behaviour.
  *
  * @return returns the levenshtein distance between s1 and s2
@@ -135,27 +135,27 @@ namespace string_metric {
  * Find the Levenshtein distance between two strings:
  * @code{.cpp}
  * // dist is 2
- * std::size_t dist = levenshtein("lewenstein", "levenshtein");
+ * size_t dist = levenshtein("lewenstein", "levenshtein");
  * @endcode
  *
  * Setting a maximum distance allows the implementation to select
  * a more efficient implementation:
  * @code{.cpp}
  * // dist is 2
- * std::size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 1);
+ * size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 1);
  * @endcode
  *
  * It is possible to select different weights by passing a `weight` struct.
  * @code{.cpp}
  * // dist is 3
- * std::size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 2});
+ * size_t dist = levenshtein("lewenstein", "levenshtein", {1, 1, 2});
  * @endcode
  * @endparblock
  */
 template <typename Sentence1, typename Sentence2>
-std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
-                        LevenshteinWeightTable weights = {1, 1, 1},
-                        std::size_t max = std::numeric_limits<std::size_t>::max())
+size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
+                   LevenshteinWeightTable weights = {1, 1, 1},
+                   size_t max = std::numeric_limits<size_t>::max())
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -169,9 +169,9 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
             // max can make use of the common divisor of the three weights
-            const std::size_t new_max =
-                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-            const std::size_t distance =
+            const size_t new_max =
+                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+            const size_t distance =
                 detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -181,9 +181,9 @@ std::size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
-            const std::size_t new_max =
-                max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-            const std::size_t distance =
+            const size_t new_max =
+                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+            const size_t distance =
                 detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -201,8 +201,7 @@ struct CachedLevenshtein {
     {}
 
     template <typename Sentence2>
-    std::size_t distance(const Sentence2& s2,
-                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    size_t distance(const Sentence2& s2, size_t max = std::numeric_limits<size_t>::max()) const
     {
         auto s2_view = common::to_string_view(s2);
 
@@ -215,9 +214,9 @@ struct CachedLevenshtein {
             /* uniform Levenshtein multiplied with the common factor */
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
-                const std::size_t new_max =
-                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-                const std::size_t distance =
+                const size_t new_max =
+                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+                const size_t distance =
                     detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
                     weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
@@ -228,9 +227,9 @@ struct CachedLevenshtein {
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
-                const std::size_t new_max =
-                    max / weights.insert_cost + (std::size_t)(max % weights.insert_cost != 0);
-                const std::size_t distance =
+                const size_t new_max =
+                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
+                const size_t distance =
                     detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
                     weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
@@ -431,14 +430,14 @@ Editops llcs_editops(const Sentence1& s1, const Sentence2& s2)
  * @param max
  *   Maximum Hamming distance between s1 and s2, that is
  *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<std::size_t>::max(),
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
  *   which deactivates this behaviour.
  *
  * @return Hamming distance between s1 and s2
  */
 template <typename Sentence1, typename Sentence2>
-std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
-                    std::size_t max = std::numeric_limits<std::size_t>::max())
+size_t hamming(const Sentence1& s1, const Sentence2& s2,
+               size_t max = std::numeric_limits<size_t>::max())
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -447,9 +446,9 @@ std::size_t hamming(const Sentence1& s1, const Sentence2& s2,
         throw std::invalid_argument("s1 and s2 are not the same length.");
     }
 
-    std::size_t hamm = 0;
+    size_t hamm = 0;
 
-    for (std::size_t i = 0; i < sentence1.length(); i++) {
+    for (size_t i = 0; i < sentence1.length(); i++) {
         if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
             hamm++;
         }
@@ -466,8 +465,7 @@ struct CachedHamming {
     {}
 
     template <typename Sentence2>
-    std::size_t distance(const Sentence2& s2,
-                         std::size_t max = std::numeric_limits<std::size_t>::max()) const
+    size_t distance(const Sentence2& s2, size_t max = std::numeric_limits<size_t>::max()) const
     {
         return hamming(s1_view, s2, max);
     }
