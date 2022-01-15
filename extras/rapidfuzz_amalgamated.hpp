@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-15 23:09:06.305238
+//  Generated: 2022-01-15 23:45:25.068461
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2113,6 +2113,8 @@ void swap(Opcodes& lhs, Opcodes& rhs)
 
 Editops::Editops(const Opcodes& other)
 {
+    src_len = other.get_src_len();
+    dest_len = other.get_dest_len();
     for (const auto& op : other) {
         switch (op.type) {
         case EditType::None:
@@ -2141,6 +2143,8 @@ Editops::Editops(const Opcodes& other)
 
 Opcodes::Opcodes(const Editops& other)
 {
+    src_len = other.get_src_len();
+    dest_len = other.get_dest_len();
     size_t src_pos = 0;
     size_t dest_pos = 0;
     for (size_t i = 0; i < other.size();) {
