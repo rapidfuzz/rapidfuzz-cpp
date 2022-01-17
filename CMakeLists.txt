@@ -10,12 +10,9 @@ set(HEADERS
 	rapidfuzz/fuzz.hpp
 	rapidfuzz/fuzz_impl.hpp
 	rapidfuzz/string_metric.hpp
-	rapidfuzz/utils.hpp
-	rapidfuzz/utils_impl.hpp
 	rapidfuzz/details/SplittedSentenceView.hpp
 	rapidfuzz/details/type_traits.hpp
 	rapidfuzz/details/types.hpp
-	rapidfuzz/details/unicode.hpp
 	rapidfuzz/details/matching_blocks.hpp
 	rapidfuzz/details/string_view.hpp
 	rapidfuzz/details/string_metrics/levenshtein_impl.hpp

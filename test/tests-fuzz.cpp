@@ -1,10 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <rapidfuzz/utils.hpp>
 #include <rapidfuzz/fuzz.hpp>
 
 namespace fuzz = rapidfuzz::fuzz;
-namespace utils = rapidfuzz::utils;
 
 /**
  * @name RatioTest
@@ -34,12 +32,6 @@ TEST_CASE("RatioTest")
 		REQUIRE(100 == fuzz::ratio("test", "test"));
         REQUIRE(100 == fuzz::ratio(s8, s8a));
         REQUIRE(100 == fuzz::ratio(s9, s9a));
-    }
-
-    SECTION("testCaseInsensitive")
-    {
-        REQUIRE( 100 != fuzz::ratio(s1, s2) );
-        REQUIRE( 100 == fuzz::ratio(utils::default_process(s1), utils::default_process(s2)) );
     }
 
     SECTION("testPartialRatio")

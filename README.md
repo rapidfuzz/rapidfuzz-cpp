@@ -105,7 +105,6 @@ There are CMake options available:
 ## Usage
 ```cpp
 #include "rapidfuzz/fuzz.hpp"
-#include "rapidfuzz/utils.hpp"
 ```
 
 ### Simple Ratio

@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-15 23:45:25.068461
+//  Generated: 2022-01-17 16:42:04.095873
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2864,102 +2864,6 @@ private:
 #include <cctype>
 #include <cwctype>
 
-
-#include <cstdint>
-#include <type_traits>
-
-namespace rapidfuzz {
-namespace Unicode {
-
-template <typename, typename = void>
-struct is_space_dispatch_tag : std::integral_constant<int, 0> {};
-
-template <typename CharT>
-struct is_space_dispatch_tag<CharT, typename std::enable_if<sizeof(CharT) == 1>::type>
-    : std::integral_constant<int, 1> {};
-
-/*
- * Implementation of is_space for char types that are at least 2 Byte in size
- */
-template <typename CharT>
-bool is_space_impl(const CharT ch, std::integral_constant<int, 0>)
-{
-    switch (ch) {
-    case 0x0009:
-    case 0x000A:
-    case 0x000B:
-    case 0x000C:
-    case 0x000D:
-    case 0x001C:
-    case 0x001D:
-    case 0x001E:
-    case 0x001F:
-    case 0x0020:
-    case 0x0085:
-    case 0x00A0:
-    case 0x1680:
-    case 0x2000:
-    case 0x2001:
-    case 0x2002:
-    case 0x2003:
-    case 0x2004:
-    case 0x2005:
-    case 0x2006:
-    case 0x2007:
-    case 0x2008:
-    case 0x2009:
-    case 0x200A:
-    case 0x2028:
-    case 0x2029:
-    case 0x202F:
-    case 0x205F:
-    case 0x3000:
-        return true;
-    }
-    return false;
-}
-
-/*
- * Implementation of is_space for char types that are 1 Byte in size
- */
-template <typename CharT>
-bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
-{
-    switch (ch) {
-    case 0x0009:
-    case 0x000A:
-    case 0x000B:
-    case 0x000C:
-    case 0x000D:
-    case 0x001C:
-    case 0x001D:
-    case 0x001E:
-    case 0x001F:
-    case 0x0020:
-        return true;
-    }
-    return false;
-}
-
-/*
- * checks whether unicode characters have the bidirectional
- * type 'WS', 'B' or 'S' or the category 'Zs'
- */
-template <typename CharT>
-bool is_space(const CharT ch)
-{
-    return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
-}
-
-// this requires sources to compiled, while the current version for C++ is header only
-// this will be added to the C++ version later on.
-#ifdef RAPIDFUZZ_PYTHON
-uint32_t UnicodeDefaultProcess(uint32_t ch);
-#endif
-
-} // namespace Unicode
-} // namespace rapidfuzz
-
 namespace rapidfuzz {
 
 template <typename CharT1, typename CharT2>
@@ -3073,6 +2977,86 @@ StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_stri
     return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
 }
 
+template <typename, typename = void>
+struct is_space_dispatch_tag : std::integral_constant<int, 0> {};
+
+template <typename CharT>
+struct is_space_dispatch_tag<CharT, typename std::enable_if<sizeof(CharT) == 1>::type>
+    : std::integral_constant<int, 1> {};
+
+/*
+ * Implementation of is_space for char types that are at least 2 Byte in size
+ */
+template <typename CharT>
+bool is_space_impl(const CharT ch, std::integral_constant<int, 0>)
+{
+    switch (ch) {
+    case 0x0009:
+    case 0x000A:
+    case 0x000B:
+    case 0x000C:
+    case 0x000D:
+    case 0x001C:
+    case 0x001D:
+    case 0x001E:
+    case 0x001F:
+    case 0x0020:
+    case 0x0085:
+    case 0x00A0:
+    case 0x1680:
+    case 0x2000:
+    case 0x2001:
+    case 0x2002:
+    case 0x2003:
+    case 0x2004:
+    case 0x2005:
+    case 0x2006:
+    case 0x2007:
+    case 0x2008:
+    case 0x2009:
+    case 0x200A:
+    case 0x2028:
+    case 0x2029:
+    case 0x202F:
+    case 0x205F:
+    case 0x3000:
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Implementation of is_space for char types that are 1 Byte in size
+ */
+template <typename CharT>
+bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
+{
+    switch (ch) {
+    case 0x0009:
+    case 0x000A:
+    case 0x000B:
+    case 0x000C:
+    case 0x000D:
+    case 0x001C:
+    case 0x001D:
+    case 0x001E:
+    case 0x001F:
+    case 0x0020:
+        return true;
+    }
+    return false;
+}
+
+/*
+ * checks whether unicode characters have the bidirectional
+ * type 'WS', 'B' or 'S' or the category 'Zs'
+ */
+template <typename CharT>
+bool is_space(const CharT ch)
+{
+    return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
+}
+
 template <typename Sentence, typename CharT>
 SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
 {
@@ -3083,7 +3067,7 @@ SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
     const auto* last = first + s.size();
 
     for (; second != last && first != last; first = second + 1) {
-        second = std::find_if(first, last, Unicode::is_space<CharT>);
+        second = std::find_if(first, last, is_space<CharT>);
 
         if (first != second) {
             splitted.emplace_back(first, second - first);
@@ -7015,146 +6999,5 @@ double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
 }
 
 } // namespace fuzz
-} // namespace rapidfuzz
-
-
-#include <cmath>
-#include <tuple>
-#include <vector>
-
-namespace rapidfuzz {
-namespace utils {
-
-/**
- * @defgroup Utils Utils
- * Utility functions
- * @{
- */
-
-/**
- * @brief removes any non alphanumeric characters, trim whitespaces from
- * beginning/end and lowercase the string. Currently this only supports
- * Ascii. Characters outside of the ascii spec are not changed. This
- * will be changed in the future to support full unicode. In case this has
- * has a noticable effect on the performance an additional `ascii_default_process`
- * function will be provided, that keeps this behaviour
- *
- * @tparam CharT char type of the string
- *
- * @param s string to process
- *
- * @return returns the processed string
- */
-
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
-std::basic_string<CharT> default_process(Sentence&& s);
-
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
-                           has_data_and_size<Sentence>::value>>
-std::basic_string<CharT> default_process(Sentence s);
-
-template <typename CharT>
-std::size_t default_process(CharT* str, std::size_t len);
-
-/**@}*/
-
-} // namespace utils
-} // namespace rapidfuzz
-
-
-#include <algorithm>
-#include <array>
-#include <cctype>
-#include <cwctype>
-#include <limits>
-
-
-namespace rapidfuzz {
-
-template <typename CharT>
-std::size_t utils::default_process(CharT* str, std::size_t len)
-{
-    /* mapping converting
-     * - non alphanumeric characters to whitespace (32)
-     * - alphanumeric characters to lowercase
-     *
-     * generated using
-     * `[ord(chr(x).lower()) if chr(x).isalnum() else 0x20 for x in range(256)]`
-     * in Python3.9
-     */
-    static const int extended_ascii_mapping[256] = {
-        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
-        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
-        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  48,  49,  50,  51,  52,  53,
-        54,  55,  56,  57,  32,  32,  32,  32,  32,  32,  32,  97,  98,  99,  100, 101, 102, 103,
-        104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
-        122, 32,  32,  32,  32,  32,  32,  97,  98,  99,  100, 101, 102, 103, 104, 105, 106, 107,
-        108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 32,  32,  32,
-        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
-        32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,  32,
-        32,  32,  32,  32,  32,  32,  32,  32,  170, 32,  32,  32,  32,  32,  32,  32,  178, 179,
-        32,  181, 32,  32,  32,  185, 186, 32,  188, 189, 190, 32,  224, 225, 226, 227, 228, 229,
-        230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 32,
-        248, 249, 250, 251, 252, 253, 254, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
-        234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 32,  248, 249, 250, 251,
-        252, 253, 254, 255};
-
-    std::transform(str, str + len, str, [](CharT ch) {
-        /* irrelevant cases for a given char type are removed at compile time by any decent compiler
-         */
-        if (ch < 0 || rapidfuzz::common::to_unsigned(ch) > std::numeric_limits<uint32_t>::max()) {
-            return ch;
-        }
-        else if (ch < 256) {
-            return static_cast<CharT>(extended_ascii_mapping[rapidfuzz::common::to_unsigned(ch)]);
-        }
-        else {
-            // this requires sources to compiled, while the current version for C++ is header only
-            // this will be added to the C++ version later on.
-#ifdef RAPIDFUZZ_PYTHON
-            return static_cast<CharT>(Unicode::UnicodeDefaultProcess(static_cast<uint32_t>(ch)));
-#else
-      return ch;
-#endif
-        }
-    });
-
-    while (len > 0 && str[len - 1] == ' ') {
-        len--;
-    }
-
-    std::size_t prefix = 0;
-    while (len > 0 && str[prefix] == ' ') {
-        len--;
-        prefix++;
-    }
-
-    if (prefix != 0) {
-        std::copy(str + prefix, str + prefix + len, str);
-    }
-
-    return len;
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence&& s)
-{
-    std::basic_string<CharT> str(std::forward<Sentence>(s));
-
-    std::size_t len = default_process(&str[0], str.size());
-    str.resize(len);
-    return str;
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> utils::default_process(Sentence s)
-{
-    return default_process(std::basic_string<CharT>(s.data(), s.size()));
-}
-
 } // namespace rapidfuzz
 #endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
