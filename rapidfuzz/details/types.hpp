@@ -12,9 +12,6 @@
 
 namespace rapidfuzz {
 
-/* 0.0% - 100.0% */
-using percent = double;
-
 template <typename CharT>
 using string_view_vec = std::vector<basic_string_view<CharT>>;
 

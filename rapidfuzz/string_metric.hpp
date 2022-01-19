@@ -319,7 +319,7 @@ private:
 template <typename Sentence1, typename Sentence2>
 double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
                               LevenshteinWeightTable weights = {1, 1, 1},
-                              percent score_cutoff = 0.0)
+                              double score_cutoff = 0.0)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -350,7 +350,7 @@ struct CachedNormalizedLevenshtein {
     {}
 
     template <typename Sentence2>
-    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    double ratio(const Sentence2& s2, double score_cutoff = 0) const
     {
         auto s2_view = common::to_string_view(s2);
 
@@ -499,7 +499,7 @@ private:
  *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
-double normalized_hamming(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
+double normalized_hamming(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -514,7 +514,7 @@ struct CachedNormalizedHamming {
     {}
 
     template <typename Sentence2>
-    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    double ratio(const Sentence2& s2, double score_cutoff = 0) const
     {
         return normalized_hamming(s1_view, s2, score_cutoff);
     }
@@ -548,7 +548,7 @@ private:
  */
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
-                               percent score_cutoff = 0.0)
+                               double score_cutoff = 0.0)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -569,7 +569,7 @@ struct CachedJaroWinklerSimilarity {
     {}
 
     template <typename Sentence2>
-    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    double ratio(const Sentence2& s2, double score_cutoff = 0) const
     {
         return jaro_winkler_similarity(s1_view, s2, prefix_weight, score_cutoff);
     }
@@ -600,7 +600,7 @@ private:
  *   as a float between 0 and 1.0
  */
 template <typename Sentence1, typename Sentence2>
-double jaro_similarity(const Sentence1& s1, const Sentence2& s2, percent score_cutoff = 0.0)
+double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -616,7 +616,7 @@ struct CachedJaroSimilarity {
     {}
 
     template <typename Sentence2>
-    double ratio(const Sentence2& s2, percent score_cutoff = 0) const
+    double ratio(const Sentence2& s2, double score_cutoff = 0) const
     {
         return jaro_similarity(s1_view, s2, score_cutoff);
     }

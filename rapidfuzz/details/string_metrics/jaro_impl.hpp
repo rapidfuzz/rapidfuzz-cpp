@@ -15,7 +15,7 @@ bool isnum(CharT val)
 }
 
 template <typename CharT1, typename CharT2>
-static inline percent jaro_calculate_similarity(basic_string_view<CharT1> P,
+static inline double jaro_calculate_similarity(basic_string_view<CharT1> P,
                                                 basic_string_view<CharT2> T, size_t CommonChars,
                                                 size_t Transpositions)
 {
@@ -27,7 +27,7 @@ static inline percent jaro_calculate_similarity(basic_string_view<CharT1> P,
 
 template <typename CharT1, typename CharT2>
 static inline bool jaro_length_filter(basic_string_view<CharT1> P, basic_string_view<CharT2> T,
-                                      percent score_cutoff)
+                                      double score_cutoff)
 {
     if (!T.size() || !P.size()) return false;
 
@@ -39,7 +39,7 @@ static inline bool jaro_length_filter(basic_string_view<CharT1> P, basic_string_
 
 template <typename CharT1, typename CharT2>
 static inline bool jaro_common_char_filter(basic_string_view<CharT1> P, basic_string_view<CharT2> T,
-                                           size_t CommonChars, percent score_cutoff)
+                                           size_t CommonChars, double score_cutoff)
 {
     if (!CommonChars) return false;
 
@@ -145,7 +145,7 @@ static inline size_t count_transpositions_word(const common::PatternMatchVector&
 
 template <typename CharT1, typename CharT2>
 double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT2> T,
-                            percent score_cutoff)
+                            double score_cutoff)
 {
     if (!jaro_length_filter(P, T, score_cutoff)) {
         return 0.0;
@@ -166,8 +166,8 @@ double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT
 }
 
 template <typename CharT1, typename CharT2>
-percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
-                                 percent score_cutoff)
+double jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
+                                 double score_cutoff)
 {
     if (!jaro_length_filter(P, T, score_cutoff)) {
         return 0.0;
@@ -201,8 +201,8 @@ percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<
 }
 
 template <typename CharT1, typename CharT2>
-percent jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
-                        percent score_cutoff)
+double jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
+                        double score_cutoff)
 {
     if (P.size() <= 64 && P.size() <= 64) {
         return jaro_similarity_word(P, T, score_cutoff);
@@ -213,8 +213,8 @@ percent jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T
 }
 
 template <typename CharT1, typename CharT2>
-percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
-                                double prefix_weight, percent score_cutoff)
+double jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
+                                double prefix_weight, double score_cutoff)
 {
     size_t min_len = std::min(P.size(), T.size());
     size_t prefix = 0;

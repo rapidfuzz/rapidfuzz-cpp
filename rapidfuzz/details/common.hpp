@@ -39,13 +39,13 @@ template <typename CharT1, typename CharT2>
 DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
                                                         SplittedSentenceView<CharT2> b);
 
-constexpr double result_cutoff(double result, percent score_cutoff)
+constexpr double result_cutoff(double result, double score_cutoff)
 {
     return (result >= score_cutoff) ? result : 0;
 }
 
 template <int Max = 1>
-constexpr percent norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
+constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
     return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);

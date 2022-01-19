@@ -19,14 +19,14 @@ namespace fuzz {
  *********************************************/
 
 template <typename Sentence1, typename Sentence2>
-percent ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
+double ratio(const Sentence1& s1, const Sentence2& s2, const double score_cutoff)
 {
     return string_metric::normalized_levenshtein(s1, s2, {1, 1, 2}, score_cutoff / 100) * 100;
 }
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     auto s2_view = common::to_string_view(s2);
 
@@ -42,10 +42,10 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) 
 namespace detail {
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
-percent
+double
 partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence1>& cached_ratio,
                            const common::CharHashTable<char_type<Sentence1>, bool>& s1_char_map,
-                           const Sentence2& s2, percent score_cutoff)
+                           const Sentence2& s2, double score_cutoff)
 {
     double max_ratio = 0;
     auto s1_view = common::to_string_view(s1);
@@ -103,7 +103,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>>
-percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     auto s1_view = common::to_string_view(s1);
     CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
@@ -117,9 +117,9 @@ percent partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, per
 }
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
-percent partial_ratio_long_needle(const Sentence1& s1,
+double partial_ratio_long_needle(const Sentence1& s1,
                                   const CachedRatio<CachedSentence1>& cached_ratio,
-                                  const Sentence2& s2, percent score_cutoff)
+                                  const Sentence2& s2, double score_cutoff)
 {
     double max_ratio = 0;
     if (score_cutoff > 100) {
@@ -156,7 +156,7 @@ percent partial_ratio_long_needle(const Sentence1& s1,
 }
 
 template <typename Sentence1, typename Sentence2>
-percent partial_ratio_long_needle(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double partial_ratio_long_needle(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     auto s1_view = common::to_string_view(s1);
     CachedRatio<decltype(s1_view)> cached_ratio(s1_view);
@@ -167,7 +167,7 @@ percent partial_ratio_long_needle(const Sentence1& s1, const Sentence2& s2, perc
 } // namespace detail
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double partial_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) {
         return 0;
@@ -203,7 +203,7 @@ CachedPartialRatio<Sentence1>::CachedPartialRatio(const Sentence1& s1)
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     auto s2_view = common::to_string_view(s2);
 
@@ -229,7 +229,7 @@ double CachedPartialRatio<Sentence1>::ratio(const Sentence2& s2, percent score_c
  *********************************************/
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -238,7 +238,7 @@ percent token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedTokenSortRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedTokenSortRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -250,7 +250,7 @@ double CachedTokenSortRatio<Sentence1>::ratio(const Sentence2& s2, percent score
  *********************************************/
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -261,7 +261,7 @@ percent partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, perce
 template <typename Sentence1>
 template <typename Sentence2>
 double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
-                                                     percent score_cutoff) const
+                                                     double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -274,8 +274,8 @@ double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
 
 namespace detail {
 template <typename CharT1, typename CharT2>
-percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
-                        const SplittedSentenceView<CharT2>& tokens_b, const percent score_cutoff)
+double token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
+                        const SplittedSentenceView<CharT2>& tokens_b, const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -304,7 +304,7 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
     size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    percent result = 0;
+    double result = 0;
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
         string_metric::levenshtein(diff_ab_joined, diff_ba_joined, {1, 1, 2}, cutoff_distance);
@@ -322,11 +322,11 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
     std::size_t sect_ab_dist = bool(sect_len) + ab_len;
-    percent sect_ab_ratio =
+    double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = bool(sect_len) + ba_len;
-    percent sect_ba_ratio =
+    double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
@@ -334,7 +334,7 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
 } // namespace detail
 
 template <typename Sentence1, typename Sentence2>
-percent token_set_ratio(const Sentence1& s1, const Sentence2& s2, const percent score_cutoff)
+double token_set_ratio(const Sentence1& s1, const Sentence2& s2, const double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -349,7 +349,7 @@ CachedTokenSetRatio<Sentence1>::CachedTokenSetRatio(const Sentence1& s1)
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -362,9 +362,9 @@ double CachedTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, percent score_
 
 namespace detail {
 template <typename CharT1, typename CharT2>
-percent partial_token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
+double partial_token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
                                 const SplittedSentenceView<CharT2>& tokens_b,
-                                const percent score_cutoff)
+                                const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -383,7 +383,7 @@ percent partial_token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
 } // namespace detail
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -398,7 +398,7 @@ CachedPartialTokenSetRatio<Sentence1>::CachedPartialTokenSetRatio(const Sentence
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedPartialTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedPartialTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -410,7 +410,7 @@ double CachedPartialTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, percent
  *********************************************/
 
 template <typename Sentence1, typename Sentence2>
-percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -433,7 +433,7 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     size_t ba_len = diff_ba_joined.length();
     size_t sect_len = intersect.length();
 
-    percent result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
+    double result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
     size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
@@ -456,11 +456,11 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
     std::size_t sect_ab_dist = bool(sect_len) + ab_len;
-    percent sect_ab_ratio =
+    double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = bool(sect_len) + ba_len;
-    percent sect_ba_ratio =
+    double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
@@ -468,9 +468,9 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
 
 namespace detail {
 template <typename CharT1, typename CachedSentence1, typename Sentence2>
-percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
+double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
                     const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted, const Sentence2& s2,
-                    percent score_cutoff)
+                    double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -492,7 +492,7 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     size_t ba_len = diff_ba_joined.length();
     size_t sect_len = intersect.length();
 
-    percent result = cached_ratio_s1_sorted.ratio(s2_tokens.join(), score_cutoff);
+    double result = cached_ratio_s1_sorted.ratio(s2_tokens.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
     size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
@@ -515,11 +515,11 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
     std::size_t sect_ab_dist = bool(sect_len) + ab_len;
-    percent sect_ab_ratio =
+    double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = bool(sect_len) + ba_len;
-    percent sect_ba_ratio =
+    double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
@@ -527,10 +527,10 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename Sentence2>
-percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
+double token_ratio(const std::basic_string<CharT1>& s1_sorted,
                     const SplittedSentenceView<CharT1>& tokens_s1,
                     const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
-                    percent score_cutoff)
+                    double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -552,7 +552,7 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     size_t ba_len = diff_ba_joined.length();
     size_t sect_len = intersect.length();
 
-    percent result = 0;
+    double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
         result = string_metric::detail::normalized_weighted_levenshtein(
@@ -585,11 +585,11 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
     std::size_t sect_ab_dist = bool(sect_len) + ab_len;
-    percent sect_ab_ratio =
+    double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
     std::size_t sect_ba_dist = bool(sect_len) + ba_len;
-    percent sect_ba_ratio =
+    double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
@@ -598,7 +598,7 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     return detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, s2, score_cutoff);
 }
@@ -608,7 +608,7 @@ double CachedTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cut
  *********************************************/
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
-percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -623,7 +623,7 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
 
-    percent result = partial_ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
+    double result = partial_ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // do not calculate the same partial_ratio twice
     if (tokens_a.word_count() == diff_ab.word_count() &&
@@ -637,9 +637,9 @@ percent partial_token_ratio(const Sentence1& s1, const Sentence2& s2, percent sc
 
 namespace detail {
 template <typename CharT1, typename Sentence2>
-percent partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
+double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
                             const SplittedSentenceView<CharT1>& tokens_s1, const Sentence2& s2,
-                            percent score_cutoff)
+                            double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -653,7 +653,7 @@ percent partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
 
-    percent result = partial_ratio(s1_sorted, tokens_b.join(), score_cutoff);
+    double result = partial_ratio(s1_sorted, tokens_b.join(), score_cutoff);
 
     // do not calculate the same partial_ratio twice
     if (tokens_s1.word_count() == diff_ab.word_count() &&
@@ -676,7 +676,7 @@ CachedPartialTokenRatio<Sentence1>::CachedPartialTokenRatio(const Sentence1& s1)
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedPartialTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedPartialTokenRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     return detail::partial_token_ratio(s1_sorted, tokens_s1, s2, score_cutoff);
 }
@@ -686,7 +686,7 @@ double CachedPartialTokenRatio<Sentence1>::ratio(const Sentence2& s2, percent sc
  *********************************************/
 
 template <typename Sentence1, typename Sentence2>
-percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double WRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -706,7 +706,7 @@ percent WRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
     double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
                                        : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-    percent end_ratio = ratio(s1, s2, score_cutoff);
+    double end_ratio = ratio(s1, s2, score_cutoff);
 
     if (len_ratio < 1.5) {
         score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
@@ -735,7 +735,7 @@ CachedWRatio<Sentence1>::CachedWRatio(const Sentence1& s1)
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -754,7 +754,7 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
     double len_ratio = (len_a > len_b) ? static_cast<double>(len_a) / static_cast<double>(len_b)
                                        : static_cast<double>(len_b) / static_cast<double>(len_a);
 
-    percent end_ratio = cached_partial_ratio.cached_ratio.ratio(s2_view, score_cutoff);
+    double end_ratio = cached_partial_ratio.cached_ratio.ratio(s2_view, score_cutoff);
 
     if (len_ratio < 1.5) {
         score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
@@ -780,7 +780,7 @@ double CachedWRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff)
  *********************************************/
 
 template <typename Sentence1, typename Sentence2>
-percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
+double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
     auto s1_view = common::to_string_view(s1);
     auto s2_view = common::to_string_view(s2);
@@ -796,7 +796,7 @@ percent QRatio(const Sentence1& s1, const Sentence2& s2, percent score_cutoff)
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, percent score_cutoff) const
+double CachedQRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     auto s2_view = common::to_string_view(s2);
 
