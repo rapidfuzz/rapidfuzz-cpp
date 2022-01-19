@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-19 18:24:53.940653
+//  Generated: 2022-01-19 18:30:47.704695
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2195,10 +2195,10 @@ public:
     SplittedSentenceView(string_view_vec<CharT> sentence) : m_sentence(std::move(sentence))
     {}
 
-    std::size_t dedupe();
-    std::size_t size() const;
+    size_t dedupe();
+    size_t size() const;
 
-    std::size_t length() const
+    size_t length() const
     {
         return size();
     }
@@ -2208,7 +2208,7 @@ public:
         return m_sentence.empty();
     }
 
-    std::size_t word_count() const
+    size_t word_count() const
     {
         return m_sentence.size();
     }
@@ -2225,20 +2225,20 @@ private:
 };
 
 template <typename CharT>
-std::size_t SplittedSentenceView<CharT>::dedupe()
+size_t SplittedSentenceView<CharT>::dedupe()
 {
-    std::size_t old_word_count = word_count();
+    size_t old_word_count = word_count();
     m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
     return old_word_count - word_count();
 }
 
 template <typename CharT>
-std::size_t SplittedSentenceView<CharT>::size() const
+size_t SplittedSentenceView<CharT>::size() const
 {
     if (m_sentence.empty()) return 0;
 
     // there is a whitespace between each word
-    std::size_t result = m_sentence.size() - 1;
+    size_t result = m_sentence.size() - 1;
     for (const auto& word : m_sentence) {
         result += word.size();
     }
@@ -2844,7 +2844,7 @@ bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
 {
     if (x.size() != y.size()) return false;
 
-    for (std::size_t i = 0; i < x.size(); ++i) {
+    for (size_t i = 0; i < x.size(); ++i) {
         if (x[i] != y[i]) return false;
     }
     return true;
@@ -2919,9 +2919,9 @@ common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 fir
  * Removes common prefix of two string views
  */
 template <typename CharT1, typename CharT2>
-std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-    std::size_t prefix = static_cast<std::size_t>(
+    size_t prefix = static_cast<size_t>(
         std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
     a.remove_prefix(prefix);
     b.remove_prefix(prefix);
@@ -2932,9 +2932,9 @@ std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_str
  * Removes common suffix of two string views
  */
 template <typename CharT1, typename CharT2>
-std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-    std::size_t suffix = static_cast<std::size_t>(std::distance(
+    size_t suffix = static_cast<size_t>(std::distance(
         a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
     a.remove_suffix(suffix);
     b.remove_suffix(suffix);
@@ -3529,10 +3529,10 @@ private:
 namespace rapidfuzz {
 namespace detail {
 struct MatchingBlock {
-    std::size_t spos;
-    std::size_t dpos;
-    std::size_t length;
-    MatchingBlock(std::size_t aSPos, std::size_t aDPos, std::size_t aLength)
+    size_t spos;
+    size_t dpos;
+    size_t length;
+    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength)
         : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
@@ -3542,31 +3542,31 @@ namespace difflib {
 template <typename CharT1, typename CharT2>
 class SequenceMatcher {
 public:
-    using match_t = std::tuple<std::size_t, std::size_t, std::size_t>;
+    using match_t = std::tuple<size_t, size_t, size_t>;
 
     SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b) : a_(a), b_(b)
     {
         j2len_.resize(b.size() + 1);
-        for (std::size_t i = 0; i < b.size(); ++i) {
+        for (size_t i = 0; i < b.size(); ++i) {
             b2j_.create(b[i]).push_back(i);
         }
     }
 
-    match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low,
-                               std::size_t b_high)
+    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low,
+                               size_t b_high)
     {
-        std::size_t best_i = a_low;
-        std::size_t best_j = b_low;
-        std::size_t best_size = 0;
+        size_t best_i = a_low;
+        size_t best_j = b_low;
+        size_t best_size = 0;
 
         // Find longest junk free match
         {
-            for (std::size_t i = a_low; i < a_high; ++i) {
+            for (size_t i = a_low; i < a_high; ++i) {
                 const auto& indexes = b2j_[a_[i]];
-                std::size_t pos = 0;
-                std::size_t next_val = 0;
+                size_t pos = 0;
+                size_t next_val = 0;
                 for (; pos < indexes.size(); pos++) {
-                    std::size_t j = indexes[pos];
+                    size_t j = indexes[pos];
                     if (j < b_low) continue;
 
                     next_val = j2len_[j];
@@ -3574,10 +3574,10 @@ public:
                 }
 
                 for (; pos < indexes.size(); pos++) {
-                    std::size_t j = indexes[pos];
+                    size_t j = indexes[pos];
                     if (j >= b_high) break;
 
-                    std::size_t k = next_val + 1;
+                    size_t k = next_val + 1;
 
                     /* the next value might be overwritten below
                      * so cache it */
@@ -3595,8 +3595,8 @@ public:
             }
 
             std::fill(
-                j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_low),
-                j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
+                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
+                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {
@@ -3617,17 +3617,17 @@ public:
     std::vector<MatchingBlock> get_matching_blocks()
     {
         // The following are tuple extracting aliases
-        std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> queue;
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
-        std::size_t queue_head = 0;
+        size_t queue_head = 0;
         queue.reserve(std::min(a_.size(), b_.size()));
         queue.emplace_back(0, a_.size(), 0, b_.size());
 
         while (queue_head < queue.size()) {
-            std::size_t a_low, a_high, b_low, b_high;
+            size_t a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
-            std::size_t spos, dpos, length;
+            size_t spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
             if (length) {
                 if (a_low < spos && b_low < dpos) {
@@ -3645,7 +3645,7 @@ public:
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-        std::size_t i1, j1, k1;
+        size_t i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
@@ -3673,8 +3673,8 @@ protected:
 
 private:
     // Cache to avoid reallocations
-    std::vector<std::size_t> j2len_;
-    common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
+    std::vector<size_t> j2len_;
+    common::CharHashTable<CharT2, std::vector<size_t>> b2j_;
 };
 } // namespace difflib
 
@@ -3699,20 +3699,20 @@ namespace string_metric {
 namespace detail {
 
 template <typename CharT1, typename CharT2>
-std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
+size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
                                                basic_string_view<CharT2> s2,
-                                               LevenshteinWeightTable weights, std::size_t max)
+                                               LevenshteinWeightTable weights, size_t max)
 {
-    std::vector<std::size_t> cache(s1.size() + 1);
+    std::vector<size_t> cache(s1.size() + 1);
 
     cache[0] = 0;
-    for (std::size_t i = 1; i < cache.size(); ++i) {
+    for (size_t i = 1; i < cache.size(); ++i) {
         cache[i] = cache[i - 1] + weights.delete_cost;
     }
 
     for (const auto& char2 : s2) {
         auto cache_iter = cache.begin();
-        std::size_t temp = *cache_iter;
+        size_t temp = *cache_iter;
         *cache_iter += weights.insert_cost;
 
         for (const auto& char1 : s1) {
@@ -3726,24 +3726,24 @@ std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
         }
     }
 
-    return (cache.back() <= max) ? cache.back() : (std::size_t)-1;
+    return (cache.back() <= max) ? cache.back() : (size_t)-1;
 }
 
 template <typename CharT1, typename CharT2>
-std::size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                LevenshteinWeightTable weights, std::size_t max)
+size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
+                                LevenshteinWeightTable weights, size_t max)
 {
     // do not swap the strings, since insertion/deletion cost can be different
     if (s1.size() >= s2.size()) {
         // at least length difference deletions required
         if ((s1.size() - s2.size()) * weights.delete_cost > max) {
-            return (std::size_t)-1;
+            return (size_t)-1;
         }
     }
     else {
         // at least length difference insertions required
         if ((s2.size() - s1.size()) * weights.insert_cost > max) {
-            return (std::size_t)-1;
+            return (size_t)-1;
         }
     }
 
@@ -3764,7 +3764,7 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
     }
 
     // calculate the maximum possible edit distance from the weights
-    std::size_t max_dist = 0;
+    size_t max_dist = 0;
     if (s1.size() >= s2.size()) {
         max_dist = std::min(
             // delete all characters from s1 and insert all characters from s2
@@ -3782,8 +3782,8 @@ double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string
 
     auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
 
-    std::size_t dist = generic_levenshtein(s1, s2, weights, cutoff_distance);
-    return (dist != (std::size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+    size_t dist = generic_levenshtein(s1, s2, weights, cutoff_distance);
+    return (dist != (size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
 }
 
 } // namespace detail
@@ -6212,7 +6212,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
     auto s1_view = common::to_string_view(s1);
     auto s2_view = common::to_string_view(s2);
 
-    for (std::size_t i = 1; i < s1_view.size(); ++i) {
+    for (size_t i = 1; i < s1_view.size(); ++i) {
         auto long_substr = s2_view.substr(0, i);
 
         if (!s1_char_map[long_substr.back()]) {
@@ -6228,7 +6228,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
         }
     }
 
-    for (std::size_t i = 0; i < s2_view.size() - s1_view.size(); ++i) {
+    for (size_t i = 0; i < s2_view.size() - s1_view.size(); ++i) {
         auto long_substr = s2_view.substr(i, s1_view.size());
 
         if (!s1_char_map[long_substr.back()]) {
@@ -6244,7 +6244,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
         }
     }
 
-    for (std::size_t i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
+    for (size_t i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
         auto long_substr = s2_view.substr(i, s1_view.size());
 
         if (!s1_char_map[long_substr[0]]) {
@@ -6304,7 +6304,7 @@ double partial_ratio_long_needle(const Sentence1& s1,
     }
 
     for (const auto& block : blocks) {
-        std::size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
+        size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
         auto long_substr = s2_view.substr(long_start, s1_view.length());
 
         double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
@@ -6482,11 +6482,11 @@ double token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -6616,11 +6616,11 @@ double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -6675,11 +6675,11 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -6745,11 +6745,11 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 

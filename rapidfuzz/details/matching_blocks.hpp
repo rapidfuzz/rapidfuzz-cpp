@@ -33,10 +33,10 @@
 namespace rapidfuzz {
 namespace detail {
 struct MatchingBlock {
-    std::size_t spos;
-    std::size_t dpos;
-    std::size_t length;
-    MatchingBlock(std::size_t aSPos, std::size_t aDPos, std::size_t aLength)
+    size_t spos;
+    size_t dpos;
+    size_t length;
+    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength)
         : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
@@ -46,31 +46,31 @@ namespace difflib {
 template <typename CharT1, typename CharT2>
 class SequenceMatcher {
 public:
-    using match_t = std::tuple<std::size_t, std::size_t, std::size_t>;
+    using match_t = std::tuple<size_t, size_t, size_t>;
 
     SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b) : a_(a), b_(b)
     {
         j2len_.resize(b.size() + 1);
-        for (std::size_t i = 0; i < b.size(); ++i) {
+        for (size_t i = 0; i < b.size(); ++i) {
             b2j_.create(b[i]).push_back(i);
         }
     }
 
-    match_t find_longest_match(std::size_t a_low, std::size_t a_high, std::size_t b_low,
-                               std::size_t b_high)
+    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low,
+                               size_t b_high)
     {
-        std::size_t best_i = a_low;
-        std::size_t best_j = b_low;
-        std::size_t best_size = 0;
+        size_t best_i = a_low;
+        size_t best_j = b_low;
+        size_t best_size = 0;
 
         // Find longest junk free match
         {
-            for (std::size_t i = a_low; i < a_high; ++i) {
+            for (size_t i = a_low; i < a_high; ++i) {
                 const auto& indexes = b2j_[a_[i]];
-                std::size_t pos = 0;
-                std::size_t next_val = 0;
+                size_t pos = 0;
+                size_t next_val = 0;
                 for (; pos < indexes.size(); pos++) {
-                    std::size_t j = indexes[pos];
+                    size_t j = indexes[pos];
                     if (j < b_low) continue;
 
                     next_val = j2len_[j];
@@ -78,10 +78,10 @@ public:
                 }
 
                 for (; pos < indexes.size(); pos++) {
-                    std::size_t j = indexes[pos];
+                    size_t j = indexes[pos];
                     if (j >= b_high) break;
 
-                    std::size_t k = next_val + 1;
+                    size_t k = next_val + 1;
 
                     /* the next value might be overwritten below
                      * so cache it */
@@ -99,8 +99,8 @@ public:
             }
 
             std::fill(
-                j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_low),
-                j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
+                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
+                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
         }
 
         while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {
@@ -121,17 +121,17 @@ public:
     std::vector<MatchingBlock> get_matching_blocks()
     {
         // The following are tuple extracting aliases
-        std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> queue;
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
-        std::size_t queue_head = 0;
+        size_t queue_head = 0;
         queue.reserve(std::min(a_.size(), b_.size()));
         queue.emplace_back(0, a_.size(), 0, b_.size());
 
         while (queue_head < queue.size()) {
-            std::size_t a_low, a_high, b_low, b_high;
+            size_t a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
-            std::size_t spos, dpos, length;
+            size_t spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
             if (length) {
                 if (a_low < spos && b_low < dpos) {
@@ -149,7 +149,7 @@ public:
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-        std::size_t i1, j1, k1;
+        size_t i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
@@ -177,8 +177,8 @@ protected:
 
 private:
     // Cache to avoid reallocations
-    std::vector<std::size_t> j2len_;
-    common::CharHashTable<CharT2, std::vector<std::size_t>> b2j_;
+    std::vector<size_t> j2len_;
+    common::CharHashTable<CharT2, std::vector<size_t>> b2j_;
 };
 } // namespace difflib
 

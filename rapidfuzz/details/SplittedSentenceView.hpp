@@ -11,10 +11,10 @@ public:
     SplittedSentenceView(string_view_vec<CharT> sentence) : m_sentence(std::move(sentence))
     {}
 
-    std::size_t dedupe();
-    std::size_t size() const;
+    size_t dedupe();
+    size_t size() const;
 
-    std::size_t length() const
+    size_t length() const
     {
         return size();
     }
@@ -24,7 +24,7 @@ public:
         return m_sentence.empty();
     }
 
-    std::size_t word_count() const
+    size_t word_count() const
     {
         return m_sentence.size();
     }
@@ -41,20 +41,20 @@ private:
 };
 
 template <typename CharT>
-std::size_t SplittedSentenceView<CharT>::dedupe()
+size_t SplittedSentenceView<CharT>::dedupe()
 {
-    std::size_t old_word_count = word_count();
+    size_t old_word_count = word_count();
     m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
     return old_word_count - word_count();
 }
 
 template <typename CharT>
-std::size_t SplittedSentenceView<CharT>::size() const
+size_t SplittedSentenceView<CharT>::size() const
 {
     if (m_sentence.empty()) return 0;
 
     // there is a whitespace between each word
-    std::size_t result = m_sentence.size() - 1;
+    size_t result = m_sentence.size() - 1;
     for (const auto& word : m_sentence) {
         result += word.size();
     }

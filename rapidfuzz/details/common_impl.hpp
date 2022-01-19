@@ -13,7 +13,7 @@ bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
 {
     if (x.size() != y.size()) return false;
 
-    for (std::size_t i = 0; i < x.size(); ++i) {
+    for (size_t i = 0; i < x.size(); ++i) {
         if (x[i] != y[i]) return false;
     }
     return true;
@@ -88,9 +88,9 @@ common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 fir
  * Removes common prefix of two string views
  */
 template <typename CharT1, typename CharT2>
-std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-    std::size_t prefix = static_cast<std::size_t>(
+    size_t prefix = static_cast<size_t>(
         std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
     a.remove_prefix(prefix);
     b.remove_prefix(prefix);
@@ -101,9 +101,9 @@ std::size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_str
  * Removes common suffix of two string views
  */
 template <typename CharT1, typename CharT2>
-std::size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
+size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
-    std::size_t suffix = static_cast<std::size_t>(std::distance(
+    size_t suffix = static_cast<size_t>(std::distance(
         a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
     a.remove_suffix(suffix);
     b.remove_suffix(suffix);

@@ -51,7 +51,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
     auto s1_view = common::to_string_view(s1);
     auto s2_view = common::to_string_view(s2);
 
-    for (std::size_t i = 1; i < s1_view.size(); ++i) {
+    for (size_t i = 1; i < s1_view.size(); ++i) {
         auto long_substr = s2_view.substr(0, i);
 
         if (!s1_char_map[long_substr.back()]) {
@@ -67,7 +67,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
         }
     }
 
-    for (std::size_t i = 0; i < s2_view.size() - s1_view.size(); ++i) {
+    for (size_t i = 0; i < s2_view.size() - s1_view.size(); ++i) {
         auto long_substr = s2_view.substr(i, s1_view.size());
 
         if (!s1_char_map[long_substr.back()]) {
@@ -83,7 +83,7 @@ partial_ratio_short_needle(const Sentence1& s1, const CachedRatio<CachedSentence
         }
     }
 
-    for (std::size_t i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
+    for (size_t i = s2_view.size() - s1_view.size(); i < s2_view.size(); ++i) {
         auto long_substr = s2_view.substr(i, s1_view.size());
 
         if (!s1_char_map[long_substr[0]]) {
@@ -143,7 +143,7 @@ double partial_ratio_long_needle(const Sentence1& s1,
     }
 
     for (const auto& block : blocks) {
-        std::size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
+        size_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
         auto long_substr = s2_view.substr(long_start, s1_view.length());
 
         double ls_ratio = cached_ratio.ratio(long_substr, score_cutoff);
@@ -321,11 +321,11 @@ double token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -455,11 +455,11 @@ double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -514,11 +514,11 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -584,11 +584,11 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
     double sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
     double sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
