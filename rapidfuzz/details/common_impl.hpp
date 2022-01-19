@@ -14,7 +14,7 @@ bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
     if (x.size() != y.size()) return false;
 
     for (std::size_t i = 0; i < x.size(); ++i) {
-        if (common::mixed_sign_unequal(x[i], y[i])) return false;
+        if (x[i] != y[i]) return false;
     }
     return true;
 }
@@ -77,7 +77,7 @@ std::pair<InputIterator1, InputIterator2>
 common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
                  InputIterator2 last2)
 {
-    while (first1 != last1 && first2 != last2 && common::mixed_sign_equal(*first1, *first2)) {
+    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
         ++first1;
         ++first2;
     }

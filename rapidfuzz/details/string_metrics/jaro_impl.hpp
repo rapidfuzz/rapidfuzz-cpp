@@ -70,7 +70,7 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string
         size_t lowlim = (i >= Bound) ? i - Bound : 0;
         size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
         for (size_t j = lowlim; j <= hilim; j++) {
-            if (!P_flag[j] && common::mixed_sign_equal(P[j], T[i])) {
+            if (!P_flag[j] && P[j] == T[i]) {
                 T_flag[i] = 1;
                 P_flag[j] = 1;
                 CommonChars++;
@@ -190,7 +190,7 @@ percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<
                     break;
                 }
             }
-            if (common::mixed_sign_unequal(T[i], P[j])) {
+            if (T[i] != P[j]) {
                 Transpositions++;
             }
         }
@@ -221,7 +221,7 @@ percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<C
     size_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
     for (; prefix < max_prefix; ++prefix) {
-        if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix])) {
+        if (T[prefix] != P[prefix] || isnum(T[prefix])) {
             break;
         }
     }

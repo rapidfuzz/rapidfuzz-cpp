@@ -148,30 +148,6 @@ constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
     return typename std::make_signed<T>::type(value);
 }
 
-template <typename T, typename U>
-bool mixed_sign_equal(const T a, const U b)
-{
-    // prevent compiler warnings by casting
-    static constexpr bool both_signed = std::is_signed<T>::value && std::is_signed<U>::value;
-    static constexpr bool both_unsigned = std::is_unsigned<T>::value && std::is_unsigned<U>::value;
-    if (both_signed) {
-        return to_signed(a) == to_signed(b);
-    }
-    else if (both_unsigned) {
-        return to_unsigned(a) == to_unsigned(b);
-    }
-    else {
-        // They can't be equal if 'a' or 'b' is negative.
-        return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
-    }
-}
-
-template <typename T, typename U>
-bool mixed_sign_unequal(const T a, const U b)
-{
-    return !mixed_sign_equal(a, b);
-}
-
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
  */

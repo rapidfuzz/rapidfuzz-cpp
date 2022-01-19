@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-19 17:37:48.217270
+//  Generated: 2022-01-19 18:01:21.199787
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2564,30 +2564,6 @@ constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
     return typename std::make_signed<T>::type(value);
 }
 
-template <typename T, typename U>
-bool mixed_sign_equal(const T a, const U b)
-{
-    // prevent compiler warnings by casting
-    static constexpr bool both_signed = std::is_signed<T>::value && std::is_signed<U>::value;
-    static constexpr bool both_unsigned = std::is_unsigned<T>::value && std::is_unsigned<U>::value;
-    if (both_signed) {
-        return to_signed(a) == to_signed(b);
-    }
-    else if (both_unsigned) {
-        return to_unsigned(a) == to_unsigned(b);
-    }
-    else {
-        // They can't be equal if 'a' or 'b' is negative.
-        return a >= 0 && b >= 0 && to_unsigned(a) == to_unsigned(b);
-    }
-}
-
-template <typename T, typename U>
-bool mixed_sign_unequal(const T a, const U b)
-{
-    return !mixed_sign_equal(a, b);
-}
-
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
  */
@@ -2872,7 +2848,7 @@ bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
     if (x.size() != y.size()) return false;
 
     for (std::size_t i = 0; i < x.size(); ++i) {
-        if (common::mixed_sign_unequal(x[i], y[i])) return false;
+        if (x[i] != y[i]) return false;
     }
     return true;
 }
@@ -2935,7 +2911,7 @@ std::pair<InputIterator1, InputIterator2>
 common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
                  InputIterator2 last2)
 {
-    while (first1 != last1 && first2 != last2 && common::mixed_sign_equal(*first1, *first2)) {
+    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
         ++first1;
         ++first2;
     }
@@ -3626,15 +3602,14 @@ public:
                 j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
         }
 
-        while (best_i > a_low && best_j > b_low &&
-               common::mixed_sign_equal(a_[best_i - 1], b_[best_j - 1])) {
+        while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {
             --best_i;
             --best_j;
             ++best_size;
         }
 
         while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               common::mixed_sign_equal(a_[best_i + best_size], b_[best_j + best_size]))
+               a_[best_i + best_size] == b_[best_j + best_size])
         {
             ++best_size;
         }
@@ -3744,7 +3719,7 @@ std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
         *cache_iter += weights.insert_cost;
 
         for (const auto& char1 : s1) {
-            if (common::mixed_sign_unequal(char1, char2)) {
+            if (char1 != char2) {
                 temp = std::min({*cache_iter + weights.delete_cost,
                                  *(cache_iter + 1) + weights.insert_cost,
                                  temp + weights.replace_cost});
@@ -3989,7 +3964,7 @@ static inline FlaggedCharsOriginal flag_similar_characters_original(basic_string
         size_t lowlim = (i >= Bound) ? i - Bound : 0;
         size_t hilim = (i + Bound <= P.size() - 1) ? (i + Bound) : P.size() - 1;
         for (size_t j = lowlim; j <= hilim; j++) {
-            if (!P_flag[j] && common::mixed_sign_equal(P[j], T[i])) {
+            if (!P_flag[j] && P[j] == T[i]) {
                 T_flag[i] = 1;
                 P_flag[j] = 1;
                 CommonChars++;
@@ -4109,7 +4084,7 @@ percent jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<
                     break;
                 }
             }
-            if (common::mixed_sign_unequal(T[i], P[j])) {
+            if (T[i] != P[j]) {
                 Transpositions++;
             }
         }
@@ -4140,7 +4115,7 @@ percent jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<C
     size_t max_prefix = (min_len >= 4) ? 4 : min_len;
 
     for (; prefix < max_prefix; ++prefix) {
-        if (!common::mixed_sign_equal(T[prefix], P[prefix]) || isnum(T[prefix])) {
+        if (T[prefix] != P[prefix] || isnum(T[prefix])) {
             break;
         }
     }
@@ -4488,7 +4463,7 @@ size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<C
         size_t s2_pos = 0;
         size_t cur_dist = 0;
         while (s1_pos < s1.size() && s2_pos < s2.size()) {
-            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+            if (s1[s1_pos] != s2[s2_pos]) {
                 cur_dist++;
                 if (!ops) break;
                 if (ops & 1) s1_pos++;
@@ -5274,7 +5249,7 @@ size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_stri
         size_t cur_dist = 0;
 
         while (s1_pos < s1.size() && s2_pos < s2.size()) {
-            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+            if (s1[s1_pos] != s2[s2_pos]) {
                 cur_dist++;
 
                 if (!ops) break;
@@ -6013,7 +5988,7 @@ size_t hamming(const Sentence1& s1, const Sentence2& s2,
     size_t hamm = 0;
 
     for (size_t i = 0; i < sentence1.length(); i++) {
-        if (common::mixed_sign_unequal(sentence1[i], sentence2[i])) {
+        if (sentence1[i] != sentence2[i]) {
             hamm++;
         }
     }

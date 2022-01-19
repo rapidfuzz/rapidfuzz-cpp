@@ -60,7 +60,7 @@ size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<C
         size_t s2_pos = 0;
         size_t cur_dist = 0;
         while (s1_pos < s1.size() && s2_pos < s2.size()) {
-            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+            if (s1[s1_pos] != s2[s2_pos]) {
                 cur_dist++;
                 if (!ops) break;
                 if (ops & 1) s1_pos++;

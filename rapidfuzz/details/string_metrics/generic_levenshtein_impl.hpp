@@ -29,7 +29,7 @@ std::size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
         *cache_iter += weights.insert_cost;
 
         for (const auto& char1 : s1) {
-            if (common::mixed_sign_unequal(char1, char2)) {
+            if (char1 != char2) {
                 temp = std::min({*cache_iter + weights.delete_cost,
                                  *(cache_iter + 1) + weights.insert_cost,
                                  temp + weights.replace_cost});

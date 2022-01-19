@@ -75,7 +75,7 @@ size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_stri
         size_t cur_dist = 0;
 
         while (s1_pos < s1.size() && s2_pos < s2.size()) {
-            if (common::mixed_sign_unequal(s1[s1_pos], s2[s2_pos])) {
+            if (s1[s1_pos] != s2[s2_pos]) {
                 cur_dist++;
 
                 if (!ops) break;

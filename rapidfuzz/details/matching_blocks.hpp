@@ -103,15 +103,14 @@ public:
                 j2len_.begin() + static_cast<std::vector<std::size_t>::difference_type>(b_high), 0);
         }
 
-        while (best_i > a_low && best_j > b_low &&
-               common::mixed_sign_equal(a_[best_i - 1], b_[best_j - 1])) {
+        while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {
             --best_i;
             --best_j;
             ++best_size;
         }
 
         while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               common::mixed_sign_equal(a_[best_i + best_size], b_[best_j + best_size]))
+               a_[best_i + best_size] == b_[best_j + best_size])
         {
             ++best_size;
         }
