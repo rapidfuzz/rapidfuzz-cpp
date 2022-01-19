@@ -127,8 +127,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        matrix.dist += !!(HP & mask);
-        matrix.dist -= !!(HN & mask);
+        matrix.dist += bool(HP & mask);
+        matrix.dist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         HP = (HP << 1) | 1;
@@ -213,8 +213,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
-            matrix.dist += !!(HP & Last);
-            matrix.dist -= !!(HN & Last);
+            matrix.dist += bool(HP & Last);
+            matrix.dist -= bool(HN & Last);
 
             /* Step 4: Computing Vp and VN */
             HP = (HP << 1) | HP_carry;

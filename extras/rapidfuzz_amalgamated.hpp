@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-17 16:42:04.095873
+//  Generated: 2022-01-19 17:37:48.217270
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4295,8 +4295,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(basic_string_view<CharT1> s2,
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        matrix.dist += !!(HP & mask);
-        matrix.dist -= !!(HN & mask);
+        matrix.dist += bool(HP & mask);
+        matrix.dist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         HP = (HP << 1) | 1;
@@ -4381,8 +4381,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(basic_string_view<CharT
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
-            matrix.dist += !!(HP & Last);
-            matrix.dist -= !!(HN & Last);
+            matrix.dist += bool(HP & Last);
+            matrix.dist -= bool(HN & Last);
 
             /* Step 4: Computing Vp and VN */
             HP = (HP << 1) | HP_carry;
@@ -4660,8 +4660,8 @@ size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        currDist += !!(HP & mask);
-        currDist -= !!(HN & mask);
+        currDist += bool(HP & mask);
+        currDist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         VP = HN | ~((D0 >> 1) | HP);
@@ -4695,8 +4695,8 @@ size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::Patter
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        currDist += !!(HP & mask);
-        currDist -= !!(HN & mask);
+        currDist += bool(HP & mask);
+        currDist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         HP = (HP << 1) | 1;
@@ -6490,8 +6490,8 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     percent result = 0;
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
@@ -6510,11 +6510,11 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -6625,8 +6625,8 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     percent result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
@@ -6644,11 +6644,11 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -6684,8 +6684,8 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     percent result = cached_ratio_s1_sorted.ratio(s2_tokens.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
@@ -6703,11 +6703,11 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -6754,8 +6754,8 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     }
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
@@ -6773,11 +6773,11 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 

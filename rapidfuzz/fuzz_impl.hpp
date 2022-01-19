@@ -301,8 +301,8 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     percent result = 0;
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
@@ -321,11 +321,11 @@ percent token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -436,8 +436,8 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     percent result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
@@ -455,11 +455,11 @@ percent token_ratio(const Sentence1& s1, const Sentence2& s2, percent score_cuto
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -495,8 +495,8 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     percent result = cached_ratio_s1_sorted.ratio(s2_tokens.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
@@ -514,11 +514,11 @@ percent token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
@@ -565,8 +565,8 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     }
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    size_t sect_ab_len = sect_len + !!sect_len + ab_len;
-    size_t sect_ba_len = sect_len + !!sect_len + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
     size_t dist =
@@ -584,11 +584,11 @@ percent token_ratio(const std::basic_string<CharT1>& s1_sorted,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    std::size_t sect_ab_dist = !!sect_len + ab_len;
+    std::size_t sect_ab_dist = bool(sect_len) + ab_len;
     percent sect_ab_ratio =
         common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    std::size_t sect_ba_dist = !!sect_len + ba_len;
+    std::size_t sect_ba_dist = bool(sect_len) + ba_len;
     percent sect_ba_ratio =
         common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 

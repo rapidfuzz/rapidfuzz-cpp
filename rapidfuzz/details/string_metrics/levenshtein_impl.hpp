@@ -232,8 +232,8 @@ size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        currDist += !!(HP & mask);
-        currDist -= !!(HN & mask);
+        currDist += bool(HP & mask);
+        currDist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         VP = HN | ~((D0 >> 1) | HP);
@@ -267,8 +267,8 @@ size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::Patter
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        currDist += !!(HP & mask);
-        currDist -= !!(HN & mask);
+        currDist += bool(HP & mask);
+        currDist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         HP = (HP << 1) | 1;
