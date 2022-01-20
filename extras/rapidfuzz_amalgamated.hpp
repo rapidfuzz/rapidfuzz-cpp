@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-19 18:30:47.704695
+//  Generated: 2022-01-20 07:14:20.829406
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -21,6 +21,8 @@
 #include <cstddef>
 #include <type_traits>
 #include <vector>
+#include <cassert>
+#include <stdexcept>
 
 // Copyright 2017-2020 by Martin Moene
 //
@@ -1704,7 +1706,7 @@ struct EditOp {
     {}
 };
 
-static inline bool operator==(EditOp a, EditOp b)
+inline bool operator==(EditOp a, EditOp b)
 {
     return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
@@ -1741,7 +1743,7 @@ struct Opcode {
     {}
 };
 
-static inline bool operator==(Opcode a, Opcode b)
+inline bool operator==(Opcode a, Opcode b)
 {
     return (a.type == b.type) && (a.src_begin == b.src_begin) && (a.src_end == b.src_end) &&
            (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
@@ -1937,7 +1939,7 @@ private:
     size_type dest_len;
 };
 
-bool operator==(const Editops& lhs, const Editops& rhs)
+inline bool operator==(const Editops& lhs, const Editops& rhs)
 {
     if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
@@ -1949,12 +1951,12 @@ bool operator==(const Editops& lhs, const Editops& rhs)
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-bool operator!=(const Editops& lhs, const Editops& rhs)
+inline bool operator!=(const Editops& lhs, const Editops& rhs)
 {
     return !(lhs == rhs);
 }
 
-void swap(Editops& lhs, Editops& rhs)
+inline void swap(Editops& lhs, Editops& rhs)
 {
     lhs.swap(rhs);
 }
@@ -2086,7 +2088,7 @@ private:
     size_type dest_len;
 };
 
-bool operator==(const Opcodes& lhs, const Opcodes& rhs)
+inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
     if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
@@ -2098,17 +2100,17 @@ bool operator==(const Opcodes& lhs, const Opcodes& rhs)
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
+inline bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
 {
     return !(lhs == rhs);
 }
 
-void swap(Opcodes& lhs, Opcodes& rhs)
+inline void swap(Opcodes& lhs, Opcodes& rhs)
 {
     lhs.swap(rhs);
 }
 
-Editops::Editops(const Opcodes& other)
+inline Editops::Editops(const Opcodes& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
@@ -2138,7 +2140,7 @@ Editops::Editops(const Opcodes& other)
     }
 }
 
-Opcodes::Opcodes(const Editops& other)
+inline Opcodes::Opcodes(const Editops& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
@@ -2546,6 +2548,15 @@ size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<Char
 template <typename CharT1, typename CharT2>
 size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
+template <typename InputIt1, typename InputIt2>
+StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
+
+template <typename InputIt1, typename InputIt2>
+int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
+
+template <typename InputIt1, typename InputIt2>
+int64_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 
@@ -2928,6 +2939,15 @@ size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_v
     return prefix;
 }
 
+template <typename InputIt1, typename InputIt2>
+int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
+{
+    int64_t prefix = std::distance(first1, common::mismatch(first1, last1, first2, last2).first);
+    first1 += prefix;
+    first2 += prefix;
+    return prefix;
+}
+
 /**
  * Removes common suffix of two string views
  */
@@ -2941,6 +2961,21 @@ size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_v
     return suffix;
 }
 
+template <typename InputIt1, typename InputIt2>
+int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2)
+{
+    auto rfirst1 = std::make_reverse_iterator(last1);
+    auto rlast1 = std::make_reverse_iterator(first1);
+    auto rfirst2 = std::make_reverse_iterator(last2);
+    auto rlast2 = std::make_reverse_iterator(first2);
+
+    int64_t suffix =
+        std::distance(rfirst1, common::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
+    last1 -= suffix;
+    last2 -= suffix;
+    return suffix;
+}
+
 /**
  * Removes common affix of two string views
  */
@@ -2948,6 +2983,14 @@ template <typename CharT1, typename CharT2>
 StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
 {
     return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
+}
+
+template <typename InputIt1, typename InputIt2>
+StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
+                                InputIt2& last2)
+{
+    return StringAffix{remove_common_prefix(first1, last1, first2, last2),
+                       remove_common_suffix(first1, last1, first2, last2)};
 }
 
 template <typename, typename = void>
@@ -3689,6 +3732,7 @@ std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1,
 } /* namespace rapidfuzz */
 
 
+
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -3698,97 +3742,134 @@ namespace rapidfuzz {
 namespace string_metric {
 namespace detail {
 
-template <typename CharT1, typename CharT2>
-size_t generic_levenshtein_wagner_fischer(basic_string_view<CharT1> s1,
-                                               basic_string_view<CharT2> s2,
-                                               LevenshteinWeightTable weights, size_t max)
+template <typename InputIt1, typename InputIt2>
+int64_t generalized_levenshtein_wagner_fischer(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                           InputIt2 last2, LevenshteinWeightTable weights,
+                                           int64_t max)
 {
-    std::vector<size_t> cache(s1.size() + 1);
+    int64_t len1 = std::distance(first1, last1);
+    int64_t cache_size = len1 + 1;
+    std::vector<int64_t> cache(cache_size);
 
     cache[0] = 0;
-    for (size_t i = 1; i < cache.size(); ++i) {
-        cache[i] = cache[i - 1] + weights.delete_cost;
+    for (int64_t i = 1; i < cache_size; ++i) {
+        cache[i] = cache[i - 1] + (int64_t)weights.delete_cost;
     }
 
-    for (const auto& char2 : s2) {
+    for (; first2 != last2; ++first2) {
         auto cache_iter = cache.begin();
-        size_t temp = *cache_iter;
-        *cache_iter += weights.insert_cost;
+        int64_t temp = *cache_iter;
+        *cache_iter += (int64_t)weights.insert_cost;
 
-        for (const auto& char1 : s1) {
-            if (char1 != char2) {
-                temp = std::min({*cache_iter + weights.delete_cost,
-                                 *(cache_iter + 1) + weights.insert_cost,
-                                 temp + weights.replace_cost});
+        auto _first1 = first1;
+        for (; _first1 != last1; ++_first1) {
+            if (*_first1 != *first2) {
+                temp = std::min({*cache_iter + (int64_t)weights.delete_cost,
+                                 *(cache_iter + 1) + (int64_t)weights.insert_cost,
+                                 temp + (int64_t)weights.replace_cost});
             }
             ++cache_iter;
             std::swap(*cache_iter, temp);
         }
     }
 
-    return (cache.back() <= max) ? cache.back() : (size_t)-1;
+    return std::min(cache.back(), max + 1);
 }
 
-template <typename CharT1, typename CharT2>
-size_t generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                LevenshteinWeightTable weights, size_t max)
+/**
+ * @brief calculates the maximum possible Levenshtein distance based on
+ * string lengths and weights
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_maximum(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                            LevenshteinWeightTable weights)
 {
-    // do not swap the strings, since insertion/deletion cost can be different
-    if (s1.size() >= s2.size()) {
-        // at least length difference deletions required
-        if ((s1.size() - s2.size()) * weights.delete_cost > max) {
-            return (size_t)-1;
-        }
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    int64_t max_dist = len1 * (int64_t)weights.delete_cost + len2 * (int64_t)weights.insert_cost;
+
+    if (len1 >= len2) {
+        max_dist =
+            std::min(max_dist, len2 * (int64_t)weights.replace_cost + (len1 - len2) * (int64_t)weights.delete_cost);
     }
     else {
-        // at least length difference insertions required
-        if ((s2.size() - s1.size()) * weights.insert_cost > max) {
-            return (size_t)-1;
-        }
+        max_dist =
+            std::min(max_dist, len1 * (int64_t)weights.replace_cost + (len2 - len1) * (int64_t)weights.insert_cost);
     }
 
-    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
-    // time
-    common::remove_common_affix(s1, s2);
-
-    return generic_levenshtein_wagner_fischer(s1, s2, weights, max);
+    return max_dist;
 }
 
-template <typename CharT1, typename CharT2>
-double normalized_generic_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                      LevenshteinWeightTable weights, const double score_cutoff)
+/**
+ * @brief calculates the minimal possible Levenshtein distance based on
+ * string lengths and weights
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_min_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                 LevenshteinWeightTable weights)
 {
-    if (s1.empty() || s2.empty()) {
-        return static_cast<double>(s1.empty() && s2.empty());
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    return std::max((len1 - len2) * (int64_t)weights.delete_cost, (len2 - len1) * (int64_t)weights.insert_cost);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t generalized_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                     InputIt2 last2, LevenshteinWeightTable weights, int64_t max)
+{
+    int64_t min_edits = levenshtein_min_distance(first1, last1, first2, last2, weights);
+    if (min_edits > max) {
+        return max + 1;
     }
 
-    // calculate the maximum possible edit distance from the weights
-    size_t max_dist = 0;
-    if (s1.size() >= s2.size()) {
-        max_dist = std::min(
-            // delete all characters from s1 and insert all characters from s2
-            s1.size() * weights.delete_cost + s2.size() * weights.insert_cost,
-            // replace all characters and delete the remaining characters from s1
-            s2.size() * weights.replace_cost + (s1.size() - s2.size()) * weights.delete_cost);
-    }
-    else {
-        max_dist = std::min(
-            // delete all characters from s1 and insert all characters from s2
-            s1.size() * weights.delete_cost + s2.size() * weights.insert_cost,
-            // replace all characters and insert the remaining characters into s1
-            s1.size() * weights.replace_cost + (s2.size() - s1.size()) * weights.insert_cost);
-    }
+    /* common affix does not effect Levenshtein distance */
+    common::remove_common_affix(first1, last1, first2, last2);
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
+    return generalized_levenshtein_wagner_fischer(first1, last1, first2, last2, weights, max);
+}
 
-    size_t dist = generic_levenshtein(s1, s2, weights, cutoff_distance);
-    return (dist != (size_t)-1) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+template <typename InputIt1, typename InputIt2>
+double generalized_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, LevenshteinWeightTable weights,
+                                               double score_cutoff)
+{
+    int64_t maximum = levenshtein_maximum(first1, last1, first2, last2, weights);
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t dist =
+        generalized_levenshtein_distance(first1, last1, first2, last2, weights, cutoff_distance);
+    double norm_dist = (maximum) ? dist / maximum : 0.0;
+    return (norm_dist <= score_cutoff) ? norm_dist : double(maximum);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t generalized_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                       InputIt2 last2, LevenshteinWeightTable weights,
+                                       int64_t score_cutoff)
+{
+    int64_t maximum = levenshtein_maximum(first1, last1, first2, last2, weights);
+    int64_t cutoff_distance = maximum - score_cutoff;
+    int64_t dist =
+        generalized_levenshtein_distance(first1, last1, first2, last2, weights, cutoff_distance);
+    int64_t sim = maximum - dist;
+    return (sim >= score_cutoff) ? sim : 0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double generalized_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, LevenshteinWeightTable weights,
+                                                 double score_cutoff)
+{
+    double norm_dist = generalized_levenshtein_normalized_distance(first1, last1, first2, last2,
+                                                               weights, 1.0 - score_cutoff);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
+
 
 
 
@@ -4143,6 +4224,7 @@ double jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<Ch
 } // namespace string_metric
 } // namespace rapidfuzz
 
+
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -4402,6 +4484,7 @@ Editops levenshtein_editops(basic_string_view<CharT1> s1, basic_string_view<Char
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
+
 
 #include <algorithm>
 #include <array>
@@ -4891,8 +4974,6 @@ size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, s
         return s2.size();
     }
 
-    common::BlockPatternMatchVector block(s2);
-
     if (max < 4) {
         return levenshtein_mbleven2018(s1, s2, max);
     }
@@ -4910,12 +4991,12 @@ size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, s
     }
 
     // todo max
-    if (max <= 31) {
-        size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
-                                                        // common::BlockPatternMatchVector(s2),
+    /*if (max <= 31) {
+        size_t dist = levenshtein_hyrroe2003_small_band(s1,
+                                                        common::BlockPatternMatchVector(s2),
                                                         s2.size(), max);
         return (dist > max) ? (size_t)-1 : dist;
-    }
+    }*/
 
     size_t dist =
         levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2), s2.size(), max);
@@ -4963,6 +5044,7 @@ double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<Ch
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
+
 
 #include <algorithm>
 #include <array>
@@ -5173,6 +5255,7 @@ Editops llcs_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
 } // namespace detail
 } // namespace string_metric
 } // namespace rapidfuzz
+
 
 
 #include <algorithm>
@@ -5725,7 +5808,8 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return detail::generic_levenshtein(sentence1, sentence2, weights, max);
+    return detail::generalized_levenshtein_distance(std::begin(sentence1), std::end(sentence1),
+                                       std::begin(sentence2), std::end(sentence2), weights, max);
 }
 
 template <typename Sentence1>
@@ -5772,7 +5856,8 @@ struct CachedLevenshtein {
             }
         }
 
-        return detail::generic_levenshtein(s1_view, s2_view, weights, max);
+        return detail::generalized_levenshtein_distance(std::begin(s1_view), std::end(s1_view),
+                                           std::begin(s2_view), std::end(s2_view), weights, max);
     }
 
 private:
@@ -5854,8 +5939,7 @@ private:
  */
 template <typename Sentence1, typename Sentence2>
 double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
-                              LevenshteinWeightTable weights = {1, 1, 1},
-                              double score_cutoff = 0.0)
+                              LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 0.0)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -5874,7 +5958,9 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
+    return detail::generalized_levenshtein_normalized_similarity(std::begin(sentence1), std::end(sentence1),
+                                                  std::begin(sentence2), std::end(sentence2),
+                                                  weights, score_cutoff);
 }
 
 template <typename Sentence1>
@@ -5905,7 +5991,9 @@ struct CachedNormalizedLevenshtein {
             }
         }
 
-        return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+        return detail::generalized_levenshtein_normalized_similarity(std::begin(s1_view), std::end(s1_view),
+                                                      std::begin(s2_view), std::end(s2_view),
+                                                      weights, score_cutoff);
     }
 
 private:

@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <type_traits>
 #include <vector>
+#include <cassert>
+#include <stdexcept>
 
 #include <rapidfuzz/details/string_view.hpp>
 
@@ -59,7 +61,7 @@ struct EditOp {
     {}
 };
 
-static inline bool operator==(EditOp a, EditOp b)
+inline bool operator==(EditOp a, EditOp b)
 {
     return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
@@ -96,7 +98,7 @@ struct Opcode {
     {}
 };
 
-static inline bool operator==(Opcode a, Opcode b)
+inline bool operator==(Opcode a, Opcode b)
 {
     return (a.type == b.type) && (a.src_begin == b.src_begin) && (a.src_end == b.src_end) &&
            (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
@@ -292,7 +294,7 @@ private:
     size_type dest_len;
 };
 
-bool operator==(const Editops& lhs, const Editops& rhs)
+inline bool operator==(const Editops& lhs, const Editops& rhs)
 {
     if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
@@ -304,12 +306,12 @@ bool operator==(const Editops& lhs, const Editops& rhs)
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-bool operator!=(const Editops& lhs, const Editops& rhs)
+inline bool operator!=(const Editops& lhs, const Editops& rhs)
 {
     return !(lhs == rhs);
 }
 
-void swap(Editops& lhs, Editops& rhs)
+inline void swap(Editops& lhs, Editops& rhs)
 {
     lhs.swap(rhs);
 }
@@ -441,7 +443,7 @@ private:
     size_type dest_len;
 };
 
-bool operator==(const Opcodes& lhs, const Opcodes& rhs)
+inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
     if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
         return false;
@@ -453,17 +455,17 @@ bool operator==(const Opcodes& lhs, const Opcodes& rhs)
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
+inline bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
 {
     return !(lhs == rhs);
 }
 
-void swap(Opcodes& lhs, Opcodes& rhs)
+inline void swap(Opcodes& lhs, Opcodes& rhs)
 {
     lhs.swap(rhs);
 }
 
-Editops::Editops(const Opcodes& other)
+inline Editops::Editops(const Opcodes& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
@@ -493,7 +495,7 @@ Editops::Editops(const Opcodes& other)
     }
 }
 
-Opcodes::Opcodes(const Editops& other)
+inline Opcodes::Opcodes(const Editops& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();

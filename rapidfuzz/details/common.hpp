@@ -133,6 +133,15 @@ size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<Char
 template <typename CharT1, typename CharT2>
 size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
+template <typename InputIt1, typename InputIt2>
+StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
+
+template <typename InputIt1, typename InputIt2>
+int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
+
+template <typename InputIt1, typename InputIt2>
+int64_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+
 template <typename Sentence, typename CharT = char_type<Sentence>>
 SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
 

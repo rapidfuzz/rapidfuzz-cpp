@@ -189,7 +189,8 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return detail::generic_levenshtein(sentence1, sentence2, weights, max);
+    return detail::generalized_levenshtein_distance(std::begin(sentence1), std::end(sentence1),
+                                       std::begin(sentence2), std::end(sentence2), weights, max);
 }
 
 template <typename Sentence1>
@@ -236,7 +237,8 @@ struct CachedLevenshtein {
             }
         }
 
-        return detail::generic_levenshtein(s1_view, s2_view, weights, max);
+        return detail::generalized_levenshtein_distance(std::begin(s1_view), std::end(s1_view),
+                                           std::begin(s2_view), std::end(s2_view), weights, max);
     }
 
 private:
@@ -318,8 +320,7 @@ private:
  */
 template <typename Sentence1, typename Sentence2>
 double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
-                              LevenshteinWeightTable weights = {1, 1, 1},
-                              double score_cutoff = 0.0)
+                              LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 0.0)
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
@@ -338,7 +339,9 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return detail::normalized_generic_levenshtein(sentence1, sentence2, weights, score_cutoff);
+    return detail::generalized_levenshtein_normalized_similarity(std::begin(sentence1), std::end(sentence1),
+                                                  std::begin(sentence2), std::end(sentence2),
+                                                  weights, score_cutoff);
 }
 
 template <typename Sentence1>
@@ -369,7 +372,9 @@ struct CachedNormalizedLevenshtein {
             }
         }
 
-        return detail::normalized_generic_levenshtein(s1_view, s2_view, weights, score_cutoff);
+        return detail::generalized_levenshtein_normalized_similarity(std::begin(s1_view), std::end(s1_view),
+                                                      std::begin(s2_view), std::end(s2_view),
+                                                      weights, score_cutoff);
     }
 
 private:

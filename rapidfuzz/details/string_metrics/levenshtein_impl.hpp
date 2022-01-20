@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2021 Max Bachmann */
 
+#pragma once
+
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -491,8 +493,6 @@ size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, s
         return s2.size();
     }
 
-    common::BlockPatternMatchVector block(s2);
-
     if (max < 4) {
         return levenshtein_mbleven2018(s1, s2, max);
     }
@@ -510,12 +510,12 @@ size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, s
     }
 
     // todo max
-    if (max <= 31) {
-        size_t dist = levenshtein_hyrroe2003_small_band(s1, block,
-                                                        // common::BlockPatternMatchVector(s2),
+    /*if (max <= 31) {
+        size_t dist = levenshtein_hyrroe2003_small_band(s1,
+                                                        common::BlockPatternMatchVector(s2),
                                                         s2.size(), max);
         return (dist > max) ? (size_t)-1 : dist;
-    }
+    }*/
 
     size_t dist =
         levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2), s2.size(), max);
