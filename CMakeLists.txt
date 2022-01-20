@@ -16,7 +16,7 @@ set(HEADERS
 	rapidfuzz/details/matching_blocks.hpp
 	rapidfuzz/details/string_view.hpp
 	rapidfuzz/details/string_metrics/levenshtein_impl.hpp
-	rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp
+	rapidfuzz/details/string_metrics/Indel_impl.hpp
 	rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp
 	rapidfuzz/details/common.hpp
 	rapidfuzz/details/common_impl.hpp

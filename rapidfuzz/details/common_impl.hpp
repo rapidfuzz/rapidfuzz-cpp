@@ -149,8 +149,8 @@ template <typename InputIt1, typename InputIt2>
 StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                         InputIt2& last2)
 {
-    return StringAffix{remove_common_prefix(first1, last1, first2, last2),
-                       remove_common_suffix(first1, last1, first2, last2)};
+    return StringAffix{(size_t)remove_common_prefix(first1, last1, first2, last2),
+                       (size_t)remove_common_suffix(first1, last1, first2, last2)};
 }
 
 template <typename, typename = void>

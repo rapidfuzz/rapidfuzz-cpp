@@ -318,13 +318,10 @@ int64_t uniform_levenshtein_distance(const common::BlockPatternMatchVector& bloc
 
     /* common affix does not effect Levenshtein distance */
     common::remove_common_affix(first1, last1, first2, last2);
-
-    if (!len2) {
-        return len1;
-    }
-
-    if (!len1) {
-        return len2;
+    len1 = std::distance(first1, last1);
+    len2 = std::distance(first2, last2);
+    if (!len1 || !len2) {
+        return len1 + len2;
     }
 
     return levenshtein_mbleven2018(first1, last1, first2, last2, max);
@@ -354,9 +351,10 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 
     /* common affix does not effect Levenshtein distance */
     common::remove_common_affix(first1, last1, first2, last2);
-
-    if (!len2) {
-        return len1;
+    len1 = std::distance(first1, last1);
+    len2 = std::distance(first2, last2);
+    if (!len1 || !len2) {
+        return len1 + len2;
     }
 
     if (max < 4) {

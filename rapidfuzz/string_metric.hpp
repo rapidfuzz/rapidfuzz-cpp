@@ -3,12 +3,12 @@
 
 #pragma once
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/string_metrics/Indel_impl.hpp>
 #include <rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/jaro_impl.hpp>
 #include <rapidfuzz/details/string_metrics/levenshtein_editops_impl.hpp>
 #include <rapidfuzz/details/string_metrics/levenshtein_impl.hpp>
 #include <rapidfuzz/details/string_metrics/llcs_editops_impl.hpp>
-#include <rapidfuzz/details/string_metrics/weighted_levenshtein_impl.hpp>
 
 #include <cmath>
 #include <numeric>
@@ -159,6 +159,10 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
+    auto first1 = std::begin(sentence1);
+    auto last1 = std::end(sentence1);
+    auto first2 = std::begin(sentence2);
+    auto last2 = std::end(sentence2);
 
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -170,9 +174,8 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         if (weights.insert_cost == weights.replace_cost) {
             // max can make use of the common divisor of the three weights
             size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-            size_t distance = detail::uniform_levenshtein_distance(
-                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
-                std::end(sentence2), new_max);
+            size_t distance =
+                detail::uniform_levenshtein_distance(first1, last1, first2, last2, new_max);
             distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -183,15 +186,13 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
             size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-            size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max);
+            size_t distance = Indel::detail::indel_distance(first1, last1, first2, last2, new_max);
             distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
     }
 
-    return detail::generalized_levenshtein_distance(std::begin(sentence1), std::end(sentence1),
-                                                    std::begin(sentence2), std::end(sentence2),
-                                                    weights, max);
+    return detail::generalized_levenshtein_distance(first1, last1, first2, last2, weights, max);
 }
 
 template <typename Sentence1>
@@ -206,6 +207,10 @@ struct CachedLevenshtein {
     size_t distance(const Sentence2& s2, size_t max = std::numeric_limits<size_t>::max()) const
     {
         auto s2_view = common::to_string_view(s2);
+        auto first1 = std::begin(s1_view);
+        auto last1 = std::end(s1_view);
+        auto first2 = std::begin(s2_view);
+        auto last2 = std::end(s2_view);
 
         if (weights.insert_cost == weights.delete_cost) {
             /* when insertions + deletions operations are free there can not be any edit distance */
@@ -217,9 +222,8 @@ struct CachedLevenshtein {
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
                 size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-                size_t distance = detail::uniform_levenshtein_distance(
-                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
-                    std::end(s2_view), new_max);
+                size_t distance =
+                    detail::uniform_levenshtein_distance(PM, first1, last1, first2, last2, new_max);
                 distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
@@ -230,15 +234,14 @@ struct CachedLevenshtein {
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
                 size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-                size_t distance = detail::weighted_levenshtein(s2_view, PM, s1_view, new_max);
+                size_t distance =
+                    Indel::detail::indel_distance(PM, first1, last1, first2, last2, new_max);
                 distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
         }
 
-        return detail::generalized_levenshtein_distance(std::begin(s1_view), std::end(s1_view),
-                                                        std::begin(s2_view), std::end(s2_view),
-                                                        weights, max);
+        return detail::generalized_levenshtein_distance(first1, last1, first2, last2, weights, max);
     }
 
 private:
@@ -324,26 +327,29 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
+    auto first1 = std::begin(sentence1);
+    auto last1 = std::end(sentence1);
+    auto first2 = std::begin(sentence2);
+    auto last2 = std::end(sentence2);
 
     if (weights.insert_cost == weights.delete_cost) {
         /* uniform Levenshtein */
         if (weights.insert_cost == weights.replace_cost) {
-            return detail::uniform_levenshtein_normalized_similarity(
-                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
-                std::end(sentence2), score_cutoff);
+            return detail::uniform_levenshtein_normalized_similarity(first1, last1, first2, last2,
+                                                                     score_cutoff);
         }
         /*
          * when replace_cost >= insert_cost + delete_cost no substitutions are performed
          * therefore this can be implemented as InDel distance
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-            return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
+            return Indel::detail::indel_normalized_similarity(first1, last1, first2, last2,
+                                                              score_cutoff);
         }
     }
 
-    return detail::generalized_levenshtein_normalized_similarity(
-        std::begin(sentence1), std::end(sentence1), std::begin(sentence2), std::end(sentence2),
-        weights, score_cutoff);
+    return detail::generalized_levenshtein_normalized_similarity(first1, last1, first2, last2,
+                                                                 weights, score_cutoff);
 }
 
 template <typename Sentence1>
@@ -358,26 +364,29 @@ struct CachedNormalizedLevenshtein {
     double ratio(const Sentence2& s2, double score_cutoff = 0) const
     {
         auto s2_view = common::to_string_view(s2);
+        auto first1 = std::begin(s1_view);
+        auto last1 = std::end(s1_view);
+        auto first2 = std::begin(s2_view);
+        auto last2 = std::end(s2_view);
 
         if (weights.insert_cost == weights.delete_cost) {
             /* uniform Levenshtein */
             if (weights.insert_cost == weights.replace_cost) {
-                return detail::uniform_levenshtein_normalized_similarity(
-                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
-                    std::end(s2_view), score_cutoff);
+                return detail::uniform_levenshtein_normalized_similarity(PM, first1, last1, first2,
+                                                                         last2, score_cutoff);
             }
             /*
              * when replace_cost >= insert_cost + delete_cost no substitutions are performed
              * therefore this can be implemented as InDel distance
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-                return detail::normalized_weighted_levenshtein(s2_view, PM, s1_view, score_cutoff);
+                return Indel::detail::indel_normalized_similarity(PM, first1, last1, first2, last2,
+                                                                  score_cutoff);
             }
         }
 
-        return detail::generalized_levenshtein_normalized_similarity(
-            std::begin(s1_view), std::end(s1_view), std::begin(s2_view), std::end(s2_view), weights,
-            score_cutoff);
+        return detail::generalized_levenshtein_normalized_similarity(first1, last1, first2, last2,
+                                                                     weights, score_cutoff);
     }
 
 private:

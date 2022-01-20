@@ -237,6 +237,13 @@ struct PatternMatchVector {
         }
     }
 
+    template <typename CharT>
+    uint64_t get(int64_t block, CharT key) const
+    {
+        assert(block == 0);
+        return get(key);
+    }
+
 private:
     template <typename CharT>
     void insert_mask(CharT key, uint64_t mask)

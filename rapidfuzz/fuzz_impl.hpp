@@ -30,9 +30,10 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) c
 {
     auto s2_view = common::to_string_view(s2);
 
-    return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                                  score_cutoff / 100) *
-           100;
+    double norm_sim = Indel::detail::indel_normalized_similarity(
+        blockmap_s1, std::begin(s1_view), std::end(s1_view), std::begin(s2_view), std::end(s2_view),
+        score_cutoff / 100);
+    return norm_sim * 100;
 }
 
 /**********************************************
@@ -554,10 +555,10 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        result = string_metric::detail::normalized_weighted_levenshtein(
-                     common::to_string_view(s2_sorted), blockmap_s1_sorted,
-                     common::to_string_view(s1_sorted), score_cutoff / 100) *
-                 100;
+        double norm_sim = Indel::detail::indel_normalized_similarity(
+            std::begin(s1_sorted), std::end(s1_sorted), std::begin(s2_sorted), std::end(s2_sorted),
+            score_cutoff / 100);
+        result = norm_sim * 100;
     }
     else {
         result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);

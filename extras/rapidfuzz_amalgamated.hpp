@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-20 10:40:39.249078
+//  Generated: 2022-01-20 13:29:50.396168
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2652,6 +2652,13 @@ struct PatternMatchVector {
         }
     }
 
+    template <typename CharT>
+    uint64_t get(int64_t block, CharT key) const
+    {
+        assert(block == 0);
+        return get(key);
+    }
+
 private:
     template <typename CharT>
     void insert_mask(CharT key, uint64_t mask)
@@ -3031,8 +3038,8 @@ template <typename InputIt1, typename InputIt2>
 StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                         InputIt2& last2)
 {
-    return StringAffix{remove_common_prefix(first1, last1, first2, last2),
-                       remove_common_suffix(first1, last1, first2, last2)};
+    return StringAffix{(size_t)remove_common_prefix(first1, last1, first2, last2),
+                       (size_t)remove_common_suffix(first1, last1, first2, last2)};
 }
 
 template <typename, typename = void>
@@ -3773,6 +3780,500 @@ std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1,
 
 
 
+
+
+#include <cstddef>
+#include <cstdint>
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#    include <intrin.h>
+#endif
+
+namespace rapidfuzz {
+namespace intrinsics {
+
+static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+{
+    /* todo should use _addcarry_u64 when available */
+    a += carryin;
+    *carryout = a < carryin;
+    a += b;
+    *carryout |= a < b;
+    return a;
+}
+
+static inline size_t popcount64(uint64_t x)
+{
+    const uint64_t m1 = 0x5555555555555555;
+    const uint64_t m2 = 0x3333333333333333;
+    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;
+    const uint64_t h01 = 0x0101010101010101;
+
+    x -= (x >> 1) & m1;
+    x = (x & m2) + ((x >> 2) & m2);
+    x = (x + (x >> 4)) & m4;
+    return static_cast<size_t>((x * h01) >> 56);
+}
+
+/**
+ * Extract the lowest set bit from a. If no bits are set in a returns 0.
+ */
+template <typename T>
+T blsi(T a)
+{
+    return a & -a;
+}
+
+/**
+ * Clear the lowest set bit in a.
+ */
+template <typename T>
+T blsr(T x)
+{
+    return x & (x - 1);
+}
+
+/**
+ * Sets all the lower bits of the result to 1 up to and including lowest set bit (=1) in a.
+ * If a is zero, blsmsk sets all bits to 1.
+ */
+template <typename T>
+T blsmsk(T a)
+{
+    return a ^ (a - 1);
+}
+
+#if defined(_MSC_VER) && !defined(__clang__)
+static inline int tzcnt(uint32_t x)
+{
+    unsigned long trailing_zero = 0;
+    _BitScanForward(&trailing_zero, x);
+    return trailing_zero;
+}
+
+#    if defined(_M_ARM) || defined(_M_X64)
+static inline int tzcnt(uint64_t x)
+{
+    unsigned long trailing_zero = 0;
+    _BitScanForward64(&trailing_zero, x);
+    return trailing_zero;
+}
+#    else
+static inline int tzcnt(uint64_t x)
+{
+    uint32_t msh = (uint32_t)(x >> 32);
+    uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
+    if (lsh != 0) {
+        return tzcnt(lsh);
+    }
+    return 32 + tzcnt(msh);
+}
+#    endif
+
+#else /*  gcc / clang */
+static inline int tzcnt(uint32_t x)
+{
+    return __builtin_ctz(x);
+}
+
+static inline int tzcnt(uint64_t x)
+{
+    return __builtin_ctzll(x);
+}
+#endif
+
+} // namespace intrinsics
+} // namespace rapidfuzz
+
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <stdexcept>
+#include <string>
+
+namespace rapidfuzz {
+namespace Indel {
+namespace detail {
+
+/*
+ * An encoded mbleven model table.
+ *
+ * Each 8-bit integer represents an edit sequence, with using two
+ * bits for a single operation.
+ *
+ * Each Row of 8 integers represent all possible combinations
+ * of edit sequences for a gived maximum edit distance and length
+ * difference between the two strings, that is below the maximum
+ * edit distance
+ *
+ *   0x1 = 01 = DELETE,
+ *   0x2 = 10 = INSERT
+ *
+ * 0x5 -> DEL + DEL
+ * 0x6 -> DEL + INS
+ * 0x9 -> INS + DEL
+ * 0xA -> INS + INS
+ */
+static constexpr uint8_t indel_mbleven2018_matrix[14][7] = {
+    /* max edit distance 1 */
+    {0},
+    /* case does not occur */ /* len_diff 0 */
+    {0x01},                   /* len_diff 1 */
+    /* max edit distance 2 */
+    {0x09, 0x06}, /* len_diff 0 */
+    {0x01},       /* len_diff 1 */
+    {0x05},       /* len_diff 2 */
+    /* max edit distance 3 */
+    {0x09, 0x06},       /* len_diff 0 */
+    {0x25, 0x19, 0x16}, /* len_diff 1 */
+    {0x05},             /* len_diff 2 */
+    {0x15},             /* len_diff 3 */
+    /* max edit distance 4 */
+    {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
+    {0x25, 0x19, 0x16},                   /* len_diff 1 */
+    {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
+    {0x15},                               /* len_diff 3 */
+    {0x55},                               /* len_diff 4 */
+};
+
+template <typename InputIt1, typename InputIt2>
+int64_t indel_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                          int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t len_diff = std::abs(len1 - len2);
+    auto possible_ops = indel_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
+    int64_t dist = max + 1;
+
+    for (int pos = 0; possible_ops[pos] != 0; ++pos) {
+        int ops = possible_ops[pos];
+        int64_t s1_pos = 0;
+        int64_t s2_pos = 0;
+        int64_t cur_dist = 0;
+
+        while (s1_pos < len1 && s2_pos < len2) {
+            if (first1[s1_pos] != first2[s2_pos]) {
+                cur_dist++;
+
+                if (!ops) break;
+                if (ops & 1) s1_pos++;
+                if (ops & 2) s2_pos++;
+                ops >>= 2;
+            }
+            else {
+                s1_pos++;
+                s2_pos++;
+            }
+        }
+
+        cur_dist += (len1 - s1_pos) + (len2 - s2_pos);
+        dist = std::min(dist, cur_dist);
+    }
+
+    return std::min(dist, max + 1);
+}
+
+template <int64_t N, typename PMV, typename InputIt1, typename InputIt2>
+static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputIt1 first1,
+                                                        InputIt1 last1, InputIt2 first2,
+                                                        InputIt2 last2, int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    uint64_t S[N];
+    for (int64_t i = 0; i < N; ++i) {
+        S[i] = ~0x0ull;
+    }
+
+    for (; first2 != last2; ++last2) {
+        uint64_t carry = 0;
+        uint64_t Matches[N];
+        uint64_t u[N];
+        uint64_t x[N];
+        for (int64_t i = 0; i < N; ++i) {
+            Matches[i] = block.get(i, *first2);
+            u[i] = S[i] & Matches[i];
+            x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
+            S[i] = x[i] | (S[i] - u[i]);
+        }
+    }
+
+    int64_t res = 0;
+    for (int64_t i = 0; i < N; ++i) {
+        res += intrinsics::popcount64(~S[i]);
+    }
+
+    int64_t dist = len1 + len2 - 2 * res;
+    return std::min(dist, max + 1);
+}
+
+template <typename InputIt1, typename InputIt2>
+static inline int64_t
+longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                                     InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    int64_t words = block.m_val.size();
+    std::vector<uint64_t> S(words, ~0x0ull);
+
+    for (; first2 != last2; ++last2) {
+        uint64_t carry = 0;
+        for (int64_t word = 0; word < words; ++word) {
+            const uint64_t Matches = block.get(word, *first2);
+            uint64_t Stemp = S[word];
+
+            uint64_t u = Stemp & Matches;
+
+            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
+            S[word] = x | (Stemp - u);
+        }
+    }
+
+    int64_t res = 0;
+    for (uint64_t Stemp : S) {
+        res += intrinsics::popcount64(~Stemp);
+    }
+
+    int64_t dist = len1 + len2 - 2 * res;
+    return std::min(dist, max + 1);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t longest_common_subsequence(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                                   InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t nr = (len1 / 64) + bool(len1 % 64);
+    switch (nr) {
+    case 0:
+        return std::min(len2, max + 1);
+    case 1:
+        return longest_common_subsequence_unroll<1>(block, first1, last1, first2, last2, max);
+    case 2:
+        return longest_common_subsequence_unroll<2>(block, first1, last1, first2, last2, max);
+    case 3:
+        return longest_common_subsequence_unroll<3>(block, first1, last1, first2, last2, max);
+    case 4:
+        return longest_common_subsequence_unroll<4>(block, first1, last1, first2, last2, max);
+    case 5:
+        return longest_common_subsequence_unroll<5>(block, first1, last1, first2, last2, max);
+    case 6:
+        return longest_common_subsequence_unroll<6>(block, first1, last1, first2, last2, max);
+    case 7:
+        return longest_common_subsequence_unroll<7>(block, first1, last1, first2, last2, max);
+    case 8:
+        return longest_common_subsequence_unroll<8>(block, first1, last1, first2, last2, max);
+    default:
+        return longest_common_subsequence_blockwise(block, first1, last1, first2, last2, max);
+    }
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t longest_common_subsequence(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                   int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t nr = (len1 / 64) + bool(len1 % 64);
+    switch (nr) {
+    case 1:
+    {
+        auto block = common::PatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<1>(block, first1, last1, first2, last2, max);
+    }
+    case 2:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<2>(block, first1, last1, first2, last2, max);
+    }
+    case 3:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<3>(block, first1, last1, first2, last2, max);
+    }
+    case 4:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<4>(block, first1, last1, first2, last2, max);
+    }
+    case 5:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<5>(block, first1, last1, first2, last2, max);
+    }
+    case 6:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<6>(block, first1, last1, first2, last2, max);
+    }
+    case 7:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<7>(block, first1, last1, first2, last2, max);
+    }
+    case 8:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_unroll<8>(block, first1, last1, first2, last2, max);
+    }
+    default:
+    {
+        auto block = common::BlockPatternMatchVector(first1, last1);
+        return longest_common_subsequence_blockwise(block, first1, last1, first2, last2, max);
+    }
+    }
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t indel_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                       InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    /* no edits are allowed */
+    if (max == 0 || (max == 1 && len1 == len2)) {
+        return common::equal(first1, last1, first2, last2);
+    }
+
+    if (max < std::abs(len1 - len2)) {
+        return max + 1;
+    }
+
+    // do this first, since we can not remove any affix in encoded form
+    if (max >= 5) {
+        return longest_common_subsequence(block, first1, last1, first2, last2, max);
+    }
+
+    /* common affix does not effect Levenshtein distance */
+    common::remove_common_affix(first1, last1, first2, last2);
+    len1 = std::distance(first1, last1);
+    len2 = std::distance(first2, last2);
+    if (!len1 || !len2) {
+        return len1 + len2;
+    }
+
+    return indel_mbleven2018(first1, last1, first2, last2, max);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                       int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    // Swapping the strings so the second string is shorter
+    if (len1 < len2) {
+        return indel_distance(first2, last2, first1, last1, max);
+    }
+
+    /* no edits are allowed */
+    if (max == 0 || (max == 1 && len1 == len2)) {
+        return common::equal(first1, last1, first2, last2);
+    }
+
+    if (max < std::abs(len1 - len2)) {
+        return max + 1;
+    }
+
+    /* common affix does not effect Levenshtein distance */
+    common::remove_common_affix(first1, last1, first2, last2);
+    len1 = std::distance(first1, last1);
+    len2 = std::distance(first2, last2);
+    if (!len1 || !len2) {
+        return len1 + len2;
+    }
+
+    if (max < 5) {
+        return indel_mbleven2018(first1, last1, first2, last2, max);
+    }
+
+    return longest_common_subsequence(first1, last1, first2, last2, max);
+}
+
+template <typename InputIt1, typename InputIt2>
+double indel_normalized_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                                 InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                 double score_cutoff)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = len1 + len2;
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t dist = indel_distance(block, first1, last1, first2, last2, cutoff_distance);
+    double norm_dist = (maximum) ? dist / maximum : 0.0;
+    return (norm_dist <= score_cutoff) ? norm_dist : double(maximum);
+}
+
+template <typename InputIt1, typename InputIt2>
+double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                 double score_cutoff)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = len1 + len2;
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t dist = indel_distance(first1, last1, first2, last2, cutoff_distance);
+    double norm_dist = (maximum) ? dist / maximum : 0.0;
+    return (norm_dist <= score_cutoff) ? norm_dist : double(maximum);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t indel_similarity(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                         InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = len1 + len2;
+    int64_t cutoff_distance = maximum - score_cutoff;
+    int64_t dist = indel_distance(block, first1, last1, first2, last2, cutoff_distance);
+    int64_t sim = maximum - dist;
+    return (sim >= score_cutoff) ? sim : 0;
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                         int64_t score_cutoff)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = len1 + len2;
+    int64_t cutoff_distance = maximum - score_cutoff;
+    int64_t dist = indel_distance(first1, last1, first2, last2, cutoff_distance);
+    int64_t sim = maximum - dist;
+    return (sim >= score_cutoff) ? sim : 0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double indel_normalized_similarity(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                                   InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                   double score_cutoff)
+{
+    double norm_dist =
+        indel_normalized_distance(block, first1, last1, first2, last2, 1.0 - score_cutoff);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                   double score_cutoff)
+{
+    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+}
+
+} // namespace detail
+} // namespace Indel
+} // namespace rapidfuzz
+
+
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -3914,110 +4415,6 @@ double generalized_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 l
 } // namespace rapidfuzz
 
 
-
-
-#include <cstddef>
-#include <cstdint>
-
-#if defined(_MSC_VER) && !defined(__clang__)
-#    include <intrin.h>
-#endif
-
-namespace rapidfuzz {
-namespace intrinsics {
-
-static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
-{
-    /* todo should use _addcarry_u64 when available */
-    a += carryin;
-    *carryout = a < carryin;
-    a += b;
-    *carryout |= a < b;
-    return a;
-}
-
-static inline size_t popcount64(uint64_t x)
-{
-    const uint64_t m1 = 0x5555555555555555;
-    const uint64_t m2 = 0x3333333333333333;
-    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;
-    const uint64_t h01 = 0x0101010101010101;
-
-    x -= (x >> 1) & m1;
-    x = (x & m2) + ((x >> 2) & m2);
-    x = (x + (x >> 4)) & m4;
-    return static_cast<size_t>((x * h01) >> 56);
-}
-
-/**
- * Extract the lowest set bit from a. If no bits are set in a returns 0.
- */
-template <typename T>
-T blsi(T a)
-{
-    return a & -a;
-}
-
-/**
- * Clear the lowest set bit in a.
- */
-template <typename T>
-T blsr(T x)
-{
-    return x & (x - 1);
-}
-
-/**
- * Sets all the lower bits of the result to 1 up to and including lowest set bit (=1) in a.
- * If a is zero, blsmsk sets all bits to 1.
- */
-template <typename T>
-T blsmsk(T a)
-{
-    return a ^ (a - 1);
-}
-
-#if defined(_MSC_VER) && !defined(__clang__)
-static inline int tzcnt(uint32_t x)
-{
-    unsigned long trailing_zero = 0;
-    _BitScanForward(&trailing_zero, x);
-    return trailing_zero;
-}
-
-#    if defined(_M_ARM) || defined(_M_X64)
-static inline int tzcnt(uint64_t x)
-{
-    unsigned long trailing_zero = 0;
-    _BitScanForward64(&trailing_zero, x);
-    return trailing_zero;
-}
-#    else
-static inline int tzcnt(uint64_t x)
-{
-    uint32_t msh = (uint32_t)(x >> 32);
-    uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
-    if (lsh != 0) {
-        return tzcnt(lsh);
-    }
-    return 32 + tzcnt(msh);
-}
-#    endif
-
-#else /*  gcc / clang */
-static inline int tzcnt(uint32_t x)
-{
-    return __builtin_ctz(x);
-}
-
-static inline int tzcnt(uint64_t x)
-{
-    return __builtin_ctzll(x);
-}
-#endif
-
-} // namespace intrinsics
-} // namespace rapidfuzz
 
 namespace rapidfuzz {
 namespace string_metric {
@@ -4842,13 +5239,10 @@ int64_t uniform_levenshtein_distance(const common::BlockPatternMatchVector& bloc
 
     /* common affix does not effect Levenshtein distance */
     common::remove_common_affix(first1, last1, first2, last2);
-
-    if (!len2) {
-        return len1;
-    }
-
-    if (!len1) {
-        return len2;
+    len1 = std::distance(first1, last1);
+    len2 = std::distance(first2, last2);
+    if (!len1 || !len2) {
+        return len1 + len2;
     }
 
     return levenshtein_mbleven2018(first1, last1, first2, last2, max);
@@ -4878,9 +5272,10 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 
     /* common affix does not effect Levenshtein distance */
     common::remove_common_affix(first1, last1, first2, last2);
-
-    if (!len2) {
-        return len1;
+    len1 = std::distance(first1, last1);
+    len2 = std::distance(first2, last2);
+    if (!len1 || !len2) {
+        return len1 + len2;
     }
 
     if (max < 4) {
@@ -5072,7 +5467,7 @@ template <size_t N, typename CharT1>
 LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
                                  const common::PatternMatchVector* block, size_t s2_len)
 {
-    std::uint64_t S[N];
+    uint64_t S[N];
     for (size_t i = 0; i < N; ++i) {
         S[i] = ~0x0ull;
     }
@@ -5081,9 +5476,9 @@ LLCSBitMatrix llcs_matrix_unroll(basic_string_view<CharT1> s1,
 
     for (size_t i = 0; i < s1.size(); ++i) {
         uint64_t carry = 0;
-        std::uint64_t Matches[N];
-        std::uint64_t u[N];
-        std::uint64_t x[N];
+        uint64_t Matches[N];
+        uint64_t u[N];
+        uint64_t x[N];
         for (size_t word = 0; word < N; ++word) {
             Matches[word] = block[word].get(s1[i]);
             u[word] = S[word] & Matches[word];
@@ -5109,7 +5504,7 @@ LLCSBitMatrix llcs_matrix_blockwise(basic_string_view<CharT1> s1,
     size_t words = block.m_val.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
-    std::vector<std::uint64_t> S(words, ~0x0ull);
+    std::vector<uint64_t> S(words, ~0x0ull);
     LLCSBitMatrix matrix(s1.size(), words);
 
     for (size_t i = 0; i < s1.size(); ++i) {
@@ -5184,379 +5579,6 @@ Editops llcs_editops(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
     StringAffix affix = common::remove_common_affix(s1, s2);
 
     return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
-}
-
-} // namespace detail
-} // namespace string_metric
-} // namespace rapidfuzz
-
-
-
-#include <algorithm>
-#include <array>
-#include <limits>
-#include <stdexcept>
-#include <string>
-
-namespace rapidfuzz {
-namespace string_metric {
-namespace detail {
-
-/*
- * An encoded mbleven model table.
- *
- * Each 8-bit integer represents an edit sequence, with using two
- * bits for a single operation.
- *
- * Each Row of 8 integers represent all possible combinations
- * of edit sequences for a gived maximum edit distance and length
- * difference between the two strings, that is below the maximum
- * edit distance
- *
- *   0x1 = 01 = DELETE,
- *   0x2 = 10 = INSERT
- *
- * 0x5 -> DEL + DEL
- * 0x6 -> DEL + INS
- * 0x9 -> INS + DEL
- * 0xA -> INS + INS
- */
-static constexpr uint8_t weighted_levenshtein_mbleven2018_matrix[14][7] = {
-    /* max edit distance 1 */
-    {0},
-    /* case does not occur */ /* len_diff 0 */
-    {0x01},                   /* len_diff 1 */
-    /* max edit distance 2 */
-    {0x09, 0x06}, /* len_diff 0 */
-    {0x01},       /* len_diff 1 */
-    {0x05},       /* len_diff 2 */
-    /* max edit distance 3 */
-    {0x09, 0x06},       /* len_diff 0 */
-    {0x25, 0x19, 0x16}, /* len_diff 1 */
-    {0x05},             /* len_diff 2 */
-    {0x15},             /* len_diff 3 */
-    /* max edit distance 4 */
-    {0x96, 0x66, 0x5A, 0x99, 0x69, 0xA5}, /* len_diff 0 */
-    {0x25, 0x19, 0x16},                   /* len_diff 1 */
-    {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
-    {0x15},                               /* len_diff 3 */
-    {0x55},                               /* len_diff 4 */
-};
-
-template <typename CharT1, typename CharT2>
-size_t weighted_levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                        size_t max)
-{
-    if (s1.size() < s2.size()) {
-        return weighted_levenshtein_mbleven2018(s2, s1, max);
-    }
-
-    size_t len_diff = s1.size() - s2.size();
-    auto possible_ops =
-        weighted_levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-    size_t dist = max + 1;
-
-    for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-        int ops = possible_ops[pos];
-        size_t s1_pos = 0;
-        size_t s2_pos = 0;
-        size_t cur_dist = 0;
-
-        while (s1_pos < s1.size() && s2_pos < s2.size()) {
-            if (s1[s1_pos] != s2[s2_pos]) {
-                cur_dist++;
-
-                if (!ops) break;
-                if (ops & 1)
-                    s1_pos++;
-                else if (ops & 2)
-                    s2_pos++;
-                ops >>= 2;
-            }
-            else {
-                s1_pos++;
-                s2_pos++;
-            }
-        }
-
-        cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
-        dist = std::min(dist, cur_dist);
-    }
-
-    return (dist > max) ? (size_t)-1 : dist;
-}
-
-template <size_t N, typename CharT1>
-static inline size_t longest_common_subsequence_unroll(basic_string_view<CharT1> s1,
-                                                       const common::PatternMatchVector* block,
-                                                       size_t s2_len)
-{
-    std::uint64_t S[N];
-    for (size_t i = 0; i < N; ++i) {
-        S[i] = ~0x0ull;
-    }
-
-    for (const auto& ch1 : s1) {
-
-        uint64_t carry = 0;
-        std::uint64_t Matches[N];
-        std::uint64_t u[N];
-        std::uint64_t x[N];
-        for (size_t i = 0; i < N; ++i) {
-            Matches[i] = block[i].get(ch1);
-            u[i] = S[i] & Matches[i];
-            x[i] = intrinsics::addc64(S[i], u[i], carry, &carry);
-            S[i] = x[i] | (S[i] - u[i]);
-        }
-    }
-
-    size_t res = 0;
-    for (size_t i = 0; i < N; ++i) {
-        res += intrinsics::popcount64(~S[i]);
-    }
-    return s1.size() + s2_len - 2 * res;
-}
-
-template <typename CharT1>
-static inline size_t
-longest_common_subsequence_blockwise(basic_string_view<CharT1> s1,
-                                     const common::BlockPatternMatchVector& block, size_t s2_len)
-{
-    size_t words = block.m_val.size();
-    std::vector<std::uint64_t> S(words, ~0x0ull);
-
-    for (const auto& ch1 : s1) {
-        uint64_t carry = 0;
-        for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, ch1);
-            uint64_t Stemp = S[word];
-
-            uint64_t u = Stemp & Matches;
-
-            uint64_t x = intrinsics::addc64(Stemp, u, carry, &carry);
-            S[word] = x | (Stemp - u);
-        }
-    }
-
-    size_t res = 0;
-    for (uint64_t Stemp : S) {
-        res += intrinsics::popcount64(~Stemp);
-    }
-
-    return s1.size() + s2_len - 2 * res;
-}
-
-template <typename CharT1>
-size_t longest_common_subsequence(basic_string_view<CharT1> s1,
-                                  const common::BlockPatternMatchVector& block, size_t s2_len)
-{
-    switch (block.m_val.size()) {
-    case 1:
-        return longest_common_subsequence_unroll<1>(s1, &block.m_val[0], s2_len);
-    case 2:
-        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2_len);
-    case 3:
-        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2_len);
-    case 4:
-        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2_len);
-    case 5:
-        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2_len);
-    case 6:
-        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2_len);
-    case 7:
-        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2_len);
-    case 8:
-        return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2_len);
-    default:
-        return longest_common_subsequence_blockwise(s1, block, s2_len);
-    }
-}
-
-template <typename CharT1, typename CharT2>
-size_t longest_common_subsequence(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2)
-{
-    size_t nr = (s2.size() / 64) + (size_t)((s2.size() % 64) > 0);
-    switch (nr) {
-    case 1:
-    {
-        auto block = common::PatternMatchVector(s2);
-        return longest_common_subsequence_unroll<1>(s1, &block, s2.size());
-    }
-    case 2:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<2>(s1, &block.m_val[0], s2.size());
-    }
-    case 3:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<3>(s1, &block.m_val[0], s2.size());
-    }
-    case 4:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<4>(s1, &block.m_val[0], s2.size());
-    }
-    case 5:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<5>(s1, &block.m_val[0], s2.size());
-    }
-    case 6:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<6>(s1, &block.m_val[0], s2.size());
-    }
-    case 7:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<7>(s1, &block.m_val[0], s2.size());
-    }
-    case 8:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_unroll<8>(s1, &block.m_val[0], s2.size());
-    }
-    default:
-    {
-        auto block = common::BlockPatternMatchVector(s2);
-        return longest_common_subsequence_blockwise(s1, block, s2.size());
-    }
-    }
-}
-
-// TODO this implementation needs some cleanup
-template <typename CharT1, typename CharT2>
-size_t weighted_levenshtein(basic_string_view<CharT1> s1,
-                            const common::BlockPatternMatchVector& block,
-                            basic_string_view<CharT2> s2, size_t max)
-{
-    // when no differences are allowed a direct comparision is sufficient
-    if (max == 0) {
-        if (s1.size() != s2.size()) {
-            return (size_t)-1;
-        }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
-    }
-
-    // when the strings have a similar length each difference causes
-    // at least a edit distance of 2, so a direct comparision is sufficient
-    if (max == 1) {
-        if (s1.size() == s2.size()) {
-            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
-        }
-    }
-
-    // at least length difference insertions/deletions required
-    size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
-    if (len_diff > max) {
-        return (size_t)-1;
-    }
-
-    // important to catch, since this causes block.m_val to be empty -> raises exception on access
-    if (s2.empty()) {
-        return s1.size();
-    }
-
-    // do this first, since we can not remove any affix in encoded form
-    if (max >= 5) {
-        size_t dist = longest_common_subsequence(s1, block, s2.size());
-        return (dist > max) ? (size_t)-1 : dist;
-    }
-
-    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
-    // time
-    common::remove_common_affix(s1, s2);
-
-    if (s2.empty()) {
-        return s1.size();
-    }
-
-    if (s1.empty()) {
-        return s2.size();
-    }
-
-    return weighted_levenshtein_mbleven2018(s1, s2, max);
-}
-
-template <typename CharT1, typename CharT2>
-size_t weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, size_t max)
-{
-    // Swapping the strings so the second string is shorter
-    if (s1.size() < s2.size()) {
-        return weighted_levenshtein(s2, s1, max);
-    }
-
-    // when no differences are allowed a direct comparision is sufficient
-    if (max == 0) {
-        if (s1.size() != s2.size()) {
-            return (size_t)-1;
-        }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
-    }
-
-    // when the strings have a similar length each difference causes
-    // at least a edit distance of 2, so a direct comparision is sufficient
-    if (max == 1) {
-        if (s1.size() == s2.size()) {
-            return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
-        }
-    }
-
-    // at least length difference insertions/deletions required
-    if (s1.size() - s2.size() > max) {
-        return (size_t)-1;
-    }
-
-    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
-    // time
-    common::remove_common_affix(s1, s2);
-
-    if (s2.empty()) {
-        return s1.size();
-    }
-
-    if (max < 5) {
-        return weighted_levenshtein_mbleven2018(s1, s2, max);
-    }
-
-    size_t dist = longest_common_subsequence(s1, s2);
-    return (dist > max) ? (size_t)-1 : dist;
-}
-
-template <typename CharT1, typename CharT2>
-double normalized_weighted_levenshtein(basic_string_view<CharT1> s1,
-                                       const common::BlockPatternMatchVector& block,
-                                       basic_string_view<CharT2> s2, const double score_cutoff)
-{
-    if (s1.empty() || s2.empty()) {
-        return static_cast<double>(s1.empty() && s2.empty());
-    }
-
-    size_t lensum = s1.size() + s2.size();
-
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
-
-    size_t dist = weighted_levenshtein(s1, block, s2, cutoff_distance);
-    return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
-}
-
-template <typename CharT1, typename CharT2>
-double normalized_weighted_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                                       const double score_cutoff)
-{
-    if (s1.empty() || s2.empty()) {
-        return static_cast<double>(s1.empty() && s2.empty());
-    }
-
-    size_t lensum = s1.size() + s2.size();
-
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, lensum);
-
-    size_t dist = weighted_levenshtein(s1, s2, cutoff_distance);
-    return (dist <= cutoff_distance) ? common::norm_distance(dist, lensum, score_cutoff) : 0.0;
 }
 
 } // namespace detail
@@ -5712,6 +5734,10 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
+    auto first1 = std::begin(sentence1);
+    auto last1 = std::end(sentence1);
+    auto first2 = std::begin(sentence2);
+    auto last2 = std::end(sentence2);
 
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -5723,9 +5749,8 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         if (weights.insert_cost == weights.replace_cost) {
             // max can make use of the common divisor of the three weights
             size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-            size_t distance = detail::uniform_levenshtein_distance(
-                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
-                std::end(sentence2), new_max);
+            size_t distance =
+                detail::uniform_levenshtein_distance(first1, last1, first2, last2, new_max);
             distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -5736,15 +5761,13 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
             size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-            size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max);
+            size_t distance = Indel::detail::indel_distance(first1, last1, first2, last2, new_max);
             distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
     }
 
-    return detail::generalized_levenshtein_distance(std::begin(sentence1), std::end(sentence1),
-                                                    std::begin(sentence2), std::end(sentence2),
-                                                    weights, max);
+    return detail::generalized_levenshtein_distance(first1, last1, first2, last2, weights, max);
 }
 
 template <typename Sentence1>
@@ -5759,6 +5782,10 @@ struct CachedLevenshtein {
     size_t distance(const Sentence2& s2, size_t max = std::numeric_limits<size_t>::max()) const
     {
         auto s2_view = common::to_string_view(s2);
+        auto first1 = std::begin(s1_view);
+        auto last1 = std::end(s1_view);
+        auto first2 = std::begin(s2_view);
+        auto last2 = std::end(s2_view);
 
         if (weights.insert_cost == weights.delete_cost) {
             /* when insertions + deletions operations are free there can not be any edit distance */
@@ -5770,9 +5797,8 @@ struct CachedLevenshtein {
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
                 size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-                size_t distance = detail::uniform_levenshtein_distance(
-                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
-                    std::end(s2_view), new_max);
+                size_t distance =
+                    detail::uniform_levenshtein_distance(PM, first1, last1, first2, last2, new_max);
                 distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
@@ -5783,15 +5809,14 @@ struct CachedLevenshtein {
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
                 size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
-                size_t distance = detail::weighted_levenshtein(s2_view, PM, s1_view, new_max);
+                size_t distance =
+                    Indel::detail::indel_distance(PM, first1, last1, first2, last2, new_max);
                 distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
         }
 
-        return detail::generalized_levenshtein_distance(std::begin(s1_view), std::end(s1_view),
-                                                        std::begin(s2_view), std::end(s2_view),
-                                                        weights, max);
+        return detail::generalized_levenshtein_distance(first1, last1, first2, last2, weights, max);
     }
 
 private:
@@ -5877,26 +5902,29 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
 {
     auto sentence1 = common::to_string_view(s1);
     auto sentence2 = common::to_string_view(s2);
+    auto first1 = std::begin(sentence1);
+    auto last1 = std::end(sentence1);
+    auto first2 = std::begin(sentence2);
+    auto last2 = std::end(sentence2);
 
     if (weights.insert_cost == weights.delete_cost) {
         /* uniform Levenshtein */
         if (weights.insert_cost == weights.replace_cost) {
-            return detail::uniform_levenshtein_normalized_similarity(
-                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
-                std::end(sentence2), score_cutoff);
+            return detail::uniform_levenshtein_normalized_similarity(first1, last1, first2, last2,
+                                                                     score_cutoff);
         }
         /*
          * when replace_cost >= insert_cost + delete_cost no substitutions are performed
          * therefore this can be implemented as InDel distance
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-            return detail::normalized_weighted_levenshtein(sentence1, sentence2, score_cutoff);
+            return Indel::detail::indel_normalized_similarity(first1, last1, first2, last2,
+                                                              score_cutoff);
         }
     }
 
-    return detail::generalized_levenshtein_normalized_similarity(
-        std::begin(sentence1), std::end(sentence1), std::begin(sentence2), std::end(sentence2),
-        weights, score_cutoff);
+    return detail::generalized_levenshtein_normalized_similarity(first1, last1, first2, last2,
+                                                                 weights, score_cutoff);
 }
 
 template <typename Sentence1>
@@ -5911,26 +5939,29 @@ struct CachedNormalizedLevenshtein {
     double ratio(const Sentence2& s2, double score_cutoff = 0) const
     {
         auto s2_view = common::to_string_view(s2);
+        auto first1 = std::begin(s1_view);
+        auto last1 = std::end(s1_view);
+        auto first2 = std::begin(s2_view);
+        auto last2 = std::end(s2_view);
 
         if (weights.insert_cost == weights.delete_cost) {
             /* uniform Levenshtein */
             if (weights.insert_cost == weights.replace_cost) {
-                return detail::uniform_levenshtein_normalized_similarity(
-                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
-                    std::end(s2_view), score_cutoff);
+                return detail::uniform_levenshtein_normalized_similarity(PM, first1, last1, first2,
+                                                                         last2, score_cutoff);
             }
             /*
              * when replace_cost >= insert_cost + delete_cost no substitutions are performed
              * therefore this can be implemented as InDel distance
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-                return detail::normalized_weighted_levenshtein(s2_view, PM, s1_view, score_cutoff);
+                return Indel::detail::indel_normalized_similarity(PM, first1, last1, first2, last2,
+                                                                  score_cutoff);
             }
         }
 
-        return detail::generalized_levenshtein_normalized_similarity(
-            std::begin(s1_view), std::end(s1_view), std::begin(s2_view), std::end(s2_view), weights,
-            score_cutoff);
+        return detail::generalized_levenshtein_normalized_similarity(first1, last1, first2, last2,
+                                                                     weights, score_cutoff);
     }
 
 private:
@@ -6216,9 +6247,10 @@ double CachedRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) c
 {
     auto s2_view = common::to_string_view(s2);
 
-    return string_metric::detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                                  score_cutoff / 100) *
-           100;
+    double norm_sim = Indel::detail::indel_normalized_similarity(
+        blockmap_s1, std::begin(s1_view), std::end(s1_view), std::begin(s2_view), std::end(s2_view),
+        score_cutoff / 100);
+    return norm_sim * 100;
 }
 
 /**********************************************
@@ -6740,10 +6772,10 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        result = string_metric::detail::normalized_weighted_levenshtein(
-                     common::to_string_view(s2_sorted), blockmap_s1_sorted,
-                     common::to_string_view(s1_sorted), score_cutoff / 100) *
-                 100;
+        double norm_sim = Indel::detail::indel_normalized_similarity(
+            std::begin(s1_sorted), std::end(s1_sorted), std::begin(s2_sorted), std::end(s2_sorted),
+            score_cutoff / 100);
+        result = norm_sim * 100;
     }
     else {
         result = fuzz::ratio(s1_sorted, s2_sorted, score_cutoff);
