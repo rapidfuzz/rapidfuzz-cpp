@@ -118,8 +118,8 @@ double partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, doub
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
 double partial_ratio_long_needle(const Sentence1& s1,
-                                  const CachedRatio<CachedSentence1>& cached_ratio,
-                                  const Sentence2& s2, double score_cutoff)
+                                 const CachedRatio<CachedSentence1>& cached_ratio,
+                                 const Sentence2& s2, double score_cutoff)
 {
     double max_ratio = 0;
     if (score_cutoff > 100) {
@@ -260,8 +260,7 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
-                                                     double score_cutoff) const
+double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -275,7 +274,7 @@ double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
 namespace detail {
 template <typename CharT1, typename CharT2>
 double token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
-                        const SplittedSentenceView<CharT2>& tokens_b, const double score_cutoff)
+                       const SplittedSentenceView<CharT2>& tokens_b, const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -363,8 +362,8 @@ double CachedTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, double score_c
 namespace detail {
 template <typename CharT1, typename CharT2>
 double partial_token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
-                                const SplittedSentenceView<CharT2>& tokens_b,
-                                const double score_cutoff)
+                               const SplittedSentenceView<CharT2>& tokens_b,
+                               const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -469,8 +468,8 @@ double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff
 namespace detail {
 template <typename CharT1, typename CachedSentence1, typename Sentence2>
 double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
-                    const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted, const Sentence2& s2,
-                    double score_cutoff)
+                   const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted, const Sentence2& s2,
+                   double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -528,9 +527,9 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename Sentence2>
 double token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                    const SplittedSentenceView<CharT1>& tokens_s1,
-                    const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
-                    double score_cutoff)
+                   const SplittedSentenceView<CharT1>& tokens_s1,
+                   const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
+                   double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -638,8 +637,8 @@ double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double scor
 namespace detail {
 template <typename CharT1, typename Sentence2>
 double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                            const SplittedSentenceView<CharT1>& tokens_s1, const Sentence2& s2,
-                            double score_cutoff)
+                           const SplittedSentenceView<CharT1>& tokens_s1, const Sentence2& s2,
+                           double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 

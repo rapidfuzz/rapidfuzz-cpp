@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-20 07:14:20.829406
+//  Generated: 2022-01-20 10:40:39.249078
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -18,11 +18,11 @@
 
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
-#include <cassert>
-#include <stdexcept>
 
 // Copyright 2017-2020 by Martin Moene
 //
@@ -2525,6 +2525,15 @@ template <
                            has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> to_string(const Sentence& str);
 
+/* backport of C++14 equal overload */
+template <typename InputIt1, typename InputIt2>
+bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+    auto len1 = std::distance(first1, last1);
+    auto len2 = std::distance(first2, last2);
+    return (len1 == len2) ? std::equal(first1, last1, first2) : false;
+}
+
 /**
  * @brief Finds the first mismatching pair of elements from two ranges:
  * one defined by [first1, last1) and another defined by [first2,last2).
@@ -2549,7 +2558,8 @@ template <typename CharT1, typename CharT2>
 size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename InputIt1, typename InputIt2>
-StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
+StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
+                                InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
 int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
@@ -2603,12 +2613,24 @@ struct PatternMatchVector {
         insert(s);
     }
 
+    template <typename InputIt>
+    PatternMatchVector(InputIt first, InputIt last) : m_map(), m_extendedAscii()
+    {
+        insert(first, last);
+    }
+
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
+        insert(std::begin(s), std::end(s));
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last)
+    {
         uint64_t mask = 1;
-        for (size_t i = 0; i < s.size(); ++i) {
-            insert_mask(s[i], mask);
+        for (; first != last; ++first) {
+            insert_mask(*first, mask);
             mask <<= 1;
         }
     }
@@ -2680,6 +2702,12 @@ struct BlockPatternMatchVector {
         insert(s);
     }
 
+    template <typename InputIt>
+    BlockPatternMatchVector(InputIt first, InputIt last)
+    {
+        insert(first, last);
+    }
+
     template <typename CharT>
     void insert(size_t block, CharT ch, int pos)
     {
@@ -2690,11 +2718,23 @@ struct BlockPatternMatchVector {
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
-        size_t block_count = (s.size() / 64) + (size_t)((s.size() % 64) != 0);
+        insert(std::begin(s), std::end(s));
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last)
+    {
+        int64_t len = std::distance(first, last);
+        int64_t block_count = (len / 64) + bool(len % 64);
         m_val.resize(block_count);
 
-        for (size_t block = 0; block < block_count; ++block) {
-            m_val[block].insert(s.substr(block * 64, 64));
+        for (int64_t block = 0; block < block_count; ++block) {
+            if (std::distance(first + block * 64, last) > 64) {
+                m_val[block].insert(first + block * 64, first + (block + 1) * 64);
+            }
+            else {
+                m_val[block].insert(first + block * 64, last);
+            }
         }
     }
 
@@ -2940,7 +2980,8 @@ size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_v
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
+int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+                                     InputIt2 last2)
 {
     int64_t prefix = std::distance(first1, common::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
@@ -2962,7 +3003,8 @@ size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_v
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2)
+int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+                                     InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
     auto rlast1 = std::make_reverse_iterator(first1);
@@ -2987,7 +3029,7 @@ StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_stri
 
 template <typename InputIt1, typename InputIt2>
 StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
-                                InputIt2& last2)
+                                        InputIt2& last2)
 {
     return StringAffix{remove_common_prefix(first1, last1, first2, last2),
                        remove_common_suffix(first1, last1, first2, last2)};
@@ -3267,8 +3309,7 @@ private:
  */
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
-double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
-                                 double score_cutoff = 0);
+double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // TODO documentation
 template <typename Sentence1>
@@ -3595,8 +3636,7 @@ public:
         }
     }
 
-    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low,
-                               size_t b_high)
+    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high)
     {
         size_t best_i = a_low;
         size_t best_j = b_low;
@@ -3637,9 +3677,9 @@ public:
                 }
             }
 
-            std::fill(
-                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
-                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
+            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
+                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high),
+                      0);
         }
 
         while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {
@@ -3744,8 +3784,8 @@ namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_wagner_fischer(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                           InputIt2 last2, LevenshteinWeightTable weights,
-                                           int64_t max)
+                                               InputIt2 last2, LevenshteinWeightTable weights,
+                                               int64_t max)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t cache_size = len1 + 1;
@@ -3790,12 +3830,12 @@ int64_t levenshtein_maximum(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     int64_t max_dist = len1 * (int64_t)weights.delete_cost + len2 * (int64_t)weights.insert_cost;
 
     if (len1 >= len2) {
-        max_dist =
-            std::min(max_dist, len2 * (int64_t)weights.replace_cost + (len1 - len2) * (int64_t)weights.delete_cost);
+        max_dist = std::min(max_dist, len2 * (int64_t)weights.replace_cost +
+                                          (len1 - len2) * (int64_t)weights.delete_cost);
     }
     else {
-        max_dist =
-            std::min(max_dist, len1 * (int64_t)weights.replace_cost + (len2 - len1) * (int64_t)weights.insert_cost);
+        max_dist = std::min(max_dist, len1 * (int64_t)weights.replace_cost +
+                                          (len2 - len1) * (int64_t)weights.insert_cost);
     }
 
     return max_dist;
@@ -3811,12 +3851,14 @@ int64_t levenshtein_min_distance(InputIt1 first1, InputIt1 last1, InputIt2 first
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
-    return std::max((len1 - len2) * (int64_t)weights.delete_cost, (len2 - len1) * (int64_t)weights.insert_cost);
+    return std::max((len1 - len2) * (int64_t)weights.delete_cost,
+                    (len2 - len1) * (int64_t)weights.insert_cost);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                     InputIt2 last2, LevenshteinWeightTable weights, int64_t max)
+                                         InputIt2 last2, LevenshteinWeightTable weights,
+                                         int64_t max)
 {
     int64_t min_edits = levenshtein_min_distance(first1, last1, first2, last2, weights);
     if (min_edits > max) {
@@ -3831,8 +3873,8 @@ int64_t generalized_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputI
 
 template <typename InputIt1, typename InputIt2>
 double generalized_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                               InputIt2 last2, LevenshteinWeightTable weights,
-                                               double score_cutoff)
+                                                   InputIt2 last2, LevenshteinWeightTable weights,
+                                                   double score_cutoff)
 {
     int64_t maximum = levenshtein_maximum(first1, last1, first2, last2, weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -3844,8 +3886,8 @@ double generalized_levenshtein_normalized_distance(InputIt1 first1, InputIt1 las
 
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                       InputIt2 last2, LevenshteinWeightTable weights,
-                                       int64_t score_cutoff)
+                                           InputIt2 last2, LevenshteinWeightTable weights,
+                                           int64_t score_cutoff)
 {
     int64_t maximum = levenshtein_maximum(first1, last1, first2, last2, weights);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -3856,12 +3898,13 @@ int64_t generalized_levenshtein_similarity(InputIt1 first1, InputIt1 last1, Inpu
 }
 
 template <typename InputIt1, typename InputIt2>
-double generalized_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, LevenshteinWeightTable weights,
-                                                 double score_cutoff)
+double generalized_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1,
+                                                     InputIt2 first2, InputIt2 last2,
+                                                     LevenshteinWeightTable weights,
+                                                     double score_cutoff)
 {
     double norm_dist = generalized_levenshtein_normalized_distance(first1, last1, first2, last2,
-                                                               weights, 1.0 - score_cutoff);
+                                                                   weights, 1.0 - score_cutoff);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -3988,8 +4031,8 @@ bool isnum(CharT val)
 
 template <typename CharT1, typename CharT2>
 static inline double jaro_calculate_similarity(basic_string_view<CharT1> P,
-                                                basic_string_view<CharT2> T, size_t CommonChars,
-                                                size_t Transpositions)
+                                               basic_string_view<CharT2> T, size_t CommonChars,
+                                               size_t Transpositions)
 {
     Transpositions /= 2;
     double Sim = (double)CommonChars / (double)P.size() + (double)CommonChars / (double)T.size() +
@@ -4139,7 +4182,7 @@ double jaro_similarity_word(basic_string_view<CharT1> P, basic_string_view<CharT
 
 template <typename CharT1, typename CharT2>
 double jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
-                                 double score_cutoff)
+                                double score_cutoff)
 {
     if (!jaro_length_filter(P, T, score_cutoff)) {
         return 0.0;
@@ -4174,7 +4217,7 @@ double jaro_similarity_original(basic_string_view<CharT2> P, basic_string_view<C
 
 template <typename CharT1, typename CharT2>
 double jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
-                        double score_cutoff)
+                       double score_cutoff)
 {
     if (P.size() <= 64 && P.size() <= 64) {
         return jaro_similarity_word(P, T, score_cutoff);
@@ -4186,7 +4229,7 @@ double jaro_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
 
 template <typename CharT1, typename CharT2>
 double jaro_winkler_similarity(basic_string_view<CharT2> P, basic_string_view<CharT1> T,
-                                double prefix_weight, double score_cutoff)
+                               double prefix_weight, double score_cutoff)
 {
     size_t min_len = std::min(P.size(), T.size());
     size_t prefix = 0;
@@ -4525,25 +4568,24 @@ static constexpr uint8_t levenshtein_mbleven2018_matrix[9][8] = {
     {0x15},                                     /* len_diff 3 */
 };
 
-template <typename CharT1, typename CharT2>
-size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                               size_t max)
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                int64_t max)
 {
-    if (s1.size() < s2.size()) {
-        return levenshtein_mbleven2018(s2, s1, max);
-    }
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
 
-    size_t len_diff = s1.size() - s2.size();
+    int64_t len_diff = std::abs(len1 - len2);
     auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
-    size_t dist = max + 1;
+    int64_t dist = max + 1;
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
         int ops = possible_ops[pos];
-        size_t s1_pos = 0;
-        size_t s2_pos = 0;
-        size_t cur_dist = 0;
-        while (s1_pos < s1.size() && s2_pos < s2.size()) {
-            if (s1[s1_pos] != s2[s2_pos]) {
+        int64_t s1_pos = 0;
+        int64_t s2_pos = 0;
+        int64_t cur_dist = 0;
+        while (s1_pos < len1 && s2_pos < len2) {
+            if (first1[s1_pos] != first2[s2_pos]) {
                 cur_dist++;
                 if (!ops) break;
                 if (ops & 1) s1_pos++;
@@ -4555,11 +4597,11 @@ size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<C
                 s2_pos++;
             }
         }
-        cur_dist += (s1.size() - s1_pos) + (s2.size() - s2_pos);
+        cur_dist += (len1 - s1_pos) + (len2 - s2_pos);
         dist = std::min(dist, cur_dist);
     }
 
-    return (dist > max) ? (size_t)-1 : dist;
+    return std::min(dist, max + 1);
 }
 
 /**
@@ -4580,168 +4622,25 @@ size_t levenshtein_mbleven2018(basic_string_view<CharT1> s1, basic_string_view<C
  *
  * @return returns the levenshtein distance between s1 and s2
  */
-template <typename CharT1>
-size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector& PM,
-                              size_t s1_len, size_t max)
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 first1,
+                               InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
     uint64_t VN = 0;
-    size_t currDist = s1_len;
-
-    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
-    // make sure a wraparound can never occur
-    size_t maxMisses = 0;
-    if (s1_len > s2.size()) {
-        if (s1_len - s2.size() < max) {
-            maxMisses = max - (s1_len - s2.size());
-        }
-        else {
-            // minimum is 0
-            maxMisses = 0;
-        }
-    }
-    else {
-        maxMisses = s2.size() - s1_len;
-        if (max <= std::numeric_limits<size_t>::max() - maxMisses) {
-            maxMisses = max + maxMisses;
-        }
-        else {
-            // max is (size_t)-1
-            maxMisses = std::numeric_limits<size_t>::max();
-        }
-    }
+    int64_t currDist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = (uint64_t)1 << (s1_len - 1);
+    uint64_t mask = (uint64_t)1 << (len1 - 1);
 
     /* Searching */
-    for (const auto& ch2 : s2) {
+    for (; first2 != last2; ++first2) {
         /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(ch2);
-        uint64_t X = PM_j | VN;
-        uint64_t D0 = (((X & VP) + VP) ^ VP) | X;
-
-        /* Step 2: Computing HP and HN */
-        uint64_t HP = VN | ~(D0 | VP);
-        uint64_t HN = D0 & VP;
-
-        /* Step 3: Computing the value D[m,j] */
-        // modification: early exit using maxMisses
-        if (HP & mask) {
-            currDist++;
-            if (maxMisses < 2) {
-                return (size_t)-1;
-            }
-            maxMisses -= 2;
-        }
-        else if (HN & mask) {
-            currDist--;
-        }
-        else {
-            if (maxMisses < 1) {
-                return (size_t)-1;
-            }
-            --maxMisses;
-        }
-
-        /* Step 4: Computing Vp and VN */
-        X = (HP << 1) | 1;
-        VP = (HN << 1) | ~(D0 | X);
-        VN = X & D0;
-    }
-
-    return currDist;
-}
-
-template <typename CharT1>
-size_t levenshtein_hyrroe2003_small_band(basic_string_view<CharT1> s2,
-                                         const common::BlockPatternMatchVector& PM, size_t s1_len,
-                                         size_t max)
-{
-    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = (uint64_t)-1;
-    uint64_t VN = 0;
-
-    size_t currDist = s1_len;
-
-    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
-    // make sure a wraparound can never occur
-    size_t maxMisses = 0;
-    if (s1_len > s2.size()) {
-        if (s1_len - s2.size() < max) {
-            maxMisses = max - (s1_len - s2.size());
-        }
-        else {
-            // minimum is 0
-            maxMisses = 0;
-        }
-    }
-    else {
-        maxMisses = s2.size() - s1_len;
-        if (max <= std::numeric_limits<size_t>::max() - maxMisses) {
-            maxMisses = max + maxMisses;
-        }
-        else {
-            // max is (size_t)-1
-            maxMisses = std::numeric_limits<size_t>::max();
-        }
-    }
-
-    /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = (uint64_t)1 << 63;
-
-    const size_t words = PM.m_val.size();
-
-    /* Searching */
-    for (size_t i = 0; i < s2.size(); ++i) {
-        /* Step 1: Computing D0 */
-        size_t word = i / 64;
-        size_t word_pos = i % 64;
-
-        uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
-
-        if (word + 1 < words) {
-            /* avoid shifting by 64 */
-            PM_j |= PM.get(word + 1, s2[i]) << 1 << (63 - word_pos);
-        }
-
-        /* Step 1: Computing D0 */
-        uint64_t X = PM_j;
-        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
-
-        /* Step 2: Computing HP and HN */
-        uint64_t HP = VN | ~(D0 | VP);
-        uint64_t HN = D0 & VP;
-
-        /* Step 3: Computing the value D[m,j] */
-        currDist += bool(HP & mask);
-        currDist -= bool(HN & mask);
-
-        /* Step 4: Computing Vp and VN */
-        VP = HN | ~((D0 >> 1) | HP);
-        VN = (D0 >> 1) & HP;
-    }
-
-    return currDist;
-}
-
-template <typename CharT1>
-size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::PatternMatchVector& PM,
-                              size_t s1_len)
-{
-    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = (uint64_t)-1;
-    uint64_t VN = 0;
-    size_t currDist = s1_len;
-
-    /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = (uint64_t)1 << (s1_len - 1);
-
-    /* Searching */
-    for (const auto& ch2 : s2) {
-        /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(ch2);
+        uint64_t PM_j = PM.get(*first2);
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -4761,13 +4660,63 @@ size_t levenshtein_hyrroe2003(basic_string_view<CharT1> s2, const common::Patter
         VN = HP & D0;
     }
 
-    return currDist;
+    return std::min(currDist, max + 1);
 }
 
-template <typename CharT1>
-size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
-                                   const common::BlockPatternMatchVector& PM, size_t s1_len,
-                                   size_t max)
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector& PM,
+                                          InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                          InputIt2 last2, int64_t max)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = (uint64_t)-1;
+    uint64_t VN = 0;
+
+    int64_t currDist = len1;
+
+    /* mask used when computing D[m,j] in the paper 10^(m-1) */
+    uint64_t mask = 1ull << 63;
+
+    const int64_t words = PM.m_val.size();
+
+    /* Searching */
+    for (int64_t i = 0; i < len2; ++i) {
+        /* Step 1: Computing D0 */
+        int64_t word = i / 64;
+        int64_t word_pos = i % 64;
+
+        uint64_t PM_j = PM.get(word, first2[i]) >> word_pos;
+
+        if (word + 1 < words && word_pos != 0) {
+            PM_j |= PM.get(word + 1, first2[i]) << (64 - word_pos);
+        }
+
+        /* Step 1: Computing D0 */
+        uint64_t X = PM_j;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        currDist += bool(HP & mask);
+        currDist -= bool(HN & mask);
+
+        /* Step 4: Computing Vp and VN */
+        VP = HN | ~((D0 >> 1) | HP);
+        VN = (D0 >> 1) & HP;
+    }
+
+    return std::min(currDist, max + 1);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, InputIt1 first1,
+                                    InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     struct Vectors {
         uint64_t VP;
@@ -4777,43 +4726,32 @@ size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
         {}
     };
 
-    const size_t words = PM.m_val.size();
-    size_t currDist = s1_len;
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t words = PM.m_val.size();
+    int64_t currDist = len1;
 
-    // saturated addition + subtraction to limit maxMisses to a range of 0 <-> (size_t)-1
-    // make sure a wraparound can never occur
-    size_t maxMisses = 0;
-    if (s1_len > s2.size()) {
-        if (s1_len - s2.size() < max) {
-            maxMisses = max - (s1_len - s2.size());
-        }
-        else {
-            // minimum is 0
-            maxMisses = 0;
-        }
-    }
-    else {
-        maxMisses = s2.size() - s1_len;
-        if (max <= std::numeric_limits<size_t>::max() - maxMisses) {
-            maxMisses = max + maxMisses;
-        }
-        else {
-            // max is (size_t)-1
-            maxMisses = std::numeric_limits<size_t>::max();
-        }
+    /* upper bound */
+    max = std::min(max, std::max(len1, len2));
+
+    // todo could safe up to 25% even without max when ignoring irrelevant paths
+    int64_t full_band = std::min(len1, 2 * max + 1);
+
+    if (full_band <= 64) {
+        return levenshtein_hyrroe2003_small_band(PM, first1, last1, first2, last2, max);
     }
 
     std::vector<Vectors> vecs(words);
-    const uint64_t Last = (uint64_t)1 << ((s1_len - 1) % 64);
+    uint64_t Last = (uint64_t)1 << ((len1 - 1) % 64);
 
     /* Searching */
-    for (size_t i = 0; i < s2.size(); i++) {
+    for (int64_t i = 0; i < len2; i++) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
         for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, s2[i]);
+            uint64_t PM_j = PM.get(word, first2[i]);
             uint64_t VN = vecs[word].VN;
             uint64_t VP = vecs[word].VP;
 
@@ -4842,7 +4780,7 @@ size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
 
         {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(words - 1, s2[i]);
+            uint64_t PM_j = PM.get(words - 1, first2[i]);
             uint64_t VN = vecs[words - 1].VN;
             uint64_t VP = vecs[words - 1].VP;
 
@@ -4854,23 +4792,8 @@ size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
-            // modification: early exit using maxMisses
-            if (HP & Last) {
-                currDist++;
-                if (maxMisses < 2) {
-                    return (size_t)-1;
-                }
-                maxMisses -= 2;
-            }
-            else if (HN & Last) {
-                currDist--;
-            }
-            else {
-                if (maxMisses < 1) {
-                    return (size_t)-1;
-                }
-                --maxMisses;
-            }
+            currDist += bool(HP & Last);
+            currDist -= bool(HN & Last);
 
             /* Step 4: Computing Vp and VN */
             HP = (HP << 1) | HP_carry;
@@ -4881,164 +4804,175 @@ size_t levenshtein_myers1999_block(basic_string_view<CharT1> s2,
         }
     }
 
-    return currDist;
+    return std::min(currDist, max + 1);
 }
 
-template <typename CharT1, typename CharT2>
-size_t levenshtein(basic_string_view<CharT1> s1, const common::BlockPatternMatchVector& block,
-                   basic_string_view<CharT2> s2, size_t max)
+template <typename InputIt1, typename InputIt2>
+int64_t uniform_levenshtein_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                                     InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) {
-        if (s1.size() != s2.size()) {
-            return (size_t)-1;
-        }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
+        return common::equal(first1, last1, first2, last2);
     }
 
-    // at least length difference insertions/deletions required
-    size_t len_diff = (s1.size() < s2.size()) ? s2.size() - s1.size() : s1.size() - s2.size();
-    if (len_diff > max) {
-        return (size_t)-1;
+    if (max < std::abs(len1 - len2)) {
+        return max + 1;
     }
 
     // important to catch, since this causes block.m_val to be empty -> raises exception on access
-    if (s2.empty()) {
-        return s1.size();
+    if (!len2) {
+        return std::min(len1, max + 1);
     }
 
-    // do this first, since we can not remove any affix in encoded form
+    /* do this first, since we can not remove any affix in encoded form
+     * todo actually we could at least remove the common prefix and just shift the band
+     */
     if (max >= 4) {
-        size_t dist = 0;
-        if (s2.size() < 65) {
-            if (max == (size_t)-1) {
-                dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size());
-            }
-            else {
-                dist = levenshtein_hyrroe2003(s1, block.m_val[0], s2.size(), max);
-            }
+        if (len1 < 65) {
+            return levenshtein_hyrroe2003(block.m_val[0], first1, last1, first2, last2, max);
         }
         else {
-            dist = levenshtein_myers1999_block(s1, block, s2.size(), max);
+            return levenshtein_myers1999_block(block, first1, last1, first2, last2, max);
         }
-
-        return (dist > max) ? (size_t)-1 : dist;
     }
 
-    // The Levenshtein distance between <prefix><string1><suffix> and <prefix><string2><suffix>
-    // is similar to the distance between <string1> and <string2>, so they can be removed in linear
-    // time
-    common::remove_common_affix(s1, s2);
+    /* common affix does not effect Levenshtein distance */
+    common::remove_common_affix(first1, last1, first2, last2);
 
-    if (s2.empty()) {
-        return s1.size();
+    if (!len2) {
+        return len1;
     }
 
-    if (s1.empty()) {
-        return s2.size();
+    if (!len1) {
+        return len2;
     }
 
-    return levenshtein_mbleven2018(s1, s2, max);
+    return levenshtein_mbleven2018(first1, last1, first2, last2, max);
 }
 
-template <typename CharT1, typename CharT2>
-size_t levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2, size_t max)
+template <typename InputIt1, typename InputIt2>
+int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                     InputIt2 last2, size_t max)
 {
-    /* Swapping the strings so the first string is shorter.
-     * Swapping has no effect on the score since Insertion and Deletion have the
-     * the same weight */
-    if (s1.size() > s2.size()) {
-        return levenshtein(s2, s1, max);
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    /* Swapping the strings so the second string is shorter */
+    if (len1 < len2) {
+        return uniform_levenshtein_distance(first2, last2, first1, last1, max);
     }
 
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) {
-        if (s1.size() != s2.size()) {
-            return (size_t)-1;
-        }
-        return std::equal(s1.begin(), s1.end(), s2.begin()) ? 0 : (size_t)-1;
+        return common::equal(first1, last1, first2, last2);
     }
 
     // at least length difference insertions/deletions required
-    if (s2.size() - s1.size() > max) {
-        return (size_t)-1;
+    if (max < (len1 - len2)) {
+        return max + 1;
     }
 
-    /* The Levenshtein distance between
-     * <prefix><string1><suffix> and <prefix><string2><suffix>
-     * is similar to the distance between <string1> and <string2>,
-     * so they can be removed in linear time */
-    common::remove_common_affix(s1, s2);
+    /* common affix does not effect Levenshtein distance */
+    common::remove_common_affix(first1, last1, first2, last2);
 
-    if (s1.empty()) {
-        return s2.size();
+    if (!len2) {
+        return len1;
     }
 
     if (max < 4) {
-        return levenshtein_mbleven2018(s1, s2, max);
+        return levenshtein_mbleven2018(first1, last1, first2, last2, max);
     }
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
-    if (s2.size() < 65) {
-        size_t dist;
-        if (max == (size_t)-1) {
-            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size());
-        }
-        else {
-            dist = levenshtein_hyrroe2003(s1, common::PatternMatchVector(s2), s2.size(), max);
-        }
-        return (dist > max) ? (size_t)-1 : dist;
+    if (len1 < 65) {
+        return levenshtein_hyrroe2003(common::PatternMatchVector(first1, last1), first1, last1,
+                                      first2, last2, max);
     }
-
-    // todo max
-    /*if (max <= 31) {
-        size_t dist = levenshtein_hyrroe2003_small_band(s1,
-                                                        common::BlockPatternMatchVector(s2),
-                                                        s2.size(), max);
-        return (dist > max) ? (size_t)-1 : dist;
-    }*/
-
-    size_t dist =
-        levenshtein_myers1999_block(s1, common::BlockPatternMatchVector(s2), s2.size(), max);
-
-    return (dist > max) ? (size_t)-1 : dist;
+    else {
+        return levenshtein_myers1999_block(common::BlockPatternMatchVector(first1, last1), first1,
+                                           last1, first2, last2, max);
+    }
 }
 
-template <typename CharT1, typename CharT2>
-double normalized_levenshtein(basic_string_view<CharT1> s1,
-                              const common::BlockPatternMatchVector& block,
-                              basic_string_view<CharT2> s2, const double score_cutoff)
+template <typename InputIt1, typename InputIt2>
+double uniform_levenshtein_normalized_distance(const common::BlockPatternMatchVector& block,
+                                               InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff)
 {
-    if (s1.empty() || s2.empty()) {
-        return static_cast<double>(s1.empty() && s2.empty());
-    }
-
-    /* calculate the maximum possible edit distance with
-     * Insertion/Deletion/Substitution = 1 */
-    size_t max_dist = std::max(s1.size(), s2.size());
-
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
-
-    size_t dist = levenshtein(s1, block, s2, cutoff_distance);
-    return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = std::max(len1, len2);
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t dist =
+        uniform_levenshtein_distance(block, first1, last1, first2, last2, cutoff_distance);
+    double norm_dist = (maximum) ? dist / maximum : 0.0;
+    return (norm_dist <= score_cutoff) ? norm_dist : double(maximum);
 }
 
-template <typename CharT1, typename CharT2>
-double normalized_levenshtein(basic_string_view<CharT1> s1, basic_string_view<CharT2> s2,
-                              const double score_cutoff)
+template <typename InputIt1, typename InputIt2>
+double uniform_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff)
 {
-    if (s1.empty() || s2.empty()) {
-        return static_cast<double>(s1.empty() && s2.empty());
-    }
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = std::max(len1, len2);
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t dist = uniform_levenshtein_distance(first1, last1, first2, last2, cutoff_distance);
+    double norm_dist = (maximum) ? dist / maximum : 0.0;
+    return (norm_dist <= score_cutoff) ? norm_dist : double(maximum);
+}
 
-    /* calculate the maximum possible edit distance with
-     * Insertion/Deletion/Substitution = 1 */
-    size_t max_dist = std::max(s1.size(), s2.size());
+template <typename InputIt1, typename InputIt2>
+int64_t uniform_levenshtein_similarity(const common::BlockPatternMatchVector& block,
+                                       InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                       InputIt2 last2, int64_t score_cutoff)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = std::max(len1, len2);
+    int64_t cutoff_distance = maximum - score_cutoff;
+    int64_t dist =
+        uniform_levenshtein_distance(block, first1, last1, first2, last2, cutoff_distance);
+    int64_t sim = maximum - dist;
+    return (sim >= score_cutoff) ? sim : 0;
+}
 
-    auto cutoff_distance = common::score_cutoff_to_distance(score_cutoff, max_dist);
+template <typename InputIt1, typename InputIt2>
+int64_t uniform_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                       InputIt2 last2, int64_t score_cutoff)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+    int64_t maximum = std::max(len1, len2);
+    int64_t cutoff_distance = maximum - score_cutoff;
+    int64_t dist = uniform_levenshtein_distance(first1, last1, first2, last2, cutoff_distance);
+    int64_t sim = maximum - dist;
+    return (sim >= score_cutoff) ? sim : 0;
+}
 
-    size_t dist = levenshtein(s1, s2, cutoff_distance);
-    return (dist <= cutoff_distance) ? common::norm_distance(dist, max_dist, score_cutoff) : 0.0;
+template <typename InputIt1, typename InputIt2>
+double uniform_levenshtein_normalized_similarity(const common::BlockPatternMatchVector& block,
+                                                 InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff)
+{
+    double norm_dist = uniform_levenshtein_normalized_distance(block, first1, last1, first2, last2,
+                                                               1.0 - score_cutoff);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double uniform_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff)
+{
+    double norm_dist =
+        uniform_levenshtein_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
 } // namespace detail
@@ -5788,10 +5722,11 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
             // max can make use of the common divisor of the three weights
-            const size_t new_max =
-                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-            const size_t distance =
-                detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+            size_t distance = detail::uniform_levenshtein_distance(
+                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
+                std::end(sentence2), new_max);
+            distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
         /*
@@ -5800,16 +5735,16 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
-            const size_t new_max =
-                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-            const size_t distance =
-                detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+            size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max);
+            distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
     }
 
     return detail::generalized_levenshtein_distance(std::begin(sentence1), std::end(sentence1),
-                                       std::begin(sentence2), std::end(sentence2), weights, max);
+                                                    std::begin(sentence2), std::end(sentence2),
+                                                    weights, max);
 }
 
 template <typename Sentence1>
@@ -5817,7 +5752,7 @@ struct CachedLevenshtein {
     using CharT1 = char_type<Sentence1>;
 
     CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+        : s1_view(common::to_string_view(s1)), PM(s1_view), weights(aWeights)
     {}
 
     template <typename Sentence2>
@@ -5834,11 +5769,11 @@ struct CachedLevenshtein {
             /* uniform Levenshtein multiplied with the common factor */
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
-                const size_t new_max =
-                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-                const size_t distance =
-                    detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
-                    weights.insert_cost;
+                size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+                size_t distance = detail::uniform_levenshtein_distance(
+                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
+                    std::end(s2_view), new_max);
+                distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
             /*
@@ -5847,22 +5782,21 @@ struct CachedLevenshtein {
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
-                const size_t new_max =
-                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-                const size_t distance =
-                    detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
-                    weights.insert_cost;
+                size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+                size_t distance = detail::weighted_levenshtein(s2_view, PM, s1_view, new_max);
+                distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
         }
 
         return detail::generalized_levenshtein_distance(std::begin(s1_view), std::end(s1_view),
-                                           std::begin(s2_view), std::end(s2_view), weights, max);
+                                                        std::begin(s2_view), std::end(s2_view),
+                                                        weights, max);
     }
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector blockmap_s1;
+    common::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };
 
@@ -5947,7 +5881,9 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
     if (weights.insert_cost == weights.delete_cost) {
         /* uniform Levenshtein */
         if (weights.insert_cost == weights.replace_cost) {
-            return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
+            return detail::uniform_levenshtein_normalized_similarity(
+                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
+                std::end(sentence2), score_cutoff);
         }
         /*
          * when replace_cost >= insert_cost + delete_cost no substitutions are performed
@@ -5958,9 +5894,9 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return detail::generalized_levenshtein_normalized_similarity(std::begin(sentence1), std::end(sentence1),
-                                                  std::begin(sentence2), std::end(sentence2),
-                                                  weights, score_cutoff);
+    return detail::generalized_levenshtein_normalized_similarity(
+        std::begin(sentence1), std::end(sentence1), std::begin(sentence2), std::end(sentence2),
+        weights, score_cutoff);
 }
 
 template <typename Sentence1>
@@ -5968,7 +5904,7 @@ struct CachedNormalizedLevenshtein {
     using CharT1 = char_type<Sentence1>;
 
     CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+        : s1_view(common::to_string_view(s1)), PM(s1_view), weights(aWeights)
     {}
 
     template <typename Sentence2>
@@ -5979,26 +5915,27 @@ struct CachedNormalizedLevenshtein {
         if (weights.insert_cost == weights.delete_cost) {
             /* uniform Levenshtein */
             if (weights.insert_cost == weights.replace_cost) {
-                return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+                return detail::uniform_levenshtein_normalized_similarity(
+                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
+                    std::end(s2_view), score_cutoff);
             }
             /*
              * when replace_cost >= insert_cost + delete_cost no substitutions are performed
              * therefore this can be implemented as InDel distance
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-                return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                               score_cutoff);
+                return detail::normalized_weighted_levenshtein(s2_view, PM, s1_view, score_cutoff);
             }
         }
 
-        return detail::generalized_levenshtein_normalized_similarity(std::begin(s1_view), std::end(s1_view),
-                                                      std::begin(s2_view), std::end(s2_view),
-                                                      weights, score_cutoff);
+        return detail::generalized_levenshtein_normalized_similarity(
+            std::begin(s1_view), std::end(s1_view), std::begin(s2_view), std::end(s2_view), weights,
+            score_cutoff);
     }
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector blockmap_s1;
+    common::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };
 
@@ -6367,8 +6304,8 @@ double partial_ratio_short_needle(const Sentence1& s1, const Sentence2& s2, doub
 
 template <typename Sentence1, typename CachedSentence1, typename Sentence2>
 double partial_ratio_long_needle(const Sentence1& s1,
-                                  const CachedRatio<CachedSentence1>& cached_ratio,
-                                  const Sentence2& s2, double score_cutoff)
+                                 const CachedRatio<CachedSentence1>& cached_ratio,
+                                 const Sentence2& s2, double score_cutoff)
 {
     double max_ratio = 0;
     if (score_cutoff > 100) {
@@ -6509,8 +6446,7 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 
 template <typename Sentence1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
-                                                     double score_cutoff) const
+double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2, double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -6524,7 +6460,7 @@ double CachedPartialTokenSortRatio<Sentence1>::ratio(const Sentence2& s2,
 namespace detail {
 template <typename CharT1, typename CharT2>
 double token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
-                        const SplittedSentenceView<CharT2>& tokens_b, const double score_cutoff)
+                       const SplittedSentenceView<CharT2>& tokens_b, const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -6612,8 +6548,8 @@ double CachedTokenSetRatio<Sentence1>::ratio(const Sentence2& s2, double score_c
 namespace detail {
 template <typename CharT1, typename CharT2>
 double partial_token_set_ratio(const SplittedSentenceView<CharT1>& tokens_a,
-                                const SplittedSentenceView<CharT2>& tokens_b,
-                                const double score_cutoff)
+                               const SplittedSentenceView<CharT2>& tokens_b,
+                               const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -6718,8 +6654,8 @@ double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff
 namespace detail {
 template <typename CharT1, typename CachedSentence1, typename Sentence2>
 double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
-                    const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted, const Sentence2& s2,
-                    double score_cutoff)
+                   const CachedRatio<CachedSentence1>& cached_ratio_s1_sorted, const Sentence2& s2,
+                   double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -6777,9 +6713,9 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename Sentence2>
 double token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                    const SplittedSentenceView<CharT1>& tokens_s1,
-                    const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
-                    double score_cutoff)
+                   const SplittedSentenceView<CharT1>& tokens_s1,
+                   const common::BlockPatternMatchVector& blockmap_s1_sorted, const Sentence2& s2,
+                   double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -6887,8 +6823,8 @@ double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double scor
 namespace detail {
 template <typename CharT1, typename Sentence2>
 double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                            const SplittedSentenceView<CharT1>& tokens_s1, const Sentence2& s2,
-                            double score_cutoff)
+                           const SplittedSentenceView<CharT1>& tokens_s1, const Sentence2& s2,
+                           double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 

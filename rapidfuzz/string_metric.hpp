@@ -169,10 +169,11 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
             // max can make use of the common divisor of the three weights
-            const size_t new_max =
-                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-            const size_t distance =
-                detail::levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+            size_t distance = detail::uniform_levenshtein_distance(
+                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
+                std::end(sentence2), new_max);
+            distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
         /*
@@ -181,16 +182,16 @@ size_t levenshtein(const Sentence1& s1, const Sentence2& s2,
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
-            const size_t new_max =
-                max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-            const size_t distance =
-                detail::weighted_levenshtein(sentence1, sentence2, new_max) * weights.insert_cost;
+            size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+            size_t distance = detail::weighted_levenshtein(sentence1, sentence2, new_max);
+            distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
     }
 
     return detail::generalized_levenshtein_distance(std::begin(sentence1), std::end(sentence1),
-                                       std::begin(sentence2), std::end(sentence2), weights, max);
+                                                    std::begin(sentence2), std::end(sentence2),
+                                                    weights, max);
 }
 
 template <typename Sentence1>
@@ -198,7 +199,7 @@ struct CachedLevenshtein {
     using CharT1 = char_type<Sentence1>;
 
     CachedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+        : s1_view(common::to_string_view(s1)), PM(s1_view), weights(aWeights)
     {}
 
     template <typename Sentence2>
@@ -215,11 +216,11 @@ struct CachedLevenshtein {
             /* uniform Levenshtein multiplied with the common factor */
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
-                const size_t new_max =
-                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-                const size_t distance =
-                    detail::levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
-                    weights.insert_cost;
+                size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+                size_t distance = detail::uniform_levenshtein_distance(
+                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
+                    std::end(s2_view), new_max);
+                distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
             /*
@@ -228,22 +229,21 @@ struct CachedLevenshtein {
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
-                const size_t new_max =
-                    max / weights.insert_cost + (size_t)(max % weights.insert_cost != 0);
-                const size_t distance =
-                    detail::weighted_levenshtein(s2_view, blockmap_s1, s1_view, new_max) *
-                    weights.insert_cost;
+                size_t new_max = max / weights.insert_cost + bool(max % weights.insert_cost);
+                size_t distance = detail::weighted_levenshtein(s2_view, PM, s1_view, new_max);
+                distance *= weights.insert_cost;
                 return (distance <= max) ? distance : max + 1;
             }
         }
 
         return detail::generalized_levenshtein_distance(std::begin(s1_view), std::end(s1_view),
-                                           std::begin(s2_view), std::end(s2_view), weights, max);
+                                                        std::begin(s2_view), std::end(s2_view),
+                                                        weights, max);
     }
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector blockmap_s1;
+    common::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };
 
@@ -328,7 +328,9 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
     if (weights.insert_cost == weights.delete_cost) {
         /* uniform Levenshtein */
         if (weights.insert_cost == weights.replace_cost) {
-            return detail::normalized_levenshtein(sentence1, sentence2, score_cutoff);
+            return detail::uniform_levenshtein_normalized_similarity(
+                std::begin(sentence1), std::end(sentence1), std::begin(sentence2),
+                std::end(sentence2), score_cutoff);
         }
         /*
          * when replace_cost >= insert_cost + delete_cost no substitutions are performed
@@ -339,9 +341,9 @@ double normalized_levenshtein(const Sentence1& s1, const Sentence2& s2,
         }
     }
 
-    return detail::generalized_levenshtein_normalized_similarity(std::begin(sentence1), std::end(sentence1),
-                                                  std::begin(sentence2), std::end(sentence2),
-                                                  weights, score_cutoff);
+    return detail::generalized_levenshtein_normalized_similarity(
+        std::begin(sentence1), std::end(sentence1), std::begin(sentence2), std::end(sentence2),
+        weights, score_cutoff);
 }
 
 template <typename Sentence1>
@@ -349,7 +351,7 @@ struct CachedNormalizedLevenshtein {
     using CharT1 = char_type<Sentence1>;
 
     CachedNormalizedLevenshtein(const Sentence1& s1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1_view(common::to_string_view(s1)), blockmap_s1(s1_view), weights(aWeights)
+        : s1_view(common::to_string_view(s1)), PM(s1_view), weights(aWeights)
     {}
 
     template <typename Sentence2>
@@ -360,26 +362,27 @@ struct CachedNormalizedLevenshtein {
         if (weights.insert_cost == weights.delete_cost) {
             /* uniform Levenshtein */
             if (weights.insert_cost == weights.replace_cost) {
-                return detail::normalized_levenshtein(s2_view, blockmap_s1, s1_view, score_cutoff);
+                return detail::uniform_levenshtein_normalized_similarity(
+                    PM, std::begin(s1_view), std::end(s1_view), std::begin(s2_view),
+                    std::end(s2_view), score_cutoff);
             }
             /*
              * when replace_cost >= insert_cost + delete_cost no substitutions are performed
              * therefore this can be implemented as InDel distance
              */
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-                return detail::normalized_weighted_levenshtein(s2_view, blockmap_s1, s1_view,
-                                                               score_cutoff);
+                return detail::normalized_weighted_levenshtein(s2_view, PM, s1_view, score_cutoff);
             }
         }
 
-        return detail::generalized_levenshtein_normalized_similarity(std::begin(s1_view), std::end(s1_view),
-                                                      std::begin(s2_view), std::end(s2_view),
-                                                      weights, score_cutoff);
+        return detail::generalized_levenshtein_normalized_similarity(
+            std::begin(s1_view), std::end(s1_view), std::begin(s2_view), std::end(s2_view), weights,
+            score_cutoff);
     }
 
 private:
     rapidfuzz::basic_string_view<CharT1> s1_view;
-    common::BlockPatternMatchVector blockmap_s1;
+    common::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };
 

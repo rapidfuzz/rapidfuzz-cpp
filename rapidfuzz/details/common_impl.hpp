@@ -98,7 +98,8 @@ size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_v
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
+int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+                                     InputIt2 last2)
 {
     int64_t prefix = std::distance(first1, common::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
@@ -120,7 +121,8 @@ size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_v
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2)
+int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+                                     InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
     auto rlast1 = std::make_reverse_iterator(first1);
@@ -145,7 +147,7 @@ StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_stri
 
 template <typename InputIt1, typename InputIt2>
 StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
-                                InputIt2& last2)
+                                        InputIt2& last2)
 {
     return StringAffix{remove_common_prefix(first1, last1, first2, last2),
                        remove_common_suffix(first1, last1, first2, last2)};

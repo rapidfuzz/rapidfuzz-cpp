@@ -15,8 +15,8 @@ namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_wagner_fischer(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                           InputIt2 last2, LevenshteinWeightTable weights,
-                                           int64_t max)
+                                               InputIt2 last2, LevenshteinWeightTable weights,
+                                               int64_t max)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t cache_size = len1 + 1;
@@ -61,12 +61,12 @@ int64_t levenshtein_maximum(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     int64_t max_dist = len1 * (int64_t)weights.delete_cost + len2 * (int64_t)weights.insert_cost;
 
     if (len1 >= len2) {
-        max_dist =
-            std::min(max_dist, len2 * (int64_t)weights.replace_cost + (len1 - len2) * (int64_t)weights.delete_cost);
+        max_dist = std::min(max_dist, len2 * (int64_t)weights.replace_cost +
+                                          (len1 - len2) * (int64_t)weights.delete_cost);
     }
     else {
-        max_dist =
-            std::min(max_dist, len1 * (int64_t)weights.replace_cost + (len2 - len1) * (int64_t)weights.insert_cost);
+        max_dist = std::min(max_dist, len1 * (int64_t)weights.replace_cost +
+                                          (len2 - len1) * (int64_t)weights.insert_cost);
     }
 
     return max_dist;
@@ -82,12 +82,14 @@ int64_t levenshtein_min_distance(InputIt1 first1, InputIt1 last1, InputIt2 first
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
-    return std::max((len1 - len2) * (int64_t)weights.delete_cost, (len2 - len1) * (int64_t)weights.insert_cost);
+    return std::max((len1 - len2) * (int64_t)weights.delete_cost,
+                    (len2 - len1) * (int64_t)weights.insert_cost);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                     InputIt2 last2, LevenshteinWeightTable weights, int64_t max)
+                                         InputIt2 last2, LevenshteinWeightTable weights,
+                                         int64_t max)
 {
     int64_t min_edits = levenshtein_min_distance(first1, last1, first2, last2, weights);
     if (min_edits > max) {
@@ -102,8 +104,8 @@ int64_t generalized_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputI
 
 template <typename InputIt1, typename InputIt2>
 double generalized_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                               InputIt2 last2, LevenshteinWeightTable weights,
-                                               double score_cutoff)
+                                                   InputIt2 last2, LevenshteinWeightTable weights,
+                                                   double score_cutoff)
 {
     int64_t maximum = levenshtein_maximum(first1, last1, first2, last2, weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -115,8 +117,8 @@ double generalized_levenshtein_normalized_distance(InputIt1 first1, InputIt1 las
 
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                       InputIt2 last2, LevenshteinWeightTable weights,
-                                       int64_t score_cutoff)
+                                           InputIt2 last2, LevenshteinWeightTable weights,
+                                           int64_t score_cutoff)
 {
     int64_t maximum = levenshtein_maximum(first1, last1, first2, last2, weights);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -127,12 +129,13 @@ int64_t generalized_levenshtein_similarity(InputIt1 first1, InputIt1 last1, Inpu
 }
 
 template <typename InputIt1, typename InputIt2>
-double generalized_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, LevenshteinWeightTable weights,
-                                                 double score_cutoff)
+double generalized_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1,
+                                                     InputIt2 first2, InputIt2 last2,
+                                                     LevenshteinWeightTable weights,
+                                                     double score_cutoff)
 {
     double norm_dist = generalized_levenshtein_normalized_distance(first1, last1, first2, last2,
-                                                               weights, 1.0 - score_cutoff);
+                                                                   weights, 1.0 - score_cutoff);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }

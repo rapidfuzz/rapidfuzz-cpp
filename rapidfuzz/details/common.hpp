@@ -110,6 +110,15 @@ template <
                            has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> to_string(const Sentence& str);
 
+/* backport of C++14 equal overload */
+template <typename InputIt1, typename InputIt2>
+bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+    auto len1 = std::distance(first1, last1);
+    auto len2 = std::distance(first2, last2);
+    return (len1 == len2) ? std::equal(first1, last1, first2) : false;
+}
+
 /**
  * @brief Finds the first mismatching pair of elements from two ranges:
  * one defined by [first1, last1) and another defined by [first2,last2).
@@ -134,7 +143,8 @@ template <typename CharT1, typename CharT2>
 size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
 
 template <typename InputIt1, typename InputIt2>
-StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
+StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
+                                InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
 int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
@@ -188,12 +198,24 @@ struct PatternMatchVector {
         insert(s);
     }
 
+    template <typename InputIt>
+    PatternMatchVector(InputIt first, InputIt last) : m_map(), m_extendedAscii()
+    {
+        insert(first, last);
+    }
+
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
+        insert(std::begin(s), std::end(s));
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last)
+    {
         uint64_t mask = 1;
-        for (size_t i = 0; i < s.size(); ++i) {
-            insert_mask(s[i], mask);
+        for (; first != last; ++first) {
+            insert_mask(*first, mask);
             mask <<= 1;
         }
     }
@@ -265,6 +287,12 @@ struct BlockPatternMatchVector {
         insert(s);
     }
 
+    template <typename InputIt>
+    BlockPatternMatchVector(InputIt first, InputIt last)
+    {
+        insert(first, last);
+    }
+
     template <typename CharT>
     void insert(size_t block, CharT ch, int pos)
     {
@@ -275,11 +303,23 @@ struct BlockPatternMatchVector {
     template <typename CharT>
     void insert(basic_string_view<CharT> s)
     {
-        size_t block_count = (s.size() / 64) + (size_t)((s.size() % 64) != 0);
+        insert(std::begin(s), std::end(s));
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last)
+    {
+        int64_t len = std::distance(first, last);
+        int64_t block_count = (len / 64) + bool(len % 64);
         m_val.resize(block_count);
 
-        for (size_t block = 0; block < block_count; ++block) {
-            m_val[block].insert(s.substr(block * 64, 64));
+        for (int64_t block = 0; block < block_count; ++block) {
+            if (std::distance(first + block * 64, last) > 64) {
+                m_val[block].insert(first + block * 64, first + (block + 1) * 64);
+            }
+            else {
+                m_val[block].insert(first + block * 64, last);
+            }
         }
     }
 

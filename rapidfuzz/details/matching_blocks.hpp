@@ -56,8 +56,7 @@ public:
         }
     }
 
-    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low,
-                               size_t b_high)
+    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high)
     {
         size_t best_i = a_low;
         size_t best_j = b_low;
@@ -98,9 +97,9 @@ public:
                 }
             }
 
-            std::fill(
-                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
-                j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high), 0);
+            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
+                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high),
+                      0);
         }
 
         while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {

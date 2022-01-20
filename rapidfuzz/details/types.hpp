@@ -4,11 +4,11 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
-#include <cassert>
-#include <stdexcept>
 
 #include <rapidfuzz/details/string_view.hpp>
 

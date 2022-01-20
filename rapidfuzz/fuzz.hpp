@@ -175,8 +175,7 @@ private:
  */
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
-double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
-                                 double score_cutoff = 0);
+double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // TODO documentation
 template <typename Sentence1>
