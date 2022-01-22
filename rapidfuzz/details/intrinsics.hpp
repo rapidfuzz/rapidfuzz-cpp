@@ -11,7 +11,7 @@
 #endif
 
 namespace rapidfuzz {
-namespace intrinsics {
+namespace detail {
 
 static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
@@ -23,7 +23,13 @@ static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t
     return a;
 }
 
-static inline size_t popcount64(uint64_t x)
+template <typename T, typename U>
+T ceil_div(T a, U divisor)
+{
+    return a / divisor + static_cast<T>(a % divisor != 0);
+}
+
+static inline int64_t popcount64(uint64_t x)
 {
     const uint64_t m1 = 0x5555555555555555;
     const uint64_t m2 = 0x3333333333333333;
@@ -33,7 +39,7 @@ static inline size_t popcount64(uint64_t x)
     x -= (x >> 1) & m1;
     x = (x & m2) + ((x >> 2) & m2);
     x = (x + (x >> 4)) & m4;
-    return static_cast<size_t>((x * h01) >> 56);
+    return static_cast<int64_t>((x * h01) >> 56);
 }
 
 /**
@@ -103,5 +109,5 @@ static inline int tzcnt(uint64_t x)
 }
 #endif
 
-} // namespace intrinsics
+} // namespace detail
 } // namespace rapidfuzz

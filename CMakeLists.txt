@@ -7,19 +7,25 @@ option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 
 set(HEADERS
+    rapidfuzz/distance.hpp
 	rapidfuzz/fuzz.hpp
-	rapidfuzz/fuzz_impl.hpp
-	rapidfuzz/string_metric.hpp
+	rapidfuzz/fuzz.impl
+    rapidfuzz/rapidfuzz_all.hpp
+
+	rapidfuzz/distance/Hamming.hpp
+	rapidfuzz/distance/Hamming.impl
+	rapidfuzz/distance/Indel.hpp
+	rapidfuzz/distance/Indel.impl
+	rapidfuzz/distance/Levenshtein.hpp
+	rapidfuzz/distance/Levenshtein.impl
+
+	rapidfuzz/details/common.hpp
+	rapidfuzz/details/common_impl.hpp
+	rapidfuzz/details/intrinsics.hpp
+	rapidfuzz/details/matching_blocks.hpp
 	rapidfuzz/details/SplittedSentenceView.hpp
 	rapidfuzz/details/type_traits.hpp
 	rapidfuzz/details/types.hpp
-	rapidfuzz/details/matching_blocks.hpp
-	rapidfuzz/details/string_view.hpp
-	rapidfuzz/details/string_metrics/levenshtein_impl.hpp
-	rapidfuzz/details/string_metrics/Indel_impl.hpp
-	rapidfuzz/details/string_metrics/generic_levenshtein_impl.hpp
-	rapidfuzz/details/common.hpp
-	rapidfuzz/details/common_impl.hpp
 )
 
 add_library(rapidfuzz INTERFACE)
@@ -28,7 +34,7 @@ add_library(rapidfuzz INTERFACE)
 add_library(rapidfuzz::rapidfuzz ALIAS rapidfuzz)
 
 set_target_properties(rapidfuzz PROPERTIES PUBLIC_HEADER "${HEADERS}")
-target_compile_features(rapidfuzz INTERFACE cxx_std_11)
+target_compile_features(rapidfuzz INTERFACE cxx_std_14)
 
 target_include_directories(rapidfuzz INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
                                                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")

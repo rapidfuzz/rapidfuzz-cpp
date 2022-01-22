@@ -33,43 +33,46 @@
 namespace rapidfuzz {
 namespace detail {
 struct MatchingBlock {
-    size_t spos;
-    size_t dpos;
-    size_t length;
-    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength)
+    int64_t spos;
+    int64_t dpos;
+    int64_t length;
+    MatchingBlock(int64_t aSPos, int64_t aDPos, int64_t aLength)
         : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
 
 namespace difflib {
 
-template <typename CharT1, typename CharT2>
+template <typename InputIt1, typename InputIt2>
 class SequenceMatcher {
 public:
-    using match_t = std::tuple<size_t, size_t, size_t>;
+    using match_t = std::tuple<int64_t, int64_t, int64_t>;
 
-    SequenceMatcher(basic_string_view<CharT1> a, basic_string_view<CharT2> b) : a_(a), b_(b)
+    SequenceMatcher(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+        : a_first(first1), a_last(last1), b_first(first2), b_last(last2)
     {
-        j2len_.resize(b.size() + 1);
-        for (size_t i = 0; i < b.size(); ++i) {
-            b2j_.create(b[i]).push_back(i);
+        int64_t b_len = std::distance(b_first, b_last);
+        j2len_.resize(b_len + 1);
+        for (int64_t i = 0; i < b_len; ++i) {
+            b2j_.create(b_first[i]).push_back(i);
         }
     }
 
-    match_t find_longest_match(size_t a_low, size_t a_high, size_t b_low, size_t b_high)
+    match_t find_longest_match(int64_t a_low, int64_t a_high, int64_t b_low, int64_t b_high)
     {
-        size_t best_i = a_low;
-        size_t best_j = b_low;
-        size_t best_size = 0;
+        int64_t best_i = a_low;
+        int64_t best_j = b_low;
+        int64_t best_size = 0;
 
         // Find longest junk free match
         {
-            for (size_t i = a_low; i < a_high; ++i) {
-                const auto& indexes = b2j_[a_[i]];
-                size_t pos = 0;
-                size_t next_val = 0;
+            for (int64_t i = a_low; i < a_high; ++i) {
+                const auto& indexes = b2j_[a_first[i]];
+                int64_t pos = 0;
+                int64_t next_val = 0;
+                bool found = false;
                 for (; pos < indexes.size(); pos++) {
-                    size_t j = indexes[pos];
+                    int64_t j = indexes[pos];
                     if (j < b_low) continue;
 
                     next_val = j2len_[j];
@@ -77,10 +80,11 @@ public:
                 }
 
                 for (; pos < indexes.size(); pos++) {
-                    size_t j = indexes[pos];
+                    int64_t j = indexes[pos];
                     if (j >= b_high) break;
 
-                    size_t k = next_val + 1;
+                    found = true;
+                    int64_t k = next_val + 1;
 
                     /* the next value might be overwritten below
                      * so cache it */
@@ -95,21 +99,24 @@ public:
                         best_size = k;
                     }
                 }
+
+                if (!found)
+                {
+                    std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);  
+                }
             }
 
-            std::fill(j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_low),
-                      j2len_.begin() + static_cast<std::vector<size_t>::difference_type>(b_high),
-                      0);
+            std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
         }
 
-        while (best_i > a_low && best_j > b_low && a_[best_i - 1] == b_[best_j - 1]) {
+        while (best_i > a_low && best_j > b_low && a_first[best_i - 1] == b_first[best_j - 1]) {
             --best_i;
             --best_j;
             ++best_size;
         }
 
         while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               a_[best_i + best_size] == b_[best_j + best_size])
+               a_first[best_i + best_size] == b_first[best_j + best_size])
         {
             ++best_size;
         }
@@ -119,18 +126,20 @@ public:
 
     std::vector<MatchingBlock> get_matching_blocks()
     {
+        int64_t a_len = std::distance(a_first, a_last);
+        int64_t b_len = std::distance(b_first, b_last);
         // The following are tuple extracting aliases
-        std::vector<std::tuple<size_t, size_t, size_t, size_t>> queue;
+        std::vector<std::tuple<int64_t, int64_t, int64_t, int64_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
-        size_t queue_head = 0;
-        queue.reserve(std::min(a_.size(), b_.size()));
-        queue.emplace_back(0, a_.size(), 0, b_.size());
+        int64_t queue_head = 0;
+        queue.reserve(std::min(a_len, b_len));
+        queue.emplace_back(0, a_len, 0, b_len);
 
         while (queue_head < queue.size()) {
-            size_t a_low, a_high, b_low, b_high;
+            int64_t a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
-            size_t spos, dpos, length;
+            int64_t spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
             if (length) {
                 if (a_low < spos && b_low < dpos) {
@@ -142,13 +151,13 @@ public:
                 matching_blocks_pass1.emplace_back(spos, dpos, length);
             }
         }
-        std::sort(std::begin(matching_blocks_pass1), std::end(matching_blocks_pass1));
+        std::sort(common::to_begin(matching_blocks_pass1), common::to_end(matching_blocks_pass1));
 
         std::vector<MatchingBlock> matching_blocks;
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-        size_t i1, j1, k1;
+        int64_t i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
@@ -165,27 +174,28 @@ public:
         if (k1) {
             matching_blocks.emplace_back(i1, j1, k1);
         }
-        matching_blocks.emplace_back(a_.size(), b_.size(), 0);
+        matching_blocks.emplace_back(a_len, b_len, 0);
 
         return matching_blocks;
     }
 
 protected:
-    basic_string_view<CharT1> a_;
-    basic_string_view<CharT2> b_;
+    InputIt1 a_first;
+    InputIt1 a_last;
+    InputIt2 b_first;
+    InputIt2 b_last;
 
 private:
     // Cache to avoid reallocations
-    std::vector<size_t> j2len_;
-    common::CharHashTable<CharT2, std::vector<size_t>> b2j_;
+    std::vector<int64_t> j2len_;
+    common::CharHashTable<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
 };
 } // namespace difflib
 
-template <typename CharT1, typename CharT2>
-std::vector<MatchingBlock> get_matching_blocks(basic_string_view<CharT1> s1,
-                                               basic_string_view<CharT2> s2)
+template <typename InputIt1, typename InputIt2>
+std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
-    return difflib::SequenceMatcher<CharT1, CharT2>(s1, s2).get_matching_blocks();
+    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2).get_matching_blocks();
 }
 
 } /* namespace detail */

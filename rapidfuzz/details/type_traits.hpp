@@ -11,9 +11,6 @@
 
 namespace rapidfuzz {
 
-template <bool B, class T = void>
-using enable_if_t = typename std::enable_if<B, T>::type;
-
 namespace detail {
 template <typename T>
 auto inner_type(T const*) -> T;
@@ -24,6 +21,14 @@ auto inner_type(T const&) -> typename T::value_type;
 
 template <typename T>
 using char_type = decltype(detail::inner_type(std::declval<T const&>()));
+
+template <typename T>
+using plain = std::remove_cv_t<std::remove_reference_t<T>>;
+
+template <typename T>
+using iterator_type = plain<
+        decltype(*std::declval<T>())
+>;
 
 template <typename... Conds>
 struct satisfies_all : std::true_type {};
@@ -80,13 +85,13 @@ struct is_explicitly_convertible {
         template <typename U>                                                                      \
         static yes test(U*);                                                                       \
                                                                                                    \
-        template <typename U, typename = enable_if_t<std::is_class<U>::value>>                     \
+        template <typename U, typename = std::enable_if_t<std::is_class<U>::value>>                \
         static constexpr bool class_test(U*)                                                       \
         {                                                                                          \
             return std::is_same<decltype(test<Derived>(nullptr)), yes>::value;                     \
         }                                                                                          \
                                                                                                    \
-        template <typename U, typename = enable_if_t<!std::is_class<U>::value>>                    \
+        template <typename U, typename = std::enable_if_t<!std::is_class<U>::value>>               \
         static constexpr bool class_test(const U&)                                                 \
         {                                                                                          \
             return false;                                                                          \
@@ -137,11 +142,11 @@ public:
 };
 
 template <typename C>
-void* sub_matcher(typename C::value_type const& (C::*)(size_t) const);
+void* sub_matcher(typename C::value_type const& (C::*)(int64_t) const);
 
 // TODO: Not a real SFINAE, because of the ambiguity between
-// value_type const& operator[](size_t) const;
-// and value_type& operator[](size_t);
+// value_type const& operator[](int64_t) const;
+// and value_type& operator[](int64_t);
 // Not really important
 template <class T>
 class has_bracket_operator {

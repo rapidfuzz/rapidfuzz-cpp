@@ -14,13 +14,13 @@
 
 namespace rapidfuzz {
 
-template <typename CharT1, typename CharT2, typename CharT3>
+template <typename InputIt1, typename InputIt2, typename InputIt3>
 struct DecomposedSet {
-    SplittedSentenceView<CharT1> difference_ab;
-    SplittedSentenceView<CharT2> difference_ba;
-    SplittedSentenceView<CharT3> intersection;
-    DecomposedSet(SplittedSentenceView<CharT1> diff_ab, SplittedSentenceView<CharT2> diff_ba,
-                  SplittedSentenceView<CharT3> intersect)
+    SplittedSentenceView<InputIt1> difference_ab;
+    SplittedSentenceView<InputIt2> difference_ba;
+    SplittedSentenceView<InputIt3> intersection;
+    DecomposedSet(SplittedSentenceView<InputIt1> diff_ab, SplittedSentenceView<InputIt2> diff_ba,
+                  SplittedSentenceView<InputIt3> intersect)
         : difference_ab(std::move(diff_ab)),
           difference_ba(std::move(diff_ba)),
           intersection(std::move(intersect))
@@ -35,9 +35,9 @@ namespace common {
  * @{
  */
 
-template <typename CharT1, typename CharT2>
-DecomposedSet<CharT1, CharT2, CharT1> set_decomposition(SplittedSentenceView<CharT1> a,
-                                                        SplittedSentenceView<CharT2> b);
+template <typename InputIt1, typename InputIt2>
+DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
+                                                              SplittedSentenceView<InputIt2> b);
 
 constexpr double result_cutoff(double result, double score_cutoff)
 {
@@ -45,16 +45,16 @@ constexpr double result_cutoff(double result, double score_cutoff)
 }
 
 template <int Max = 1>
-constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
+constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
     return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
 }
 
 template <int Max = 1>
-static inline size_t score_cutoff_to_distance(double score_cutoff, size_t lensum)
+static inline int64_t score_cutoff_to_distance(double score_cutoff, int64_t lensum)
 {
-    return static_cast<size_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+    return static_cast<int64_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
 template <typename T>
@@ -63,60 +63,45 @@ constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
     return std::fabs(a) <= tolerance;
 }
 
-/**
- * @brief Get a string view to the object passed as parameter
- *
- * @tparam Sentence This is a string that can be explicitly converted to
- * basic_string_view<char_type>
- * @tparam CharT This is the char_type of Sentence
- *
- * @param str string that should be converted to string_view (for type info check Template
- * parameters above)
- *
- * @return basic_string_view<CharT> of str
- */
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value>>
-basic_string_view<CharT> to_string_view(Sentence&& str);
-
-/**
- * @brief Get a string view to the object passed as parameter
- *
- * @tparam Sentence This is a string that can not be explicitly converted to
- * basic_string_view<char_type>, but stores a sequence in a similar way (e.g. boost::string_view or
- * std::vector)
- * @tparam CharT This is the char_type of Sentence
- *
- * @param str container that should be converted to string_view (for type info check Template
- * parameters above)
- *
- * @return basic_string_view<CharT> of str
- */
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<!is_explicitly_convertible<Sentence, basic_string_view<CharT>>::value &&
-                           has_data_and_size<Sentence>::value>>
-basic_string_view<CharT> to_string_view(const Sentence& str);
-
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
+    typename = std::enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
 std::basic_string<CharT> to_string(Sentence&& str);
 
 template <
     typename Sentence, typename CharT = char_type<Sentence>,
-    typename = enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
+    typename = std::enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
                            has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> to_string(const Sentence& str);
 
-/* backport of C++14 equal overload */
-template <typename InputIt1, typename InputIt2>
-bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+
+template <typename CharT>
+CharT* to_begin(CharT* s)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
-    return (len1 == len2) ? std::equal(first1, last1, first2) : false;
+    return s;
+}
+
+template <typename T>
+auto to_begin(T& x)
+{
+    using std::begin;
+    return begin(x);
+}
+
+template <typename CharT>
+CharT* to_end(CharT* s)
+{
+    while (*s != 0) {
+        ++s;
+    }
+    return s;
+}
+
+template <typename T>
+auto to_end(T& x)
+{
+    using std::end;
+    return end(x);
 }
 
 /**
@@ -133,15 +118,6 @@ template <typename InputIterator1, typename InputIterator2>
 std::pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1, InputIterator1 last1,
                                                    InputIterator2 first2, InputIterator2 last2);
 
-template <typename CharT1, typename CharT2>
-StringAffix remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
-
-template <typename CharT1, typename CharT2>
-size_t remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
-
-template <typename CharT1, typename CharT2>
-size_t remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b);
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                 InputIt2& last2);
@@ -152,8 +128,8 @@ int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
 template <typename InputIt1, typename InputIt2>
 int64_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
 
-template <typename Sentence, typename CharT = char_type<Sentence>>
-SplittedSentenceView<CharT> sorted_split(Sentence&& sentence);
+template <typename InputIt, typename CharT = iterator_type<InputIt>>
+SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 template <typename T>
 constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
@@ -192,22 +168,10 @@ struct PatternMatchVector {
     PatternMatchVector() : m_map(), m_extendedAscii()
     {}
 
-    template <typename CharT>
-    PatternMatchVector(basic_string_view<CharT> s) : m_map(), m_extendedAscii()
-    {
-        insert(s);
-    }
-
     template <typename InputIt>
     PatternMatchVector(InputIt first, InputIt last) : m_map(), m_extendedAscii()
     {
         insert(first, last);
-    }
-
-    template <typename CharT>
-    void insert(basic_string_view<CharT> s)
-    {
-        insert(std::begin(s), std::end(s));
     }
 
     template <typename InputIt>
@@ -221,7 +185,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(CharT key, size_t pos)
+    void insert(CharT key, int64_t pos)
     {
         insert_mask(key, 1ull << pos);
     }
@@ -252,7 +216,7 @@ private:
             m_extendedAscii[key] |= mask;
         }
         else {
-            size_t i = lookup((uint64_t)key);
+            int64_t i = lookup((uint64_t)key);
             m_map[i].key = key;
             m_map[i].value |= mask;
         }
@@ -262,15 +226,15 @@ private:
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    size_t lookup(uint64_t key) const
+    int64_t lookup(uint64_t key) const
     {
-        size_t i = key % 128;
+        int64_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
         }
 
-        size_t perturb = key;
+        int64_t perturb = key;
         while (true) {
             i = ((i * 5) + perturb + 1) % 128;
             if (!m_map[i].value || m_map[i].key == key) {
@@ -288,12 +252,6 @@ struct BlockPatternMatchVector {
     BlockPatternMatchVector()
     {}
 
-    template <typename CharT>
-    BlockPatternMatchVector(basic_string_view<CharT> s)
-    {
-        insert(s);
-    }
-
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
     {
@@ -301,16 +259,10 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(size_t block, CharT ch, int pos)
+    void insert(int64_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
-    }
-
-    template <typename CharT>
-    void insert(basic_string_view<CharT> s)
-    {
-        insert(std::begin(s), std::end(s));
     }
 
     template <typename InputIt>
@@ -331,14 +283,14 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    uint64_t get(size_t block, CharT ch) const
+    uint64_t get(int64_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, typename ValueType, size_t size = sizeof(CharT1)>
+template <typename CharT1, typename ValueType, int64_t size = sizeof(CharT1)>
 struct CharHashTable;
 
 template <typename CharT1, typename ValueType>
@@ -367,7 +319,7 @@ struct CharHashTable<CharT1, ValueType, 1> {
     }
 };
 
-template <typename CharT1, typename ValueType, size_t size>
+template <typename CharT1, typename ValueType, int64_t size>
 struct CharHashTable {
     std::unordered_map<CharT1, ValueType> m_val;
     ValueType m_default;
@@ -398,7 +350,7 @@ struct CharHashTable {
 
 template <typename T>
 struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector, size_t cols) : m_vector(vector), m_cols(cols)
+    explicit MatrixVectorView(T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
     T& operator[](uint64_t col)
@@ -409,12 +361,12 @@ struct MatrixVectorView {
 
 private:
     T* m_vector;
-    size_t m_cols;
+    int64_t m_cols;
 };
 
 template <typename T>
 struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector, size_t cols) : m_vector(vector), m_cols(cols)
+    explicit ConstMatrixVectorView(const T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
     ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
@@ -428,7 +380,7 @@ struct ConstMatrixVectorView {
 
 private:
     const T* m_vector;
-    size_t m_cols;
+    int64_t m_cols;
 };
 
 template <typename T>

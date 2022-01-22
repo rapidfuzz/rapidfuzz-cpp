@@ -1,20 +1,22 @@
 #pragma once
 #include <algorithm>
-#include <rapidfuzz/details/types.hpp>
+#include <rapidfuzz/details/type_traits.hpp>
 #include <string>
 
 namespace rapidfuzz {
 
-template <typename CharT>
+template <typename InputIt>
 class SplittedSentenceView {
 public:
-    SplittedSentenceView(string_view_vec<CharT> sentence) : m_sentence(std::move(sentence))
+    using CharT = iterator_type<InputIt>;
+
+    SplittedSentenceView(IteratorViewVec<InputIt> sentence) : m_sentence(std::move(sentence))
     {}
 
-    size_t dedupe();
-    size_t size() const;
+    int64_t dedupe();
+    int64_t size() const;
 
-    size_t length() const
+    int64_t length() const
     {
         return size();
     }
@@ -24,57 +26,57 @@ public:
         return m_sentence.empty();
     }
 
-    size_t word_count() const
+    int64_t word_count() const
     {
         return m_sentence.size();
     }
 
     std::basic_string<CharT> join() const;
 
-    string_view_vec<CharT> words() const
+    const IteratorViewVec<InputIt>& words() const
     {
         return m_sentence;
     }
 
 private:
-    string_view_vec<CharT> m_sentence;
+    IteratorViewVec<InputIt> m_sentence;
 };
 
-template <typename CharT>
-size_t SplittedSentenceView<CharT>::dedupe()
+template <typename InputIt>
+int64_t SplittedSentenceView<InputIt>::dedupe()
 {
-    size_t old_word_count = word_count();
+    int64_t old_word_count = word_count();
     m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
     return old_word_count - word_count();
 }
 
-template <typename CharT>
-size_t SplittedSentenceView<CharT>::size() const
+template <typename InputIt>
+int64_t SplittedSentenceView<InputIt>::size() const
 {
     if (m_sentence.empty()) return 0;
 
     // there is a whitespace between each word
-    size_t result = m_sentence.size() - 1;
+    int64_t result = m_sentence.size() - 1;
     for (const auto& word : m_sentence) {
-        result += word.size();
+        result += std::distance(word.first, word.last);
     }
 
     return result;
 }
 
-template <typename CharT>
-std::basic_string<CharT> SplittedSentenceView<CharT>::join() const
+template <typename InputIt>
+auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 {
     if (m_sentence.empty()) {
         return std::basic_string<CharT>();
     }
 
     auto sentence_iter = m_sentence.begin();
-    std::basic_string<CharT> joined{*sentence_iter};
+    std::basic_string<CharT> joined(sentence_iter->first, sentence_iter->last);
     const std::basic_string<CharT> whitespace{0x20};
     ++sentence_iter;
     for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
-        joined.append(whitespace).append(std::basic_string<CharT>{*sentence_iter});
+        joined.append(whitespace).append(std::basic_string<CharT>(sentence_iter->first, sentence_iter->last));
     }
     return joined;
 }

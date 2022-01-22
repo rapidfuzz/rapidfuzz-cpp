@@ -8,33 +8,19 @@
 
 namespace rapidfuzz {
 
-template <typename CharT1, typename CharT2>
-bool string_view_eq(basic_string_view<CharT1> x, basic_string_view<CharT2> y)
-{
-    if (x.size() != y.size()) return false;
-
-    for (size_t i = 0; i < x.size(); ++i) {
-        if (x[i] != y[i]) return false;
-    }
-    return true;
-}
-
-template <typename CharT1, typename CharT2>
-DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentenceView<CharT1> a,
-                                                                SplittedSentenceView<CharT2> b)
+template <typename InputIt1, typename InputIt2>
+DecomposedSet<InputIt1, InputIt2, InputIt1> common::set_decomposition(SplittedSentenceView<InputIt1> a,
+                                                                SplittedSentenceView<InputIt2> b)
 {
     a.dedupe();
     b.dedupe();
 
-    string_view_vec<CharT1> intersection;
-    string_view_vec<CharT1> difference_ab;
-    string_view_vec<CharT2> difference_ba = b.words();
+    IteratorViewVec<InputIt1> intersection;
+    IteratorViewVec<InputIt1> difference_ab;
+    IteratorViewVec<InputIt2> difference_ba = b.words();
 
     for (const auto& current_a : a.words()) {
-        auto element_b = std::find_if(difference_ba.begin(), difference_ba.end(),
-                                      [current_a](basic_string_view<CharT2> current_b) {
-                                          return string_view_eq(current_a, current_b);
-                                      });
+        auto element_b = std::find(difference_ba.begin(), difference_ba.end(), current_a);
 
         if (element_b != difference_ba.end()) {
             difference_ba.erase(element_b);
@@ -46,18 +32,6 @@ DecomposedSet<CharT1, CharT2, CharT1> common::set_decomposition(SplittedSentence
     }
 
     return {difference_ab, difference_ba, intersection};
-}
-
-template <typename Sentence, typename CharT, typename>
-basic_string_view<CharT> common::to_string_view(Sentence&& str)
-{
-    return basic_string_view<CharT>(std::forward<Sentence>(str));
-}
-
-template <typename Sentence, typename CharT, typename>
-basic_string_view<CharT> common::to_string_view(const Sentence& str)
-{
-    return basic_string_view<CharT>(str.data(), str.size());
 }
 
 template <typename Sentence, typename CharT, typename>
@@ -87,16 +61,6 @@ common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 fir
 /**
  * Removes common prefix of two string views
  */
-template <typename CharT1, typename CharT2>
-size_t common::remove_common_prefix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
-{
-    size_t prefix = static_cast<size_t>(
-        std::distance(a.begin(), common::mismatch(a.begin(), a.end(), b.begin(), b.end()).first));
-    a.remove_prefix(prefix);
-    b.remove_prefix(prefix);
-    return prefix;
-}
-
 template <typename InputIt1, typename InputIt2>
 int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                      InputIt2 last2)
@@ -110,16 +74,6 @@ int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2&
 /**
  * Removes common suffix of two string views
  */
-template <typename CharT1, typename CharT2>
-size_t common::remove_common_suffix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
-{
-    size_t suffix = static_cast<size_t>(std::distance(
-        a.rbegin(), common::mismatch(a.rbegin(), a.rend(), b.rbegin(), b.rend()).first));
-    a.remove_suffix(suffix);
-    b.remove_suffix(suffix);
-    return suffix;
-}
-
 template <typename InputIt1, typename InputIt2>
 int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                      InputIt2& last2)
@@ -139,18 +93,12 @@ int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 
 /**
  * Removes common affix of two string views
  */
-template <typename CharT1, typename CharT2>
-StringAffix common::remove_common_affix(basic_string_view<CharT1>& a, basic_string_view<CharT2>& b)
-{
-    return StringAffix{remove_common_prefix(a, b), remove_common_suffix(a, b)};
-}
-
 template <typename InputIt1, typename InputIt2>
 StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                         InputIt2& last2)
 {
-    return StringAffix{(size_t)remove_common_prefix(first1, last1, first2, last2),
-                       (size_t)remove_common_suffix(first1, last1, first2, last2)};
+    return StringAffix{(int64_t)remove_common_prefix(first1, last1, first2, last2),
+                       (int64_t)remove_common_suffix(first1, last1, first2, last2)};
 }
 
 template <typename, typename = void>
@@ -233,26 +181,23 @@ bool is_space(const CharT ch)
     return is_space_impl(ch, is_space_dispatch_tag<CharT>{});
 }
 
-template <typename Sentence, typename CharT>
-SplittedSentenceView<CharT> common::sorted_split(Sentence&& sentence)
+template <typename InputIt, typename CharT>
+SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
 {
-    auto s = to_string_view(std::forward<Sentence>(sentence));
-    string_view_vec<CharT> splitted;
-    const auto* first = s.data();
-    const auto* second = s.data();
-    const auto* last = first + s.size();
+    IteratorViewVec<InputIt> splitted;
+    auto second = first;
 
     for (; second != last && first != last; first = second + 1) {
         second = std::find_if(first, last, is_space<CharT>);
 
         if (first != second) {
-            splitted.emplace_back(first, second - first);
+            splitted.emplace_back(first, second);
         }
     }
 
     std::sort(splitted.begin(), splitted.end());
 
-    return SplittedSentenceView<CharT>(splitted);
+    return SplittedSentenceView<InputIt>(splitted);
 }
 
 } // namespace rapidfuzz

@@ -5,27 +5,65 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
-
-#include <rapidfuzz/details/string_view.hpp>
+#include <stddef.h>
+#include <stdint.h>
 
 namespace rapidfuzz {
 
-template <typename CharT>
-using string_view_vec = std::vector<basic_string_view<CharT>>;
+template <typename InputIt>
+class IteratorView {
+public:
+    IteratorView(InputIt first_, InputIt last_)
+        : first(first_), last(last_) {}
+    
+    InputIt first;
+    InputIt last;
+};
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator==(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
+{
+    return std::equal(a.first, a.last, b.first, b.last);
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator!=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
+{
+    return !(a == b);
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator<(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
+{
+    return (std::lexicographical_compare(a.first, a.last, b.first, b.last)); }
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator>(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
+{    return b < a; }
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator<=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
+{    return !(b < a); }
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator>=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
+{    return !(a < b); }
+
+template <typename InputIt>
+using IteratorViewVec = std::vector<IteratorView<InputIt>>;
 
 struct StringAffix {
-    size_t prefix_len;
-    size_t suffix_len;
+    int64_t prefix_len;
+    int64_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
-    size_t insert_cost;
-    size_t delete_cost;
-    size_t replace_cost;
+    int64_t insert_cost;
+    int64_t delete_cost;
+    int64_t replace_cost;
 };
 
 /**
@@ -50,13 +88,13 @@ enum class EditType {
  */
 struct EditOp {
     EditType type;   /**< type of the edit operation */
-    size_t src_pos;  /**< index into the source string */
-    size_t dest_pos; /**< index into the destination string */
+    int64_t src_pos;  /**< index into the source string */
+    int64_t dest_pos; /**< index into the destination string */
 
     EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
     {}
 
-    EditOp(EditType type_, size_t src_pos_, size_t dest_pos_)
+    EditOp(EditType type_, int64_t src_pos_, int64_t dest_pos_)
         : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
     {}
 };
@@ -81,15 +119,15 @@ inline bool operator==(EditOp a, EditOp b)
  */
 struct Opcode {
     EditType type;     /**< type of the edit operation */
-    size_t src_begin;  /**< index into the source string */
-    size_t src_end;    /**< index into the source string */
-    size_t dest_begin; /**< index into the destination string */
-    size_t dest_end;   /**< index into the destination string */
+    int64_t src_begin;  /**< index into the source string */
+    int64_t src_end;    /**< index into the source string */
+    int64_t dest_begin; /**< index into the destination string */
+    int64_t dest_end;   /**< index into the destination string */
 
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, size_t src_begin_, size_t src_end_, size_t dest_begin_, size_t dest_end_)
+    Opcode(EditType type_, int64_t src_begin_, int64_t src_end_, int64_t dest_begin_, int64_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -256,19 +294,19 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const
+    int64_t get_src_len() const
     {
         return src_len;
     }
-    void set_src_len(size_type len)
+    void set_src_len(int64_t len)
     {
         src_len = len;
     }
-    size_type get_dest_len() const
+    int64_t get_dest_len() const
     {
         return dest_len;
     }
-    void set_dest_len(size_type len)
+    void set_dest_len(int64_t len)
     {
         dest_len = len;
     }
@@ -290,8 +328,8 @@ public:
     }
 
 private:
-    size_type src_len;
-    size_type dest_len;
+    int64_t src_len;
+    int64_t dest_len;
 };
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
@@ -475,19 +513,19 @@ inline Editops::Editops(const Opcodes& other)
             break;
 
         case EditType::Replace:
-            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (int64_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
             }
             break;
 
         case EditType::Insert:
-            for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
+            for (int64_t j = 0; j < op.dest_end - op.dest_begin; j++) {
                 push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
             }
             break;
 
         case EditType::Delete:
-            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (int64_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
             }
             break;
@@ -499,17 +537,17 @@ inline Opcodes::Opcodes(const Editops& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
-    size_t src_pos = 0;
-    size_t dest_pos = 0;
-    for (size_t i = 0; i < other.size();) {
+    int64_t src_pos = 0;
+    int64_t dest_pos = 0;
+    for (int64_t i = 0; i < other.size();) {
         if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
             push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
             src_pos = other[i].src_pos;
             dest_pos = other[i].dest_pos;
         }
 
-        size_t src_begin = src_pos;
-        size_t dest_begin = dest_pos;
+        int64_t src_begin = src_pos;
+        int64_t dest_begin = dest_pos;
         EditType type = other[i].type;
         do {
             switch (type) {
