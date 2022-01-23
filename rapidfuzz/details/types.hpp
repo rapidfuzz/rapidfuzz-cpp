@@ -5,20 +5,20 @@
 
 #include <algorithm>
 #include <cassert>
+#include <stddef.h>
 #include <stdexcept>
+#include <stdint.h>
 #include <type_traits>
 #include <vector>
-#include <stddef.h>
-#include <stdint.h>
 
 namespace rapidfuzz {
 
 template <typename InputIt>
 class IteratorView {
 public:
-    IteratorView(InputIt first_, InputIt last_)
-        : first(first_), last(last_) {}
-    
+    IteratorView(InputIt first_, InputIt last_) : first(first_), last(last_)
+    {}
+
     InputIt first;
     InputIt last;
 };
@@ -38,19 +38,26 @@ inline bool operator!=(const IteratorView<InputIt1>& a, const IteratorView<Input
 template <typename InputIt1, typename InputIt2>
 inline bool operator<(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
 {
-    return (std::lexicographical_compare(a.first, a.last, b.first, b.last)); }
+    return (std::lexicographical_compare(a.first, a.last, b.first, b.last));
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator>(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{    return b < a; }
+{
+    return b < a;
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator<=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{    return !(b < a); }
+{
+    return !(b < a);
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator>=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{    return !(a < b); }
+{
+    return !(a < b);
+}
 
 template <typename InputIt>
 using IteratorViewVec = std::vector<IteratorView<InputIt>>;
@@ -87,7 +94,7 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;   /**< type of the edit operation */
+    EditType type;    /**< type of the edit operation */
     int64_t src_pos;  /**< index into the source string */
     int64_t dest_pos; /**< index into the destination string */
 
@@ -118,7 +125,7 @@ inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;     /**< type of the edit operation */
+    EditType type;      /**< type of the edit operation */
     int64_t src_begin;  /**< index into the source string */
     int64_t src_end;    /**< index into the source string */
     int64_t dest_begin; /**< index into the destination string */
@@ -127,7 +134,8 @@ struct Opcode {
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, int64_t src_begin_, int64_t src_end_, int64_t dest_begin_, int64_t dest_end_)
+    Opcode(EditType type_, int64_t src_begin_, int64_t src_end_, int64_t dest_begin_,
+           int64_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -148,17 +156,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
 {
     if (step > 0) {
         if (start < 0) {
-            start = std::max((int)(start + vec.size()), 0);
+            start = std::max((int)(start + (int)vec.size()), 0);
         }
-        else if (start > vec.size()) {
-            start = vec.size();
+        else if (start > (int)vec.size()) {
+            start = (int)vec.size();
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + vec.size()), 0);
+            stop = std::max((int)(stop + (int)vec.size()), 0);
         }
-        else if (stop > vec.size()) {
-            stop = vec.size();
+        else if (stop > (int)vec.size()) {
+            stop = (int)vec.size();
         }
 
         if (start >= stop) {
@@ -174,17 +182,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
     }
     else if (step < 0) {
         if (start < 0) {
-            start = std::max((int)(start + vec.size()), -1);
+            start = std::max((int)(start + (int)vec.size()), -1);
         }
-        else if (start >= vec.size()) {
-            start = vec.size() - 1;
+        else if (start >= (int)vec.size()) {
+            start = (int)vec.size() - 1;
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + vec.size()), -1);
+            stop = std::max((int)(stop + (int)vec.size()), -1);
         }
-        else if (stop >= vec.size()) {
-            stop = vec.size() - 1;
+        else if (stop >= (int)vec.size()) {
+            stop = (int)vec.size() - 1;
         }
 
         if (start <= stop) {
@@ -221,7 +229,7 @@ public:
     {}
 
     Editops(const Editops& other)
-        : src_len(other.src_len), dest_len(other.dest_len), std::vector<EditOp>(other)
+        : std::vector<EditOp>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
     Editops(const Opcodes& other);
@@ -369,7 +377,7 @@ public:
     {}
 
     Opcodes(const Opcodes& other)
-        : src_len(other.src_len), dest_len(other.dest_len), std::vector<Opcode>(other)
+        : std::vector<Opcode>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
     Opcodes(const Editops& other);
@@ -442,19 +450,19 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const
+    int64_t get_src_len() const
     {
         return src_len;
     }
-    void set_src_len(size_type len)
+    void set_src_len(int64_t len)
     {
         src_len = len;
     }
-    size_type get_dest_len() const
+    int64_t get_dest_len() const
     {
         return dest_len;
     }
-    void set_dest_len(size_type len)
+    void set_dest_len(int64_t len)
     {
         dest_len = len;
     }
@@ -477,8 +485,8 @@ public:
     }
 
 private:
-    size_type src_len;
-    size_type dest_len;
+    int64_t src_len;
+    int64_t dest_len;
 };
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
@@ -539,7 +547,7 @@ inline Opcodes::Opcodes(const Editops& other)
     dest_len = other.get_dest_len();
     int64_t src_pos = 0;
     int64_t dest_pos = 0;
-    for (int64_t i = 0; i < other.size();) {
+    for (size_t i = 0; i < other.size();) {
         if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
             push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
             src_pos = other[i].src_pos;

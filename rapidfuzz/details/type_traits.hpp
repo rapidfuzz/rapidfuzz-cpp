@@ -26,9 +26,7 @@ template <typename T>
 using plain = std::remove_cv_t<std::remove_reference_t<T>>;
 
 template <typename T>
-using iterator_type = plain<
-        decltype(*std::declval<T>())
->;
+using iterator_type = plain<decltype(*std::declval<T>())>;
 
 template <typename... Conds>
 struct satisfies_all : std::true_type {};

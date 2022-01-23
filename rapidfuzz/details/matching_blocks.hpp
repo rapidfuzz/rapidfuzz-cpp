@@ -68,7 +68,7 @@ public:
         {
             for (int64_t i = a_low; i < a_high; ++i) {
                 const auto& indexes = b2j_[a_first[i]];
-                int64_t pos = 0;
+                size_t pos = 0;
                 int64_t next_val = 0;
                 bool found = false;
                 for (; pos < indexes.size(); pos++) {
@@ -100,9 +100,8 @@ public:
                     }
                 }
 
-                if (!found)
-                {
-                    std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);  
+                if (!found) {
+                    std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
                 }
             }
 
@@ -132,7 +131,7 @@ public:
         std::vector<std::tuple<int64_t, int64_t, int64_t, int64_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
-        int64_t queue_head = 0;
+        size_t queue_head = 0;
         queue.reserve(std::min(a_len, b_len));
         queue.emplace_back(0, a_len, 0, b_len);
 
@@ -193,9 +192,11 @@ private:
 } // namespace difflib
 
 template <typename InputIt1, typename InputIt2>
-std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2)
 {
-    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2).get_matching_blocks();
+    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2)
+        .get_matching_blocks();
 }
 
 } /* namespace detail */

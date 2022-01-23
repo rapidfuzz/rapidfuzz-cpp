@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-23 00:43:11.429060
+//  Generated: 2022-01-23 01:47:25.785606
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -11,6 +11,8 @@
 
 
 
+#include <cmath>
+#include <numeric>
 
 #include <array>
 #include <cmath>
@@ -21,20 +23,20 @@
 
 #include <algorithm>
 #include <cassert>
+#include <stddef.h>
 #include <stdexcept>
+#include <stdint.h>
 #include <type_traits>
 #include <vector>
-#include <stddef.h>
-#include <stdint.h>
 
 namespace rapidfuzz {
 
 template <typename InputIt>
 class IteratorView {
 public:
-    IteratorView(InputIt first_, InputIt last_)
-        : first(first_), last(last_) {}
-    
+    IteratorView(InputIt first_, InputIt last_) : first(first_), last(last_)
+    {}
+
     InputIt first;
     InputIt last;
 };
@@ -54,19 +56,26 @@ inline bool operator!=(const IteratorView<InputIt1>& a, const IteratorView<Input
 template <typename InputIt1, typename InputIt2>
 inline bool operator<(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
 {
-    return (std::lexicographical_compare(a.first, a.last, b.first, b.last)); }
+    return (std::lexicographical_compare(a.first, a.last, b.first, b.last));
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator>(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{    return b < a; }
+{
+    return b < a;
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator<=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{    return !(b < a); }
+{
+    return !(b < a);
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator>=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{    return !(a < b); }
+{
+    return !(a < b);
+}
 
 template <typename InputIt>
 using IteratorViewVec = std::vector<IteratorView<InputIt>>;
@@ -103,7 +112,7 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;   /**< type of the edit operation */
+    EditType type;    /**< type of the edit operation */
     int64_t src_pos;  /**< index into the source string */
     int64_t dest_pos; /**< index into the destination string */
 
@@ -134,7 +143,7 @@ inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;     /**< type of the edit operation */
+    EditType type;      /**< type of the edit operation */
     int64_t src_begin;  /**< index into the source string */
     int64_t src_end;    /**< index into the source string */
     int64_t dest_begin; /**< index into the destination string */
@@ -143,7 +152,8 @@ struct Opcode {
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, int64_t src_begin_, int64_t src_end_, int64_t dest_begin_, int64_t dest_end_)
+    Opcode(EditType type_, int64_t src_begin_, int64_t src_end_, int64_t dest_begin_,
+           int64_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -164,17 +174,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
 {
     if (step > 0) {
         if (start < 0) {
-            start = std::max((int)(start + vec.size()), 0);
+            start = std::max((int)(start + (int)vec.size()), 0);
         }
-        else if (start > vec.size()) {
-            start = vec.size();
+        else if (start > (int)vec.size()) {
+            start = (int)vec.size();
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + vec.size()), 0);
+            stop = std::max((int)(stop + (int)vec.size()), 0);
         }
-        else if (stop > vec.size()) {
-            stop = vec.size();
+        else if (stop > (int)vec.size()) {
+            stop = (int)vec.size();
         }
 
         if (start >= stop) {
@@ -190,17 +200,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
     }
     else if (step < 0) {
         if (start < 0) {
-            start = std::max((int)(start + vec.size()), -1);
+            start = std::max((int)(start + (int)vec.size()), -1);
         }
-        else if (start >= vec.size()) {
-            start = vec.size() - 1;
+        else if (start >= (int)vec.size()) {
+            start = (int)vec.size() - 1;
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + vec.size()), -1);
+            stop = std::max((int)(stop + (int)vec.size()), -1);
         }
-        else if (stop >= vec.size()) {
-            stop = vec.size() - 1;
+        else if (stop >= (int)vec.size()) {
+            stop = (int)vec.size() - 1;
         }
 
         if (start <= stop) {
@@ -237,7 +247,7 @@ public:
     {}
 
     Editops(const Editops& other)
-        : src_len(other.src_len), dest_len(other.dest_len), std::vector<EditOp>(other)
+        : std::vector<EditOp>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
     Editops(const Opcodes& other);
@@ -385,7 +395,7 @@ public:
     {}
 
     Opcodes(const Opcodes& other)
-        : src_len(other.src_len), dest_len(other.dest_len), std::vector<Opcode>(other)
+        : std::vector<Opcode>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
     Opcodes(const Editops& other);
@@ -458,19 +468,19 @@ public:
         return reversed;
     }
 
-    size_type get_src_len() const
+    int64_t get_src_len() const
     {
         return src_len;
     }
-    void set_src_len(size_type len)
+    void set_src_len(int64_t len)
     {
         src_len = len;
     }
-    size_type get_dest_len() const
+    int64_t get_dest_len() const
     {
         return dest_len;
     }
-    void set_dest_len(size_type len)
+    void set_dest_len(int64_t len)
     {
         dest_len = len;
     }
@@ -493,8 +503,8 @@ public:
     }
 
 private:
-    size_type src_len;
-    size_type dest_len;
+    int64_t src_len;
+    int64_t dest_len;
 };
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
@@ -555,7 +565,7 @@ inline Opcodes::Opcodes(const Editops& other)
     dest_len = other.get_dest_len();
     int64_t src_pos = 0;
     int64_t dest_pos = 0;
-    for (int64_t i = 0; i < other.size();) {
+    for (size_t i = 0; i < other.size();) {
         if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
             push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
             src_pos = other[i].src_pos;
@@ -619,9 +629,7 @@ template <typename T>
 using plain = std::remove_cv_t<std::remove_reference_t<T>>;
 
 template <typename T>
-using iterator_type = plain<
-        decltype(*std::declval<T>())
->;
+using iterator_type = plain<decltype(*std::declval<T>())>;
 
 template <typename... Conds>
 struct satisfies_all : std::true_type {};
@@ -833,7 +841,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
     const std::basic_string<CharT> whitespace{0x20};
     ++sentence_iter;
     for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
-        joined.append(whitespace).append(std::basic_string<CharT>(sentence_iter->first, sentence_iter->last));
+        joined.append(whitespace)
+            .append(std::basic_string<CharT>(sentence_iter->first, sentence_iter->last));
     }
     return joined;
 }
@@ -884,7 +893,8 @@ constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff
 template <int Max = 1>
 static inline int64_t score_cutoff_to_distance(double score_cutoff, int64_t lensum)
 {
-    return static_cast<int64_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+    return static_cast<int64_t>(
+        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
 template <typename T>
@@ -893,17 +903,16 @@ constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
     return std::fabs(a) <= tolerance;
 }
 
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = std::enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
+template <typename Sentence, typename CharT = char_type<Sentence>,
+          typename = std::enable_if_t<
+              is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
 std::basic_string<CharT> to_string(Sentence&& str);
 
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = std::enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
-                           has_data_and_size<Sentence>::value>>
+template <typename Sentence, typename CharT = char_type<Sentence>,
+          typename = std::enable_if_t<
+              !is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
+              has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> to_string(const Sentence& str);
-
 
 template <typename CharT>
 CharT* to_begin(CharT* s)
@@ -1024,7 +1033,7 @@ struct PatternMatchVector {
     uint64_t get(CharT key) const
     {
         if (key >= 0 && key <= 255) {
-            return m_extendedAscii[key];
+            return m_extendedAscii[(uint8_t)key];
         }
         else {
             return m_map[lookup((uint64_t)key)].value;
@@ -1035,6 +1044,7 @@ struct PatternMatchVector {
     uint64_t get(int64_t block, CharT key) const
     {
         assert(block == 0);
+        (void)block;
         return get(key);
     }
 
@@ -1043,7 +1053,7 @@ private:
     void insert_mask(CharT key, uint64_t mask)
     {
         if (key >= 0 && key <= 255) {
-            m_extendedAscii[key] |= mask;
+            m_extendedAscii[(uint8_t)key] |= mask;
         }
         else {
             int64_t i = lookup((uint64_t)key);
@@ -1265,8 +1275,8 @@ private:
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-DecomposedSet<InputIt1, InputIt2, InputIt1> common::set_decomposition(SplittedSentenceView<InputIt1> a,
-                                                                SplittedSentenceView<InputIt2> b)
+DecomposedSet<InputIt1, InputIt2, InputIt1>
+common::set_decomposition(SplittedSentenceView<InputIt1> a, SplittedSentenceView<InputIt2> b)
 {
     a.dedupe();
     b.dedupe();
@@ -1457,8 +1467,6 @@ SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
 }
 
 } // namespace rapidfuzz
-#include <cmath>
-#include <numeric>
 #include <stdexcept>
 
 namespace rapidfuzz {
@@ -1489,27 +1497,26 @@ namespace rapidfuzz {
  */
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               int64_t score_cutoff = std::numeric_limits<int64_t>::max());
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max());
 
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
-               int64_t score_cutoff = std::numeric_limits<int64_t>::max());
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max());
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               int64_t score_cutoff = 0);
+                           int64_t score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2,
-               int64_t score_cutoff = 0);
+int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0);
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               double score_cutoff = 1.0);
+                                   double score_cutoff = 1.0);
 
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-               double score_cutoff = 1.0);
+                                   double score_cutoff = 1.0);
 
 /**
  * @brief Calculates a normalized hamming similarity
@@ -1536,31 +1543,30 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2,
  *   as a float between 0 and 1.0
  */
 template <typename InputIt1, typename InputIt2>
-double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               double score_cutoff = 0.0);
+double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                     InputIt2 last2, double score_cutoff = 0.0);
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
+double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
+                                     double score_cutoff = 0.0);
 
 template <typename CharT1>
 struct CachedHamming {
     template <typename Sentence1>
-    CachedHamming(const Sentence1& s1_)
-        : s1(common::to_string(s1_))
-    {
-    }
+    CachedHamming(const Sentence1& s1_) : s1(common::to_string(s1_))
+    {}
 
     template <typename InputIt1>
-    CachedHamming(InputIt1 first1, InputIt1 last1)
-        : s1(first1, last1)
-    {
-    }
+    CachedHamming(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    {}
 
     template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(const Sentence2& s2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
@@ -1588,9 +1594,8 @@ private:
 template <typename Sentence1>
 CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedHamming(InputIt1 first1, InputIt1 last1) ->
-    CachedHamming<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iterator_type<InputIt1>>;
 #endif
 
 /**@}*/
@@ -1604,15 +1609,14 @@ namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               int64_t score_cutoff)
+                         int64_t score_cutoff)
 {
     if (std::distance(first1, last1) != std::distance(first2, last2)) {
         throw std::invalid_argument("Sequences are not the same length.");
     }
 
     int64_t dist = 0;
-    for (; first1 != last1; first1++,first2++)
-    {
+    for (; first1 != last1; first1++, first2++) {
         dist += bool(*first1 != *first2);
     }
 
@@ -1620,14 +1624,15 @@ int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, Input
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
-               int64_t score_cutoff)
+int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return hamming_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                            common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
+int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                           int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -1639,12 +1644,13 @@ int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return hamming_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                              common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               double score_cutoff)
+                                   double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -1656,12 +1662,13 @@ double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1),
+                                       common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               double score_cutoff)
+double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                     InputIt2 last2, double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -1673,7 +1680,8 @@ double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 f
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1),
+                                         common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
@@ -1692,9 +1700,11 @@ int64_t CachedHamming<CharT1>::distance(const Sentence2& s2, int64_t score_cutof
 
 template <typename CharT1>
 template <typename InputIt2>
-int64_t CachedHamming<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
+int64_t CachedHamming<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                          int64_t score_cutoff) const
 {
-    return hamming_similarity(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return hamming_similarity(common::to_begin(s1), common::to_end(s1), first2, last2,
+                              score_cutoff);
 }
 
 template <typename CharT1>
@@ -1706,9 +1716,11 @@ int64_t CachedHamming<CharT1>::similarity(const Sentence2& s2, int64_t score_cut
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedHamming<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedHamming<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
+                                                  double score_cutoff) const
 {
-    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1), first2, last2,
+                                       score_cutoff);
 }
 
 template <typename CharT1>
@@ -1720,9 +1732,11 @@ double CachedHamming<CharT1>::normalized_distance(const Sentence2& s2, double sc
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedHamming<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedHamming<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
+                                                    double score_cutoff) const
 {
-    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1), first2, last2,
+                                         score_cutoff);
 }
 
 template <typename CharT1>
@@ -1737,43 +1751,41 @@ double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double 
 } // namespace rapidfuzz
 
 
-#include <limits>
 #include <cmath>
+#include <limits>
 
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   int64_t max = std::numeric_limits<int64_t>::max());
+                       int64_t max = std::numeric_limits<int64_t>::max());
 
 template <typename Sentence1, typename Sentence2>
 int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
-                   int64_t max = std::numeric_limits<int64_t>::max());
+                       int64_t max = std::numeric_limits<int64_t>::max());
 
 template <typename InputIt1, typename InputIt2>
 int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   int64_t score_cutoff = 0.0);
+                         int64_t score_cutoff = 0.0);
 
 template <typename Sentence1, typename Sentence2>
-int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2,
-                   int64_t score_cutoff = 0.0);
+int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0.0);
 
 template <typename InputIt1, typename InputIt2>
 double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   double score_cutoff = 1.0);
+                                 double score_cutoff = 1.0);
 
 template <typename Sentence1, typename Sentence2>
 double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                   double score_cutoff = 1.0);
+                                 double score_cutoff = 1.0);
 
 template <typename InputIt1, typename InputIt2>
 double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                              double score_cutoff = 0.0);
+                                   double score_cutoff = 0.0);
 
 template <typename Sentence1, typename Sentence2>
 double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                              double score_cutoff = 0.0);
-
+                                   double score_cutoff = 0.0);
 
 template <typename InputIt1, typename InputIt2>
 Editops indel_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2);
@@ -1781,26 +1793,24 @@ Editops indel_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2
 template <typename Sentence1, typename Sentence2>
 Editops indel_editops(const Sentence1& s1, const Sentence2& s2);
 
-
 template <typename CharT1>
 struct CachedIndel {
     template <typename Sentence1>
     CachedIndel(const Sentence1& s1_)
         : s1(common::to_string(s1_)), PM(common::to_begin(s1), common::to_end(s1))
-    {
-    }
+    {}
 
     template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1)
-        : s1(first1, last1), PM(first1, last1)
-    {
-    }
+    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(first1, last1)
+    {}
 
     template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(const Sentence2& s2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
@@ -1829,9 +1839,8 @@ private:
 template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedIndel(InputIt1 first1, InputIt1 last1) ->
-    CachedIndel<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iterator_type<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -2412,7 +2421,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 }
 
 template <int64_t N, typename PMV, typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                 InputIt2 last2)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -2447,7 +2457,8 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
 }
 
 template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block, InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block, InputIt1 first1,
+                                    InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -2523,22 +2534,21 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 
 template <typename InputIt1, typename InputIt2>
 int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   int64_t score_cutoff)
+                       int64_t score_cutoff)
 {
     return detail::indel_distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
-                   int64_t max)
+int64_t indel_distance(const Sentence1& s1, const Sentence2& s2, int64_t max)
 {
-    return indel_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), max);
+    return indel_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                          common::to_end(s2), max);
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                   InputIt2 last2,
-                              double score_cutoff)
+double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                 double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -2548,16 +2558,15 @@ double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first
 }
 
 template <typename Sentence1, typename Sentence2>
-double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                              double score_cutoff)
+double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return indel_normalized_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return indel_normalized_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                     common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                           InputIt2 last2,
-                                           int64_t score_cutoff)
+int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                         int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -2567,28 +2576,26 @@ int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2,
-                             int64_t score_cutoff)
+int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return levenshtein_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return levenshtein_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                  common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_similarity(InputIt1 first1, InputIt1 last1,
-                                                     InputIt2 first2, InputIt2 last2,
-                                                     double score_cutoff)
+double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                   double score_cutoff)
 {
-    double norm_dist = indel_normalized_distance(first1, last1, first2, last2,
-                                                                   1.0 - score_cutoff);
+    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
 template <typename Sentence1, typename Sentence2>
-double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                              double score_cutoff)
+double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return indel_normalized_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return indel_normalized_similarity(common::to_begin(s1), common::to_end(s1),
+                                       common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -2597,20 +2604,23 @@ Editops indel_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(first1, last1, first2, last2);
 
-    return detail::recover_alignment(first1, last1, first2, last2, detail::llcs_matrix(first1, last1, first2, last2), affix);
+    return detail::recover_alignment(first1, last1, first2, last2,
+                                     detail::llcs_matrix(first1, last1, first2, last2), affix);
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops indel_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return indel_editops(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2));
+    return indel_editops(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                         common::to_end(s2));
 }
 
 template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedIndel<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    return detail::indel_distance(PM, common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return detail::indel_distance(PM, common::to_begin(s1), common::to_end(s1), first2, last2,
+                                  score_cutoff);
 }
 
 template <typename CharT1>
@@ -2622,7 +2632,8 @@ int64_t CachedIndel<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
+                                                double score_cutoff) const
 {
     int64_t maximum = s1.size() + std::distance(first2, last2);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -2630,7 +2641,6 @@ double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
     double norm_dist = (maximum) ? (double)dist / (double)maximum : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
-
 
 template <typename CharT1>
 template <typename Sentence2>
@@ -2659,7 +2669,8 @@ int64_t CachedIndel<CharT1>::similarity(const Sentence2& s2, int64_t score_cutof
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedIndel<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedIndel<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
+                                                  double score_cutoff) const
 {
     double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
     double norm_sim = 1.0 - norm_dist;
@@ -2675,8 +2686,8 @@ double CachedIndel<CharT1>::normalized_similarity(const Sentence2& s2, double sc
 
 } // namespace rapidfuzz
 
-#include <limits>
 #include <cmath>
+#include <limits>
 
 namespace rapidfuzz {
 
@@ -2811,33 +2822,33 @@ namespace rapidfuzz {
  */
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   LevenshteinWeightTable weights = {1, 1, 1},
-                   int64_t max = std::numeric_limits<int64_t>::max());
+                             LevenshteinWeightTable weights = {1, 1, 1},
+                             int64_t max = std::numeric_limits<int64_t>::max());
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                   LevenshteinWeightTable weights = {1, 1, 1},
-                   int64_t max = std::numeric_limits<int64_t>::max());
+                             LevenshteinWeightTable weights = {1, 1, 1},
+                             int64_t max = std::numeric_limits<int64_t>::max());
 
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   LevenshteinWeightTable weights = {1, 1, 1},
-                   int64_t score_cutoff = 0.0);
+                               LevenshteinWeightTable weights = {1, 1, 1},
+                               int64_t score_cutoff = 0.0);
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
-                   LevenshteinWeightTable weights = {1, 1, 1},
-                   int64_t score_cutoff = 0.0);
+                               LevenshteinWeightTable weights = {1, 1, 1},
+                               int64_t score_cutoff = 0.0);
 
 template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   LevenshteinWeightTable weights = {1, 1, 1},
-                   double score_cutoff = 1.0);
+double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                       InputIt2 last2, LevenshteinWeightTable weights = {1, 1, 1},
+                                       double score_cutoff = 1.0);
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                   LevenshteinWeightTable weights = {1, 1, 1},
-                   double score_cutoff = 1.0);
+                                       LevenshteinWeightTable weights = {1, 1, 1},
+                                       double score_cutoff = 1.0);
 
 /**
  * @brief Calculates a normalized levenshtein distance using custom
@@ -2899,12 +2910,14 @@ double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
  * @endparblock
  */
 template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                              LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 0.0);
+double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                         InputIt2 last2, LevenshteinWeightTable weights = {1, 1, 1},
+                                         double score_cutoff = 0.0);
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                              LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 0.0);
+                                         LevenshteinWeightTable weights = {1, 1, 1},
+                                         double score_cutoff = 0.0);
 
 /**
  * @brief Return list of EditOp describing how to turn s1 into s2.
@@ -2927,26 +2940,27 @@ Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2);
 
-
 template <typename CharT1>
 struct CachedLevenshtein {
     template <typename Sentence1>
     CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(common::to_string(s1_)), PM(common::to_begin(s1), common::to_end(s1)), weights(aWeights)
-    {
-    }
+        : s1(common::to_string(s1_)),
+          PM(common::to_begin(s1), common::to_end(s1)),
+          weights(aWeights)
+    {}
 
     template <typename InputIt1>
     CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
         : s1(first1, last1), PM(first1, last1), weights(aWeights)
-    {
-    }
+    {}
 
     template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(const Sentence2& s2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
@@ -2974,11 +2988,12 @@ private:
 
 #if __cplusplus >= 201703L
 template <typename Sentence1>
-CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights) -> CachedLevenshtein<char_type<Sentence1>>;
+CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
+    -> CachedLevenshtein<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights) ->
-    CachedLevenshtein<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
+    -> CachedLevenshtein<iterator_type<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -3166,7 +3181,6 @@ int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 fi
                                InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     int64_t len1 = std::distance(first1, last1);
-    int64_t len2 = std::distance(first2, last2);
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = (uint64_t)-1;
@@ -3568,7 +3582,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 
 template <typename InputIt1, typename InputIt2>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVector& PM,
-                                                   InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+                                                   InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                   InputIt2 last2)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -3609,7 +3624,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
 
 template <typename InputIt1, typename InputIt2>
 LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatternMatchVector& PM,
-                                                         InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+                                                         InputIt1 first1, InputIt1 last1,
+                                                         InputIt2 first2, InputIt2 last2)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -3694,7 +3710,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                        InputIt2 last2)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -3705,7 +3722,8 @@ LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt
         return matrix;
     }
     else if (len1 <= 64) {
-        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first2, last2), first2, last2, first1, last1);
+        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first2, last2), first2,
+                                             last2, first1, last1);
     }
     else {
         return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first2, last2),
@@ -3717,8 +3735,7 @@ LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt
 
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   LevenshteinWeightTable weights,
-                   int64_t max)
+                             LevenshteinWeightTable weights, int64_t max)
 {
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -3748,21 +3765,22 @@ int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, I
         }
     }
 
-    return detail::generalized_levenshtein_wagner_fischer(first1, last1, first2, last2, weights, max);
+    return detail::generalized_levenshtein_wagner_fischer(first1, last1, first2, last2, weights,
+                                                          max);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                   LevenshteinWeightTable weights,
-                   int64_t max)
+                             LevenshteinWeightTable weights, int64_t max)
 {
-    return levenshtein_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), weights, max);
+    return levenshtein_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                common::to_end(s2), weights, max);
 }
 
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                   InputIt2 last2,
-                              LevenshteinWeightTable weights, double score_cutoff)
+                                       InputIt2 last2, LevenshteinWeightTable weights,
+                                       double score_cutoff)
 {
     int64_t maximum = detail::levenshtein_maximum(first1, last1, first2, last2, weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -3773,15 +3791,16 @@ double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                              LevenshteinWeightTable weights, double score_cutoff)
+                                       LevenshteinWeightTable weights, double score_cutoff)
 {
-    return levenshtein_normalized_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), weights, score_cutoff);
+    return levenshtein_normalized_distance(common::to_begin(s1), common::to_end(s1),
+                                           common::to_begin(s2), common::to_end(s2), weights,
+                                           score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                           InputIt2 last2, LevenshteinWeightTable weights,
-                                           int64_t score_cutoff)
+int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                               LevenshteinWeightTable weights, int64_t score_cutoff)
 {
     int64_t maximum = detail::levenshtein_maximum(first1, last1, first2, last2, weights);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -3792,28 +3811,30 @@ int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
-                              LevenshteinWeightTable weights, int64_t score_cutoff)
+                               LevenshteinWeightTable weights, int64_t score_cutoff)
 {
-    return levenshtein_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), weights, score_cutoff);
+    return levenshtein_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                  common::to_end(s2), weights, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1,
-                                                     InputIt2 first2, InputIt2 last2,
-                                                     LevenshteinWeightTable weights,
-                                                     double score_cutoff)
+double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                         InputIt2 last2, LevenshteinWeightTable weights,
+                                         double score_cutoff)
 {
-    double norm_dist = levenshtein_normalized_distance(first1, last1, first2, last2,
-                                                                   weights, 1.0 - score_cutoff);
+    double norm_dist =
+        levenshtein_normalized_distance(first1, last1, first2, last2, weights, 1.0 - score_cutoff);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                              LevenshteinWeightTable weights, double score_cutoff)
+                                         LevenshteinWeightTable weights, double score_cutoff)
 {
-    return levenshtein_normalized_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), weights, score_cutoff);
+    return levenshtein_normalized_similarity(common::to_begin(s1), common::to_end(s1),
+                                             common::to_begin(s2), common::to_end(s2), weights,
+                                             score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3822,18 +3843,22 @@ Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = common::remove_common_affix(first1, last1, first2, last2);
 
-    return detail::recover_alignment(first1, last1, first2, last2, detail::levenshtein_matrix(first1, last1, first2, last2), affix);
+    return detail::recover_alignment(first1, last1, first2, last2,
+                                     detail::levenshtein_matrix(first1, last1, first2, last2),
+                                     affix);
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return levenshtein_editops(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2));
+    return levenshtein_editops(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                               common::to_end(s2));
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
+int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2,
+                                            int64_t score_cutoff) const
 {
     auto first1 = common::to_begin(s1);
     auto last1 = common::to_end(s1);
@@ -3854,20 +3879,20 @@ int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2, int
             return (dist <= score_cutoff) ? dist : score_cutoff + 1;
         }
         /*
-            * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-            * therefore this can be implemented as InDel distance multiplied with the common factor
-            */
+         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+         * therefore this can be implemented as InDel distance multiplied with the common factor
+         */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
             int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-            int64_t dist =
-                detail::indel_distance(PM, first1, last1, first2, last2, new_max);
+            int64_t dist = detail::indel_distance(PM, first1, last1, first2, last2, new_max);
             dist *= weights.insert_cost;
             return (dist <= score_cutoff) ? dist : score_cutoff + 1;
         }
     }
 
-    return detail::generalized_levenshtein_distance(first1, last1, first2, last2, weights, score_cutoff);
+    return detail::generalized_levenshtein_distance(first1, last1, first2, last2, weights,
+                                                    score_cutoff);
 }
 
 template <typename CharT1>
@@ -3879,7 +3904,8 @@ int64_t CachedLevenshtein<CharT1>::distance(const Sentence2& s2, int64_t score_c
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
+                                                      double score_cutoff) const
 {
     auto first1 = common::to_begin(s1);
     auto last1 = common::to_end(s1);
@@ -3892,14 +3918,16 @@ double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedLevenshtein<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
+double CachedLevenshtein<CharT1>::normalized_distance(const Sentence2& s2,
+                                                      double score_cutoff) const
 {
     return normalized_distance(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-int64_t CachedLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
+int64_t CachedLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                              int64_t score_cutoff) const
 {
     auto first1 = common::to_begin(s1);
     auto last1 = common::to_end(s1);
@@ -3919,7 +3947,8 @@ int64_t CachedLevenshtein<CharT1>::similarity(const Sentence2& s2, int64_t score
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
+                                                        double score_cutoff) const
 {
     double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
     double norm_sim = 1.0 - norm_dist;
@@ -3928,7 +3957,8 @@ double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
+double CachedLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2,
+                                                        double score_cutoff) const
 {
     return normalized_similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
@@ -3971,7 +4001,8 @@ namespace fuzz {
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+             double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -3984,8 +4015,8 @@ struct CachedRatio {
     {}
 
     template <typename Sentence1>
-    CachedRatio(const Sentence1& s1)
-        : CachedRatio(common::to_begin(s1), common::to_end(s1)) {}
+    CachedRatio(const Sentence1& s1) : CachedRatio(common::to_begin(s1), common::to_end(s1))
+    {}
 
     template <typename InputIt2>
     double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
@@ -4002,9 +4033,8 @@ private:
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4033,7 +4063,8 @@ CachedRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                     double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double partial_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4049,7 +4080,8 @@ struct CachedPartialRatio {
 
     template <typename Sentence1>
     CachedPartialRatio(const Sentence1& s1)
-        : CachedPartialRatio(common::to_begin(s1), common::to_end(s1)) {}
+        : CachedPartialRatio(common::to_begin(s1), common::to_end(s1))
+    {}
 
     template <typename InputIt2>
     double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
@@ -4067,9 +4099,8 @@ private:
 template <typename Sentence1>
 CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedPartialRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedPartialRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4099,7 +4130,8 @@ CachedPartialRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
           typename CharT2 = char_type<Sentence2>>
@@ -4134,11 +4166,10 @@ private:
 template <typename Sentence1>
 CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedTokenSortRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedTokenSortRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedTokenSortRatio<iterator_type<InputIt1>>;
 #endif
-
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -4161,11 +4192,11 @@ CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
-double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2,
-                                 double score_cutoff = 0);
+double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // TODO documentation
 template <typename CharT1>
@@ -4193,11 +4224,12 @@ private:
 
 #if __cplusplus >= 201703L
 template <typename Sentence1>
-CachedPartialTokenSortRatio(const Sentence1& s1) -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
+CachedPartialTokenSortRatio(const Sentence1& s1)
+    -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedPartialTokenSortRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedPartialTokenSortRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4229,7 +4261,8 @@ CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                       double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4262,9 +4295,9 @@ private:
 template <typename Sentence1>
 CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedTokenSetRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedTokenSetRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedTokenSetRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4287,7 +4320,8 @@ CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double partial_token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double partial_token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4320,9 +4354,9 @@ private:
 template <typename Sentence1>
 CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedPartialTokenSetRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedPartialTokenSetRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4345,7 +4379,8 @@ CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                   double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4383,9 +4418,8 @@ private:
 template <typename Sentence1>
 CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedTokenRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedTokenRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4409,7 +4443,8 @@ CachedTokenRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                           double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4445,9 +4480,9 @@ private:
 template <typename Sentence1>
 CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedPartialTokenRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedPartialTokenRatio<iterator_type<InputIt1>>;
 #endif
 
 /**
@@ -4472,7 +4507,8 @@ CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+              double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double WRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4484,8 +4520,7 @@ struct CachedWRatio {
     CachedWRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedWRatio(const Sentence1& s1)
-        : CachedWRatio(common::to_begin(s1), common::to_end(s1))
+    CachedWRatio(const Sentence1& s1) : CachedWRatio(common::to_begin(s1), common::to_end(s1))
     {}
 
     template <typename InputIt2>
@@ -4497,8 +4532,8 @@ struct CachedWRatio {
 private:
     // todo somehow implement this using other ratios with creating PatternMatchVector
     // multiple times
-    CachedPartialRatio<CharT1> cached_partial_ratio;
     std::basic_string<CharT1> s1;
+    CachedPartialRatio<CharT1> cached_partial_ratio;
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
     common::BlockPatternMatchVector blockmap_s1_sorted;
@@ -4508,11 +4543,9 @@ private:
 template <typename Sentence1>
 CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedWRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedWRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iterator_type<InputIt1>>;
 #endif
-
 
 /**
  * @brief Calculates a quick ratio between two strings using fuzz.ratio
@@ -4536,7 +4569,8 @@ CachedWRatio(InputIt1 first1, InputIt1 last1) ->
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
+double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+              double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -4544,12 +4578,11 @@ double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0)
 template <typename CharT1>
 struct CachedQRatio {
     template <typename InputIt1>
-    CachedQRatio(InputIt1 first1, InputIt1 last1)
-         : s1(first1, last1), cached_ratio(first1, last1) {}
+    CachedQRatio(InputIt1 first1, InputIt1 last1) : s1(first1, last1), cached_ratio(first1, last1)
+    {}
 
     template <typename Sentence1>
-    CachedQRatio(const Sentence1& s1)
-        : CachedQRatio(common::to_begin(s1), common::to_end(s1))
+    CachedQRatio(const Sentence1& s1) : CachedQRatio(common::to_begin(s1), common::to_end(s1))
     {}
 
     template <typename InputIt2>
@@ -4567,9 +4600,8 @@ private:
 template <typename Sentence1>
 CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
-template<typename InputIt1>
-CachedQRatio(InputIt1 first1, InputIt1 last1) ->
-    CachedQRatio<iterator_type<InputIt1>>;
+template <typename InputIt1>
+CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iterator_type<InputIt1>>;
 #endif
 
 /**@}*/
@@ -4646,7 +4678,7 @@ public:
         {
             for (int64_t i = a_low; i < a_high; ++i) {
                 const auto& indexes = b2j_[a_first[i]];
-                int64_t pos = 0;
+                size_t pos = 0;
                 int64_t next_val = 0;
                 bool found = false;
                 for (; pos < indexes.size(); pos++) {
@@ -4678,9 +4710,8 @@ public:
                     }
                 }
 
-                if (!found)
-                {
-                    std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);  
+                if (!found) {
+                    std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
                 }
             }
 
@@ -4710,7 +4741,7 @@ public:
         std::vector<std::tuple<int64_t, int64_t, int64_t, int64_t>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
-        int64_t queue_head = 0;
+        size_t queue_head = 0;
         queue.reserve(std::min(a_len, b_len));
         queue.emplace_back(0, a_len, 0, b_len);
 
@@ -4771,9 +4802,11 @@ private:
 } // namespace difflib
 
 template <typename InputIt1, typename InputIt2>
-std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2)
 {
-    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2).get_matching_blocks();
+    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2)
+        .get_matching_blocks();
 }
 
 } /* namespace detail */
@@ -4801,16 +4834,16 @@ double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, d
 template <typename Sentence1, typename Sentence2>
 double ratio(const Sentence1& s1, const Sentence2& s2, const double score_cutoff)
 {
-    return ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2),
+                 score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    double norm_sim = detail::indel_normalized_similarity(
-        PM, common::to_begin(s1), common::to_end(s1), first2, last2,
-        score_cutoff / 100);
+    double norm_sim = rapidfuzz::detail::indel_normalized_similarity(
+        PM, common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff / 100);
     return norm_sim * 100;
 }
 
@@ -4829,7 +4862,8 @@ namespace detail {
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 double
-partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, const CachedRatio<CachedCharT1>& cached_ratio,
+partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                           const CachedRatio<CachedCharT1>& cached_ratio,
                            const common::CharHashTable<iterator_type<InputIt1>, bool>& s1_char_map,
                            double score_cutoff)
 {
@@ -4891,24 +4925,24 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-double partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                  double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
     common::CharHashTable<CharT1, bool> s1_char_map;
     int64_t len1 = std::distance(first1, last1);
-    for (int64_t i = 0; i < len1; ++i)
-    {
+    for (int64_t i = 0; i < len1; ++i) {
         s1_char_map.create(first1[i]) = true;
     }
 
-    return partial_ratio_short_needle(first1, last1, first2, last2, cached_ratio, s1_char_map, score_cutoff);
+    return partial_ratio_short_needle(first1, last1, first2, last2, cached_ratio, s1_char_map,
+                                      score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 const CachedRatio<CachedCharT1>& cached_ratio,
-                                 double score_cutoff)
+                                 const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -4935,7 +4969,8 @@ double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first
     for (const auto& block : blocks) {
         int64_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
         auto substr_first = first2 + long_start;
-        auto substr_last = (std::distance(substr_first, last2) < len1) ? last2 : substr_first + len1;
+        auto substr_last =
+            (std::distance(substr_first, last2) < len1) ? last2 : substr_first + len1;
 
         double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
         if (ls_ratio > max_ratio) {
@@ -4947,7 +4982,8 @@ double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                 double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
@@ -4957,7 +4993,8 @@ double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first
 } // namespace detail
 
 template <typename InputIt1, typename InputIt2>
-double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                     double score_cutoff)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
@@ -4985,7 +5022,8 @@ double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 
 template <typename Sentence1, typename Sentence2>
 double partial_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return partial_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return partial_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                         common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
@@ -4993,35 +5031,36 @@ template <typename InputIt1>
 CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
     : s1(first1, last1), cached_ratio(first1, last1)
 {
-    for (const auto& ch : s1)
-    {
+    for (const auto& ch : s1) {
         s1_char_map.create(ch) = true;
     }
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                              double score_cutoff) const
 {
+    int64_t len1 = (int64_t)s1.size();
     int64_t len2 = std::distance(first2, last2);
 
-    if (s1.size() > len2) {
+    if (len1 > len2) {
         return partial_ratio(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
     }
 
-    if (s1.empty() || !len2) {
-        return static_cast<double>(s1.size() == len2) * 100.0;
+    if (!len1 || !len2) {
+        return static_cast<double>(len1 == len2) * 100.0;
     }
 
-    if (s1.size() <= 64) {
-        return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2, last2, cached_ratio, s1_char_map,
-                                                  score_cutoff);
+    if (len1 <= 64) {
+        return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2,
+                                                  last2, cached_ratio, s1_char_map, score_cutoff);
     }
     else {
-        return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2, last2, cached_ratio, score_cutoff);
+        return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2,
+                                                 last2, cached_ratio, score_cutoff);
     }
 }
-
 
 template <typename CharT1>
 template <typename Sentence2>
@@ -5034,22 +5073,26 @@ double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_
  *             token_sort_ratio
  *********************************************/
 template <typename InputIt1, typename InputIt2>
-double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
-    return ratio(common::sorted_split(first1, last1).join(), common::sorted_split(first2, last2).join(), score_cutoff);
+    return ratio(common::sorted_split(first1, last1).join(),
+                 common::sorted_split(first2, last2).join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2, typename CharT1, typename CharT2>
 double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return token_sort_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return token_sort_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                            common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                                double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -5068,12 +5111,13 @@ double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double scor
  *********************************************/
 
 template <typename InputIt1, typename InputIt2>
-double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
-    return partial_ratio(common::sorted_split(first1, last1).join(), common::sorted_split(first2, last2).join(),
-                         score_cutoff);
+    return partial_ratio(common::sorted_split(first1, last1).join(),
+                         common::sorted_split(first2, last2).join(), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -5084,16 +5128,19 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                                       double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
-    return cached_partial_ratio.similarity(common::sorted_split(first2, last2).join(), score_cutoff);
+    return cached_partial_ratio.similarity(common::sorted_split(first2, last2).join(),
+                                           score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2,
+                                                       double score_cutoff) const
 {
     return similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
@@ -5163,23 +5210,26 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 } // namespace detail
 
 template <typename InputIt1, typename InputIt2>
-double token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                       double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
-    return detail::token_set_ratio(common::sorted_split(first1, last1), common::sorted_split(first2, last2),
-                                   score_cutoff);
+    return detail::token_set_ratio(common::sorted_split(first1, last1),
+                                   common::sorted_split(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return token_set_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return token_set_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                           common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                               double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -5220,32 +5270,37 @@ double partial_token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 } // namespace detail
 
 template <typename InputIt1, typename InputIt2>
-double partial_token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double partial_token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
-    return detail::partial_token_set_ratio(common::sorted_split(first1, last1), common::sorted_split(first2, last2),
-                                           score_cutoff);
+    return detail::partial_token_set_ratio(common::sorted_split(first1, last1),
+                                           common::sorted_split(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return partial_token_set_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return partial_token_set_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                   common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                                      double score_cutoff) const
 {
     if (score_cutoff > 100) return 0;
 
-    return detail::partial_token_set_ratio(tokens_s1, common::sorted_split(first2, last2), score_cutoff);
+    return detail::partial_token_set_ratio(tokens_s1, common::sorted_split(first2, last2),
+                                           score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2,
+                                                      double score_cutoff) const
 {
     return similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
@@ -5255,7 +5310,8 @@ double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, doubl
  *********************************************/
 
 template <typename InputIt1, typename InputIt2>
-double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                   double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -5313,14 +5369,15 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
 template <typename Sentence1, typename Sentence2>
 double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return token_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return token_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                       common::to_end(s2), score_cutoff);
 }
 
 namespace detail {
 template <typename CharT1, typename CachedCharT1, typename InputIt2>
 double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
-                   const CachedRatio<CachedCharT1>& cached_ratio_s1_sorted, InputIt2 first2, InputIt2 last2,
-                   double score_cutoff)
+                   const CachedRatio<CachedCharT1>& cached_ratio_s1_sorted, InputIt2 first2,
+                   InputIt2 last2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -5378,8 +5435,8 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double token_ratio(const std::basic_string<CharT1>& s1_sorted,
                    const SplittedSentenceView<InputIt1>& tokens_s1,
-                   const common::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2, InputIt2 last2,
-                   double score_cutoff)
+                   const common::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2,
+                   InputIt2 last2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -5404,9 +5461,9 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        double norm_sim = indel_normalized_similarity(
-            common::to_begin(s1_sorted), common::to_end(s1_sorted), common::to_begin(s2_sorted), common::to_end(s2_sorted),
-            score_cutoff / 100);
+        double norm_sim = rapidfuzz::detail::indel_normalized_similarity(
+            blockmap_s1_sorted, common::to_begin(s1_sorted), common::to_end(s1_sorted),
+            common::to_begin(s2_sorted), common::to_end(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -5418,8 +5475,7 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
-    int64_t dist =
-        indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
+    int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance) {
         result = std::max(
             result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
@@ -5447,7 +5503,8 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                            double score_cutoff) const
 {
     return detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);
 }
@@ -5464,7 +5521,8 @@ double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cu
  *********************************************/
 
 template <typename InputIt1, typename InputIt2>
-double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
+double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                           double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -5494,14 +5552,15 @@ double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 template <typename Sentence1, typename Sentence2>
 double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return partial_token_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return partial_token_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                               common::to_end(s2), score_cutoff);
 }
 
 namespace detail {
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                           const SplittedSentenceView<InputIt1>& tokens_s1, InputIt2 first2, InputIt2 last2,
-                           double score_cutoff)
+                           const SplittedSentenceView<InputIt1>& tokens_s1, InputIt2 first2,
+                           InputIt2 last2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -5531,7 +5590,8 @@ double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                                   double score_cutoff) const
 {
     return detail::partial_token_ratio(s1_sorted, tokens_s1, first2, last2, score_cutoff);
 }
@@ -5564,35 +5624,39 @@ double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
     }
 
     double len_ratio = (len1 > len2) ? static_cast<double>(len1) / static_cast<double>(len2)
-                                       : static_cast<double>(len2) / static_cast<double>(len1);
+                                     : static_cast<double>(len2) / static_cast<double>(len1);
 
     double end_ratio = ratio(first1, last1, first2, last2, score_cutoff);
 
     if (len_ratio < 1.5) {
         score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
-        return std::max(end_ratio, token_ratio(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);
+        return std::max(end_ratio,
+                        token_ratio(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);
     }
 
     const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
 
     score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
-    end_ratio = std::max(end_ratio, partial_ratio(first1, last1, first2, last2, score_cutoff) * PARTIAL_SCALE);
+    end_ratio = std::max(end_ratio,
+                         partial_ratio(first1, last1, first2, last2, score_cutoff) * PARTIAL_SCALE);
 
     score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
-    return std::max(end_ratio,
-                    partial_token_ratio(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE * PARTIAL_SCALE);
+    return std::max(end_ratio, partial_token_ratio(first1, last1, first2, last2, score_cutoff) *
+                                   UNBASE_SCALE * PARTIAL_SCALE);
 }
 
 template <typename Sentence1, typename Sentence2>
 double WRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return WRatio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return WRatio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                  common::to_end(s2), score_cutoff);
 }
 
 template <typename Sentence1>
 template <typename InputIt1>
 CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
-    : s1(first1, last1), cached_partial_ratio(first1, last1),
+    : s1(first1, last1),
+      cached_partial_ratio(first1, last1),
       tokens_s1(common::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join())
 {
@@ -5617,29 +5681,28 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
     }
 
     double len_ratio = (len1 > len2) ? static_cast<double>(len1) / static_cast<double>(len2)
-                                       : static_cast<double>(len2) / static_cast<double>(len1);
+                                     : static_cast<double>(len2) / static_cast<double>(len1);
 
     double end_ratio = cached_partial_ratio.cached_ratio.similarity(first2, last2, score_cutoff);
 
     if (len_ratio < 1.5) {
         score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
         // use pre calculated values
-        auto r =
-            detail::token_ratio(s1_sorted, tokens_s1, blockmap_s1_sorted, first2, last2, score_cutoff);
+        auto r = detail::token_ratio(s1_sorted, tokens_s1, blockmap_s1_sorted, first2, last2,
+                                     score_cutoff);
         return std::max(end_ratio, r * UNBASE_SCALE);
     }
 
     const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
 
     score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
-    end_ratio =
-        std::max(end_ratio, cached_partial_ratio.similarity(first2, last2, score_cutoff) * PARTIAL_SCALE);
+    end_ratio = std::max(end_ratio, cached_partial_ratio.similarity(first2, last2, score_cutoff) *
+                                        PARTIAL_SCALE);
 
     score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;
     auto r = detail::partial_token_ratio(s1_sorted, tokens_s1, first2, last2, score_cutoff);
     return std::max(end_ratio, r * UNBASE_SCALE * PARTIAL_SCALE);
 }
-
 
 template <typename CharT1>
 template <typename Sentence2>
@@ -5670,7 +5733,8 @@ double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
 template <typename Sentence1, typename Sentence2>
 double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return QRatio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return QRatio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                  common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>

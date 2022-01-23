@@ -76,7 +76,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
     const std::basic_string<CharT> whitespace{0x20};
     ++sentence_iter;
     for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
-        joined.append(whitespace).append(std::basic_string<CharT>(sentence_iter->first, sentence_iter->last));
+        joined.append(whitespace)
+            .append(std::basic_string<CharT>(sentence_iter->first, sentence_iter->last));
     }
     return joined;
 }

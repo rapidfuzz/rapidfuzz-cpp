@@ -9,8 +9,8 @@
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-DecomposedSet<InputIt1, InputIt2, InputIt1> common::set_decomposition(SplittedSentenceView<InputIt1> a,
-                                                                SplittedSentenceView<InputIt2> b)
+DecomposedSet<InputIt1, InputIt2, InputIt1>
+common::set_decomposition(SplittedSentenceView<InputIt1> a, SplittedSentenceView<InputIt2> b)
 {
     a.dedupe();
     b.dedupe();

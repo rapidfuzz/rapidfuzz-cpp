@@ -54,7 +54,8 @@ constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff
 template <int Max = 1>
 static inline int64_t score_cutoff_to_distance(double score_cutoff, int64_t lensum)
 {
-    return static_cast<int64_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
+    return static_cast<int64_t>(
+        std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
 template <typename T>
@@ -63,17 +64,16 @@ constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
     return std::fabs(a) <= tolerance;
 }
 
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = std::enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
+template <typename Sentence, typename CharT = char_type<Sentence>,
+          typename = std::enable_if_t<
+              is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
 std::basic_string<CharT> to_string(Sentence&& str);
 
-template <
-    typename Sentence, typename CharT = char_type<Sentence>,
-    typename = std::enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
-                           has_data_and_size<Sentence>::value>>
+template <typename Sentence, typename CharT = char_type<Sentence>,
+          typename = std::enable_if_t<
+              !is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
+              has_data_and_size<Sentence>::value>>
 std::basic_string<CharT> to_string(const Sentence& str);
-
 
 template <typename CharT>
 CharT* to_begin(CharT* s)
@@ -194,7 +194,7 @@ struct PatternMatchVector {
     uint64_t get(CharT key) const
     {
         if (key >= 0 && key <= 255) {
-            return m_extendedAscii[key];
+            return m_extendedAscii[(uint8_t)key];
         }
         else {
             return m_map[lookup((uint64_t)key)].value;
@@ -205,6 +205,7 @@ struct PatternMatchVector {
     uint64_t get(int64_t block, CharT key) const
     {
         assert(block == 0);
+        (void)block;
         return get(key);
     }
 
@@ -213,7 +214,7 @@ private:
     void insert_mask(CharT key, uint64_t mask)
     {
         if (key >= 0 && key <= 255) {
-            m_extendedAscii[key] |= mask;
+            m_extendedAscii[(uint8_t)key] |= mask;
         }
         else {
             int64_t i = lookup((uint64_t)key);

@@ -2,22 +2,21 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include <rapidfuzz/details/common.hpp>
 #include <cmath>
+#include <rapidfuzz/details/common.hpp>
 
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               int64_t score_cutoff)
+                         int64_t score_cutoff)
 {
     if (std::distance(first1, last1) != std::distance(first2, last2)) {
         throw std::invalid_argument("Sequences are not the same length.");
     }
 
     int64_t dist = 0;
-    for (; first1 != last1; first1++,first2++)
-    {
+    for (; first1 != last1; first1++, first2++) {
         dist += bool(*first1 != *first2);
     }
 
@@ -25,14 +24,15 @@ int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, Input
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
-               int64_t score_cutoff)
+int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return hamming_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                            common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
+int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                           int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -44,12 +44,13 @@ int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return hamming_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                              common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               double score_cutoff)
+                                   double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
@@ -61,12 +62,13 @@ double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1),
+                                       common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-               double score_cutoff)
+double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                     InputIt2 last2, double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1);
     int64_t cutoff_distance = maximum - score_cutoff;
@@ -78,7 +80,8 @@ double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 f
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1),
+                                         common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
@@ -97,9 +100,11 @@ int64_t CachedHamming<CharT1>::distance(const Sentence2& s2, int64_t score_cutof
 
 template <typename CharT1>
 template <typename InputIt2>
-int64_t CachedHamming<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
+int64_t CachedHamming<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                          int64_t score_cutoff) const
 {
-    return hamming_similarity(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return hamming_similarity(common::to_begin(s1), common::to_end(s1), first2, last2,
+                              score_cutoff);
 }
 
 template <typename CharT1>
@@ -111,9 +116,11 @@ int64_t CachedHamming<CharT1>::similarity(const Sentence2& s2, int64_t score_cut
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedHamming<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedHamming<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
+                                                  double score_cutoff) const
 {
-    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return hamming_normalized_distance(common::to_begin(s1), common::to_end(s1), first2, last2,
+                                       score_cutoff);
 }
 
 template <typename CharT1>
@@ -125,9 +132,11 @@ double CachedHamming<CharT1>::normalized_distance(const Sentence2& s2, double sc
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedHamming<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedHamming<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
+                                                    double score_cutoff) const
 {
-    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
+    return hamming_normalized_similarity(common::to_begin(s1), common::to_end(s1), first2, last2,
+                                         score_cutoff);
 }
 
 template <typename CharT1>
