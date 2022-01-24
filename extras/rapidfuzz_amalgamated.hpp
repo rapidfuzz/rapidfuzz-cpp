@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-23 01:47:25.785606
+//  Generated: 2022-01-24 22:53:25.415558
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2012,12 +2012,17 @@ int64_t indel_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
-    int64_t len_diff = std::abs(len1 - len2);
+
+    if (len1 < len2) {
+        return indel_mbleven2018(first2, last2, first1, last1, max);
+    }
+
+    int64_t len_diff = len1 - len2;
     auto possible_ops = indel_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
     int64_t dist = max + 1;
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-        int ops = possible_ops[pos];
+        uint8_t ops = possible_ops[pos];
         int64_t s1_pos = 0;
         int64_t s2_pos = 0;
         int64_t cur_dist = 0;
@@ -2686,7 +2691,6 @@ double CachedIndel<CharT1>::normalized_similarity(const Sentence2& s2, double sc
 
 } // namespace rapidfuzz
 
-#include <cmath>
 #include <limits>
 
 namespace rapidfuzz {
@@ -2999,6 +3003,7 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
 } // namespace rapidfuzz
 
 
+#include <cmath>
 
 namespace rapidfuzz {
 namespace detail {
@@ -3129,12 +3134,16 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
 
-    int64_t len_diff = std::abs(len1 - len2);
+    if (len1 < len2) {
+        return levenshtein_mbleven2018(first2, last2, first1, last1, max);
+    }
+
+    int64_t len_diff = len1 - len2;
     auto possible_ops = levenshtein_mbleven2018_matrix[(max + max * max) / 2 + len_diff - 1];
     int64_t dist = max + 1;
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-        int ops = possible_ops[pos];
+        uint8_t ops = possible_ops[pos];
         int64_t s1_pos = 0;
         int64_t s2_pos = 0;
         int64_t cur_dist = 0;
@@ -3876,6 +3885,7 @@ int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2,
             int64_t dist =
                 detail::uniform_levenshtein_distance(PM, first1, last1, first2, last2, new_max);
             dist *= weights.insert_cost;
+
             return (dist <= score_cutoff) ? dist : score_cutoff + 1;
         }
         /*

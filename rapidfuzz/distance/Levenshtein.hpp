@@ -4,7 +4,6 @@
 #pragma once
 #include <rapidfuzz/details/common.hpp>
 
-#include <cmath>
 #include <limits>
 
 namespace rapidfuzz {
