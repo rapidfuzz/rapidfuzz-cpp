@@ -131,7 +131,7 @@ struct CachedPartialRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    common::CharHashTable<CharT1, bool> s1_char_map;
+    common::CharSet<CharT1> s1_char_set;
     CachedRatio<CharT1> cached_ratio;
 };
 

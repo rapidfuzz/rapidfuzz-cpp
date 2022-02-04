@@ -9,7 +9,7 @@
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
 #include <tuple>
-#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace rapidfuzz {
@@ -291,61 +291,54 @@ struct BlockPatternMatchVector {
     }
 };
 
-template <typename CharT1, typename ValueType, int64_t size = sizeof(CharT1)>
-struct CharHashTable;
+template <typename CharT1, int64_t size = sizeof(CharT1)>
+struct CharSet;
 
-template <typename CharT1, typename ValueType>
-struct CharHashTable<CharT1, ValueType, 1> {
+template <typename CharT1>
+struct CharSet<CharT1, 1> {
     using UCharT1 = typename std::make_unsigned<CharT1>::type;
 
-    std::array<ValueType, std::numeric_limits<UCharT1>::max() + 1> m_val;
-    ValueType m_default;
+    std::array<bool, std::numeric_limits<UCharT1>::max() + 1> m_val;
 
-    CharHashTable() : m_val{}, m_default{}
+    CharSet() : m_val{}
     {}
 
-    ValueType& create(CharT1 ch)
+    void insert(CharT1 ch)
     {
-        return m_val[UCharT1(ch)];
+        m_val[UCharT1(ch)] = true;
     }
 
     template <typename CharT2>
-    const ValueType& operator[](CharT2 ch) const
+    bool find(CharT2 ch) const
     {
         if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
+            return false;
         }
 
         return m_val[UCharT1(ch)];
     }
 };
 
-template <typename CharT1, typename ValueType, int64_t size>
-struct CharHashTable {
-    std::unordered_map<CharT1, ValueType> m_val;
-    ValueType m_default;
+template <typename CharT1, int64_t size>
+struct CharSet {
+    std::unordered_set<CharT1> m_val;
 
-    CharHashTable() : m_val{}, m_default{}
+    CharSet() : m_val{}
     {}
 
-    ValueType& create(CharT1 ch)
+    void insert(CharT1 ch)
     {
-        return m_val[ch];
+        m_val.insert(ch);
     }
 
     template <typename CharT2>
-    const ValueType& operator[](CharT2 ch) const
+    bool find(CharT2 ch) const
     {
         if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
+            return false;
         }
 
-        auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end()) {
-            return m_default;
-        }
-
-        return search->second;
+        return m_val.find(CharT1(ch)) != m_val.end();
     }
 };
 

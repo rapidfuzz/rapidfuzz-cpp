@@ -54,7 +54,7 @@ public:
         int64_t b_len = std::distance(b_first, b_last);
         j2len_.resize(b_len + 1);
         for (int64_t i = 0; i < b_len; ++i) {
-            b2j_.create(b_first[i]).push_back(i);
+            b2j_[b_first[i]].push_back(i);
         }
     }
 
@@ -67,36 +67,41 @@ public:
         // Find longest junk free match
         {
             for (int64_t i = a_low; i < a_high; ++i) {
-                const auto& indexes = b2j_[a_first[i]];
-                size_t pos = 0;
-                int64_t next_val = 0;
                 bool found = false;
-                for (; pos < indexes.size(); pos++) {
-                    int64_t j = indexes[pos];
-                    if (j < b_low) continue;
+                auto iter = b2j_.find(a_first[i]);
+                if (iter != std::end(b2j_))
+                {
+                    const auto& indexes = iter->second;
 
-                    next_val = j2len_[j];
-                    break;
-                }
+                    size_t pos = 0;
+                    int64_t next_val = 0;
+                    for (; pos < indexes.size(); pos++) {
+                        int64_t j = indexes[pos];
+                        if (j < b_low) continue;
 
-                for (; pos < indexes.size(); pos++) {
-                    int64_t j = indexes[pos];
-                    if (j >= b_high) break;
-
-                    found = true;
-                    int64_t k = next_val + 1;
-
-                    /* the next value might be overwritten below
-                     * so cache it */
-                    if (pos + 1 < indexes.size()) {
-                        next_val = j2len_[indexes[pos + 1]];
+                        next_val = j2len_[j];
+                        break;
                     }
 
-                    j2len_[j + 1] = k;
-                    if (k > best_size) {
-                        best_i = i - k + 1;
-                        best_j = j - k + 1;
-                        best_size = k;
+                    for (; pos < indexes.size(); pos++) {
+                        int64_t j = indexes[pos];
+                        if (j >= b_high) break;
+
+                        found = true;
+                        int64_t k = next_val + 1;
+
+                        /* the next value might be overwritten below
+                        * so cache it */
+                        if (pos + 1 < indexes.size()) {
+                            next_val = j2len_[indexes[pos + 1]];
+                        }
+
+                        j2len_[j + 1] = k;
+                        if (k > best_size) {
+                            best_i = i - k + 1;
+                            best_j = j - k + 1;
+                            best_size = k;
+                        }
                     }
                 }
 
@@ -187,7 +192,7 @@ protected:
 private:
     // Cache to avoid reallocations
     std::vector<int64_t> j2len_;
-    common::CharHashTable<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
+    std::unordered_map<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
 };
 } // namespace difflib
 

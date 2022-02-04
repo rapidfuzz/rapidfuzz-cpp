@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-01-24 22:53:25.415558
+//  Generated: 2022-02-04 22:39:06.767195
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -848,7 +848,7 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 }
 
 } // namespace rapidfuzz#include <tuple>
-#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace rapidfuzz {
@@ -1130,61 +1130,54 @@ struct BlockPatternMatchVector {
     }
 };
 
-template <typename CharT1, typename ValueType, int64_t size = sizeof(CharT1)>
-struct CharHashTable;
+template <typename CharT1, int64_t size = sizeof(CharT1)>
+struct CharSet;
 
-template <typename CharT1, typename ValueType>
-struct CharHashTable<CharT1, ValueType, 1> {
+template <typename CharT1>
+struct CharSet<CharT1, 1> {
     using UCharT1 = typename std::make_unsigned<CharT1>::type;
 
-    std::array<ValueType, std::numeric_limits<UCharT1>::max() + 1> m_val;
-    ValueType m_default;
+    std::array<bool, std::numeric_limits<UCharT1>::max() + 1> m_val;
 
-    CharHashTable() : m_val{}, m_default{}
+    CharSet() : m_val{}
     {}
 
-    ValueType& create(CharT1 ch)
+    void insert(CharT1 ch)
     {
-        return m_val[UCharT1(ch)];
+        m_val[UCharT1(ch)] = true;
     }
 
     template <typename CharT2>
-    const ValueType& operator[](CharT2 ch) const
+    bool find(CharT2 ch) const
     {
         if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
+            return false;
         }
 
         return m_val[UCharT1(ch)];
     }
 };
 
-template <typename CharT1, typename ValueType, int64_t size>
-struct CharHashTable {
-    std::unordered_map<CharT1, ValueType> m_val;
-    ValueType m_default;
+template <typename CharT1, int64_t size>
+struct CharSet {
+    std::unordered_set<CharT1> m_val;
 
-    CharHashTable() : m_val{}, m_default{}
+    CharSet() : m_val{}
     {}
 
-    ValueType& create(CharT1 ch)
+    void insert(CharT1 ch)
     {
-        return m_val[ch];
+        m_val.insert(ch);
     }
 
     template <typename CharT2>
-    const ValueType& operator[](CharT2 ch) const
+    bool find(CharT2 ch) const
     {
         if (!CanTypeFitValue<CharT1>(ch)) {
-            return m_default;
+            return false;
         }
 
-        auto search = m_val.find(CharT1(ch));
-        if (search == m_val.end()) {
-            return m_default;
-        }
-
-        return search->second;
+        return m_val.find(CharT1(ch)) != m_val.end();
     }
 };
 
@@ -4101,7 +4094,7 @@ struct CachedPartialRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    common::CharHashTable<CharT1, bool> s1_char_map;
+    common::CharSet<CharT1> s1_char_set;
     CachedRatio<CharT1> cached_ratio;
 };
 
@@ -4674,7 +4667,7 @@ public:
         int64_t b_len = std::distance(b_first, b_last);
         j2len_.resize(b_len + 1);
         for (int64_t i = 0; i < b_len; ++i) {
-            b2j_.create(b_first[i]).push_back(i);
+            b2j_[b_first[i]].push_back(i);
         }
     }
 
@@ -4687,36 +4680,41 @@ public:
         // Find longest junk free match
         {
             for (int64_t i = a_low; i < a_high; ++i) {
-                const auto& indexes = b2j_[a_first[i]];
-                size_t pos = 0;
-                int64_t next_val = 0;
                 bool found = false;
-                for (; pos < indexes.size(); pos++) {
-                    int64_t j = indexes[pos];
-                    if (j < b_low) continue;
+                auto iter = b2j_.find(a_first[i]);
+                if (iter != std::end(b2j_))
+                {
+                    const auto& indexes = iter->second;
 
-                    next_val = j2len_[j];
-                    break;
-                }
+                    size_t pos = 0;
+                    int64_t next_val = 0;
+                    for (; pos < indexes.size(); pos++) {
+                        int64_t j = indexes[pos];
+                        if (j < b_low) continue;
 
-                for (; pos < indexes.size(); pos++) {
-                    int64_t j = indexes[pos];
-                    if (j >= b_high) break;
-
-                    found = true;
-                    int64_t k = next_val + 1;
-
-                    /* the next value might be overwritten below
-                     * so cache it */
-                    if (pos + 1 < indexes.size()) {
-                        next_val = j2len_[indexes[pos + 1]];
+                        next_val = j2len_[j];
+                        break;
                     }
 
-                    j2len_[j + 1] = k;
-                    if (k > best_size) {
-                        best_i = i - k + 1;
-                        best_j = j - k + 1;
-                        best_size = k;
+                    for (; pos < indexes.size(); pos++) {
+                        int64_t j = indexes[pos];
+                        if (j >= b_high) break;
+
+                        found = true;
+                        int64_t k = next_val + 1;
+
+                        /* the next value might be overwritten below
+                        * so cache it */
+                        if (pos + 1 < indexes.size()) {
+                            next_val = j2len_[indexes[pos + 1]];
+                        }
+
+                        j2len_[j + 1] = k;
+                        if (k > best_size) {
+                            best_i = i - k + 1;
+                            best_j = j - k + 1;
+                            best_size = k;
+                        }
                     }
                 }
 
@@ -4807,7 +4805,7 @@ protected:
 private:
     // Cache to avoid reallocations
     std::vector<int64_t> j2len_;
-    common::CharHashTable<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
+    std::unordered_map<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
 };
 } // namespace difflib
 
@@ -4874,7 +4872,7 @@ template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 double
 partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            const CachedRatio<CachedCharT1>& cached_ratio,
-                           const common::CharHashTable<iterator_type<InputIt1>, bool>& s1_char_map,
+                           const common::CharSet<iterator_type<InputIt1>>& s1_char_set,
                            double score_cutoff)
 {
     double max_ratio = 0;
@@ -4885,7 +4883,7 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
     for (int64_t i = 1; i < len1; ++i) {
         auto substr_last = first2 + i;
 
-        if (!s1_char_map[*(substr_last - 1)]) {
+        if (!s1_char_set.find(*(substr_last - 1))) {
             continue;
         }
 
@@ -4902,7 +4900,7 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         auto substr_first = first2 + i;
         auto substr_last = substr_first + len1;
 
-        if (!s1_char_map[*(substr_last - 1)]) {
+        if (!s1_char_set.find(*(substr_last - 1))) {
             continue;
         }
 
@@ -4918,7 +4916,7 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
     for (int64_t i = len2 - len1; i < len2; ++i) {
         auto substr_first = first2 + i;
 
-        if (!s1_char_map[*substr_first]) {
+        if (!s1_char_set.find(*substr_first)) {
             continue;
         }
 
@@ -4940,13 +4938,13 @@ double partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 firs
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
-    common::CharHashTable<CharT1, bool> s1_char_map;
+    common::CharSet<CharT1> s1_char_set;
     int64_t len1 = std::distance(first1, last1);
     for (int64_t i = 0; i < len1; ++i) {
-        s1_char_map.create(first1[i]) = true;
+        s1_char_set.insert(first1[i]);
     }
 
-    return partial_ratio_short_needle(first1, last1, first2, last2, cached_ratio, s1_char_map,
+    return partial_ratio_short_needle(first1, last1, first2, last2, cached_ratio, s1_char_set,
                                       score_cutoff);
 }
 
@@ -5042,7 +5040,7 @@ CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
     : s1(first1, last1), cached_ratio(first1, last1)
 {
     for (const auto& ch : s1) {
-        s1_char_map.create(ch) = true;
+        s1_char_set.insert(ch);
     }
 }
 
@@ -5064,7 +5062,7 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
     if (len1 <= 64) {
         return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                  last2, cached_ratio, s1_char_map, score_cutoff);
+                                                  last2, cached_ratio, s1_char_set, score_cutoff);
     }
     else {
         return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2,
