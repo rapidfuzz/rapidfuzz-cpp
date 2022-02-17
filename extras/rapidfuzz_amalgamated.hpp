@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-02-04 22:39:06.767195
+//  Generated: 2022-02-17 23:45:13.512998
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -604,6 +604,35 @@ inline Opcodes::Opcodes(const Editops& other)
         push_back({EditType::None, src_pos, other.get_src_len(), dest_pos, other.get_dest_len()});
     }
 }
+
+template <typename T>
+struct ScoreAlignment {
+    T score;            /**< resulting score of the algorithm */
+    int64_t src_start;  /**< index into the source string */
+    int64_t src_end;    /**< index into the source string */
+    int64_t dest_start; /**< index into the destination string */
+    int64_t dest_end;   /**< index into the destination string */
+
+    ScoreAlignment() : score(T()), src_start(0), src_end(0), dest_start(0), dest_end(0)
+    {}
+
+    ScoreAlignment(T score_, int64_t src_start_, int64_t src_end_, int64_t dest_start_,
+           int64_t dest_end_)
+        : score(score_),
+          src_start(src_start_),
+          src_end(src_end_),
+          dest_start(dest_start_),
+          dest_end(dest_end_)
+    {}
+};
+
+template <typename T>
+inline bool operator==(const ScoreAlignment<T>& a, const ScoreAlignment<T>& b)
+{
+    return (a.score == b.score) && (a.src_start == b.src_start) && (a.src_end == b.src_end) &&
+           (a.dest_start == b.dest_start) && (a.dest_end == b.dest_end);
+}
+
 
 } // namespace rapidfuzz
 
@@ -4040,6 +4069,13 @@ template <typename InputIt1>
 CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iterator_type<InputIt1>>;
 #endif
 
+template <typename InputIt1, typename InputIt2>
+ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                     double score_cutoff = 0);
+
+template <typename Sentence1, typename Sentence2>
+ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
  *
@@ -4869,16 +4905,20 @@ double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff)
 namespace detail {
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
-double
+ScoreAlignment<double>
 partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            const CachedRatio<CachedCharT1>& cached_ratio,
                            const common::CharSet<iterator_type<InputIt1>>& s1_char_set,
                            double score_cutoff)
 {
-    double max_ratio = 0;
+    ScoreAlignment<double> res;
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
     assert(len2 >= len1);
+    res.src_start = 0;
+    res.src_end = len1;
+    res.dest_start = 0;
+    res.dest_end = len1;
 
     for (int64_t i = 1; i < len1; ++i) {
         auto substr_last = first2 + i;
@@ -4888,10 +4928,12 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
 
         double ls_ratio = cached_ratio.similarity(first2, substr_last, score_cutoff);
-        if (ls_ratio > max_ratio) {
-            score_cutoff = max_ratio = ls_ratio;
-            if (ls_ratio == 100.0) {
-                return 100.0;
+        if (ls_ratio > res.score) {
+            score_cutoff = res.score = ls_ratio;
+            res.dest_start = 0;
+            res.dest_end = i;
+            if (res.score == 100.0) {
+                return res;
             }
         }
     }
@@ -4905,10 +4947,12 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
 
         double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
-        if (ls_ratio > max_ratio) {
-            score_cutoff = max_ratio = ls_ratio;
-            if (ls_ratio == 100.0) {
-                return 100.0;
+        if (ls_ratio > res.score) {
+            score_cutoff = res.score = ls_ratio;
+            res.dest_start = i;
+            res.dest_end = i + len1;
+            if (res.score == 100.0) {
+                return res;
             }
         }
     }
@@ -4921,19 +4965,21 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
 
         double ls_ratio = cached_ratio.similarity(substr_first, last2, score_cutoff);
-        if (ls_ratio > max_ratio) {
-            score_cutoff = max_ratio = ls_ratio;
-            if (ls_ratio == 100.0) {
-                return 100.0;
+        if (ls_ratio > res.score) {
+            score_cutoff = res.score = ls_ratio;
+            res.dest_start = i;
+            res.dest_end = len2;
+            if (res.score == 100.0) {
+                return res;
             }
         }
     }
 
-    return max_ratio;
+    return res;
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-double partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                   double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
@@ -4949,48 +4995,49 @@ double partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 firs
 }
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
-double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                  const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
 {
+    ScoreAlignment<double> res;
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
     assert(len2 >= len1);
-
-    double max_ratio = 0;
-    if (score_cutoff > 100) {
-        return 0;
-    }
-
-    if (!len1 || !len2) {
-        return static_cast<double>(len1 == len2) * 100.0;
-    }
+    res.src_start = 0;
+    res.src_end = len1;
+    res.dest_start = 0;
+    res.dest_end = len1;
 
     auto blocks = rapidfuzz::detail::get_matching_blocks(first1, last1, first2, last2);
 
     // when there is a full match exit early
     for (const auto& block : blocks) {
         if (block.length == len1) {
-            return 100;
+            res.score = 100;
+            res.dest_start = std::max(int64_t(0), block.dpos - block.spos);
+            res.dest_end = std::min(len2, res.dest_start + len1);
+            return res;
         }
     }
 
     for (const auto& block : blocks) {
-        int64_t long_start = (block.dpos > block.spos) ? block.dpos - block.spos : 0;
+        int64_t long_start = std::max(int64_t(0), block.dpos - block.spos);
+        int64_t long_end = std::min(len2, long_start + len1);
         auto substr_first = first2 + long_start;
-        auto substr_last =
-            (std::distance(substr_first, last2) < len1) ? last2 : substr_first + len1;
+        auto substr_last = first2 + long_end;
 
         double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
-        if (ls_ratio > max_ratio) {
-            score_cutoff = max_ratio = ls_ratio;
+        if (ls_ratio > res.score) {
+            score_cutoff = res.score = ls_ratio;
+            res.dest_start = long_start;
+            res.dest_end = long_end;
         }
     }
 
-    return max_ratio;
+    return res;
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                  double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
@@ -5001,22 +5048,25 @@ double partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first
 } // namespace detail
 
 template <typename InputIt1, typename InputIt2>
-double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                      double score_cutoff)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
 
+    if (len1 > len2) {
+        ScoreAlignment<double> result = partial_ratio_alignment(first2, last2, first1, last1, score_cutoff);
+        std::swap(result.src_start, result.dest_start);
+        std::swap(result.src_end, result.dest_end);
+        return result;
+    }
+
     if (score_cutoff > 100) {
-        return 0;
+        return ScoreAlignment<double>(0, 0, len1, 0, len1);
     }
 
     if (!len1 || !len2) {
-        return static_cast<double>(len1 == len2) * 100.0;
-    }
-
-    if (len1 > len2) {
-        return partial_ratio(first2, last2, first1, last1, score_cutoff);
+        return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
     }
 
     if (len1 <= 64) {
@@ -5028,10 +5078,23 @@ double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 
 }
 
 template <typename Sentence1, typename Sentence2>
+ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+{
+    return partial_ratio_alignment(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                   common::to_end(s2), score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                     double score_cutoff)
+{
+    return partial_ratio_alignment(first1, last1, first2, last2, score_cutoff).score;
+}
+
+template <typename Sentence1, typename Sentence2>
 double partial_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return partial_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                         common::to_end(s2), score_cutoff);
+    return partial_ratio_alignment(s1, s2, score_cutoff).score;
 }
 
 template <typename CharT1>
@@ -5056,17 +5119,21 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
         return partial_ratio(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
     }
 
+    if (score_cutoff > 100) {
+        return 0;
+    }
+
     if (!len1 || !len2) {
         return static_cast<double>(len1 == len2) * 100.0;
     }
 
     if (len1 <= 64) {
         return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                  last2, cached_ratio, s1_char_set, score_cutoff);
+                                                  last2, cached_ratio, s1_char_set, score_cutoff).score;
     }
     else {
         return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                 last2, cached_ratio, score_cutoff);
+                                                 last2, cached_ratio, score_cutoff).score;
     }
 }
 

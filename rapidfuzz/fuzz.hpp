@@ -77,6 +77,13 @@ template <typename InputIt1>
 CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iterator_type<InputIt1>>;
 #endif
 
+template <typename InputIt1, typename InputIt2>
+ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                     double score_cutoff = 0);
+
+template <typename Sentence1, typename Sentence2>
+ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
  *
