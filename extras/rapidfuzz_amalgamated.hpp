@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-02-17 23:45:13.512998
+//  Generated: 2022-02-18 08:59:46.603264
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2234,7 +2234,7 @@ int64_t indel_distance(const common::BlockPatternMatchVector& block, InputIt1 fi
 
     /* no edits are allowed */
     if (max == 0 || (max == 1 && len1 == len2)) {
-        return !std::equal(first1, last1, first2, last2);
+        return std::equal(first1, last1, first2, last2) ? 0 : max + 1;
     }
 
     if (max < std::abs(len1 - len2)) {
@@ -2271,7 +2271,7 @@ int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt
 
     /* no edits are allowed */
     if (max == 0 || (max == 1 && len1 == len2)) {
-        return !std::equal(first1, last1, first2, last2);
+        return std::equal(first1, last1, first2, last2) ? 0 : max + 1;
     }
 
     if (max < std::abs(len1 - len2)) {
