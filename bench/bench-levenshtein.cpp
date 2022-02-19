@@ -1,42 +1,39 @@
 #include <benchmark/benchmark.h>
-#include <rapidfuzz/string_metric.hpp>
-#include <rapidfuzz/details/string_view.hpp>
+#include <rapidfuzz/distance/Levenshtein.hpp>
 #include <string>
 #include <vector>
 
-namespace string_metric = rapidfuzz::string_metric;
-
 // Define another benchmark
 static void BM_LevWeightedDist1(benchmark::State &state) {
-  rapidfuzz::string_view a = "aaaaa aaaaa";
+  std::string a = "aaaaa aaaaa";
   for (auto _ : state) {
-    benchmark::DoNotOptimize(string_metric::levenshtein(a, a));
+    benchmark::DoNotOptimize(rapidfuzz::levenshtein_distance(a, a));
   }
   state.SetLabel("Similar Strings");
 }
 
 static void BM_LevWeightedDist2(benchmark::State &state) {
-  rapidfuzz::string_view a = "aaaaa aaaaa";
-  rapidfuzz::string_view b = "bbbbb bbbbb";
+  std::string a = "aaaaa aaaaa";
+  std::string b = "bbbbb bbbbb";
   for (auto _ : state) {
-    benchmark::DoNotOptimize(string_metric::levenshtein(a, b));
+    benchmark::DoNotOptimize(rapidfuzz::levenshtein_distance(a, b));
   }
   state.SetLabel("Different Strings");
 }
 
 static void BM_LevNormWeightedDist1(benchmark::State &state) {
-  rapidfuzz::string_view a = "aaaaa aaaaa";
+  std::string a = "aaaaa aaaaa";
   for (auto _ : state) {
-    benchmark::DoNotOptimize(string_metric::normalized_levenshtein(a, a));
+    benchmark::DoNotOptimize(rapidfuzz::levenshtein_normalized_distance(a, a));
   }
   state.SetLabel("Similar Strings");
 }
 
 static void BM_LevNormWeightedDist2(benchmark::State &state) {
-  rapidfuzz::string_view a = "aaaaa aaaaa";
-  rapidfuzz::string_view b = "bbbbb bbbbb";
+  std::string a = "aaaaa aaaaa";
+  std::string b = "bbbbb bbbbb";
   for (auto _ : state) {
-    benchmark::DoNotOptimize(string_metric::normalized_levenshtein(a, b));
+    benchmark::DoNotOptimize(rapidfuzz::levenshtein_normalized_distance(a, b));
   }
   state.SetLabel("Different Strings");
 }

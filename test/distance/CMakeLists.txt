@@ -7,7 +7,5 @@ function(rapidfuzz_add_test NAME SOURCE)
 	add_test(NAME ${NAME} COMMAND test_${NAME})
 endfunction()
 
-rapidfuzz_add_test(fuzz tests-fuzz.cpp)
-rapidfuzz_add_test(common tests-common.cpp)
-
-add_subdirectory(distance)
+rapidfuzz_add_test(Hamming tests-Hamming.cpp)
+rapidfuzz_add_test(Levenshtein tests-Levenshtein.cpp)

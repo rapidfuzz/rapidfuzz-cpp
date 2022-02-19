@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-02-18 08:59:46.603264
+//  Generated: 2022-02-19 18:59:13.099666
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5198,7 +5198,8 @@ double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2
 template <typename Sentence1, typename Sentence2>
 double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return partial_token_sort_ratio(common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return partial_token_sort_ratio(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                                    common::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>

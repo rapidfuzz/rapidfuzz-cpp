@@ -33,7 +33,6 @@ static void BM_FuzzRatio2(benchmark::State &state) {
 BENCHMARK(BM_FuzzRatio1);
 BENCHMARK(BM_FuzzRatio2);
 
-
 static void BM_FuzzPartialRatio1(benchmark::State &state) {
   std::wstring a = L"aaaaa aaaaa";
   for (auto _ : state) {
@@ -93,7 +92,6 @@ static void BM_FuzzPartialTokenSort2(benchmark::State &state) {
 
 BENCHMARK(BM_FuzzPartialTokenSort1);
 BENCHMARK(BM_FuzzPartialTokenSort2);
-
 
 static void BM_FuzzTokenSet1(benchmark::State &state) {
   std::wstring a = L"aaaaa aaaaa";
