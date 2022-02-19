@@ -56,4 +56,4 @@ jobs:
 
     - name: Run example project
       working-directory: ${{github.workspace}}/examples/cmake_installed/build
-      run: foo
+      run: ./foo
