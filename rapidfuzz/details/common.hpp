@@ -110,8 +110,8 @@ auto to_end(T& x)
  * one defined by [first1, last1) and another defined by [first2,last2).
  * Similar implementation to std::mismatch from C++14
  *
- * @param first1, last1	-	the first range of the elements
- * @param first2, last2	-	the second range of the elements
+ * @param first1, last1 - the first range of the elements
+ * @param first2, last2 - the second range of the elements
  *
  * @return std::pair with iterators to the first two non-equal elements.
  */

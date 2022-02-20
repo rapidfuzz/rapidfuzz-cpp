@@ -7,7 +7,7 @@ import datetime
 import sys
 
 root_path = os.path.dirname(os.path.realpath( os.path.dirname(sys.argv[0])))
-version_string = "0.0.1"
+version_string = "1.0.0"
 
 starting_header = os.path.join(root_path, 'rapidfuzz', 'rapidfuzz_all.hpp')
 output_header = os.path.join(root_path, 'extras', 'rapidfuzz_amalgamated.hpp')

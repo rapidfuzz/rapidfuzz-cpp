@@ -66,9 +66,9 @@ target_include_directories(rapidfuzz
 
 # Build tests only if requested
 if(RAPIDFUZZ_BUILD_TESTING AND NOT_SUBPROJECT)
-	include(CTest)
-  	enable_testing()
-  	add_subdirectory(test)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(test)
 endif()
 
 # Build examples only if requested
@@ -83,7 +83,7 @@ endif()
 
 # Build fuzz tests only if requested
 if(RAPIDFUZZ_BUILD_FUZZERS)
-	add_subdirectory(fuzzing)
+    add_subdirectory(fuzzing)
 endif()
 
 # Only perform the installation steps when RapidFuzz is not being used as

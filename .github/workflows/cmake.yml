@@ -39,6 +39,8 @@ jobs:
       run: |
           fuzzing/fuzz_levenshtein_distance -max_total_time=30
           fuzzing/fuzz_levenshtein_editops -max_total_time=30
+          fuzzing/fuzz_indel_distance -max_total_time=30
+          fuzzing/fuzz_indel_editops -max_total_time=30
 
   build_cmake_installed:
     runs-on: ubuntu-latest

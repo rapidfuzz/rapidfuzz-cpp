@@ -418,8 +418,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         return editops;
     }
 
-    int64_t row = len1;
-    int64_t col = len2;
+    int64_t col = len1;
+    int64_t row = len2;
 
     while (row && col) {
         uint64_t col_pos = col - 1;
@@ -429,6 +429,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 
         /* Deletion */
         if (matrix.S[row - 1][col_word] & mask) {
+            assert(dist > 0);
             dist--;
             col--;
             editops[dist].type = EditType::Delete;
@@ -440,6 +441,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 
             /* Insertion */
             if (row && (~matrix.S[row - 1][col_word]) & mask) {
+                assert(dist > 0);
                 dist--;
                 editops[dist].type = EditType::Insert;
                 editops[dist].src_pos = col + affix.prefix_len;

@@ -29,7 +29,7 @@ TEST_CASE("RatioTest")
     SECTION("testEqual")
     {
         REQUIRE(100 == fuzz::ratio(s1, s1));
-		REQUIRE(100 == fuzz::ratio("test", "test"));
+        REQUIRE(100 == fuzz::ratio("test", "test"));
         REQUIRE(100 == fuzz::ratio(s8, s8a));
         REQUIRE(100 == fuzz::ratio(s9, s9a));
     }

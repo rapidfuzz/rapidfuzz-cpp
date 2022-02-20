@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
-//  RapidFuzz v0.0.1
-//  Generated: 2022-02-20 04:09:54.003024
+//  RapidFuzz v1.0.0
+//  Generated: 2022-02-20 14:35:03.101318
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -977,8 +977,8 @@ auto to_end(T& x)
  * one defined by [first1, last1) and another defined by [first2,last2).
  * Similar implementation to std::mismatch from C++14
  *
- * @param first1, last1	-	the first range of the elements
- * @param first2, last2	-	the second range of the elements
+ * @param first1, last1 - the first range of the elements
+ * @param first2, last2 - the second range of the elements
  *
  * @return std::pair with iterators to the first two non-equal elements.
  */
@@ -2413,8 +2413,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         return editops;
     }
 
-    int64_t row = len1;
-    int64_t col = len2;
+    int64_t col = len1;
+    int64_t row = len2;
 
     while (row && col) {
         uint64_t col_pos = col - 1;
@@ -2424,6 +2424,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 
         /* Deletion */
         if (matrix.S[row - 1][col_word] & mask) {
+            assert(dist > 0);
             dist--;
             col--;
             editops[dist].type = EditType::Delete;
@@ -2435,6 +2436,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 
             /* Insertion */
             if (row && (~matrix.S[row - 1][col_word]) & mask) {
+                assert(dist > 0);
                 dist--;
                 editops[dist].type = EditType::Insert;
                 editops[dist].src_pos = col + affix.prefix_len;

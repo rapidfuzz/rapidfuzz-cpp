@@ -12,9 +12,9 @@ FetchContent_MakeAvailable(
         googlebenchmark)
 
 function(rapidfuzz_add_benchmark NAME SOURCE)
-	add_executable(bench_${NAME} ${SOURCE})
-	target_link_libraries(bench_${NAME} PRIVATE ${PROJECT_NAME})
-	target_link_libraries(bench_${NAME} PRIVATE benchmark::benchmark)
+    add_executable(bench_${NAME} ${SOURCE})
+    target_link_libraries(bench_${NAME} PRIVATE ${PROJECT_NAME})
+    target_link_libraries(bench_${NAME} PRIVATE benchmark::benchmark)
 endfunction()
 
 rapidfuzz_add_benchmark(fuzz bench-fuzz.cpp)
