@@ -36,53 +36,53 @@ TEST_CASE("RatioTest")
 
     SECTION("testPartialRatio")
     {
-        REQUIRE( 100 == fuzz::partial_ratio(s1, s1) );
-        REQUIRE( 100 != fuzz::ratio(s1, s3) );
-        REQUIRE( 100 == fuzz::partial_ratio(s1, s3) );
+        REQUIRE(100 == fuzz::partial_ratio(s1, s1));
+        REQUIRE(100 != fuzz::ratio(s1, s3));
+        REQUIRE(100 == fuzz::partial_ratio(s1, s3));
     }
 
     SECTION("testTokenSortRatio")
     {
-        REQUIRE( 100 == fuzz::token_sort_ratio(s1, s1) );
+        REQUIRE(100 == fuzz::token_sort_ratio(s1, s1));
         const std::string s92 = "metss new york hello";
         const std::string s0 = "metss new york hello";
-        REQUIRE(fuzz::token_sort_ratio(s92, s0) >90);
+        REQUIRE(fuzz::token_sort_ratio(s92, s0) > 90);
     }
 
     SECTION("testTokenSetRatio")
     {
-        REQUIRE( 100 == fuzz::token_set_ratio(s4, s5) );
-        REQUIRE( 100 == fuzz::token_set_ratio(s8, s8a, false) );
-        REQUIRE( 100 == fuzz::token_set_ratio(s9, s9a, true) );
-        REQUIRE( 100 == fuzz::token_set_ratio(s9, s9a, false) );
-        REQUIRE( 50  == fuzz::token_set_ratio(s10, s10a, false) );
+        REQUIRE(100 == fuzz::token_set_ratio(s4, s5));
+        REQUIRE(100 == fuzz::token_set_ratio(s8, s8a, false));
+        REQUIRE(100 == fuzz::token_set_ratio(s9, s9a, true));
+        REQUIRE(100 == fuzz::token_set_ratio(s9, s9a, false));
+        REQUIRE(50 == fuzz::token_set_ratio(s10, s10a, false));
     }
 
     SECTION("testPartialTokenSetRatio")
     {
-        REQUIRE( 100 == fuzz::partial_token_set_ratio(s4, s7) );
+        REQUIRE(100 == fuzz::partial_token_set_ratio(s4, s7));
     }
 
     SECTION("testWRatioEqual")
     {
-        REQUIRE( 100 == fuzz::WRatio(s1, s1) );
+        REQUIRE(100 == fuzz::WRatio(s1, s1));
     }
 
     SECTION("testWRatioPartialMatch")
     {
         // a partial match is scaled by .9
-        REQUIRE( 90 == fuzz::WRatio(s1, s3) );
+        REQUIRE(90 == fuzz::WRatio(s1, s3));
     }
 
     SECTION("testWRatioMisorderedMatch")
     {
         // misordered full matches are scaled by .95
-        REQUIRE( 95 == fuzz::WRatio(s4, s5) );
+        REQUIRE(95 == fuzz::WRatio(s4, s5));
     }
 
     SECTION("testEmptyStringsScore100")
     {
-        REQUIRE( 100 == fuzz::ratio("", "") );
-        REQUIRE( 100 == fuzz::partial_ratio("", "") );
+        REQUIRE(100 == fuzz::ratio("", ""));
+        REQUIRE(100 == fuzz::partial_ratio("", ""));
     }
 }

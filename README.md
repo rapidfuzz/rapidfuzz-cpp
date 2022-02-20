@@ -154,15 +154,15 @@ a string to multiple strings.
 ```cpp
 template <typename Sentence1,
           typename Iterable, typename Sentence2 = typename Iterable::value_type>
-std::vector<std::pair<Sentence2, percent>>
-extract(const Sentence1& query, const Iterable& choices, const percent score_cutoff = 0.0)
+std::vector<std::pair<Sentence2, double>>
+extract(const Sentence1& query, const Iterable& choices, const double score_cutoff = 0.0)
 {
-  std::vector<std::pair<Sentence2, percent>> results;
+  std::vector<std::pair<Sentence2, double>> results;
 
   auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
 
   for (const auto& choice : choices) {
-    double score = scorer.ratio(choice, score_cutoff);
+    double score = scorer.similarity(choice, score_cutoff);
 
     if (score >= score_cutoff) {
       results.emplace_back(choice, score);
@@ -180,8 +180,8 @@ The following function compares a query string to all strings in a list of choic
 ```cpp
 template <typename Sentence1,
           typename Iterable, typename Sentence2 = typename Iterable::value_type>
-std::optional<std::pair<Sentence2, percent>>
-extractOne(const Sentence1& query, const Iterable& choices, const percent score_cutoff = 0.0)
+std::optional<std::pair<Sentence2, double>>
+extractOne(const Sentence1& query, const Iterable& choices, const double score_cutoff = 0.0)
 {
   bool match_found = false;
   double best_score = score_cutoff;
@@ -190,7 +190,7 @@ extractOne(const Sentence1& query, const Iterable& choices, const percent score_
   auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
 
   for (const auto& choice : choices) {
-    double score = scorer.ratio(choice, best_score);
+    double score = scorer.similarity(choice, best_score);
 
     if (score >= best_score) {
       match_found = true;
@@ -214,27 +214,22 @@ It is very simple to use those scorers e.g. with open OpenMP to achieve better p
 ```cpp
 template <typename Sentence1,
           typename Iterable, typename Sentence2 = typename Iterable::value_type>
-std::vector<std::pair<Sentence2, percent>>
-extract(const Sentence1& query, const Iterable& choices, const percent score_cutoff = 0.0)
+std::vector<std::pair<Sentence2, double>>
+extract(const Sentence1& query, const Iterable& choices, const double score_cutoff = 0.0)
 {
-  std::vector<std::pair<Sentence2, percent>> results(choices.size());
+  std::vector<std::pair<Sentence2, double>> results(choices.size());
 
   auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
 
   #pragma omp parallel for
   for (std::size_t i = 0; i < choices.size(); ++i) {
-    double score = scorer.ratio(choices[i], score_cutoff);
+    double score = scorer.similarity(choices[i], score_cutoff);
     results[i] = std::make_pair(choices[i], score);
   }
 
   return results;
 }
 ```
-
-Note that the scorers do not take ownership of the data you pass them.
-Internally they fully operate on string_views. This is especially important for the cached implementations,
-since it might be tempting to pass the first string to the constructor of the cached scorer and delete it afterwards.
-
 
 ## License
 RapidFuzz is licensed under the MIT license since I believe that everyone should be able to use it without being forced to adopt the GPL license. Thats why the library is based on an older version of fuzzywuzzy that was MIT licensed as well.

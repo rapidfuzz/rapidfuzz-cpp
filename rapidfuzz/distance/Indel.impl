@@ -632,8 +632,8 @@ int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Input
 template <typename Sentence1, typename Sentence2>
 int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return levenshtein_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                                  common::to_end(s2), score_cutoff);
+    return indel_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                            common::to_end(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
