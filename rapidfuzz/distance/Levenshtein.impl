@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
-#include <rapidfuzz/distance/Indel.hpp>
 #include <cmath>
+#include <rapidfuzz/distance/Indel.hpp>
 
 namespace rapidfuzz {
 namespace detail {
@@ -527,8 +527,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         return editops;
     }
 
-    int64_t row = len1;
-    int64_t col = len2;
+    int64_t col = len1;
+    int64_t row = len2;
 
     while (row && col) {
         uint64_t col_pos = col - 1;
@@ -536,34 +536,37 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         col_pos = col_pos % 64;
         uint64_t mask = 1ull << col_pos;
 
-        /* Insertion */
+        /* Deletion */
         if (matrix.VP[row - 1][col_word] & mask) {
+            assert(dist > 0);
             dist--;
             col--;
-            editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
+            editops[dist].type = EditType::Delete;
+            editops[dist].src_pos = col + affix.prefix_len;
+            editops[dist].dest_pos = row + affix.prefix_len;
         }
         else {
             row--;
 
-            /* Deletion */
+            /* Insertion */
             if (row && matrix.VN[row - 1][col_word] & mask) {
+                assert(dist > 0);
                 dist--;
-                editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + affix.prefix_len;
-                editops[dist].dest_pos = col + affix.prefix_len;
+                editops[dist].type = EditType::Insert;
+                editops[dist].src_pos = col + affix.prefix_len;
+                editops[dist].dest_pos = row + affix.prefix_len;
             }
             /* Match/Mismatch */
             else {
                 col--;
 
                 /* Replace (Matches are not recorded) */
-                if (first1[row] != first2[col]) {
+                if (first1[col] != first2[row]) {
+                    assert(dist > 0);
                     dist--;
                     editops[dist].type = EditType::Replace;
-                    editops[dist].src_pos = row + affix.prefix_len;
-                    editops[dist].dest_pos = col + affix.prefix_len;
+                    editops[dist].src_pos = col + affix.prefix_len;
+                    editops[dist].dest_pos = row + affix.prefix_len;
                 }
             }
         }
@@ -572,17 +575,17 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     while (col) {
         dist--;
         col--;
-        editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     while (row) {
         dist--;
         row--;
-        editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     return editops;
@@ -730,12 +733,12 @@ LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt
         return matrix;
     }
     else if (len1 <= 64) {
-        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first2, last2), first2,
-                                             last2, first1, last1);
+        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first1, last1), first1,
+                                             last1, first2, last2);
     }
     else {
-        return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first2, last2),
-                                                   first2, last2, first1, last1);
+        return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first1, last1),
+                                                   first1, last1, first2, last2);
     }
 }
 

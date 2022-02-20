@@ -11,10 +11,9 @@ endif()
 
 option(RAPIDFUZZ_DEVELOPMENT_BUILD "Build tests, enable warnings, enable Werror, etc" OFF)
 
-include(CMakeDependentOption)
-cmake_dependent_option(RAPIDFUZZ_BUILD_TESTING "Build tests" ON "RAPIDFUZZ_DEVELOPMENT_BUILD" OFF)
-cmake_dependent_option(RAPIDFUZZ_BUILD_BENCHMARKS "Build benchmarks" OFF "RAPIDFUZZ_DEVELOPMENT_BUILD" OFF)
-cmake_dependent_option(RAPIDFUZZ_BUILD_FUZZERS "Build fuzzers" OFF "RAPIDFUZZ_DEVELOPMENT_BUILD" OFF)
+option(RAPIDFUZZ_BUILD_TESTING "Build tests" OFF)
+option(RAPIDFUZZ_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(RAPIDFUZZ_BUILD_FUZZERS "Build fuzzers" OFF)
 
 # RapidFuzz's build breaks if done in-tree. You probably should not build
 # things in tree anyway, but we can allow projects that include RapidFuzz
@@ -28,9 +27,6 @@ project(rapidfuzz LANGUAGES CXX VERSION 1.0.0)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-if(RAPIDFUZZ_DEVELOPMENT_BUILD)
-  include(CTest)
-endif()
 
 # Basic paths
 set(RAPIDFUZZ_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -70,8 +66,9 @@ target_include_directories(rapidfuzz
 
 # Build tests only if requested
 if(RAPIDFUZZ_BUILD_TESTING AND NOT_SUBPROJECT)
-  enable_testing()
-  add_subdirectory(test)
+	include(CTest)
+  	enable_testing()
+  	add_subdirectory(test)
 endif()
 
 # Build examples only if requested
@@ -86,7 +83,7 @@ endif()
 
 # Build fuzz tests only if requested
 if(RAPIDFUZZ_BUILD_FUZZERS)
-    #add_subdirectory(fuzzing)
+	add_subdirectory(fuzzing)
 endif()
 
 # Only perform the installation steps when RapidFuzz is not being used as

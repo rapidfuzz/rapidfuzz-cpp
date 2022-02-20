@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v0.0.1
-//  Generated: 2022-02-19 18:59:13.099666
+//  Generated: 2022-02-20 04:09:54.003024
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -17,6 +17,7 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <algorithm>
 
 
@@ -617,7 +618,7 @@ struct ScoreAlignment {
     {}
 
     ScoreAlignment(T score_, int64_t src_start_, int64_t src_end_, int64_t dest_start_,
-           int64_t dest_end_)
+                   int64_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),
@@ -632,7 +633,6 @@ inline bool operator==(const ScoreAlignment<T>& a, const ScoreAlignment<T>& b)
     return (a.score == b.score) && (a.src_start == b.src_start) && (a.src_end == b.src_end) &&
            (a.dest_start == b.dest_start) && (a.dest_end == b.dest_end);
 }
-
 
 } // namespace rapidfuzz
 
@@ -1221,6 +1221,11 @@ struct MatrixVectorView {
         return m_vector[col];
     }
 
+    int64_t size() const
+    {
+        return m_cols;
+    }
+
 private:
     T* m_vector;
     int64_t m_cols;
@@ -1238,6 +1243,11 @@ struct ConstMatrixVectorView {
     {
         assert(col < m_cols);
         return m_vector[col];
+    }
+
+    int64_t size() const
+    {
+        return m_cols;
     }
 
 private:
@@ -1268,13 +1278,23 @@ struct Matrix {
     MatrixVectorView<uint64_t> operator[](uint64_t row)
     {
         assert(row < m_rows);
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
     }
 
     ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
     {
         assert(row < m_rows);
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+    }
+
+    uint64_t rows() const
+    {
+        return m_rows;
+    }
+
+    uint64_t cols() const
+    {
+        return m_cols;
     }
 
 private:
@@ -2402,28 +2422,28 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         col_pos = col_pos % 64;
         uint64_t mask = 1ull << col_pos;
 
-        /* Insertion */
+        /* Deletion */
         if (matrix.S[row - 1][col_word] & mask) {
             dist--;
             col--;
-            editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
+            editops[dist].type = EditType::Delete;
+            editops[dist].src_pos = col + affix.prefix_len;
+            editops[dist].dest_pos = row + affix.prefix_len;
         }
         else {
             row--;
 
-            /* Deletion */
+            /* Insertion */
             if (row && (~matrix.S[row - 1][col_word]) & mask) {
                 dist--;
-                editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + affix.prefix_len;
-                editops[dist].dest_pos = col + affix.prefix_len;
+                editops[dist].type = EditType::Insert;
+                editops[dist].src_pos = col + affix.prefix_len;
+                editops[dist].dest_pos = row + affix.prefix_len;
             }
             /* Match */
             else {
                 col--;
-                assert(first1[row] == first2[col]);
+                assert(first1[col] == first2[row]);
             }
         }
     }
@@ -2431,17 +2451,17 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     while (col) {
         dist--;
         col--;
-        editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     while (row) {
         dist--;
         row--;
-        editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     return editops;
@@ -2528,31 +2548,31 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         matrix.dist = len1 + len2;
         return matrix;
     }
-    else if (len2 <= 64) {
-        common::PatternMatchVector block(first2, last2);
-        return llcs_matrix_unroll<1>(block, first2, last2, first1, last1);
+    else if (len1 <= 64) {
+        common::PatternMatchVector block(first1, last1);
+        return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
     }
     else {
-        common::BlockPatternMatchVector block(first2, last2);
+        common::BlockPatternMatchVector block(first1, last1);
         switch (block.m_val.size()) {
         case 1:
-            return llcs_matrix_unroll<1>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
         case 2:
-            return llcs_matrix_unroll<2>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<2>(block, first1, last1, first2, last2);
         case 3:
-            return llcs_matrix_unroll<3>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<3>(block, first1, last1, first2, last2);
         case 4:
-            return llcs_matrix_unroll<4>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<4>(block, first1, last1, first2, last2);
         case 5:
-            return llcs_matrix_unroll<5>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<5>(block, first1, last1, first2, last2);
         case 6:
-            return llcs_matrix_unroll<6>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<6>(block, first1, last1, first2, last2);
         case 7:
-            return llcs_matrix_unroll<7>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<7>(block, first1, last1, first2, last2);
         case 8:
-            return llcs_matrix_unroll<8>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<8>(block, first1, last1, first2, last2);
         default:
-            return llcs_matrix_blockwise(block, first2, last2, first1, last1);
+            return llcs_matrix_blockwise(block, first1, last1, first2, last2);
         }
     }
 }
@@ -3550,8 +3570,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         return editops;
     }
 
-    int64_t row = len1;
-    int64_t col = len2;
+    int64_t col = len1;
+    int64_t row = len2;
 
     while (row && col) {
         uint64_t col_pos = col - 1;
@@ -3559,34 +3579,37 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         col_pos = col_pos % 64;
         uint64_t mask = 1ull << col_pos;
 
-        /* Insertion */
+        /* Deletion */
         if (matrix.VP[row - 1][col_word] & mask) {
+            assert(dist > 0);
             dist--;
             col--;
-            editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
+            editops[dist].type = EditType::Delete;
+            editops[dist].src_pos = col + affix.prefix_len;
+            editops[dist].dest_pos = row + affix.prefix_len;
         }
         else {
             row--;
 
-            /* Deletion */
+            /* Insertion */
             if (row && matrix.VN[row - 1][col_word] & mask) {
+                assert(dist > 0);
                 dist--;
-                editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + affix.prefix_len;
-                editops[dist].dest_pos = col + affix.prefix_len;
+                editops[dist].type = EditType::Insert;
+                editops[dist].src_pos = col + affix.prefix_len;
+                editops[dist].dest_pos = row + affix.prefix_len;
             }
             /* Match/Mismatch */
             else {
                 col--;
 
                 /* Replace (Matches are not recorded) */
-                if (first1[row] != first2[col]) {
+                if (first1[col] != first2[row]) {
+                    assert(dist > 0);
                     dist--;
                     editops[dist].type = EditType::Replace;
-                    editops[dist].src_pos = row + affix.prefix_len;
-                    editops[dist].dest_pos = col + affix.prefix_len;
+                    editops[dist].src_pos = col + affix.prefix_len;
+                    editops[dist].dest_pos = row + affix.prefix_len;
                 }
             }
         }
@@ -3595,17 +3618,17 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     while (col) {
         dist--;
         col--;
-        editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     while (row) {
         dist--;
         row--;
-        editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     return editops;
@@ -3753,12 +3776,12 @@ LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt
         return matrix;
     }
     else if (len1 <= 64) {
-        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first2, last2), first2,
-                                             last2, first1, last1);
+        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first1, last1), first1,
+                                             last1, first2, last2);
     }
     else {
-        return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first2, last2),
-                                                   first2, last2, first1, last1);
+        return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first1, last1),
+                                                   first1, last1, first2, last2);
     }
 }
 
@@ -4070,11 +4093,12 @@ CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iterator_type<InputI
 #endif
 
 template <typename InputIt1, typename InputIt2>
-ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                     double score_cutoff = 0);
+ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
-ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2,
+                                               double score_cutoff = 0);
 
 /**
  * @brief calculates the fuzz::ratio of the optimal string alignment
@@ -4718,8 +4742,7 @@ public:
             for (int64_t i = a_low; i < a_high; ++i) {
                 bool found = false;
                 auto iter = b2j_.find(a_first[i]);
-                if (iter != std::end(b2j_))
-                {
+                if (iter != std::end(b2j_)) {
                     const auto& indexes = iter->second;
 
                     size_t pos = 0;
@@ -4740,7 +4763,7 @@ public:
                         int64_t k = next_val + 1;
 
                         /* the next value might be overwritten below
-                        * so cache it */
+                         * so cache it */
                         if (pos + 1 < indexes.size()) {
                             next_val = j2len_[indexes[pos + 1]];
                         }
@@ -4979,8 +5002,8 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                  double score_cutoff)
+ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                  InputIt2 last2, double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
@@ -4995,8 +5018,9 @@ ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last
 }
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
-ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
+ScoreAlignment<double>
+partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                          const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
 {
     ScoreAlignment<double> res;
     int64_t len1 = std::distance(first1, last1);
@@ -5037,8 +5061,8 @@ ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 double score_cutoff)
+ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
@@ -5048,14 +5072,15 @@ ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1
 } // namespace detail
 
 template <typename InputIt1, typename InputIt2>
-ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                     double score_cutoff)
+ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
 
     if (len1 > len2) {
-        ScoreAlignment<double> result = partial_ratio_alignment(first2, last2, first1, last1, score_cutoff);
+        ScoreAlignment<double> result =
+            partial_ratio_alignment(first2, last2, first1, last1, score_cutoff);
         std::swap(result.src_start, result.dest_start);
         std::swap(result.src_end, result.dest_end);
         return result;
@@ -5078,7 +5103,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
 }
 
 template <typename Sentence1, typename Sentence2>
-ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2,
+                                               double score_cutoff)
 {
     return partial_ratio_alignment(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
                                    common::to_end(s2), score_cutoff);
@@ -5129,11 +5155,13 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
     if (len1 <= 64) {
         return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                  last2, cached_ratio, s1_char_set, score_cutoff).score;
+                                                  last2, cached_ratio, s1_char_set, score_cutoff)
+            .score;
     }
     else {
         return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                 last2, cached_ratio, score_cutoff).score;
+                                                 last2, cached_ratio, score_cutoff)
+            .score;
     }
 }
 

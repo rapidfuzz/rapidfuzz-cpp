@@ -128,8 +128,8 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                  double score_cutoff)
+ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                  InputIt2 last2, double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
@@ -144,8 +144,9 @@ ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last
 }
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
-ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
+ScoreAlignment<double>
+partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                          const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
 {
     ScoreAlignment<double> res;
     int64_t len1 = std::distance(first1, last1);
@@ -186,8 +187,8 @@ ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
-ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 double score_cutoff)
+ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
@@ -197,14 +198,15 @@ ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1
 } // namespace detail
 
 template <typename InputIt1, typename InputIt2>
-ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                     double score_cutoff)
+ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff)
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
 
     if (len1 > len2) {
-        ScoreAlignment<double> result = partial_ratio_alignment(first2, last2, first1, last1, score_cutoff);
+        ScoreAlignment<double> result =
+            partial_ratio_alignment(first2, last2, first1, last1, score_cutoff);
         std::swap(result.src_start, result.dest_start);
         std::swap(result.src_end, result.dest_end);
         return result;
@@ -227,7 +229,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
 }
 
 template <typename Sentence1, typename Sentence2>
-ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Sentence2& s2,
+                                               double score_cutoff)
 {
     return partial_ratio_alignment(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
                                    common::to_end(s2), score_cutoff);
@@ -278,11 +281,13 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
     if (len1 <= 64) {
         return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                  last2, cached_ratio, s1_char_set, score_cutoff).score;
+                                                  last2, cached_ratio, s1_char_set, score_cutoff)
+            .score;
     }
     else {
         return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2,
-                                                 last2, cached_ratio, score_cutoff).score;
+                                                 last2, cached_ratio, score_cutoff)
+            .score;
     }
 }
 

@@ -427,28 +427,28 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         col_pos = col_pos % 64;
         uint64_t mask = 1ull << col_pos;
 
-        /* Insertion */
+        /* Deletion */
         if (matrix.S[row - 1][col_word] & mask) {
             dist--;
             col--;
-            editops[dist].type = EditType::Insert;
-            editops[dist].src_pos = row + affix.prefix_len;
-            editops[dist].dest_pos = col + affix.prefix_len;
+            editops[dist].type = EditType::Delete;
+            editops[dist].src_pos = col + affix.prefix_len;
+            editops[dist].dest_pos = row + affix.prefix_len;
         }
         else {
             row--;
 
-            /* Deletion */
+            /* Insertion */
             if (row && (~matrix.S[row - 1][col_word]) & mask) {
                 dist--;
-                editops[dist].type = EditType::Delete;
-                editops[dist].src_pos = row + affix.prefix_len;
-                editops[dist].dest_pos = col + affix.prefix_len;
+                editops[dist].type = EditType::Insert;
+                editops[dist].src_pos = col + affix.prefix_len;
+                editops[dist].dest_pos = row + affix.prefix_len;
             }
             /* Match */
             else {
                 col--;
-                assert(first1[row] == first2[col]);
+                assert(first1[col] == first2[row]);
             }
         }
     }
@@ -456,17 +456,17 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     while (col) {
         dist--;
         col--;
-        editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Delete;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     while (row) {
         dist--;
         row--;
-        editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = row + affix.prefix_len;
-        editops[dist].dest_pos = col + affix.prefix_len;
+        editops[dist].type = EditType::Insert;
+        editops[dist].src_pos = col + affix.prefix_len;
+        editops[dist].dest_pos = row + affix.prefix_len;
     }
 
     return editops;
@@ -553,31 +553,31 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         matrix.dist = len1 + len2;
         return matrix;
     }
-    else if (len2 <= 64) {
-        common::PatternMatchVector block(first2, last2);
-        return llcs_matrix_unroll<1>(block, first2, last2, first1, last1);
+    else if (len1 <= 64) {
+        common::PatternMatchVector block(first1, last1);
+        return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
     }
     else {
-        common::BlockPatternMatchVector block(first2, last2);
+        common::BlockPatternMatchVector block(first1, last1);
         switch (block.m_val.size()) {
         case 1:
-            return llcs_matrix_unroll<1>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
         case 2:
-            return llcs_matrix_unroll<2>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<2>(block, first1, last1, first2, last2);
         case 3:
-            return llcs_matrix_unroll<3>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<3>(block, first1, last1, first2, last2);
         case 4:
-            return llcs_matrix_unroll<4>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<4>(block, first1, last1, first2, last2);
         case 5:
-            return llcs_matrix_unroll<5>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<5>(block, first1, last1, first2, last2);
         case 6:
-            return llcs_matrix_unroll<6>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<6>(block, first1, last1, first2, last2);
         case 7:
-            return llcs_matrix_unroll<7>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<7>(block, first1, last1, first2, last2);
         case 8:
-            return llcs_matrix_unroll<8>(block, first2, last2, first1, last1);
+            return llcs_matrix_unroll<8>(block, first1, last1, first2, last2);
         default:
-            return llcs_matrix_blockwise(block, first2, last2, first1, last1);
+            return llcs_matrix_blockwise(block, first1, last1, first2, last2);
         }
     }
 }

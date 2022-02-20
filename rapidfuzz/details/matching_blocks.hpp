@@ -69,8 +69,7 @@ public:
             for (int64_t i = a_low; i < a_high; ++i) {
                 bool found = false;
                 auto iter = b2j_.find(a_first[i]);
-                if (iter != std::end(b2j_))
-                {
+                if (iter != std::end(b2j_)) {
                     const auto& indexes = iter->second;
 
                     size_t pos = 0;
@@ -91,7 +90,7 @@ public:
                         int64_t k = next_val + 1;
 
                         /* the next value might be overwritten below
-                        * so cache it */
+                         * so cache it */
                         if (pos + 1 < indexes.size()) {
                             next_val = j2len_[indexes[pos + 1]];
                         }

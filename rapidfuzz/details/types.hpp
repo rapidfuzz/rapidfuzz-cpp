@@ -599,7 +599,7 @@ struct ScoreAlignment {
     {}
 
     ScoreAlignment(T score_, int64_t src_start_, int64_t src_end_, int64_t dest_start_,
-           int64_t dest_end_)
+                   int64_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),
@@ -614,6 +614,5 @@ inline bool operator==(const ScoreAlignment<T>& a, const ScoreAlignment<T>& b)
     return (a.score == b.score) && (a.src_start == b.src_start) && (a.src_end == b.src_end) &&
            (a.dest_start == b.dest_start) && (a.dest_end == b.dest_end);
 }
-
 
 } // namespace rapidfuzz

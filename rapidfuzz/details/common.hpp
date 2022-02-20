@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <rapidfuzz/details/SplittedSentenceView.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
@@ -353,6 +354,11 @@ struct MatrixVectorView {
         return m_vector[col];
     }
 
+    int64_t size() const
+    {
+        return m_cols;
+    }
+
 private:
     T* m_vector;
     int64_t m_cols;
@@ -370,6 +376,11 @@ struct ConstMatrixVectorView {
     {
         assert(col < m_cols);
         return m_vector[col];
+    }
+
+    int64_t size() const
+    {
+        return m_cols;
     }
 
 private:
@@ -400,13 +411,23 @@ struct Matrix {
     MatrixVectorView<uint64_t> operator[](uint64_t row)
     {
         assert(row < m_rows);
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
     }
 
     ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
     {
         assert(row < m_rows);
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_rows);
+        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+    }
+
+    uint64_t rows() const
+    {
+        return m_rows;
+    }
+
+    uint64_t cols() const
+    {
+        return m_cols;
     }
 
 private:
