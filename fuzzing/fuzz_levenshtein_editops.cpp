@@ -2,7 +2,7 @@
 /* Copyright © 2021 Max Bachmann */
 
 #include "fuzzing.hpp"
-#include <rapidfuzz/distance/Levenshtein.hpp>
+#include <rapidfuzz/distance.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -13,6 +13,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
 
-    rapidfuzz::levenshtein_editops(s1, s2);
+    rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
+
+    if (s2 != rapidfuzz::editops_apply<uint8_t>(ops, s1, s2)) {
+        throw std::logic_error("levenshtein_editops failed");
+    }
     return 0;
 }

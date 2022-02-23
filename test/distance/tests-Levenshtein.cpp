@@ -2,7 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 
-#include <rapidfuzz/distance/Levenshtein.hpp>
+#include <rapidfuzz/distance.hpp>
 
 TEST_CASE("Levenshtein")
 {
@@ -40,21 +40,10 @@ TEST_CASE("Levenshtein_editops")
     std::string s = "Lorem ipsum.";
     std::string d = "XYZLorem ABC iPsum";
 
-    rapidfuzz::Editops editops = rapidfuzz::levenshtein_editops(s, d);
-    rapidfuzz::Editops correct_editops(9);
-    correct_editops[0] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 0, 0);
-    correct_editops[1] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 0, 1);
-    correct_editops[2] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 0, 2);
-    correct_editops[3] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 6, 9);
-    correct_editops[4] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 6, 10);
-    correct_editops[5] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 6, 11);
-    correct_editops[6] = rapidfuzz::EditOp(rapidfuzz::EditType::Insert, 6, 12);
-    correct_editops[7] = rapidfuzz::EditOp(rapidfuzz::EditType::Replace, 7, 14);
-    correct_editops[8] = rapidfuzz::EditOp(rapidfuzz::EditType::Delete, 11, 18);
-    correct_editops.set_src_len(s.size());
-    correct_editops.set_dest_len(d.size());
-
-    REQUIRE(editops == correct_editops);
+    rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s, d);
+    REQUIRE(d == rapidfuzz::editops_apply<char>(ops, s, d));
+    REQUIRE(ops.get_src_len() == s.size());
+    REQUIRE(ops.get_dest_len() == d.size());
 };
 
 TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
@@ -73,5 +62,6 @@ TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
     uint32_t len2 = 65;
     std::basic_string<uint8_t> s2(string2, len2);
 
-    rapidfuzz::levenshtein_editops(s1, s2);
+    rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
+    REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops, s1, s2));
 };
