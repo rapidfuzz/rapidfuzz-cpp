@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-02-20 20:35:19.687773
+//  Generated: 2022-02-23 20:36:03.546565
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5262,7 +5262,7 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (tokens_a.empty() || tokens_a.empty()) {
+    if (tokens_a.empty() || tokens_b.empty()) {
         return 0;
     }
 
@@ -5361,7 +5361,7 @@ double partial_token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (tokens_a.empty() || tokens_a.empty()) {
+    if (tokens_a.empty() || tokens_b.empty()) {
         return 0;
     }
 

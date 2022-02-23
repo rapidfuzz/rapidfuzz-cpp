@@ -386,7 +386,7 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (tokens_a.empty() || tokens_a.empty()) {
+    if (tokens_a.empty() || tokens_b.empty()) {
         return 0;
     }
 
@@ -485,7 +485,7 @@ double partial_token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (tokens_a.empty() || tokens_a.empty()) {
+    if (tokens_a.empty() || tokens_b.empty()) {
         return 0;
     }
 

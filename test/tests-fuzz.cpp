@@ -80,9 +80,45 @@ TEST_CASE("RatioTest")
         REQUIRE(95 == fuzz::WRatio(s4, s5));
     }
 
-    SECTION("testEmptyStringsScore100")
+    SECTION("testTwoEmptyStrings")
     {
         REQUIRE(100 == fuzz::ratio("", ""));
         REQUIRE(100 == fuzz::partial_ratio("", ""));
+        REQUIRE(100 == fuzz::token_sort_ratio("", ""));
+        REQUIRE(  0 == fuzz::token_set_ratio("", ""));
+        REQUIRE(100 == fuzz::partial_token_sort_ratio("", ""));
+        REQUIRE(  0 == fuzz::partial_token_set_ratio("", ""));
+        REQUIRE(100 == fuzz::token_ratio("", ""));
+        REQUIRE(100 == fuzz::partial_token_ratio("", ""));
+        REQUIRE(  0 == fuzz::WRatio("", ""));
+        REQUIRE(  0 == fuzz::QRatio("", ""));
+    }
+
+    SECTION("testFirstStringEmpty")
+    {
+        REQUIRE(0 == fuzz::ratio("test", ""));
+        REQUIRE(0 == fuzz::partial_ratio("test", ""));
+        REQUIRE(0 == fuzz::token_sort_ratio("test", ""));
+        REQUIRE(0 == fuzz::token_set_ratio("test", ""));
+        REQUIRE(0 == fuzz::partial_token_sort_ratio("test", ""));
+        REQUIRE(0 == fuzz::partial_token_set_ratio("test", ""));
+        REQUIRE(0 == fuzz::token_ratio("test", ""));
+        REQUIRE(0 == fuzz::partial_token_ratio("test", ""));
+        REQUIRE(0 == fuzz::WRatio("test", ""));
+        REQUIRE(0 == fuzz::QRatio("test", ""));
+    }
+
+    SECTION("testSecondStringEmpty")
+    {
+        REQUIRE(0 == fuzz::ratio("", "test"));
+        REQUIRE(0 == fuzz::partial_ratio("", "test"));
+        REQUIRE(0 == fuzz::token_sort_ratio("", "test"));
+        REQUIRE(0 == fuzz::token_set_ratio("", "test"));
+        REQUIRE(0 == fuzz::partial_token_sort_ratio("", "test"));
+        REQUIRE(0 == fuzz::partial_token_set_ratio("", "test"));
+        REQUIRE(0 == fuzz::token_ratio("", "test"));
+        REQUIRE(0 == fuzz::partial_token_ratio("", "test"));
+        REQUIRE(0 == fuzz::WRatio("", "test"));
+        REQUIRE(0 == fuzz::QRatio("", "test"));
     }
 }
