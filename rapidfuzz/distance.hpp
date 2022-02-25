@@ -13,7 +13,7 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
-    
+
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
     int64_t src_pos = 0;
@@ -63,6 +63,49 @@ template <typename CharT, typename Sentence1, typename Sentence2>
 std::basic_string<CharT> editops_apply(const Editops& ops, const Sentence1& s1, const Sentence2& s2)
 {
     return editops_apply<CharT>(ops, common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
+                            common::to_end(s2));
+}
+
+template <typename CharT, typename InputIt1, typename InputIt2>
+std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+    int64_t len1 = std::distance(first1, last1);
+    int64_t len2 = std::distance(first2, last2);
+
+    std::basic_string<CharT> res_str;
+    res_str.resize(len1 + len2);
+    int64_t dest_pos = 0;
+
+    for (const auto& op : ops)
+    {
+        switch (op.type)
+        {
+        case EditType::None:
+            for (int64_t i = op.src_begin; i < op.src_end; ++i)
+            {
+                res_str[dest_pos++] = static_cast<CharT>(first1[i]);
+            }
+            break;
+        case EditType::Replace:
+        case EditType::Insert:
+            for (int64_t i = op.dest_begin; i < op.dest_end; ++i)
+            {
+                res_str[dest_pos++] = static_cast<CharT>(first2[i]);
+            }
+            break;
+        case EditType::Delete:
+            break;
+        }
+    }
+
+    res_str.resize(dest_pos);
+    return res_str;
+}
+
+template <typename CharT, typename Sentence1, typename Sentence2>
+std::basic_string<CharT> opcodes_apply(const Opcodes& ops, const Sentence1& s1, const Sentence2& s2)
+{
+    return opcodes_apply<CharT>(ops, common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
                             common::to_end(s2));
 }
 
