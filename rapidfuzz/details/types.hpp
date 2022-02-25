@@ -278,6 +278,7 @@ public:
     using std::vector<EditOp>::push_back;
     using std::vector<EditOp>::emplace_back;
     using std::vector<EditOp>::pop_back;
+    using std::vector<EditOp>::resize;
 
     void swap(Editops& rhs) noexcept
     {
@@ -426,6 +427,7 @@ public:
     using std::vector<Opcode>::push_back;
     using std::vector<Opcode>::emplace_back;
     using std::vector<Opcode>::pop_back;
+    using std::vector<Opcode>::resize;
 
     void swap(Opcodes& rhs) noexcept
     {

@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-02-23 21:28:17.074660
+//  Generated: 2022-02-25 18:49:26.056051
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -297,6 +297,7 @@ public:
     using std::vector<EditOp>::push_back;
     using std::vector<EditOp>::emplace_back;
     using std::vector<EditOp>::pop_back;
+    using std::vector<EditOp>::resize;
 
     void swap(Editops& rhs) noexcept
     {
@@ -445,6 +446,7 @@ public:
     using std::vector<Opcode>::push_back;
     using std::vector<Opcode>::emplace_back;
     using std::vector<Opcode>::pop_back;
+    using std::vector<Opcode>::resize;
 
     void swap(Opcodes& rhs) noexcept
     {
@@ -1085,7 +1087,7 @@ private:
             m_extendedAscii[(uint8_t)key] |= mask;
         }
         else {
-            int64_t i = lookup((uint64_t)key);
+            uint64_t i = lookup((uint64_t)key);
             m_map[i].key = key;
             m_map[i].value |= mask;
         }
@@ -1095,15 +1097,15 @@ private:
      * lookup key inside the hasmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    int64_t lookup(uint64_t key) const
+    uint64_t lookup(uint64_t key) const
     {
-        int64_t i = key % 128;
+        uint64_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
         }
 
-        int64_t perturb = key;
+        uint64_t perturb = key;
         while (true) {
             i = ((i * 5) + perturb + 1) % 128;
             if (!m_map[i].value || m_map[i].key == key) {
@@ -4021,7 +4023,6 @@ double CachedLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2,
 }
 
 } // namespace rapidfuzz
-
 namespace rapidfuzz {
 
 template <typename CharT, typename InputIt1, typename InputIt2>
