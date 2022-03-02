@@ -137,4 +137,10 @@ if (NOT_SUBPROJECT)
       DESTINATION
         ${RAPIDFUZZ_CMAKE_CONFIG_DESTINATION}
     )
+    
+    set(CPACK_PACKAGE_VENDOR "Max Bachmann")
+    set(CPACK_PACKAGE_CONTACT "kontakt@maxbachmann.de")
+    set(CPACK_GENERATOR "DEB")
+    include(CPack)
+
 endif(NOT_SUBPROJECT)
