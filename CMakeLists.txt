@@ -138,9 +138,14 @@ if (NOT_SUBPROJECT)
         ${RAPIDFUZZ_CMAKE_CONFIG_DESTINATION}
     )
     
+    # CPack/CMake started taking the package version from project version 3.12
+    # So we need to set the version manually for older CMake versions
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+        set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+    endif()
+    
     set(CPACK_PACKAGE_VENDOR "Max Bachmann")
-    set(CPACK_PACKAGE_CONTACT "kontakt@maxbachmann.de")
-    set(CPACK_GENERATOR "DEB")
+    set(CPACK_PACKAGE_CONTACT "https://github.com/maxbachmann/rapidfuzz-cpp")
     include(CPack)
 
 endif(NOT_SUBPROJECT)
