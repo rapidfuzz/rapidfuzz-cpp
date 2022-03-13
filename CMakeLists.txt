@@ -9,8 +9,6 @@ else()
   set(NOT_SUBPROJECT OFF)
 endif()
 
-option(RAPIDFUZZ_DEVELOPMENT_BUILD "Build tests, enable warnings, enable Werror, etc" OFF)
-
 option(RAPIDFUZZ_BUILD_TESTING "Build tests" OFF)
 option(RAPIDFUZZ_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(RAPIDFUZZ_BUILD_FUZZERS "Build fuzzers" OFF)
@@ -29,11 +27,11 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # Basic paths
-set(RAPIDFUZZ_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(SOURCES_DIR ${RAPIDFUZZ_DIR}/rapidfuzz)
-set(TEST_DIR ${RAPIDFUZZ_DIR}/test)
-set(BENCHMARK_DIR ${RAPIDFUZZ_DIR}/tests/bench)
-set(EXAMPLES_DIR ${RAPIDFUZZ_DIR}/examples)
+set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(SOURCES_DIR ${BASE_DIR}/rapidfuzz)
+set(TEST_DIR ${BASE_DIR}/test)
+set(BENCHMARK_DIR ${BASE_DIR}/tests/bench)
+set(EXAMPLES_DIR ${BASE_DIR}/examples)
 
 # Please keep these ordered alphabetically
 set(PUBLIC_HEADERS
@@ -137,7 +135,7 @@ if (NOT_SUBPROJECT)
       DESTINATION
         ${RAPIDFUZZ_CMAKE_CONFIG_DESTINATION}
     )
-    
+
     # CPack/CMake started taking the package version from project version 3.12
     # So we need to set the version manually for older CMake versions
     if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
