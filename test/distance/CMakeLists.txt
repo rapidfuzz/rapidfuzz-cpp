@@ -8,5 +8,6 @@ function(rapidfuzz_add_test test)
 endfunction()
 
 rapidfuzz_add_test(Hamming)
-rapidfuzz_add_test(Levenshtein)
 rapidfuzz_add_test(Indel)
+rapidfuzz_add_test(LCSseq)
+rapidfuzz_add_test(Levenshtein)

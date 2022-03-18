@@ -30,6 +30,7 @@ TEST_CASE("Indel")
         std::string a = "South Korea";
         std::string b = "North Korea";
         REQUIRE(rapidfuzz::indel_distance(a, b) == 4);
+        REQUIRE(rapidfuzz::indel_distance(a, b, 5) == 4);
         REQUIRE(rapidfuzz::indel_distance(a, b, 4) == 4);
         REQUIRE(rapidfuzz::indel_distance(a, b, 3) == 4);
         REQUIRE(rapidfuzz::indel_distance(a, b, 2) == 3);
