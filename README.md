@@ -159,7 +159,7 @@ extract(const Sentence1& query, const Iterable& choices, const double score_cuto
 {
   std::vector<std::pair<Sentence2, double>> results;
 
-  auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
+  auto scorer = rapidfuzz::fuzz::CachedRatio<typename Sentence1::value_type>(query);
 
   for (const auto& choice : choices) {
     double score = scorer.similarity(choice, score_cutoff);
@@ -187,7 +187,7 @@ extractOne(const Sentence1& query, const Iterable& choices, const double score_c
   double best_score = score_cutoff;
   Sentence2 best_match;
 
-  auto scorer = rapidfuzz::fuzz::CachedRatio<Sentence1>(query);
+  auto scorer = rapidfuzz::fuzz::CachedRatio<typename Sentence1::value_type>(query);
 
   for (const auto& choice : choices) {
     double score = scorer.similarity(choice, best_score);
