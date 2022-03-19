@@ -44,6 +44,8 @@ set(PUBLIC_HEADERS
     ${SOURCES_DIR}/distance/Hamming.impl
     ${SOURCES_DIR}/distance/Indel.hpp
     ${SOURCES_DIR}/distance/Indel.impl
+    ${SOURCES_DIR}/distance/LCSseq.hpp
+    ${SOURCES_DIR}/distance/LCSseq.impl
     ${SOURCES_DIR}/distance/Levenshtein.hpp
     ${SOURCES_DIR}/distance/Levenshtein.impl
 )
