@@ -128,7 +128,7 @@ private:
     std::basic_string<CharT1> s1;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 

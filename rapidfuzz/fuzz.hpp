@@ -69,7 +69,7 @@ private:
     common::BlockPatternMatchVector PM;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
@@ -143,7 +143,7 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
@@ -210,7 +210,7 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
@@ -270,7 +270,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSortRatio(const Sentence1& s1)
     -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
@@ -339,7 +339,7 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
@@ -398,7 +398,7 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
@@ -462,7 +462,7 @@ private:
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
@@ -524,7 +524,7 @@ private:
     std::basic_string<CharT1> s1_sorted;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
@@ -587,7 +587,7 @@ private:
     common::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
@@ -644,7 +644,7 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 

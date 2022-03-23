@@ -303,7 +303,7 @@ private:
     LevenshteinWeightTable weights;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
     -> CachedLevenshtein<char_type<Sentence1>>;

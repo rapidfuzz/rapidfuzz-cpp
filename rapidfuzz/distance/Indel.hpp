@@ -88,7 +88,7 @@ private:
     common::BlockPatternMatchVector PM;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
