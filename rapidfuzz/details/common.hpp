@@ -225,7 +225,7 @@ private:
     }
 
     /**
-     * lookup key inside the hasmap using a similar collision resolution
+     * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
     uint64_t lookup(uint64_t key) const

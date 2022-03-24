@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-03-19 13:58:26.120789
+//  Generated: 2022-03-25 01:03:24.321277
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1094,7 +1094,7 @@ private:
     }
 
     /**
-     * lookup key inside the hasmap using a similar collision resolution
+     * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
     uint64_t lookup(uint64_t key) const
@@ -1634,7 +1634,7 @@ private:
     std::basic_string<CharT1> s1;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
@@ -1879,7 +1879,7 @@ private:
     common::BlockPatternMatchVector PM;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
@@ -2714,7 +2714,7 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum = std::max(s1.size(), std::distance(first2, last2));
+    int64_t maximum = std::max((int64_t)s1.size(), (int64_t)std::distance(first2, last2));
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t sim = maximum - distance(first2, last2, cutoff_distance);
     return (sim >= score_cutoff) ? sim : 0;
@@ -2732,7 +2732,7 @@ template <typename InputIt2>
 double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                  double score_cutoff) const
 {
-    int64_t maximum = std::max(s1.size(), std::distance(first2, last2));
+    int64_t maximum = std::max((int64_t)s1.size(), (int64_t)std::distance(first2, last2));
     if (maximum == 0) {
         return 0;
     }
@@ -3291,7 +3291,7 @@ private:
     LevenshteinWeightTable weights;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
     -> CachedLevenshtein<char_type<Sentence1>>;
@@ -4401,7 +4401,7 @@ private:
     common::BlockPatternMatchVector PM;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
@@ -4475,7 +4475,7 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
@@ -4542,7 +4542,7 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
@@ -4602,7 +4602,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSortRatio(const Sentence1& s1)
     -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
@@ -4671,7 +4671,7 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
@@ -4730,7 +4730,7 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
@@ -4794,7 +4794,7 @@ private:
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
@@ -4856,7 +4856,7 @@ private:
     std::basic_string<CharT1> s1_sorted;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
@@ -4919,7 +4919,7 @@ private:
     common::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
@@ -4976,7 +4976,7 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if __cplusplus >= 201703L
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
