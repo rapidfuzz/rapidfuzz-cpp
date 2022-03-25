@@ -45,4 +45,12 @@ TEST_CASE("Indel")
         REQUIRE(rapidfuzz::lcs_seq_distance(a, b, 1) == 2);
         REQUIRE(rapidfuzz::lcs_seq_distance(a, b, 0) == 1);
     }
+
+    SECTION("testCachedImplementation")
+    {
+        std::string a = "001";
+        std::string b = "220";
+        REQUIRE(1 == rapidfuzz::lcs_seq_similarity(a, b));
+        REQUIRE(1 == rapidfuzz::CachedLCSseq<char>(a).similarity(b));
+    }
 };

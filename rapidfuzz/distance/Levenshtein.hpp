@@ -261,9 +261,7 @@ template <typename CharT1>
 struct CachedLevenshtein {
     template <typename Sentence1>
     CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(common::to_string(s1_)),
-          PM(common::to_begin(s1), common::to_end(s1)),
-          weights(aWeights)
+        : CachedLevenshtein(common::to_begin(s1_), common::to_end(s1_), aWeights)
     {}
 
     template <typename InputIt1>

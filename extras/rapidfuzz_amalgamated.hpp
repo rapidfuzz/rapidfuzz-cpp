@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-03-25 01:03:24.321277
+//  Generated: 2022-03-25 13:23:49.823125
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1597,7 +1597,7 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
 template <typename CharT1>
 struct CachedHamming {
     template <typename Sentence1>
-    CachedHamming(const Sentence1& s1_) : s1(common::to_string(s1_))
+    CachedHamming(const Sentence1& s1_) : CachedHamming(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -1840,8 +1840,7 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2);
 template <typename CharT1>
 struct CachedIndel {
     template <typename Sentence1>
-    CachedIndel(const Sentence1& s1_)
-        : s1(common::to_string(s1_)), PM(common::to_begin(s1), common::to_end(s1))
+    CachedIndel(const Sentence1& s1_) : CachedIndel(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -2047,8 +2046,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 template <typename CharT1>
 struct CachedLCSseq {
     template <typename Sentence1>
-    CachedLCSseq(const Sentence1& s1_)
-        : s1(common::to_string(s1_)), PM(common::to_begin(s1), common::to_end(s1))
+    CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -2099,10 +2097,6 @@ CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iterator_type<Inpu
 
 
 #include <algorithm>
-#include <array>
-#include <iostream>
-#include <limits>
-#include <string>
 
 namespace rapidfuzz {
 namespace detail {
@@ -2365,7 +2359,7 @@ int64_t lcs_seq_similarity(const common::BlockPatternMatchVector& block, InputIt
 {
     int64_t len1 = std::distance(first1, last1);
     int64_t len2 = std::distance(first2, last2);
-    int64_t max_misses = std::max(len1, len2) - score_cutoff;
+    int64_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2)) {
@@ -2781,8 +2775,7 @@ double CachedLCSseq<CharT1>::normalized_similarity(const Sentence2& s2, double s
     return normalized_similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
-} // namespace rapidfuzz
-namespace rapidfuzz {
+} // namespace rapidfuzznamespace rapidfuzz {
 namespace detail {
 
 template <typename InputIt1, typename InputIt2>
@@ -3249,9 +3242,7 @@ template <typename CharT1>
 struct CachedLevenshtein {
     template <typename Sentence1>
     CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(common::to_string(s1_)),
-          PM(common::to_begin(s1), common::to_end(s1)),
-          weights(aWeights)
+        : CachedLevenshtein(common::to_begin(s1_), common::to_end(s1_), aWeights)
     {}
 
     template <typename InputIt1>
@@ -4383,11 +4374,11 @@ double ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 template <typename CharT1>
 struct CachedRatio {
     template <typename InputIt1>
-    CachedRatio(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(first1, last1)
+    CachedRatio(InputIt1 first1, InputIt1 last1) : cached_indel(first1, last1)
     {}
 
     template <typename Sentence1>
-    CachedRatio(const Sentence1& s1) : CachedRatio(common::to_begin(s1), common::to_end(s1))
+    CachedRatio(const Sentence1& s1) : cached_indel(s1)
     {}
 
     template <typename InputIt2>
@@ -4397,8 +4388,7 @@ struct CachedRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0) const;
 
 private:
-    std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    CachedIndel<CharT1> cached_indel;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
@@ -5226,9 +5216,7 @@ template <typename CharT1>
 template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    double norm_sim = rapidfuzz::detail::indel_normalized_similarity(
-        PM, common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff / 100);
-    return norm_sim * 100;
+    return cached_indel.normalized_similarity(first2, last2, score_cutoff / 100) * 100;
 }
 
 template <typename CharT1>

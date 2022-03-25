@@ -1,8 +1,10 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <rapidfuzz/fuzz.hpp>
 
 namespace fuzz = rapidfuzz::fuzz;
+using Catch::Approx;
 
 /**
  * @name RatioTest
@@ -120,5 +122,10 @@ TEST_CASE("RatioTest")
         REQUIRE(0 == fuzz::partial_token_ratio("", "test"));
         REQUIRE(0 == fuzz::WRatio("", "test"));
         REQUIRE(0 == fuzz::QRatio("", "test"));
+    }
+
+    SECTION("testPartialRatioShortNeedle")
+    {
+        REQUIRE(Approx(33.3333333) == fuzz::partial_ratio("001", "220222"));
     }
 }

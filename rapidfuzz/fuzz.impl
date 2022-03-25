@@ -3,7 +3,6 @@
 /* Copyright © 2011 Adam Cohen */
 
 #include <rapidfuzz/details/matching_blocks.hpp>
-#include <rapidfuzz/distance/Indel.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -35,9 +34,7 @@ template <typename CharT1>
 template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    double norm_sim = rapidfuzz::detail::indel_normalized_similarity(
-        PM, common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff / 100);
-    return norm_sim * 100;
+    return cached_indel.normalized_similarity(first2, last2, score_cutoff / 100) * 100;
 }
 
 template <typename CharT1>

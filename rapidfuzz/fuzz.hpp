@@ -4,6 +4,7 @@
 
 #pragma once
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/distance/Indel.hpp>
 
 #include <type_traits>
 
@@ -51,11 +52,11 @@ double ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 template <typename CharT1>
 struct CachedRatio {
     template <typename InputIt1>
-    CachedRatio(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(first1, last1)
+    CachedRatio(InputIt1 first1, InputIt1 last1) : cached_indel(first1, last1)
     {}
 
     template <typename Sentence1>
-    CachedRatio(const Sentence1& s1) : CachedRatio(common::to_begin(s1), common::to_end(s1))
+    CachedRatio(const Sentence1& s1) : cached_indel(s1)
     {}
 
     template <typename InputIt2>
@@ -65,8 +66,7 @@ struct CachedRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0) const;
 
 private:
-    std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    CachedIndel<CharT1> cached_indel;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)

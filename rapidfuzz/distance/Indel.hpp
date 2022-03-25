@@ -49,8 +49,7 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2);
 template <typename CharT1>
 struct CachedIndel {
     template <typename Sentence1>
-    CachedIndel(const Sentence1& s1_)
-        : s1(common::to_string(s1_)), PM(common::to_begin(s1), common::to_end(s1))
+    CachedIndel(const Sentence1& s1_) : CachedIndel(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt1>

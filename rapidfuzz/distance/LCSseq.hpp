@@ -49,8 +49,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 template <typename CharT1>
 struct CachedLCSseq {
     template <typename Sentence1>
-    CachedLCSseq(const Sentence1& s1_)
-        : s1(common::to_string(s1_)), PM(common::to_begin(s1), common::to_end(s1))
+    CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt1>
