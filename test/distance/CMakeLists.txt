@@ -2,6 +2,13 @@ find_package(Catch2 3 REQUIRED)
 
 function(rapidfuzz_add_test test)
     add_executable(test_${test} tests-${test}.cpp)
+
+    if(MSVC)
+        target_compile_options(test_${test} PRIVATE /W4 /WX)
+    else()
+        target_compile_options(test_${test} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    endif()
+
     target_link_libraries(test_${test} ${PROJECT_NAME})
     target_link_libraries(test_${test} Catch2::Catch2WithMain )
     add_test(NAME ${test} COMMAND test_${test})

@@ -13,6 +13,13 @@ FetchContent_MakeAvailable(
 
 function(rapidfuzz_add_benchmark NAME SOURCE)
     add_executable(bench_${NAME} ${SOURCE})
+
+    if(MSVC)
+        target_compile_options(bench_${NAME} PRIVATE /W4 /WX)
+    else()
+        target_compile_options(bench_${NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    endif()
+
     target_link_libraries(bench_${NAME} PRIVATE ${PROJECT_NAME})
     target_link_libraries(bench_${NAME} PRIVATE benchmark::benchmark)
 endfunction()
