@@ -128,4 +128,10 @@ TEST_CASE("RatioTest")
     {
         REQUIRE(Approx(33.3333333) == fuzz::partial_ratio("001", "220222"));
     }
+
+    SECTION("testIssue206") /* test for https://github.com/maxbachmann/RapidFuzz/issues/206 */
+    {
+        REQUIRE(Approx(81.81818) == fuzz::token_set_ratio("South Korea", "North Korea"));
+        REQUIRE(Approx(81.81818) == fuzz::token_set_ratio("South Korea", "North Korea", 80));
+    }
 }

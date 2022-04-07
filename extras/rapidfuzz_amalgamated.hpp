@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-03-25 13:23:49.823125
+//  Generated: 2022-04-07 23:46:03.846338
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1217,7 +1217,7 @@ struct MatrixVectorView {
     explicit MatrixVectorView(T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
-    T& operator[](uint64_t col)
+    T& operator[](int64_t col)
     {
         assert(col < m_cols);
         return m_vector[col];
@@ -1241,7 +1241,7 @@ struct ConstMatrixVectorView {
     ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
     {}
 
-    const T& operator[](uint64_t col)
+    const T& operator[](int64_t col)
     {
         assert(col < m_cols);
         return m_vector[col];
@@ -5591,7 +5591,7 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
     int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     double result = 0;
-    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
 
     if (dist <= cutoff_distance) {
@@ -5749,7 +5749,7 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
     int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance) {
         result = std::max(
@@ -5814,7 +5814,7 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
     int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance) {
         result = std::max(
@@ -5883,7 +5883,7 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
     int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, ab_len + ba_len);
+    auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance) {
         result = std::max(

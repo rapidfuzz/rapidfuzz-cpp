@@ -348,7 +348,7 @@ struct MatrixVectorView {
     explicit MatrixVectorView(T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
-    T& operator[](uint64_t col)
+    T& operator[](int64_t col)
     {
         assert(col < m_cols);
         return m_vector[col];
@@ -372,7 +372,7 @@ struct ConstMatrixVectorView {
     ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
     {}
 
-    const T& operator[](uint64_t col)
+    const T& operator[](int64_t col)
     {
         assert(col < m_cols);
         return m_vector[col];
