@@ -131,7 +131,48 @@ TEST_CASE("RatioTest")
 
     SECTION("testIssue206") /* test for https://github.com/maxbachmann/RapidFuzz/issues/206 */
     {
-        REQUIRE(Approx(81.81818) == fuzz::token_set_ratio("South Korea", "North Korea"));
-        REQUIRE(Approx(81.81818) == fuzz::token_set_ratio("South Korea", "North Korea", 80));
+        double score1, score2;
+        const char* str1 = "South Korea";
+        const char* str2 = "North Korea";
+
+        score1 = fuzz::ratio(str1, str2);
+        score2 = fuzz::ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::partial_ratio(str1, str2);
+        score2 = fuzz::partial_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::token_sort_ratio(str1, str2);
+        score2 = fuzz::token_sort_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::token_set_ratio(str1, str2);
+        score2 = fuzz::token_set_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::token_ratio(str1, str2);
+        score2 = fuzz::token_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::partial_token_sort_ratio(str1, str2);
+        score2 = fuzz::partial_token_sort_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::partial_token_set_ratio(str1, str2);
+        score2 = fuzz::partial_token_set_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::partial_token_ratio(str1, str2);
+        score2 = fuzz::partial_token_ratio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::WRatio(str1, str2);
+        score2 = fuzz::WRatio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
+
+        score1 = fuzz::QRatio(str1, str2);
+        score2 = fuzz::QRatio(str1, str2, score1 - 0.0001);
+        REQUIRE(score1 == score2);
     }
 }
