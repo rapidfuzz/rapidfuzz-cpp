@@ -53,16 +53,16 @@ namespace rapidfuzz {
  *      the Levenshtein distance, so the affix is removed before calculating the
  *      similarity.
  *
- *    - If max is ≤ 3 the mbleven algorithm is used. This algorithm
+ *    - If max is <= 3 the mbleven algorithm is used. This algorithm
  *      checks all possible edit operations that are possible under
  *      the threshold `max`. The time complexity of this algorithm is ``O(N)``.
  *
- *    - If the length of the shorter string is ≤ 64 after removing the common affix
+ *    - If the length of the shorter string is <= 64 after removing the common affix
  *      Hyyrös' algorithm is used, which calculates the Levenshtein distance in
  *      parallel. The algorithm is described by @cite hyrro_2002. The time complexity of this
  *      algorithm is ``O(N)``.
  *
- *    - If the length of the shorter string is ≥ 64 after removing the common affix
+ *    - If the length of the shorter string is >= 64 after removing the common affix
  *      a blockwise implementation of Myers' algorithm is used, which calculates
  *      the Levenshtein distance in parallel (64 characters at a time).
  *      The algorithm is described by @cite myers_1999. The time complexity of this
@@ -89,20 +89,20 @@ namespace rapidfuzz {
  *      the Levenshtein distance, so the affix is removed before calculating the
  *      similarity.
  *
- *    - If max is ≤ 4 the mbleven algorithm is used. This algorithm
+ *    - If max is <= 4 the mbleven algorithm is used. This algorithm
  *      checks all possible edit operations that are possible under
  *      the threshold `max`. As a difference to the normal Levenshtein distance this
  *      algorithm can even be used up to a threshold of 4 here, since the higher weight
  *      of substitutions decreases the amount of possible edit operations.
  *      The time complexity of this algorithm is ``O(N)``.
  *
- *    - If the length of the shorter string is ≤ 64 after removing the common affix
+ *    - If the length of the shorter string is <= 64 after removing the common affix
  *      Hyyrös' lcs algorithm is used, which calculates the InDel distance in
  *      parallel. The algorithm is described by @cite hyrro_lcs_2004 and is extended with support
  *      for UTF32 in this implementation. The time complexity of this
  *      algorithm is ``O(N)``.
  *
- *    - If the length of the shorter string is ≥ 64 after removing the common affix
+ *    - If the length of the shorter string is >= 64 after removing the common affix
  *      a blockwise implementation of Hyyrös' lcs algorithm is used, which calculates
  *      the Levenshtein distance in parallel (64 characters at a time).
  *      The algorithm is described by @cite hyrro_lcs_2004. The time complexity of this
