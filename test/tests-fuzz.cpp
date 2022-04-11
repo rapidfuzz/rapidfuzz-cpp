@@ -3,6 +3,8 @@
 
 #include <rapidfuzz/fuzz.hpp>
 
+#include <iostream>
+
 namespace fuzz = rapidfuzz::fuzz;
 using Catch::Approx;
 
