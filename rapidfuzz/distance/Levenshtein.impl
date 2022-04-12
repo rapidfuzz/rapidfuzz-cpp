@@ -493,7 +493,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         std::size_t col_pos = col - 1;
         std::size_t col_word = col_pos / 64;
         col_pos = col_pos % 64;
-        std::size_t mask = static_cast<std::size_t>(1) << col_pos;
+        uint64_t mask = static_cast<std::uint64_t>(1) << col_pos;
 
         /* Deletion */
         if (matrix.VP[row - 1][col_word] & mask) {
