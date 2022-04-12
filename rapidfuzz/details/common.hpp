@@ -270,8 +270,8 @@ struct BlockPatternMatchVector {
     template <typename InputIt>
     void insert(InputIt first, InputIt last)
     {
-        int64_t len = std::distance(first, last);
-        auto block_count = static_cast<std::ptrdiff_t>((len / 64) + bool(len % 64));
+        auto len = std::distance(first, last);
+        auto block_count = len / 64 + bool(len % 64);
         m_val.resize(block_count);
 
         for (std::ptrdiff_t block = 0; block < block_count; ++block) {

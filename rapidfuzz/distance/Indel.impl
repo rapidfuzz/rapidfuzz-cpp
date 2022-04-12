@@ -12,7 +12,7 @@ int64_t indel_distance(const common::BlockPatternMatchVector& block, InputIt1 fi
                        InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t lcs_cutoff = std::max((int64_t)0, maximum / 2 - score_cutoff);
+    int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
     int64_t lcs_sim = detail::lcs_seq_similarity(block, first1, last1, first2, last2, lcs_cutoff);
     int64_t dist = maximum - 2 * lcs_sim;
     return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -23,7 +23,7 @@ int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt
                        int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t lcs_cutoff = std::max((int64_t)0, maximum / 2 - score_cutoff);
+    int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
     int64_t lcs_sim = lcs_seq_similarity(first1, last1, first2, last2, lcs_cutoff);
     int64_t dist = maximum - 2 * lcs_sim;
     return (dist <= score_cutoff) ? dist : score_cutoff + 1;
