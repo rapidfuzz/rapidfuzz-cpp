@@ -345,10 +345,10 @@ struct CharSet {
 
 template <typename T>
 struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector, std::size_t cols) : m_vector(vector), m_cols(cols)
+    MatrixVectorView(T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    T& operator[](std::size_t col)
+    T& operator[](std::size_t col) noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
@@ -366,13 +366,13 @@ private:
 
 template <typename T>
 struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector, std::size_t cols) : m_vector(vector), m_cols(cols)
+    ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
+    ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept : m_vector(other.m_vector)
     {}
 
-    const T& operator[](std::size_t col)
+    const T& operator[](std::size_t col) const noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
