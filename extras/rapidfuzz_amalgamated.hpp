@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-04-12 10:10:14.097763
+//  Generated: 2022-04-12 10:11:05.045612
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1224,7 +1224,8 @@ struct ConstMatrixVectorView {
     explicit ConstMatrixVectorView(const T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
+    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+        : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
     const T& operator[](int64_t col)

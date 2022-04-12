@@ -355,7 +355,8 @@ struct ConstMatrixVectorView {
     explicit ConstMatrixVectorView(const T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
+    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+        : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
     const T& operator[](int64_t col)
