@@ -46,18 +46,6 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
     return std::basic_string<CharT>(str.data(), str.size());
 }
 
-template <typename InputIterator1, typename InputIterator2>
-std::pair<InputIterator1, InputIterator2>
-common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
-                 InputIterator2 last2)
-{
-    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
-        ++first1;
-        ++first2;
-    }
-    return std::pair<InputIterator1, InputIterator2>(first1, first2);
-}
-
 /**
  * Removes common prefix of two string views
  */
@@ -65,7 +53,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                      InputIt2 last2)
 {
-    int64_t prefix = std::distance(first1, common::mismatch(first1, last1, first2, last2).first);
+    int64_t prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
     first2 += prefix;
     return prefix;
@@ -83,8 +71,7 @@ int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 
     auto rfirst2 = std::make_reverse_iterator(last2);
     auto rlast2 = std::make_reverse_iterator(first2);
 
-    int64_t suffix =
-        std::distance(rfirst1, common::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
+    int64_t suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
     last1 -= suffix;
     last2 -= suffix;
     return suffix;

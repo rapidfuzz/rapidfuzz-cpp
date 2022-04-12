@@ -105,20 +105,6 @@ auto to_end(T& x)
     return end(x);
 }
 
-/**
- * @brief Finds the first mismatching pair of elements from two ranges:
- * one defined by [first1, last1) and another defined by [first2,last2).
- * Similar implementation to std::mismatch from C++14
- *
- * @param first1, last1 - the first range of the elements
- * @param first2, last2 - the second range of the elements
- *
- * @return std::pair with iterators to the first two non-equal elements.
- */
-template <typename InputIterator1, typename InputIterator2>
-std::pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1, InputIterator1 last1,
-                                                   InputIterator2 first2, InputIterator2 last2);
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                 InputIt2& last2);
