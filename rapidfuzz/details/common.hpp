@@ -49,7 +49,9 @@ template <int Max = 1>
 constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
-    return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
+    return result_cutoff(
+        (lensum > 0) ? (max - max * static_cast<double>(dist) / static_cast<double>(lensum)) : max,
+        score_cutoff);
 }
 
 template <int Max = 1>
@@ -110,10 +112,12 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
+std::ptrdiff_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+                                    InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-int64_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+std::ptrdiff_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+                                    InputIt2& last2);
 
 template <typename InputIt, typename CharT = iterator_type<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
@@ -181,10 +185,10 @@ struct PatternMatchVector {
     uint64_t get(CharT key) const
     {
         if (key >= 0 && key <= 255) {
-            return m_extendedAscii[(uint8_t)key];
+            return m_extendedAscii[static_cast<uint8_t>(key)];
         }
         else {
-            return m_map[lookup((uint64_t)key)].value;
+            return m_map[lookup(static_cast<uint64_t>(key))].value;
         }
     }
 
@@ -204,7 +208,7 @@ private:
             m_extendedAscii[(uint8_t)key] |= mask;
         }
         else {
-            uint64_t i = lookup((uint64_t)key);
+            int32_t i = lookup(static_cast<uint64_t>(key));
             m_map[i].key = key;
             m_map[i].value |= mask;
         }
@@ -214,9 +218,9 @@ private:
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    uint64_t lookup(uint64_t key) const
+    int32_t lookup(uint64_t key) const
     {
-        uint64_t i = key % 128;
+        int32_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
@@ -224,7 +228,7 @@ private:
 
         uint64_t perturb = key;
         while (true) {
-            i = ((i * 5) + perturb + 1) % 128;
+            i = (static_cast<uint64_t>(i) * 5 + perturb + 1) % 128;
             if (!m_map[i].value || m_map[i].key == key) {
                 return i;
             }
@@ -237,8 +241,7 @@ private:
 struct BlockPatternMatchVector {
     std::vector<PatternMatchVector> m_val;
 
-    BlockPatternMatchVector()
-    {}
+    BlockPatternMatchVector() = default;
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
@@ -256,11 +259,11 @@ struct BlockPatternMatchVector {
     template <typename InputIt>
     void insert(InputIt first, InputIt last)
     {
-        int64_t len = std::distance(first, last);
-        int64_t block_count = (len / 64) + bool(len % 64);
+        auto len = std::distance(first, last);
+        auto block_count = len / 64 + bool(len % 64);
         m_val.resize(block_count);
 
-        for (int64_t block = 0; block < block_count; ++block) {
+        for (std::ptrdiff_t block = 0; block < block_count; ++block) {
             if (std::distance(first + block * 64, last) > 64) {
                 m_val[block].insert(first + block * 64, first + (block + 1) * 64);
             }
@@ -271,7 +274,7 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    uint64_t get(int64_t block, CharT ch) const
+    uint64_t get(std::ptrdiff_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
@@ -331,53 +334,63 @@ struct CharSet {
 
 template <typename T>
 struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
+
+    using value_type = T;
+
+    MatrixVectorView(T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    T& operator[](int64_t col)
+    value_type& operator[](std::size_t col) noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    int64_t size() const
+    std::size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     T* m_vector;
-    int64_t m_cols;
+    std::size_t m_cols;
 };
 
 template <typename T>
 struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
+
+    using value_type = T;
+
+    ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept
+        : m_vector(vector), m_cols(cols)
     {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+    ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept
         : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
-    const T& operator[](int64_t col)
+    const value_type& operator[](std::size_t col) const noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    int64_t size() const
+    std::size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     const T* m_vector;
-    int64_t m_cols;
+    std::size_t m_cols;
 };
 
 template <typename T>
 struct Matrix {
-    Matrix(uint64_t rows, uint64_t cols, uint64_t val)
+
+    using value_type = T;
+
+    Matrix(std::size_t rows, std::size_t cols, T val)
     {
         m_rows = rows;
         m_cols = cols;
@@ -395,31 +408,31 @@ struct Matrix {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<uint64_t> operator[](uint64_t row)
+    MatrixVectorView<value_type> operator[](std::size_t row) noexcept
     {
         assert(row < m_rows);
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+        return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
+    ConstMatrixVectorView<value_type> operator[](std::size_t row) const noexcept
     {
         assert(row < m_rows);
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+        return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    uint64_t rows() const
+    std::size_t rows() const noexcept
     {
         return m_rows;
     }
 
-    uint64_t cols() const
+    std::size_t cols() const noexcept
     {
         return m_cols;
     }
 
 private:
-    uint64_t m_rows;
-    uint64_t m_cols;
+    std::size_t m_rows;
+    std::size_t m_cols;
     T* m_matrix;
 };
 

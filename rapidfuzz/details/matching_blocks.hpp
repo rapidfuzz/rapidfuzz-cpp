@@ -33,10 +33,10 @@
 namespace rapidfuzz {
 namespace detail {
 struct MatchingBlock {
-    int64_t spos;
-    int64_t dpos;
-    int64_t length;
-    MatchingBlock(int64_t aSPos, int64_t aDPos, int64_t aLength)
+    std::ptrdiff_t spos;
+    std::ptrdiff_t dpos;
+    std::ptrdiff_t length;
+    MatchingBlock(std::ptrdiff_t aSPos, std::ptrdiff_t aDPos, std::ptrdiff_t aLength)
         : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
@@ -45,37 +45,38 @@ namespace difflib {
 
 template <typename InputIt1, typename InputIt2>
 class SequenceMatcher {
+    using Index = std::ptrdiff_t;
 public:
-    using match_t = std::tuple<int64_t, int64_t, int64_t>;
+    using match_t = std::tuple<Index, Index, Index>;
 
     SequenceMatcher(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
         : a_first(first1), a_last(last1), b_first(first2), b_last(last2)
     {
-        int64_t b_len = std::distance(b_first, b_last);
+        auto b_len = std::distance(b_first, b_last);
         j2len_.resize(b_len + 1);
-        for (int64_t i = 0; i < b_len; ++i) {
+        for (Index i = 0; i < b_len; ++i) {
             b2j_[b_first[i]].push_back(i);
         }
     }
 
-    match_t find_longest_match(int64_t a_low, int64_t a_high, int64_t b_low, int64_t b_high)
+    match_t find_longest_match(Index a_low, Index a_high, Index b_low, Index b_high)
     {
-        int64_t best_i = a_low;
-        int64_t best_j = b_low;
-        int64_t best_size = 0;
+        Index best_i = a_low;
+        Index best_j = b_low;
+        Index best_size = 0;
 
         // Find longest junk free match
         {
-            for (int64_t i = a_low; i < a_high; ++i) {
+            for (Index i = a_low; i < a_high; ++i) {
                 bool found = false;
                 auto iter = b2j_.find(a_first[i]);
                 if (iter != std::end(b2j_)) {
                     const auto& indexes = iter->second;
 
                     size_t pos = 0;
-                    int64_t next_val = 0;
+                    Index next_val = 0;
                     for (; pos < indexes.size(); pos++) {
-                        int64_t j = indexes[pos];
+                        Index j = indexes[pos];
                         if (j < b_low) continue;
 
                         next_val = j2len_[j];
@@ -83,11 +84,11 @@ public:
                     }
 
                     for (; pos < indexes.size(); pos++) {
-                        int64_t j = indexes[pos];
+                        Index j = indexes[pos];
                         if (j >= b_high) break;
 
                         found = true;
-                        int64_t k = next_val + 1;
+                        Index k = next_val + 1;
 
                         /* the next value might be overwritten below
                          * so cache it */
@@ -129,10 +130,10 @@ public:
 
     std::vector<MatchingBlock> get_matching_blocks()
     {
-        int64_t a_len = std::distance(a_first, a_last);
-        int64_t b_len = std::distance(b_first, b_last);
+        auto a_len = std::distance(a_first, a_last);
+        auto b_len = std::distance(b_first, b_last);
         // The following are tuple extracting aliases
-        std::vector<std::tuple<int64_t, int64_t, int64_t, int64_t>> queue;
+        std::vector<std::tuple<Index, Index, Index, Index>> queue;
         std::vector<match_t> matching_blocks_pass1;
 
         size_t queue_head = 0;
@@ -140,9 +141,9 @@ public:
         queue.emplace_back(0, a_len, 0, b_len);
 
         while (queue_head < queue.size()) {
-            int64_t a_low, a_high, b_low, b_high;
+            Index a_low, a_high, b_low, b_high;
             std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
-            int64_t spos, dpos, length;
+            Index spos, dpos, length;
             std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
             if (length) {
                 if (a_low < spos && b_low < dpos) {
@@ -160,7 +161,7 @@ public:
 
         matching_blocks.reserve(matching_blocks_pass1.size());
 
-        int64_t i1, j1, k1;
+        Index i1, j1, k1;
         i1 = j1 = k1 = 0;
 
         for (match_t const& m : matching_blocks_pass1) {
@@ -190,8 +191,8 @@ protected:
 
 private:
     // Cache to avoid reallocations
-    std::vector<int64_t> j2len_;
-    std::unordered_map<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
+    std::vector<Index> j2len_;
+    std::unordered_map<iterator_type<InputIt2>, std::vector<Index>> b2j_;
 };
 } // namespace difflib
 

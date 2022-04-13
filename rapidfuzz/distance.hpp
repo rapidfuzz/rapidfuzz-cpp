@@ -13,13 +13,13 @@ template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2)
 {
-    int64_t len1 = std::distance(first1, last1);
-    int64_t len2 = std::distance(first2, last2);
+    auto len1 = std::distance(first1, last1);
+    auto len2 = std::distance(first2, last2);
 
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
-    int64_t src_pos = 0;
-    int64_t dest_pos = 0;
+    std::ptrdiff_t src_pos = 0;
+    std::ptrdiff_t dest_pos = 0;
 
     for (const auto& op : ops) {
         /* matches between last and current editop */
@@ -68,12 +68,12 @@ template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2)
 {
-    int64_t len1 = std::distance(first1, last1);
-    int64_t len2 = std::distance(first2, last2);
+    auto len1 = std::distance(first1, last1);
+    auto len2 = std::distance(first2, last2);
 
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
-    int64_t dest_pos = 0;
+    std::ptrdiff_t dest_pos = 0;
 
     for (const auto& op : ops) {
         switch (op.type) {

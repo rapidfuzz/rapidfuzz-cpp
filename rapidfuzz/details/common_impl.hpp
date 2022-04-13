@@ -50,10 +50,10 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
  * Removes common prefix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+std::ptrdiff_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                      InputIt2 last2)
 {
-    int64_t prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
+    auto prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
     first2 += prefix;
     return prefix;
@@ -63,7 +63,7 @@ int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2&
  * Removes common suffix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+std::ptrdiff_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                      InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
@@ -71,7 +71,7 @@ int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 
     auto rfirst2 = std::make_reverse_iterator(last2);
     auto rlast2 = std::make_reverse_iterator(first2);
 
-    int64_t suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
+    auto suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
     last1 -= suffix;
     last2 -= suffix;
     return suffix;
@@ -84,8 +84,8 @@ template <typename InputIt1, typename InputIt2>
 StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                         InputIt2& last2)
 {
-    return StringAffix{(int64_t)remove_common_prefix(first1, last1, first2, last2),
-                       (int64_t)remove_common_suffix(first1, last1, first2, last2)};
+    return StringAffix{remove_common_prefix(first1, last1, first2, last2),
+                       remove_common_suffix(first1, last1, first2, last2)};
 }
 
 template <typename, typename = void>

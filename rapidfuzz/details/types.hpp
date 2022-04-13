@@ -63,8 +63,8 @@ template <typename InputIt>
 using IteratorViewVec = std::vector<IteratorView<InputIt>>;
 
 struct StringAffix {
-    int64_t prefix_len;
-    int64_t suffix_len;
+    std::ptrdiff_t prefix_len;
+    std::ptrdiff_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
@@ -94,14 +94,14 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;    /**< type of the edit operation */
-    int64_t src_pos;  /**< index into the source string */
-    int64_t dest_pos; /**< index into the destination string */
+    EditType type;           /**< type of the edit operation */
+    std::ptrdiff_t src_pos;  /**< index into the source string */
+    std::ptrdiff_t dest_pos; /**< index into the destination string */
 
     EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
     {}
 
-    EditOp(EditType type_, int64_t src_pos_, int64_t dest_pos_)
+    EditOp(EditType type_, std::ptrdiff_t src_pos_, std::ptrdiff_t dest_pos_)
         : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
     {}
 };
@@ -125,17 +125,17 @@ inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;      /**< type of the edit operation */
-    int64_t src_begin;  /**< index into the source string */
-    int64_t src_end;    /**< index into the source string */
-    int64_t dest_begin; /**< index into the destination string */
-    int64_t dest_end;   /**< index into the destination string */
+    EditType type;             /**< type of the edit operation */
+    std::ptrdiff_t src_begin;  /**< index into the source string */
+    std::ptrdiff_t src_end;    /**< index into the source string */
+    std::ptrdiff_t dest_begin; /**< index into the destination string */
+    std::ptrdiff_t dest_end;   /**< index into the destination string */
 
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, int64_t src_begin_, int64_t src_end_, int64_t dest_begin_,
-           int64_t dest_end_)
+    Opcode(EditType type_, std::ptrdiff_t src_begin_, std::ptrdiff_t src_end_,
+           std::ptrdiff_t dest_begin_, std::ptrdiff_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -156,17 +156,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
 {
     if (step > 0) {
         if (start < 0) {
-            start = std::max((int)(start + (int)vec.size()), 0);
+            start = std::max<int>(start + static_cast<int>(vec.size()), 0);
         }
-        else if (start > (int)vec.size()) {
-            start = (int)vec.size();
+        else if (start > static_cast<int>(vec.size())) {
+            start = static_cast<int>(vec.size());
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + (int)vec.size()), 0);
+            stop = std::max<int>(stop + static_cast<int>(vec.size()), 0);
         }
-        else if (stop > (int)vec.size()) {
-            stop = (int)vec.size();
+        else if (stop > static_cast<int>(vec.size())) {
+            stop = static_cast<int>(vec.size());
         }
 
         if (start >= stop) {
@@ -182,17 +182,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
     }
     else if (step < 0) {
         if (start < 0) {
-            start = std::max((int)(start + (int)vec.size()), -1);
+            start = std::max<int>(start + static_cast<int>(vec.size()), -1);
         }
-        else if (start >= (int)vec.size()) {
-            start = (int)vec.size() - 1;
+        else if (start >= static_cast<int>(vec.size())) {
+            start = static_cast<int>(vec.size()) - 1;
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + (int)vec.size()), -1);
+            stop = std::max<int>(stop + static_cast<int>(vec.size()), -1);
         }
-        else if (stop >= (int)vec.size()) {
-            stop = (int)vec.size() - 1;
+        else if (stop >= static_cast<int>(vec.size())) {
+            stop = static_cast<int>(vec.size()) - 1;
         }
 
         if (start <= stop) {
@@ -218,14 +218,15 @@ class Editops : private std::vector<EditOp> {
 public:
     using std::vector<EditOp>::size_type;
 
-    Editops() : src_len(0), dest_len(0)
+    Editops() noexcept : src_len(0), dest_len(0)
     {}
 
     Editops(size_type count, const EditOp& value)
         : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Editops(size_type count) : std::vector<EditOp>(count), src_len(0), dest_len(0)
+    explicit Editops(size_type count)
+        : std::vector<EditOp>(count), src_len(0), dest_len(0)
     {}
 
     Editops(const Editops& other)
@@ -239,7 +240,7 @@ public:
         swap(other);
     }
 
-    Editops& operator=(Editops other)
+    Editops& operator=(Editops other) noexcept
     {
         swap(other);
         return *this;
@@ -303,19 +304,19 @@ public:
         return reversed;
     }
 
-    int64_t get_src_len() const
+    std::ptrdiff_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(int64_t len)
+    void set_src_len(std::ptrdiff_t len) noexcept
     {
         src_len = len;
     }
-    int64_t get_dest_len() const
+    std::ptrdiff_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(int64_t len)
+    void set_dest_len(std::ptrdiff_t len) noexcept
     {
         dest_len = len;
     }
@@ -337,8 +338,8 @@ public:
     }
 
 private:
-    int64_t src_len;
-    int64_t dest_len;
+    std::ptrdiff_t src_len;
+    std::ptrdiff_t dest_len;
 };
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
@@ -358,7 +359,7 @@ inline bool operator!=(const Editops& lhs, const Editops& rhs)
     return !(lhs == rhs);
 }
 
-inline void swap(Editops& lhs, Editops& rhs)
+inline void swap(Editops& lhs, Editops& rhs) noexcept(noexcept(lhs.swap(rhs)))
 {
     lhs.swap(rhs);
 }
@@ -367,14 +368,15 @@ class Opcodes : private std::vector<Opcode> {
 public:
     using std::vector<Opcode>::size_type;
 
-    Opcodes() : src_len(0), dest_len(0)
+    Opcodes() noexcept : src_len(0), dest_len(0)
     {}
 
     Opcodes(size_type count, const Opcode& value)
         : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Opcodes(size_type count) : std::vector<Opcode>(count), src_len(0), dest_len(0)
+    explicit Opcodes(size_type count)
+        : std::vector<Opcode>(count), src_len(0), dest_len(0)
     {}
 
     Opcodes(const Opcodes& other)
@@ -388,7 +390,7 @@ public:
         swap(other);
     }
 
-    Opcodes& operator=(Opcodes other)
+    Opcodes& operator=(Opcodes other) noexcept
     {
         swap(other);
         return *this;
@@ -452,19 +454,19 @@ public:
         return reversed;
     }
 
-    int64_t get_src_len() const
+    std::ptrdiff_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(int64_t len)
+    void set_src_len(std::ptrdiff_t len) noexcept
     {
         src_len = len;
     }
-    int64_t get_dest_len() const
+    std::ptrdiff_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(int64_t len)
+    void set_dest_len(std::ptrdiff_t len) noexcept
     {
         dest_len = len;
     }
@@ -487,8 +489,8 @@ public:
     }
 
 private:
-    int64_t src_len;
-    int64_t dest_len;
+    std::ptrdiff_t src_len;
+    std::ptrdiff_t dest_len;
 };
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
@@ -508,7 +510,7 @@ inline bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
     return !(lhs == rhs);
 }
 
-inline void swap(Opcodes& lhs, Opcodes& rhs)
+inline void swap(Opcodes& lhs, Opcodes& rhs) noexcept(noexcept(lhs.swap(rhs)))
 {
     lhs.swap(rhs);
 }
@@ -523,19 +525,19 @@ inline Editops::Editops(const Opcodes& other)
             break;
 
         case EditType::Replace:
-            for (int64_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (std::ptrdiff_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
             }
             break;
 
         case EditType::Insert:
-            for (int64_t j = 0; j < op.dest_end - op.dest_begin; j++) {
+            for (std::ptrdiff_t j = 0; j < op.dest_end - op.dest_begin; j++) {
                 push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
             }
             break;
 
         case EditType::Delete:
-            for (int64_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (std::ptrdiff_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
             }
             break;
@@ -547,8 +549,8 @@ inline Opcodes::Opcodes(const Editops& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
-    int64_t src_pos = 0;
-    int64_t dest_pos = 0;
+    std::ptrdiff_t src_pos = 0;
+    std::ptrdiff_t dest_pos = 0;
     for (size_t i = 0; i < other.size();) {
         if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
             push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
@@ -556,8 +558,8 @@ inline Opcodes::Opcodes(const Editops& other)
             dest_pos = other[i].dest_pos;
         }
 
-        int64_t src_begin = src_pos;
-        int64_t dest_begin = dest_pos;
+        std::ptrdiff_t src_begin = src_pos;
+        std::ptrdiff_t dest_begin = dest_pos;
         EditType type = other[i].type;
         do {
             switch (type) {
@@ -591,17 +593,17 @@ inline Opcodes::Opcodes(const Editops& other)
 
 template <typename T>
 struct ScoreAlignment {
-    T score;            /**< resulting score of the algorithm */
-    int64_t src_start;  /**< index into the source string */
-    int64_t src_end;    /**< index into the source string */
-    int64_t dest_start; /**< index into the destination string */
-    int64_t dest_end;   /**< index into the destination string */
+    T score;                   /**< resulting score of the algorithm */
+    std::ptrdiff_t src_start;  /**< index into the source string */
+    std::ptrdiff_t src_end;    /**< index into the source string */
+    std::ptrdiff_t dest_start; /**< index into the destination string */
+    std::ptrdiff_t dest_end;   /**< index into the destination string */
 
     ScoreAlignment() : score(T()), src_start(0), src_end(0), dest_start(0), dest_end(0)
     {}
 
-    ScoreAlignment(T score_, int64_t src_start_, int64_t src_end_, int64_t dest_start_,
-                   int64_t dest_end_)
+    ScoreAlignment(T score_, std::ptrdiff_t src_start_, std::ptrdiff_t src_end_,
+                   std::ptrdiff_t dest_start_, std::ptrdiff_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),
