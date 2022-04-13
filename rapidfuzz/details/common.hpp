@@ -48,7 +48,7 @@ constexpr double result_cutoff(double result, double score_cutoff)
 template <int Max = 1>
 constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff = 0)
 {
-    auto max = static_cast<double>(Max);
+    double max = static_cast<double>(Max);
     return result_cutoff(
         (lensum > 0) ? (max - max * static_cast<double>(dist) / static_cast<double>(lensum)) : max,
         score_cutoff);
