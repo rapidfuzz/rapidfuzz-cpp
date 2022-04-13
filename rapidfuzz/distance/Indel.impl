@@ -35,9 +35,9 @@ double indel_normalized_distance(const common::BlockPatternMatchVector& block, I
                                  double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = indel_distance(block, first1, last1, first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? (double)dist / (double)maximum : 0.0;
+    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 
@@ -46,7 +46,7 @@ int64_t indel_similarity(const common::BlockPatternMatchVector& block, InputIt1 
                          InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t cutoff_distance = std::max((int64_t)0, maximum - score_cutoff);
+    int64_t cutoff_distance = std::max<int64_t>(0, maximum - score_cutoff);
     int64_t dist = indel_distance(block, first1, last1, first2, last2, cutoff_distance);
     int64_t sim = maximum - dist;
     return (sim >= score_cutoff) ? sim : 0;
@@ -84,9 +84,9 @@ double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first
                                  double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = indel_distance(first1, last1, first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? (double)dist / (double)maximum : 0.0;
+    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 
@@ -102,7 +102,7 @@ int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Input
                          int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t cutoff_distance = std::max((int64_t)0, maximum - score_cutoff);
+    int64_t cutoff_distance = std::max<int64_t>(0, maximum - score_cutoff);
     int64_t dist = indel_distance(first1, last1, first2, last2, cutoff_distance);
     int64_t sim = maximum - dist;
     return (sim >= score_cutoff) ? sim : 0;
@@ -164,9 +164,9 @@ double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                 double score_cutoff) const
 {
     int64_t maximum = s1.size() + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? (double)dist / (double)maximum : 0.0;
+    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 

@@ -94,7 +94,7 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;    /**< type of the edit operation */
+    EditType type;           /**< type of the edit operation */
     std::ptrdiff_t src_pos;  /**< index into the source string */
     std::ptrdiff_t dest_pos; /**< index into the destination string */
 
@@ -125,7 +125,7 @@ inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;      /**< type of the edit operation */
+    EditType type;             /**< type of the edit operation */
     std::ptrdiff_t src_begin;  /**< index into the source string */
     std::ptrdiff_t src_end;    /**< index into the source string */
     std::ptrdiff_t dest_begin; /**< index into the destination string */
@@ -156,17 +156,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
 {
     if (step > 0) {
         if (start < 0) {
-            start = std::max((int)(start + (int)vec.size()), 0);
+            start = std::max<int>(start + static_cast<int>(vec.size()), 0);
         }
-        else if (start > (int)vec.size()) {
-            start = (int)vec.size();
+        else if (start > static_cast<int>(vec.size())) {
+            start = static_cast<int>(vec.size());
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + (int)vec.size()), 0);
+            stop = std::max<int>(stop + static_cast<int>(vec.size()), 0);
         }
-        else if (stop > (int)vec.size()) {
-            stop = (int)vec.size();
+        else if (stop > static_cast<int>(vec.size())) {
+            stop = static_cast<int>(vec.size());
         }
 
         if (start >= stop) {
@@ -182,17 +182,17 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
     }
     else if (step < 0) {
         if (start < 0) {
-            start = std::max((int)(start + (int)vec.size()), -1);
+            start = std::max<int>(start + static_cast<int>(vec.size()), -1);
         }
-        else if (start >= (int)vec.size()) {
-            start = (int)vec.size() - 1;
+        else if (start >= static_cast<int>(vec.size())) {
+            start = static_cast<int>(vec.size()) - 1;
         }
 
         if (stop < 0) {
-            stop = std::max((int)(stop + (int)vec.size()), -1);
+            stop = std::max<int>(stop + static_cast<int>(vec.size()), -1);
         }
-        else if (stop >= (int)vec.size()) {
-            stop = (int)vec.size() - 1;
+        else if (stop >= static_cast<int>(vec.size())) {
+            stop = static_cast<int>(vec.size()) - 1;
         }
 
         if (start <= stop) {
@@ -218,17 +218,21 @@ class Editops : private std::vector<EditOp> {
 public:
     using std::vector<EditOp>::size_type;
 
-    Editops() : src_len(0), dest_len(0)
+    Editops() noexcept : src_len(0), dest_len(0)
     {}
 
-    Editops(size_type count, const EditOp& value)
+    Editops(size_type count, const EditOp& value) noexcept(
+        std::is_nothrow_constructible<std::vector<EditOp>, size_type, const EditOp&>::value)
         : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Editops(size_type count) : std::vector<EditOp>(count), src_len(0), dest_len(0)
+    explicit Editops(size_type count) noexcept(
+        std::is_nothrow_constructible<std::vector<EditOp>, size_type>::value)
+        : std::vector<EditOp>(count), src_len(0), dest_len(0)
     {}
 
-    Editops(const Editops& other)
+    Editops(const Editops& other) noexcept(
+        std::is_nothrow_copy_constructible<std::vector<EditOp>>::value)
         : std::vector<EditOp>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
@@ -239,7 +243,7 @@ public:
         swap(other);
     }
 
-    Editops& operator=(Editops other)
+    Editops& operator=(Editops other) noexcept
     {
         swap(other);
         return *this;
@@ -303,19 +307,19 @@ public:
         return reversed;
     }
 
-    std::ptrdiff_t get_src_len() const
+    std::ptrdiff_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(std::ptrdiff_t len)
+    void set_src_len(std::ptrdiff_t len) noexcept
     {
         src_len = len;
     }
-    std::ptrdiff_t get_dest_len() const
+    std::ptrdiff_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(std::ptrdiff_t len)
+    void set_dest_len(std::ptrdiff_t len) noexcept
     {
         dest_len = len;
     }
@@ -358,7 +362,7 @@ inline bool operator!=(const Editops& lhs, const Editops& rhs)
     return !(lhs == rhs);
 }
 
-inline void swap(Editops& lhs, Editops& rhs)
+inline void swap(Editops& lhs, Editops& rhs) noexcept(noexcept(lhs.swap(rhs)))
 {
     lhs.swap(rhs);
 }
@@ -367,17 +371,21 @@ class Opcodes : private std::vector<Opcode> {
 public:
     using std::vector<Opcode>::size_type;
 
-    Opcodes() : src_len(0), dest_len(0)
+    Opcodes() noexcept : src_len(0), dest_len(0)
     {}
 
-    Opcodes(size_type count, const Opcode& value)
+    Opcodes(size_type count, const Opcode& value) noexcept(
+        std::is_nothrow_constructible<std::vector<Opcode>, size_type, const Opcode&>::value)
         : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Opcodes(size_type count) : std::vector<Opcode>(count), src_len(0), dest_len(0)
+    explicit Opcodes(size_type count) noexcept(
+        std::is_nothrow_constructible<std::vector<Opcode>, size_type>::value)
+        : std::vector<Opcode>(count), src_len(0), dest_len(0)
     {}
 
-    Opcodes(const Opcodes& other)
+    Opcodes(const Opcodes& other) noexcept(
+        std::is_nothrow_copy_constructible<std::vector<Opcode>>::value)
         : std::vector<Opcode>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
@@ -388,7 +396,7 @@ public:
         swap(other);
     }
 
-    Opcodes& operator=(Opcodes other)
+    Opcodes& operator=(Opcodes other) noexcept
     {
         swap(other);
         return *this;
@@ -452,19 +460,19 @@ public:
         return reversed;
     }
 
-    std::ptrdiff_t get_src_len() const
+    std::ptrdiff_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(std::ptrdiff_t len)
+    void set_src_len(std::ptrdiff_t len) noexcept
     {
         src_len = len;
     }
-    std::ptrdiff_t get_dest_len() const
+    std::ptrdiff_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(std::ptrdiff_t len)
+    void set_dest_len(std::ptrdiff_t len) noexcept
     {
         dest_len = len;
     }
@@ -508,7 +516,7 @@ inline bool operator!=(const Opcodes& lhs, const Opcodes& rhs)
     return !(lhs == rhs);
 }
 
-inline void swap(Opcodes& lhs, Opcodes& rhs)
+inline void swap(Opcodes& lhs, Opcodes& rhs) noexcept(noexcept(lhs.swap(rhs)))
 {
     lhs.swap(rhs);
 }
@@ -591,7 +599,7 @@ inline Opcodes::Opcodes(const Editops& other)
 
 template <typename T>
 struct ScoreAlignment {
-    T score;            /**< resulting score of the algorithm */
+    T score;                   /**< resulting score of the algorithm */
     std::ptrdiff_t src_start;  /**< index into the source string */
     std::ptrdiff_t src_end;    /**< index into the source string */
     std::ptrdiff_t dest_start; /**< index into the destination string */

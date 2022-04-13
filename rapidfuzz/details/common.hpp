@@ -48,8 +48,10 @@ constexpr double result_cutoff(double result, double score_cutoff)
 template <int Max = 1>
 constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff = 0)
 {
-    double max = static_cast<double>(Max);
-    return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
+    auto max = static_cast<double>(Max);
+    return result_cutoff(
+        (lensum > 0) ? (max - max * static_cast<double>(dist) / static_cast<double>(lensum)) : max,
+        score_cutoff);
 }
 
 template <int Max = 1>
@@ -124,10 +126,12 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
+std::ptrdiff_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+                                    InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+std::ptrdiff_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+                                    InputIt2& last2);
 
 template <typename InputIt, typename CharT = iterator_type<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
@@ -195,10 +199,10 @@ struct PatternMatchVector {
     uint64_t get(CharT key) const
     {
         if (key >= 0 && key <= 255) {
-            return m_extendedAscii[(uint8_t)key];
+            return m_extendedAscii[static_cast<uint8_t>(key)];
         }
         else {
-            return m_map[lookup((uint64_t)key)].value;
+            return m_map[lookup(static_cast<uint64_t>(key))].value;
         }
     }
 
@@ -251,8 +255,7 @@ private:
 struct BlockPatternMatchVector {
     std::vector<PatternMatchVector> m_val;
 
-    BlockPatternMatchVector()
-    {}
+    BlockPatternMatchVector() = default;
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
@@ -366,7 +369,8 @@ private:
 
 template <typename T>
 struct ConstMatrixVectorView {
-    ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
+    ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept
+        : m_vector(vector), m_cols(cols)
     {}
 
     ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept : m_vector(other.m_vector)
@@ -411,13 +415,13 @@ struct Matrix {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<uint64_t> operator[](std::size_t row)
+    MatrixVectorView<uint64_t> operator[](std::size_t row) noexcept
     {
         assert(row < m_rows);
         return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
     }
 
-    ConstMatrixVectorView<uint64_t> operator[](std::size_t row) const
+    ConstMatrixVectorView<uint64_t> operator[](std::size_t row) const noexcept
     {
         assert(row < m_rows);
         return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);

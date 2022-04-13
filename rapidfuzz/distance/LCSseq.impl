@@ -132,7 +132,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
                                      InputIt1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff)
 {
-    std::ptrdiff_t words = block.m_val.size();
+    auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
     std::vector<uint64_t> S(words, ~0x0ull);
 
     for (; first2 != last2; ++first2) {
@@ -457,7 +457,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    auto words = block.m_val.size();
+    auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     std::vector<uint64_t> S(words, ~0x0ull);
@@ -532,7 +532,7 @@ int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, Input
                          int64_t score_cutoff)
 {
     int64_t maximum = std::max(std::distance(first1, last1), std::distance(first2, last2));
-    int64_t cutoff_similarity = std::max(static_cast<int64_t>(0), maximum - score_cutoff);
+    int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
     int64_t sim = lcs_seq_similarity(first1, last1, first2, last2, cutoff_similarity);
     int64_t dist = maximum - sim;
     return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -553,9 +553,9 @@ double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
     if (maximum == 0) {
         return 0.0;
     }
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     double norm_sim =
-        (double)lcs_seq_distance(first1, last1, first2, last2, cutoff_distance) / (double)maximum;
+        static_cast<double>(lcs_seq_distance(first1, last1, first2, last2, cutoff_distance)) / static_cast<double>(maximum);
     return (norm_sim <= score_cutoff) ? norm_sim : 1.0;
 }
 
@@ -617,7 +617,7 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum = std::max((int64_t)s1.size(), (int64_t)std::distance(first2, last2));
+    int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t sim = maximum - distance(first2, last2, cutoff_distance);
     return (sim >= score_cutoff) ? sim : 0;
@@ -635,12 +635,12 @@ template <typename InputIt2>
 double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                  double score_cutoff) const
 {
-    int64_t maximum = std::max((int64_t)s1.size(), (int64_t)std::distance(first2, last2));
+    int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
     if (maximum == 0) {
         return 0;
     }
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
-    double norm_dist = (double)distance(first2, last2, cutoff_distance) / (double)maximum;
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    double norm_dist = static_cast<double>(distance(first2, last2, cutoff_distance)) / static_cast<double>(maximum);
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 

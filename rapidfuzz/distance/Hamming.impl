@@ -55,7 +55,7 @@ double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
     auto maximum = std::distance(first1, last1);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? (double)dist / (double)maximum : 0.0;
+    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 
