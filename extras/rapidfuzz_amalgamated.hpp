@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-04-07 23:46:03.846338
+//  Generated: 2022-04-12 10:11:05.045612
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -974,20 +974,6 @@ auto to_end(T& x)
     return end(x);
 }
 
-/**
- * @brief Finds the first mismatching pair of elements from two ranges:
- * one defined by [first1, last1) and another defined by [first2,last2).
- * Similar implementation to std::mismatch from C++14
- *
- * @param first1, last1 - the first range of the elements
- * @param first2, last2 - the second range of the elements
- *
- * @return std::pair with iterators to the first two non-equal elements.
- */
-template <typename InputIterator1, typename InputIterator2>
-std::pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1, InputIterator1 last1,
-                                                   InputIterator2 first2, InputIterator2 last2);
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
                                 InputIt2& last2);
@@ -1238,7 +1224,8 @@ struct ConstMatrixVectorView {
     explicit ConstMatrixVectorView(const T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
     {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other) : m_vector(other.m_vector)
+    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+        : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
     const T& operator[](int64_t col)
@@ -1356,18 +1343,6 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
     return std::basic_string<CharT>(str.data(), str.size());
 }
 
-template <typename InputIterator1, typename InputIterator2>
-std::pair<InputIterator1, InputIterator2>
-common::mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2,
-                 InputIterator2 last2)
-{
-    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
-        ++first1;
-        ++first2;
-    }
-    return std::pair<InputIterator1, InputIterator2>(first1, first2);
-}
-
 /**
  * Removes common prefix of two string views
  */
@@ -1375,7 +1350,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                      InputIt2 last2)
 {
-    int64_t prefix = std::distance(first1, common::mismatch(first1, last1, first2, last2).first);
+    int64_t prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
     first2 += prefix;
     return prefix;
@@ -1393,8 +1368,7 @@ int64_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 
     auto rfirst2 = std::make_reverse_iterator(last2);
     auto rlast2 = std::make_reverse_iterator(first2);
 
-    int64_t suffix =
-        std::distance(rfirst1, common::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
+    int64_t suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
     last1 -= suffix;
     last2 -= suffix;
     return suffix;
