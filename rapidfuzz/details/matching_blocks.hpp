@@ -192,7 +192,7 @@ protected:
 private:
     // Cache to avoid reallocations
     std::vector<Index> j2len_;
-    std::unordered_map<iterator_type<InputIt2>, std::vector<Index>> b2j_;
+    std::unordered_map<iter_value_t<InputIt2>, std::vector<Index>> b2j_;
 };
 } // namespace difflib
 

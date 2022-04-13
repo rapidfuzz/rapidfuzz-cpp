@@ -119,7 +119,7 @@ template <typename InputIt1, typename InputIt2>
 std::ptrdiff_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                     InputIt2& last2);
 
-template <typename InputIt, typename CharT = iterator_type<InputIt>>
+template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 template <typename T>

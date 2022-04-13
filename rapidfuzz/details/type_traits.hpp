@@ -22,11 +22,12 @@ auto inner_type(T const&) -> typename T::value_type;
 template <typename T>
 using char_type = decltype(detail::inner_type(std::declval<T const&>()));
 
+/* backport of std::iter_value_t from C++20
+ * This does not cover the complete functionality, but should be enough for
+ * the use cases in this library
+ */
 template <typename T>
-using plain = std::remove_cv_t<std::remove_reference_t<T>>;
-
-template <typename T>
-using iterator_type = plain<decltype(*std::declval<T>())>;
+using iter_value_t = typename std::iterator_traits<T>::value_type;
 
 template <typename... Conds>
 struct satisfies_all : std::true_type {};
