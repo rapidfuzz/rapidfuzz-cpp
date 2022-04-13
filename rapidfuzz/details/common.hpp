@@ -348,10 +348,13 @@ struct CharSet {
 
 template <typename T>
 struct MatrixVectorView {
+
+    using value_type = T;
+
     MatrixVectorView(T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    T& operator[](std::size_t col) noexcept
+    value_type& operator[](std::size_t col) noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
@@ -369,6 +372,9 @@ private:
 
 template <typename T>
 struct ConstMatrixVectorView {
+
+    using value_type = T;
+
     ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept
         : m_vector(vector), m_cols(cols)
     {}
@@ -376,7 +382,7 @@ struct ConstMatrixVectorView {
     ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept : m_vector(other.m_vector)
     {}
 
-    const T& operator[](std::size_t col) const noexcept
+    const value_type& operator[](std::size_t col) const noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
@@ -415,16 +421,16 @@ struct Matrix {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<uint64_t> operator[](std::size_t row) noexcept
+    MatrixVectorView<value_type> operator[](std::size_t row) noexcept
     {
         assert(row < m_rows);
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+        return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    ConstMatrixVectorView<uint64_t> operator[](std::size_t row) const noexcept
+    ConstMatrixVectorView<value_type> operator[](std::size_t row) const noexcept
     {
         assert(row < m_rows);
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+        return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
     std::size_t rows() const noexcept
