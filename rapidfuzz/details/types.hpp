@@ -221,18 +221,15 @@ public:
     Editops() noexcept : src_len(0), dest_len(0)
     {}
 
-    Editops(size_type count, const EditOp& value) noexcept(
-        std::is_nothrow_constructible<std::vector<EditOp>, size_type, const EditOp&>::value)
+    Editops(size_type count, const EditOp& value)
         : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Editops(size_type count) noexcept(
-        std::is_nothrow_constructible<std::vector<EditOp>, size_type>::value)
+    explicit Editops(size_type count)
         : std::vector<EditOp>(count), src_len(0), dest_len(0)
     {}
 
-    Editops(const Editops& other) noexcept(
-        std::is_nothrow_copy_constructible<std::vector<EditOp>>::value)
+    Editops(const Editops& other)
         : std::vector<EditOp>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
@@ -374,18 +371,15 @@ public:
     Opcodes() noexcept : src_len(0), dest_len(0)
     {}
 
-    Opcodes(size_type count, const Opcode& value) noexcept(
-        std::is_nothrow_constructible<std::vector<Opcode>, size_type, const Opcode&>::value)
+    Opcodes(size_type count, const Opcode& value)
         : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Opcodes(size_type count) noexcept(
-        std::is_nothrow_constructible<std::vector<Opcode>, size_type>::value)
+    explicit Opcodes(size_type count)
         : std::vector<Opcode>(count), src_len(0), dest_len(0)
     {}
 
-    Opcodes(const Opcodes& other) noexcept(
-        std::is_nothrow_copy_constructible<std::vector<Opcode>>::value)
+    Opcodes(const Opcodes& other)
         : std::vector<Opcode>(other), src_len(other.src_len), dest_len(other.dest_len)
     {}
 
