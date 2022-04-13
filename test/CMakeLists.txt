@@ -37,10 +37,6 @@ project_options(
         # CLANG_WARNINGS "-Weverything"
 )
 
-
-#find_package(Catch2 3 REQUIRED)
-
-
 function(rapidfuzz_add_test test)
     add_executable(test_${test} tests-${test}.cpp)
     target_link_libraries(test_${test} ${PROJECT_NAME})
