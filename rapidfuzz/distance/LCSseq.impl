@@ -102,7 +102,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
 {
     uint64_t S[N];
     for (int64_t i = 0; i < N; ++i) {
-        S[i] = ~0x0ull;
+        S[i] = ~UINT64_C(0);
     }
 
     for (; first2 != last2; ++first2) {
@@ -133,7 +133,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
                                      int64_t score_cutoff)
 {
     auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
-    std::vector<uint64_t> S(words, ~0x0ull);
+    std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
@@ -333,7 +333,7 @@ int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 
 struct LLCSBitMatrix {
     LLCSBitMatrix(std::size_t rows, std::size_t cols)
-        : S(rows, cols, static_cast<decltype(S)::value_type>(-1)), dist(0)
+        : S(rows, cols, ~UINT64_C(0)), dist(0)
     {}
 
     common::Matrix<uint64_t> S;
@@ -366,7 +366,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         uint64_t col_pos = col - 1;
         uint64_t col_word = col_pos / 64;
         col_pos = col_pos % 64;
-        uint64_t mask = 1ull << col_pos;
+        uint64_t mask = UINT64_C(1) << col_pos;
 
         /* Deletion */
         if (matrix.S[row - 1][col_word] & mask) {
@@ -423,7 +423,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     auto len2 = std::distance(first2, last2);
     uint64_t S[N];
     for (std::ptrdiff_t i = 0; i < N; ++i) {
-        S[i] = ~0x0ull;
+        S[i] = ~UINT64_C(0);
     }
 
     LLCSBitMatrix matrix(len2, N);
@@ -460,7 +460,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
     auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
-    std::vector<uint64_t> S(words, ~0x0ull);
+    std::vector<uint64_t> S(words, ~UINT64_C(0));
     LLCSBitMatrix matrix(len2, words);
 
     for (std::ptrdiff_t i = 0; i < len2; ++i) {

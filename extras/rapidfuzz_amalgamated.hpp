@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-04-13 19:30:04.596979
+//  Generated: 2022-04-13 19:43:41.536491
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1050,7 +1050,7 @@ struct PatternMatchVector {
     template <typename CharT>
     void insert(CharT key, int64_t pos)
     {
-        insert_mask(key, 1ull << pos);
+        insert_mask(key, UINT64_C(1) << pos);
     }
 
     template <typename CharT>
@@ -2184,7 +2184,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
 {
     uint64_t S[N];
     for (int64_t i = 0; i < N; ++i) {
-        S[i] = ~0x0ull;
+        S[i] = ~UINT64_C(0);
     }
 
     for (; first2 != last2; ++first2) {
@@ -2215,7 +2215,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
                                      int64_t score_cutoff)
 {
     auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
-    std::vector<uint64_t> S(words, ~0x0ull);
+    std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
@@ -2415,7 +2415,7 @@ int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 
 struct LLCSBitMatrix {
     LLCSBitMatrix(std::size_t rows, std::size_t cols)
-        : S(rows, cols, static_cast<decltype(S)::value_type>(-1)), dist(0)
+        : S(rows, cols, ~UINT64_C(0)), dist(0)
     {}
 
     common::Matrix<uint64_t> S;
@@ -2448,7 +2448,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         uint64_t col_pos = col - 1;
         uint64_t col_word = col_pos / 64;
         col_pos = col_pos % 64;
-        uint64_t mask = 1ull << col_pos;
+        uint64_t mask = UINT64_C(1) << col_pos;
 
         /* Deletion */
         if (matrix.S[row - 1][col_word] & mask) {
@@ -2505,7 +2505,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     auto len2 = std::distance(first2, last2);
     uint64_t S[N];
     for (std::ptrdiff_t i = 0; i < N; ++i) {
-        S[i] = ~0x0ull;
+        S[i] = ~UINT64_C(0);
     }
 
     LLCSBitMatrix matrix(len2, N);
@@ -2542,7 +2542,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
     auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
-    std::vector<uint64_t> S(words, ~0x0ull);
+    std::vector<uint64_t> S(words, ~UINT64_C(0));
     LLCSBitMatrix matrix(len2, words);
 
     for (std::ptrdiff_t i = 0; i < len2; ++i) {
@@ -3474,12 +3474,12 @@ int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 fi
     auto len1 = std::distance(first1, last1);
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = static_cast<uint64_t>(-1);
+    uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
     int64_t currDist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = static_cast<uint64_t>(1) << (len1 - 1);
+    uint64_t mask = UINT64_C(1) << (len1 - 1);
 
     /* Searching */
     for (; first2 != last2; ++first2) {
@@ -3516,13 +3516,13 @@ int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector&
     auto len2 = std::distance(first2, last2);
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = static_cast<uint64_t>(-1);
+    uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
     int64_t currDist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = 1ull << 63;
+    uint64_t mask = UINT64_C(1) << 63;
 
     const auto words = static_cast<std::ptrdiff_t>(PM.m_val.size());
 
@@ -3566,7 +3566,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
         uint64_t VP;
         uint64_t VN;
 
-        Vectors() : VP(~0x0ull), VN(0)
+        Vectors() : VP(~UINT64_C(0)), VN(0)
         {}
     };
 
@@ -3586,7 +3586,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
     }
 
     std::vector<Vectors> vecs(words);
-    uint64_t Last = static_cast<uint64_t>(1) << ((len1 - 1) % 64);
+    uint64_t Last = UINT64_C(1) << ((len1 - 1) % 64);
 
     /* Searching */
     for (std::ptrdiff_t i = 0; i < len2; i++) {
@@ -3742,7 +3742,7 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 
 struct LevenshteinBitMatrix {
     LevenshteinBitMatrix(std::size_t rows, std::size_t cols)
-        : VP(rows, cols, static_cast<uint64_t>(-1)), VN(rows, cols, 0), dist(0)
+        : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
     {}
 
     common::Matrix<uint64_t> VP;
@@ -3840,14 +3840,14 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    uint64_t VP = ~0x0ull;
+    uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
     LevenshteinBitMatrix matrix(len2, 1);
     matrix.dist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = static_cast<uint64_t>(1) << (len1 - 1);
+    uint64_t mask = UINT64_C(1) << (len1 - 1);
 
     /* Searching */
     for (std::ptrdiff_t i = 0; i < len2; ++i) {
@@ -3888,7 +3888,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
         uint64_t VP;
         uint64_t VN;
 
-        Vectors() : VP(~0x0ull), VN(0)
+        Vectors() : VP(~UINT64_C(0)), VN(0)
         {}
     };
 
@@ -3897,7 +3897,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
     matrix.dist = len1;
 
     std::vector<Vectors> vecs(words);
-    uint64_t Last = static_cast<uint64_t>(1) << ((len1 - 1) % 64);
+    uint64_t Last = UINT64_C(1) << ((len1 - 1) % 64);
 
     /* Searching */
     for (std::ptrdiff_t i = 0; i < len2; i++) {

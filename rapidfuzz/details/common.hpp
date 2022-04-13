@@ -178,7 +178,7 @@ struct PatternMatchVector {
     template <typename CharT>
     void insert(CharT key, int64_t pos)
     {
-        insert_mask(key, 1ull << pos);
+        insert_mask(key, UINT64_C(1) << pos);
     }
 
     template <typename CharT>

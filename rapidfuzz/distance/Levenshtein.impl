@@ -190,12 +190,12 @@ int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 fi
     auto len1 = std::distance(first1, last1);
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = static_cast<uint64_t>(-1);
+    uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
     int64_t currDist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = static_cast<uint64_t>(1) << (len1 - 1);
+    uint64_t mask = UINT64_C(1) << (len1 - 1);
 
     /* Searching */
     for (; first2 != last2; ++first2) {
@@ -232,13 +232,13 @@ int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector&
     auto len2 = std::distance(first2, last2);
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = static_cast<uint64_t>(-1);
+    uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
     int64_t currDist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = 1ull << 63;
+    uint64_t mask = UINT64_C(1) << 63;
 
     const auto words = static_cast<std::ptrdiff_t>(PM.m_val.size());
 
@@ -282,7 +282,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
         uint64_t VP;
         uint64_t VN;
 
-        Vectors() : VP(~0x0ull), VN(0)
+        Vectors() : VP(~UINT64_C(0)), VN(0)
         {}
     };
 
@@ -302,7 +302,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
     }
 
     std::vector<Vectors> vecs(words);
-    uint64_t Last = static_cast<uint64_t>(1) << ((len1 - 1) % 64);
+    uint64_t Last = UINT64_C(1) << ((len1 - 1) % 64);
 
     /* Searching */
     for (std::ptrdiff_t i = 0; i < len2; i++) {
@@ -458,7 +458,7 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 
 struct LevenshteinBitMatrix {
     LevenshteinBitMatrix(std::size_t rows, std::size_t cols)
-        : VP(rows, cols, static_cast<uint64_t>(-1)), VN(rows, cols, 0), dist(0)
+        : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
     {}
 
     common::Matrix<uint64_t> VP;
@@ -556,14 +556,14 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    uint64_t VP = ~0x0ull;
+    uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
     LevenshteinBitMatrix matrix(len2, 1);
     matrix.dist = len1;
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = static_cast<uint64_t>(1) << (len1 - 1);
+    uint64_t mask = UINT64_C(1) << (len1 - 1);
 
     /* Searching */
     for (std::ptrdiff_t i = 0; i < len2; ++i) {
@@ -604,7 +604,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
         uint64_t VP;
         uint64_t VN;
 
-        Vectors() : VP(~0x0ull), VN(0)
+        Vectors() : VP(~UINT64_C(0)), VN(0)
         {}
     };
 
@@ -613,7 +613,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
     matrix.dist = len1;
 
     std::vector<Vectors> vecs(words);
-    uint64_t Last = static_cast<uint64_t>(1) << ((len1 - 1) % 64);
+    uint64_t Last = UINT64_C(1) << ((len1 - 1) % 64);
 
     /* Searching */
     for (std::ptrdiff_t i = 0; i < len2; i++) {
