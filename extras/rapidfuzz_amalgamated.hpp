@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.0
-//  Generated: 2022-04-12 10:11:05.045612
+//  Generated: 2022-04-15 01:07:45.627252
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -904,6 +904,11 @@ namespace common {
  * Common utilities shared among multiple functions
  * @{
  */
+
+static inline double NormSim_to_NormDist(double score_cutoff, double imprecision=0.00001)
+{
+    return std::min(1.0, 1.0 - score_cutoff + imprecision);
+}
 
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
@@ -2649,8 +2654,9 @@ template <typename InputIt1, typename InputIt2>
 double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                      InputIt2 last2, double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_sim =
-        1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
+        1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, cutoff_score);
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
@@ -2737,7 +2743,8 @@ template <typename InputIt2>
 double CachedLCSseq<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                    double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -2749,7 +2756,8 @@ double CachedLCSseq<CharT1>::normalized_similarity(const Sentence2& s2, double s
     return normalized_similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
-} // namespace rapidfuzznamespace rapidfuzz {
+} // namespace rapidfuzz
+namespace rapidfuzz {
 namespace detail {
 
 template <typename InputIt1, typename InputIt2>
@@ -2802,8 +2810,9 @@ double indel_normalized_similarity(const common::BlockPatternMatchVector& block,
                                    InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_dist =
-        indel_normalized_distance(block, first1, last1, first2, last2, 1.0 - score_cutoff);
+        indel_normalized_distance(block, first1, last1, first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -2831,6 +2840,7 @@ double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
     int64_t dist = indel_distance(first1, last1, first2, last2, cutoff_distance);
+
     double norm_dist = (maximum) ? (double)dist / (double)maximum : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
@@ -2864,7 +2874,8 @@ template <typename InputIt1, typename InputIt2>
 double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
-    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -2945,7 +2956,8 @@ template <typename InputIt2>
 double CachedIndel<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                   double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -4059,8 +4071,9 @@ double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputI
                                          InputIt2 last2, LevenshteinWeightTable weights,
                                          double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_dist =
-        levenshtein_normalized_distance(first1, last1, first2, last2, weights, 1.0 - score_cutoff);
+        levenshtein_normalized_distance(first1, last1, first2, last2, weights, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -4188,7 +4201,8 @@ template <typename InputIt2>
 double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                         double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
