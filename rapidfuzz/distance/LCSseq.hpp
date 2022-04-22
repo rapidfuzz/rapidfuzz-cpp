@@ -46,6 +46,43 @@ Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputI
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 
+template <int MaxLen>
+struct MultiLCSseq {
+    MultiLCSseq() : pos(0) {}
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(common::to_begin(s1_), common::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        auto block_pos = pos % 64;
+        auto block = pos / 64;
+
+        PM.m_val.resize(block + 1);
+
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos += MaxLen;
+    }
+
+    template <typename InputIt2>
+    void similarity(int64_t* scores, InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
+
+    //template <typename Sentence2>
+    //int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
+
+private:
+    std::ptrdiff_t pos;
+    common::BlockPatternMatchVector PM;
+};
+
 template <typename CharT1>
 struct CachedLCSseq {
     template <typename Sentence1>

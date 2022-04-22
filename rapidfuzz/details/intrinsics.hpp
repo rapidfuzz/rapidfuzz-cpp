@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <bitset>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>
@@ -41,6 +42,45 @@ static inline int64_t popcount64(uint64_t x)
     x = (x + (x >> 4)) & m4;
     return static_cast<int64_t>((x * h01) >> 56);
 }
+
+static inline int popcount(uint64_t x)
+{
+    return static_cast<int>(std::bitset<64>(x).count());
+}
+
+static inline int popcount(uint32_t x)
+{
+    return static_cast<int>(std::bitset<32>(x).count());
+}
+
+static inline int popcount(uint16_t x)
+{
+    return static_cast<int>(std::bitset<16>(x).count());
+}
+
+static inline int popcount(uint8_t x)
+{
+    static constexpr int bit_count[256] = {
+        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+        4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
+    };
+    return bit_count[x];
+}
+
 
 /**
  * Extract the lowest set bit from a. If no bits are set in a returns 0.
@@ -108,6 +148,16 @@ static inline int tzcnt(uint64_t x)
     return __builtin_ctzll(x);
 }
 #endif
+
+template<class T, T... inds, class F>
+constexpr void unroll(std::integer_sequence<T, inds...>, F&& f) {
+  (f(std::integral_constant<T, inds>{}), ...);
+}
+
+template<class T, T count, class F>
+constexpr void unroll(F&& f) {
+  unroll(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
+}
 
 } // namespace detail
 } // namespace rapidfuzz

@@ -3,6 +3,7 @@
 
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
+#include <rapidfuzz/details/simd_sse2.hpp>
 
 #include <algorithm>
 
@@ -95,33 +96,68 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     return (max_len >= score_cutoff) ? max_len : 0;
 }
 
+template <typename VecType, typename InputIt>
+static inline void longest_common_subsequence_simd(
+    int64_t* scores,
+    const common::BlockPatternMatchVector& block,
+    InputIt first2, InputIt last2, int64_t score_cutoff)
+{
+    static constexpr int vec_count = detail::native_simd<VecType>::size();
+    static constexpr int vecs = vec_count * sizeof(VecType) / 8;
+    size_t block_count = block.m_val.size();
+
+    for (size_t cur_vec = 0; cur_vec < (block_count / vecs); ++cur_vec)
+    {
+        detail::native_simd<VecType> S = (VecType)-1;
+
+        for (; first2 != last2; ++first2) {
+            uint64_t stored[vecs];
+            unroll<int, vecs>([&](auto i) {
+                stored[i] = block.get(cur_vec * vecs + i, *first2);
+            });
+
+            detail::native_simd<VecType> Matches;
+
+            Matches.load(stored);
+            detail::native_simd<VecType> u = S & Matches;
+            S = (S + u) | (S - u);
+        }
+
+        S = ~S;
+        std::array<int64_t, vec_count> res = S.popcount();
+        unroll<int, vec_count>([&](auto i) {
+            scores[cur_vec * vecs + i] = (res[i] >= score_cutoff) ? res[i] : 0;
+        });
+    }
+}
+
 template <int64_t N, typename PMV, typename InputIt1, typename InputIt2>
 static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputIt1, InputIt1,
                                                         InputIt2 first2, InputIt2 last2,
                                                         int64_t score_cutoff)
 {
     uint64_t S[N];
-    for (int64_t i = 0; i < N; ++i) {
+    unroll<int, N>([&](int i){
         S[i] = ~0x0ull;
-    }
+    });
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
         uint64_t Matches[N];
         uint64_t u[N];
         uint64_t x[N];
-        for (int64_t i = 0; i < N; ++i) {
+        unroll<int, N>([&](int i){
             Matches[i] = block.get(i, *first2);
             u[i] = S[i] & Matches[i];
             x[i] = addc64(S[i], u[i], carry, &carry);
             S[i] = x[i] | (S[i] - u[i]);
-        }
+        });
     }
 
     int64_t res = 0;
-    for (int64_t i = 0; i < N; ++i) {
+    unroll<int, N>([&](int i){
         res += popcount64(~S[i]);
-    }
+    });
 
     return (res >= score_cutoff) ? res : 0;
 }
@@ -611,6 +647,28 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
     return lcs_seq_editops(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
                            common::to_end(s2));
+}
+
+template <int MaxLen>
+template <typename InputIt2>
+void MultiLCSseq<MaxLen>::similarity(int64_t* scores, InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
+{
+    if (MaxLen == 8)
+    {
+        detail::longest_common_subsequence_simd<uint8_t>(scores, PM, first2, last2, score_cutoff);
+    }
+    else if (MaxLen == 16)
+    {
+        detail::longest_common_subsequence_simd<uint16_t>(scores, PM, first2, last2, score_cutoff);
+    }
+    else if (MaxLen == 32)
+    {
+        detail::longest_common_subsequence_simd<uint32_t>(scores, PM, first2, last2, score_cutoff);
+    }
+    else if (MaxLen == 64)
+    {
+        detail::longest_common_subsequence_simd<uint64_t>(scores, PM, first2, last2, score_cutoff);
+    }
 }
 
 template <typename CharT1>

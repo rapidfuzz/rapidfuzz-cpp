@@ -182,6 +182,11 @@ struct PatternMatchVector {
         insert_mask(key, 1ull << pos);
     }
 
+    uint64_t get(char key) const
+    {
+        return m_extendedAscii[(uint8_t)key];
+    }
+
     template <typename CharT>
     uint64_t get(CharT key) const
     {
