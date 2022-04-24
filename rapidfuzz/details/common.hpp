@@ -383,16 +383,42 @@ private:
 template <typename T>
 struct Matrix {
     Matrix(uint64_t rows, uint64_t cols, uint64_t val)
+        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
     {
-        m_rows = rows;
-        m_cols = cols;
-        if (rows * cols > 0) {
-            m_matrix = new T[rows * cols];
-            std::fill_n(m_matrix, rows * cols, val);
-        }
-        else {
-            m_matrix = nullptr;
-        }
+        std::fill_n(m_matrix, m_rows * m_cols, val);
+    }
+
+    Matrix(const Matrix& other)
+        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
+    {
+        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
+    }
+
+    Matrix(Matrix&& other) noexcept
+        : m_rows(0), m_cols(0), m_matrix(nullptr)
+    {
+        other.swap(*this);
+    }
+
+    Matrix& operator=(Matrix&& other) noexcept
+    {
+        Matrix temp = other;
+        temp.swap(*this);
+        return *this;
+    }
+
+    Matrix& operator=(const Matrix& other)
+    {
+        other.swap(*this);
+        return *this;
+    }
+
+    void swap(Matrix& rhs) noexcept
+    {
+        using std::swap;
+        swap(m_rows, rhs.m_rows);
+        swap(m_cols, rhs.m_cols);
+        swap(m_matrix, rhs.m_matrix);
     }
 
     ~Matrix()
