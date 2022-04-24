@@ -92,7 +92,7 @@ template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iterator_type<InputIt1>>;
+CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz

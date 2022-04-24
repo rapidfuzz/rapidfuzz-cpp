@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-24 21:30:40.136040
+//  Generated: 2022-04-24 21:45:44.705826
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -656,11 +656,12 @@ auto inner_type(T const&) -> typename T::value_type;
 template <typename T>
 using char_type = decltype(detail::inner_type(std::declval<T const&>()));
 
+/* backport of std::iter_value_t from C++20
+ * This does not cover the complete functionality, but should be enough for
+ * the use cases in this library
+ */
 template <typename T>
-using plain = std::remove_cv_t<std::remove_reference_t<T>>;
-
-template <typename T>
-using iterator_type = plain<decltype(*std::declval<T>())>;
+using iter_value_t = typename std::iterator_traits<T>::value_type;
 
 template <typename... Conds>
 struct satisfies_all : std::true_type {};
@@ -804,7 +805,7 @@ namespace rapidfuzz {
 template <typename InputIt>
 class SplittedSentenceView {
 public:
-    using CharT = iterator_type<InputIt>;
+    using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(IteratorViewVec<InputIt> sentence) : m_sentence(std::move(sentence))
     {}
@@ -989,7 +990,7 @@ int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
 template <typename InputIt1, typename InputIt2>
 int64_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
 
-template <typename InputIt, typename CharT = iterator_type<InputIt>>
+template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 template <typename T>
@@ -1647,7 +1648,7 @@ template <typename Sentence1>
 CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iterator_type<InputIt1>>;
+CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
 #endif
 
 /**@}*/
@@ -1891,7 +1892,7 @@ template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iterator_type<InputIt1>>;
+CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -2097,7 +2098,7 @@ template <typename Sentence1>
 CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iterator_type<InputIt1>>;
+CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -3304,7 +3305,7 @@ CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
 
 template <typename InputIt1>
 CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
-    -> CachedLevenshtein<iterator_type<InputIt1>>;
+    -> CachedLevenshtein<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -4413,7 +4414,7 @@ template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iterator_type<InputIt1>>;
+CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iter_value_t<InputIt1>>;
 #endif
 
 template <typename InputIt1, typename InputIt2>
@@ -4487,7 +4488,7 @@ template <typename Sentence1>
 CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iterator_type<InputIt1>>;
+CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4555,7 +4556,7 @@ CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sent
 
 template <typename InputIt1>
 CachedTokenSortRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedTokenSortRatio<iterator_type<InputIt1>>;
+    -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4616,7 +4617,7 @@ CachedPartialTokenSortRatio(const Sentence1& s1)
 
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedPartialTokenSortRatio<iterator_type<InputIt1>>;
+    -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4684,7 +4685,7 @@ CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Senten
 
 template <typename InputIt1>
 CachedTokenSetRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedTokenSetRatio<iterator_type<InputIt1>>;
+    -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4743,7 +4744,7 @@ CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<ch
 
 template <typename InputIt1>
 CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedPartialTokenSetRatio<iterator_type<InputIt1>>;
+    -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4806,7 +4807,7 @@ template <typename Sentence1>
 CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iterator_type<InputIt1>>;
+CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4869,7 +4870,7 @@ CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_typ
 
 template <typename InputIt1>
 CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedPartialTokenRatio<iterator_type<InputIt1>>;
+    -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4931,7 +4932,7 @@ template <typename Sentence1>
 CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iterator_type<InputIt1>>;
+CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -4988,7 +4989,7 @@ template <typename Sentence1>
 CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iterator_type<InputIt1>>;
+CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**@}*/
@@ -5188,7 +5189,7 @@ protected:
 private:
     // Cache to avoid reallocations
     std::vector<int64_t> j2len_;
-    std::unordered_map<iterator_type<InputIt2>, std::vector<int64_t>> b2j_;
+    std::unordered_map<iter_value_t<InputIt2>, std::vector<int64_t>> b2j_;
 };
 } // namespace difflib
 
@@ -5253,7 +5254,7 @@ template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 ScoreAlignment<double>
 partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            const CachedRatio<CachedCharT1>& cached_ratio,
-                           const common::CharSet<iterator_type<InputIt1>>& s1_char_set,
+                           const common::CharSet<iter_value_t<InputIt1>>& s1_char_set,
                            double score_cutoff)
 {
     ScoreAlignment<double> res;
@@ -5323,7 +5324,7 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
     return res;
 }
 
-template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
+template <typename InputIt1, typename InputIt2, typename CharT1 = iter_value_t<InputIt1>>
 ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                   InputIt2 last2, double score_cutoff)
 {
@@ -5382,7 +5383,7 @@ partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     return res;
 }
 
-template <typename InputIt1, typename InputIt2, typename CharT1 = iterator_type<InputIt1>>
+template <typename InputIt1, typename InputIt2, typename CharT1 = iter_value_t<InputIt1>>
 ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                  InputIt2 last2, double score_cutoff)
 {

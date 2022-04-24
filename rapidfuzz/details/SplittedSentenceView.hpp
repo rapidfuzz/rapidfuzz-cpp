@@ -8,7 +8,7 @@ namespace rapidfuzz {
 template <typename InputIt>
 class SplittedSentenceView {
 public:
-    using CharT = iterator_type<InputIt>;
+    using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(IteratorViewVec<InputIt> sentence) : m_sentence(std::move(sentence))
     {}
