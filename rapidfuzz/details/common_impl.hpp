@@ -180,6 +180,9 @@ SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
         if (first != second) {
             splitted.emplace_back(first, second);
         }
+
+        if (second == last)
+            break;
     }
 
     std::sort(splitted.begin(), splitted.end());
