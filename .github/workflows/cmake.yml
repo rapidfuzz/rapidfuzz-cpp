@@ -16,14 +16,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: install Catch2
-      run: |
-          git clone https://github.com/catchorg/Catch2.git
-          cd Catch2
-          git checkout v3.0.0-preview3
-          cmake -Bbuild -H. -DBUILD_TESTING=OFF
-          sudo cmake --build build/ --target install
-
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}  -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_BUILD_FUZZERS=1 -DCMAKE_CXX_COMPILER=clang++
 

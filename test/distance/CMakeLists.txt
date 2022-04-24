@@ -1,5 +1,3 @@
-find_package(Catch2 3 REQUIRED)
-
 function(rapidfuzz_add_test test)
     add_executable(test_${test} tests-${test}.cpp)
 
