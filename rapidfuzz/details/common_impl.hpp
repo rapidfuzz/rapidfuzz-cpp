@@ -174,7 +174,7 @@ SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
     IteratorViewVec<InputIt> splitted;
     auto second = first;
 
-    for (; second != last && first != last; first = second + 1) {
+    for (; first != last; first = second + 1) {
         second = std::find_if(first, last, is_space<CharT>);
 
         if (first != second) {
