@@ -492,7 +492,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         std::size_t col_pos = col - 1;
         std::size_t col_word = col_pos / 64;
         col_pos = col_pos % 64;
-        uint64_t mask = static_cast<std::uint64_t>(1) << col_pos;
+        uint64_t mask = UINT64_C(1) << col_pos;
 
         /* Deletion */
         if (matrix.VP[row - 1][col_word] & mask) {
@@ -791,8 +791,9 @@ double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputI
                                          InputIt2 last2, LevenshteinWeightTable weights,
                                          double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_dist =
-        levenshtein_normalized_distance(first1, last1, first2, last2, weights, 1.0 - score_cutoff);
+        levenshtein_normalized_distance(first1, last1, first2, last2, weights, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -920,7 +921,8 @@ template <typename InputIt2>
 double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                         double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
