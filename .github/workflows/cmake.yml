@@ -1,30 +1,30 @@
 name: CMake
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  build_linux:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD_TYPE: [Release, Debug]
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}  -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_BUILD_FUZZERS=1 -DCMAKE_CXX_COMPILER=clang++
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}  -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_BUILD_FUZZERS=1 -DCMAKE_CXX_COMPILER=clang++
 
     - name: Build
-      run: cmake --build build --config ${{env.BUILD_TYPE}}
+      run: cmake --build build --config ${{matrix.BUILD_TYPE}}
 
     - name: Test
       working-directory: build
-      run: ctest -C ${{env.BUILD_TYPE}} --rerun-failed --output-on-failure
+      run: ctest -C ${{matrix.BUILD_TYPE}} --rerun-failed --output-on-failure
 
     - name: Fuzz Test
       working-directory: build
@@ -33,6 +33,26 @@ jobs:
           fuzzing/fuzz_levenshtein_editops -max_total_time=30
           fuzzing/fuzz_indel_distance -max_total_time=30
           fuzzing/fuzz_indel_editops -max_total_time=30
+
+  build_windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD_TYPE: [Release, Debug]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}  -DRAPIDFUZZ_BUILD_TESTING=1
+
+    - name: Build
+      run: cmake --build build --config ${{matrix.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: build
+      run: ctest -C ${{matrix.BUILD_TYPE}} --rerun-failed --output-on-failure
 
   build_cmake_installed:
     runs-on: ubuntu-latest
