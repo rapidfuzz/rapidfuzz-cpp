@@ -21,7 +21,7 @@ jobs:
           git clone https://github.com/catchorg/Catch2.git
           cd Catch2
           git checkout v3.0.0-preview3
-          cmake -Bbuild -H. -DBUILD_TESTING=OFF
+          cmake -Bbuild -H. -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           sudo cmake --build build/ --target install
 
     - name: Configure CMake
@@ -57,7 +57,7 @@ jobs:
           git clone https://github.com/catchorg/Catch2.git
           cd Catch2
           git checkout v3.0.0-preview3
-          cmake -Bbuild -S. -DBUILD_TESTING=OFF
+          cmake -Bbuild -S. -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           cmake --build build/ --target install
 
     - name: Configure CMake
