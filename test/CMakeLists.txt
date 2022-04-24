@@ -1,4 +1,11 @@
-find_package(Catch2 3 REQUIRED)
+include(FetchContent)
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY  https://github.com/catchorg/Catch2.git
+        GIT_TAG         v3.0.0-preview4
+)
+
+FetchContent_MakeAvailable(Catch2)
 
 function(rapidfuzz_add_test test)
     add_executable(test_${test} tests-${test}.cpp)
