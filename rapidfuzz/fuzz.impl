@@ -58,16 +58,16 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
                            double score_cutoff)
 {
     ScoreAlignment<double> res;
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<std::size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<std::size_t>(std::distance(first2, last2));
     assert(len2 >= len1);
     res.src_start = 0;
     res.src_end = len1;
     res.dest_start = 0;
     res.dest_end = len1;
 
-    for (std::ptrdiff_t i = 1; i < len1; ++i) {
-        auto substr_last = first2 + i;
+    for (std::size_t i = 1; i < len1; ++i) {
+        auto substr_last = first2 + static_cast<std::ptrdiff_t>(i);
 
         if (!s1_char_set.find(*(substr_last - 1))) {
             continue;
@@ -84,9 +84,9 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
     }
 
-    for (std::ptrdiff_t i = 0; i < len2 - len1; ++i) {
-        auto substr_first = first2 + i;
-        auto substr_last = substr_first + len1;
+    for (std::size_t i = 0; i < len2 - len1; ++i) {
+        auto substr_first = first2 + static_cast<std::ptrdiff_t>(i);
+        auto substr_last = substr_first + static_cast<std::ptrdiff_t>(len1);
 
         if (!s1_char_set.find(*(substr_last - 1))) {
             continue;
@@ -103,8 +103,8 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
     }
 
-    for (std::ptrdiff_t i = len2 - len1; i < len2; ++i) {
-        auto substr_first = first2 + i;
+    for (std::size_t i = len2 - len1; i < len2; ++i) {
+        auto substr_first = first2 + static_cast<std::ptrdiff_t>(i);
 
         if (!s1_char_set.find(*substr_first)) {
             continue;
@@ -146,8 +146,8 @@ partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
                           const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
 {
     ScoreAlignment<double> res;
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<std::size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<std::size_t>(std::distance(first2, last2));
     assert(len2 >= len1);
     res.src_start = 0;
     res.src_end = len1;
@@ -160,17 +160,17 @@ partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     for (const auto& block : blocks) {
         if (block.length == len1) {
             res.score = 100;
-            res.dest_start = std::max<std::ptrdiff_t>(0, block.dpos - block.spos);
+            res.dest_start = std::max<std::size_t>(0, block.dpos - block.spos);
             res.dest_end = std::min(len2, res.dest_start + len1);
             return res;
         }
     }
 
     for (const auto& block : blocks) {
-        auto long_start = std::max<std::ptrdiff_t>(0, block.dpos - block.spos);
+        auto long_start = std::max<std::size_t>(0, block.dpos - block.spos);
         auto long_end = std::min(len2, long_start + len1);
-        auto substr_first = first2 + long_start;
-        auto substr_last = first2 + long_end;
+        auto substr_first = first2 + static_cast<std::ptrdiff_t>(long_start);
+        auto substr_last = first2 + static_cast<std::ptrdiff_t>(long_end);
 
         double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
         if (ls_ratio > res.score) {
@@ -198,8 +198,8 @@ template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                InputIt2 last2, double score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<std::size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<std::size_t>(std::distance(first2, last2));
 
     if (len1 > len2) {
         ScoreAlignment<double> result =
@@ -261,8 +261,8 @@ template <typename InputIt2>
 double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
                                               double score_cutoff) const
 {
-    std::ptrdiff_t len1 = s1.size();
-    std::ptrdiff_t len2 = std::distance(first2, last2);
+    std::size_t len1 = s1.size();
+    std::size_t len2 = static_cast<std::size_t>(std::distance(first2, last2));
 
     if (len1 > len2) {
         return partial_ratio(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
@@ -400,13 +400,13 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
-    int64_t sect_len = intersect.length();
+    std::size_t ab_len = diff_ab_joined.length();
+    std::size_t ba_len = diff_ba_joined.length();
+    std::size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
-    int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
+    int64_t sect_ab_len = static_cast<int64_t>(sect_len + bool(sect_len) + ab_len);
+    int64_t sect_ba_len = static_cast<int64_t>(sect_len + bool(sect_len) + ba_len);
 
     double result = 0;
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
@@ -424,13 +424,13 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = bool(sect_len) + ab_len;
+    int64_t sect_ab_dist = static_cast<int64_t>(bool(sect_len) + ab_len);
     double sect_ab_ratio =
-        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, static_cast<int64_t>(sect_len) + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = bool(sect_len) + ba_len;
+    int64_t sect_ba_dist = static_cast<int64_t>(bool(sect_len) + ba_len);
     double sect_ba_ratio =
-        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, static_cast<int64_t>(sect_len) + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -557,15 +557,15 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
-    int64_t sect_len = intersect.length();
+    std::size_t ab_len = diff_ab_joined.length();
+    std::size_t ba_len = diff_ba_joined.length();
+    std::size_t sect_len = intersect.length();
 
     double result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
-    int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
+    int64_t sect_ab_len = static_cast<int64_t>(sect_len + bool(sect_len) + ab_len);
+    int64_t sect_ba_len = static_cast<int64_t>(sect_len + bool(sect_len) + ba_len);
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
@@ -582,13 +582,13 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = bool(sect_len) + ab_len;
+    int64_t sect_ab_dist = static_cast<int64_t>(bool(sect_len) + ab_len);
     double sect_ab_ratio =
-        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, static_cast<int64_t>(sect_len) + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = bool(sect_len) + ba_len;
+    int64_t sect_ba_dist = static_cast<int64_t>(bool(sect_len) + ba_len);
     double sect_ba_ratio =
-        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, static_cast<int64_t>(sect_len) + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }

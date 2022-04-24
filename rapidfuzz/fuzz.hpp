@@ -127,8 +127,8 @@ struct CachedPartialRatio {
     CachedPartialRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedPartialRatio(const Sentence1& s1)
-        : CachedPartialRatio(common::to_begin(s1), common::to_end(s1))
+    CachedPartialRatio(const Sentence1& sent)
+        : CachedPartialRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>
@@ -324,8 +324,8 @@ struct CachedTokenSetRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenSetRatio(const Sentence1& s1)
-        : CachedTokenSetRatio(common::to_begin(s1), common::to_end(s1))
+    CachedTokenSetRatio(const Sentence1& sent)
+        : CachedTokenSetRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>
@@ -383,8 +383,8 @@ struct CachedPartialTokenSetRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenSetRatio(const Sentence1& s1)
-        : CachedPartialTokenSetRatio(common::to_begin(s1), common::to_end(s1))
+    CachedPartialTokenSetRatio(const Sentence1& sent)
+        : CachedPartialTokenSetRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>
@@ -445,8 +445,8 @@ struct CachedTokenRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenRatio(const Sentence1& s1)
-        : CachedTokenRatio(common::to_begin(s1), common::to_end(s1))
+    CachedTokenRatio(const Sentence1& sent)
+        : CachedTokenRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>
@@ -508,8 +508,8 @@ struct CachedPartialTokenRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenRatio(const Sentence1& s1)
-        : CachedPartialTokenRatio(common::to_begin(s1), common::to_end(s1))
+    CachedPartialTokenRatio(const Sentence1& sent)
+        : CachedPartialTokenRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>
@@ -568,7 +568,7 @@ struct CachedWRatio {
     CachedWRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedWRatio(const Sentence1& s1) : CachedWRatio(common::to_begin(s1), common::to_end(s1))
+    CachedWRatio(const Sentence1& sent) : CachedWRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>
@@ -630,7 +630,7 @@ struct CachedQRatio {
     {}
 
     template <typename Sentence1>
-    CachedQRatio(const Sentence1& s1) : CachedQRatio(common::to_begin(s1), common::to_end(s1))
+    CachedQRatio(const Sentence1& sent) : CachedQRatio(common::to_begin(sent), common::to_end(sent))
     {}
 
     template <typename InputIt2>

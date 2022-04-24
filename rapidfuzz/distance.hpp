@@ -13,18 +13,18 @@ template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<std::size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<std::size_t>(std::distance(first2, last2));
 
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
-    std::ptrdiff_t src_pos = 0;
-    std::ptrdiff_t dest_pos = 0;
+    std::size_t src_pos = 0;
+    std::size_t dest_pos = 0;
 
     for (const auto& op : ops) {
         /* matches between last and current editop */
         while (src_pos < op.src_pos) {
-            res_str[dest_pos] = static_cast<CharT>(first1[src_pos]);
+            res_str[dest_pos] = static_cast<CharT>(first1[static_cast<std::ptrdiff_t>(src_pos)]);
             src_pos++;
             dest_pos++;
         }
@@ -32,12 +32,12 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
         switch (op.type) {
         case EditType::None:
         case EditType::Replace:
-            res_str[dest_pos] = static_cast<CharT>(first2[op.dest_pos]);
+            res_str[dest_pos] = static_cast<CharT>(first2[static_cast<std::ptrdiff_t>(op.dest_pos)]);
             src_pos++;
             dest_pos++;
             break;
         case EditType::Insert:
-            res_str[dest_pos] = static_cast<CharT>(first2[op.dest_pos]);
+            res_str[dest_pos] = static_cast<CharT>(first2[static_cast<std::ptrdiff_t>(op.dest_pos)]);
             dest_pos++;
             break;
         case EditType::Delete:
@@ -48,7 +48,7 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
 
     /* matches after the last editop */
     while (src_pos < len1) {
-        res_str[dest_pos] = static_cast<CharT>(first1[src_pos]);
+        res_str[dest_pos] = static_cast<CharT>(first1[static_cast<std::ptrdiff_t>(src_pos)]);
         src_pos++;
         dest_pos++;
     }
@@ -68,24 +68,24 @@ template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<std::size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<std::size_t>(std::distance(first2, last2));
 
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
-    std::ptrdiff_t dest_pos = 0;
+    std::size_t dest_pos = 0;
 
     for (const auto& op : ops) {
         switch (op.type) {
         case EditType::None:
-            for (int64_t i = op.src_begin; i < op.src_end; ++i) {
-                res_str[dest_pos++] = static_cast<CharT>(first1[i]);
+            for (auto i = op.src_begin; i < op.src_end; ++i) {
+                res_str[dest_pos++] = static_cast<CharT>(first1[static_cast<std::ptrdiff_t>(i)]);
             }
             break;
         case EditType::Replace:
         case EditType::Insert:
-            for (int64_t i = op.dest_begin; i < op.dest_end; ++i) {
-                res_str[dest_pos++] = static_cast<CharT>(first2[i]);
+            for (auto i = op.dest_begin; i < op.dest_end; ++i) {
+                res_str[dest_pos++] = static_cast<CharT>(first2[static_cast<std::ptrdiff_t>(i)]);
             }
             break;
         case EditType::Delete:
