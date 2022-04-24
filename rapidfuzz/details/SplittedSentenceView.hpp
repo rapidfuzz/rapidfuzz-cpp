@@ -17,7 +17,7 @@ public:
     std::size_t dedupe();
     std::size_t size() const;
 
-    inline std::size_t length() const
+    std::size_t length() const
     {
         return size();
     }
