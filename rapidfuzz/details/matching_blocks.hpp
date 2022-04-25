@@ -46,6 +46,7 @@ namespace difflib {
 template <typename InputIt1, typename InputIt2>
 class SequenceMatcher {
     using Index = size_t;
+
 public:
     using match_t = std::tuple<Index, Index, Index>;
 
@@ -106,21 +107,27 @@ public:
                 }
 
                 if (!found) {
-                    std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low), j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
+                    std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low),
+                              j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
                 }
             }
 
-            std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low), j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
+            std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low),
+                      j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
         }
 
-        while (best_i > a_low && best_j > b_low && a_first[static_cast<ptrdiff_t>(best_i) - 1] == b_first[static_cast<ptrdiff_t>(best_j) - 1]) {
+        while (best_i > a_low && best_j > b_low &&
+               a_first[static_cast<ptrdiff_t>(best_i) - 1] ==
+                   b_first[static_cast<ptrdiff_t>(best_j) - 1])
+        {
             --best_i;
             --best_j;
             ++best_size;
         }
 
         while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               a_first[static_cast<ptrdiff_t>(best_i + best_size)] == b_first[static_cast<ptrdiff_t>(best_j + best_size)])
+               a_first[static_cast<ptrdiff_t>(best_i + best_size)] ==
+                   b_first[static_cast<ptrdiff_t>(best_j + best_size)])
         {
             ++best_size;
         }

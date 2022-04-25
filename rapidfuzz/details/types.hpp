@@ -94,7 +94,7 @@ enum class EditType {
  * Delete:  delete character at src_pos
  */
 struct EditOp {
-    EditType type;           /**< type of the edit operation */
+    EditType type;   /**< type of the edit operation */
     size_t src_pos;  /**< index into the source string */
     size_t dest_pos; /**< index into the destination string */
 
@@ -125,7 +125,7 @@ inline bool operator==(EditOp a, EditOp b)
  *          Note that dest_begin==dest_end in this case.
  */
 struct Opcode {
-    EditType type;             /**< type of the edit operation */
+    EditType type;     /**< type of the edit operation */
     size_t src_begin;  /**< index into the source string */
     size_t src_end;    /**< index into the source string */
     size_t dest_begin; /**< index into the destination string */
@@ -134,8 +134,7 @@ struct Opcode {
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, size_t src_begin_, size_t src_end_,
-           size_t dest_begin_, size_t dest_end_)
+    Opcode(EditType type_, size_t src_begin_, size_t src_end_, size_t dest_begin_, size_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -225,8 +224,7 @@ public:
         : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Editops(size_type count)
-        : std::vector<EditOp>(count), src_len(0), dest_len(0)
+    explicit Editops(size_type count) : std::vector<EditOp>(count), src_len(0), dest_len(0)
     {}
 
     Editops(const Editops& other)
@@ -375,8 +373,7 @@ public:
         : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
     {}
 
-    explicit Opcodes(size_type count)
-        : std::vector<Opcode>(count), src_len(0), dest_len(0)
+    explicit Opcodes(size_type count) : std::vector<Opcode>(count), src_len(0), dest_len(0)
     {}
 
     Opcodes(const Opcodes& other)
@@ -593,7 +590,7 @@ inline Opcodes::Opcodes(const Editops& other)
 
 template <typename T>
 struct ScoreAlignment {
-    T score;                   /**< resulting score of the algorithm */
+    T score;           /**< resulting score of the algorithm */
     size_t src_start;  /**< index into the source string */
     size_t src_end;    /**< index into the source string */
     size_t dest_start; /**< index into the destination string */
@@ -602,8 +599,8 @@ struct ScoreAlignment {
     ScoreAlignment() : score(T()), src_start(0), src_end(0), dest_start(0), dest_end(0)
     {}
 
-    ScoreAlignment(T score_, size_t src_start_, size_t src_end_,
-                   size_t dest_start_, size_t dest_end_)
+    ScoreAlignment(T score_, size_t src_start_, size_t src_end_, size_t dest_start_,
+                   size_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),

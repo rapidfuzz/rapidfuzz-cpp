@@ -7,9 +7,9 @@
 #include <cstring>
 #include <limits>
 #include <rapidfuzz/details/SplittedSentenceView.hpp>
+#include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
-#include <rapidfuzz/details/intrinsics.hpp>
 #include <unordered_set>
 #include <vector>
 
@@ -36,7 +36,7 @@ namespace common {
  * @{
  */
 
-static inline double NormSim_to_NormDist(double score_cutoff, double imprecision=0.00001)
+static inline double NormSim_to_NormDist(double score_cutoff, double imprecision = 0.00001)
 {
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
 }
@@ -117,12 +117,10 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
-                                    InputIt2 last2);
+size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
-                                    InputIt2& last2);
+size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
@@ -276,7 +274,8 @@ struct BlockPatternMatchVector {
 
         for (ptrdiff_t block = 0; block < block_count; ++block) {
             if (std::distance(first + block * 64, last) > 64) {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64, first + (block + 1) * 64);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64,
+                                                         first + (block + 1) * 64);
             }
             else {
                 m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
@@ -372,8 +371,7 @@ struct ConstMatrixVectorView {
 
     using value_type = T;
 
-    ConstMatrixVectorView(const T* vector, size_t cols) noexcept
-        : m_vector(vector), m_cols(cols)
+    ConstMatrixVectorView(const T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
     ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept
@@ -413,8 +411,7 @@ struct Matrix {
         std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
     }
 
-    Matrix(Matrix&& other) noexcept
-        : m_rows(0), m_cols(0), m_matrix(nullptr)
+    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
     {
         other.swap(*this);
     }

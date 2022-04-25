@@ -51,7 +51,7 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
  */
 template <typename InputIt1, typename InputIt2>
 size_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
-                                     InputIt2 last2)
+                                    InputIt2 last2)
 {
     auto prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
@@ -64,7 +64,7 @@ size_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& 
  */
 template <typename InputIt1, typename InputIt2>
 size_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
-                                     InputIt2& last2)
+                                    InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
     auto rlast1 = std::make_reverse_iterator(first1);
@@ -181,8 +181,7 @@ SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
             splitted.emplace_back(first, second);
         }
 
-        if (second == last)
-            break;
+        if (second == last) break;
     }
 
     std::sort(splitted.begin(), splitted.end());

@@ -18,10 +18,10 @@ int64_t generalized_levenshtein_wagner_fischer(InputIt1 first1, InputIt1 last1, 
     // added to suppress a null pointer dereference false positive
     // due to a bug in GCC
 #ifdef __GNUC__
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wnull-dereference"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
     cache[0] = 0;
-#   pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
 #endif
     for (size_t i = 1; i < cache_size; ++i) {
         cache[i] = cache[i - 1] + weights.delete_cost;
@@ -759,7 +759,8 @@ double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2
                                        double score_cutoff)
 {
     int64_t maximum = detail::levenshtein_maximum(first1, last1, first2, last2, weights);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = levenshtein_distance(first1, last1, first2, last2, weights, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
@@ -888,7 +889,8 @@ double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 
     auto first1 = common::to_begin(s1);
     auto last1 = common::to_end(s1);
     int64_t maximum = detail::levenshtein_maximum(first1, last1, first2, last2, weights);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;

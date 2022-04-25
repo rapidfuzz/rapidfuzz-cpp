@@ -10,8 +10,9 @@ class SplittedSentenceView {
 public:
     using CharT = iter_value_t<InputIt>;
 
-    SplittedSentenceView(IteratorViewVec<InputIt> sentence)
-        noexcept(std::is_nothrow_move_constructible<IteratorViewVec<InputIt>>::value) : m_sentence(std::move(sentence))
+    SplittedSentenceView(IteratorViewVec<InputIt> sentence) noexcept(
+        std::is_nothrow_move_constructible<IteratorViewVec<InputIt>>::value)
+        : m_sentence(std::move(sentence))
     {}
 
     size_t dedupe();

@@ -344,8 +344,7 @@ template <typename Sentence1>
 CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedTokenSetRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
+CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**

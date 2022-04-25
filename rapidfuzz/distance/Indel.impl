@@ -36,7 +36,8 @@ double indel_normalized_distance(const common::BlockPatternMatchVector& block, I
                                  double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = indel_distance(block, first1, last1, first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
@@ -59,8 +60,7 @@ double indel_normalized_similarity(const common::BlockPatternMatchVector& block,
                                    double score_cutoff)
 {
     double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
-    double norm_dist =
-        indel_normalized_distance(block, first1, last1, first2, last2, cutoff_score);
+    double norm_dist = indel_normalized_distance(block, first1, last1, first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -86,7 +86,8 @@ double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first
                                  double score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = indel_distance(first1, last1, first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
@@ -167,7 +168,8 @@ double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                 double score_cutoff) const
 {
     int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;

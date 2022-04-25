@@ -332,8 +332,7 @@ int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 }
 
 struct LLCSBitMatrix {
-    LLCSBitMatrix(size_t rows, size_t cols)
-        : S(rows, cols, ~UINT64_C(0)), dist(0)
+    LLCSBitMatrix(size_t rows, size_t cols) : S(rows, cols, ~UINT64_C(0)), dist(0)
     {}
 
     common::Matrix<uint64_t> S;
@@ -553,9 +552,11 @@ double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
     if (maximum == 0) {
         return 0.0;
     }
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     double norm_sim =
-        static_cast<double>(lcs_seq_distance(first1, last1, first2, last2, cutoff_distance)) / static_cast<double>(maximum);
+        static_cast<double>(lcs_seq_distance(first1, last1, first2, last2, cutoff_distance)) /
+        static_cast<double>(maximum);
     return (norm_sim <= score_cutoff) ? norm_sim : 1.0;
 }
 
@@ -585,8 +586,7 @@ double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 f
                                      InputIt2 last2, double score_cutoff)
 {
     double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
-    double norm_sim =
-        1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, cutoff_score);
+    double norm_sim = 1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, cutoff_score);
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
@@ -640,8 +640,10 @@ double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2
     if (maximum == 0) {
         return 0;
     }
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    double norm_dist = static_cast<double>(distance(first2, last2, cutoff_distance)) / static_cast<double>(maximum);
+    int64_t cutoff_distance =
+        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    double norm_dist = static_cast<double>(distance(first2, last2, cutoff_distance)) /
+                       static_cast<double>(maximum);
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 
