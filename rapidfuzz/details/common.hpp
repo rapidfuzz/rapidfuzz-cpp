@@ -269,7 +269,7 @@ struct BlockPatternMatchVector {
     void insert(InputIt first, InputIt last)
     {
         auto len = std::distance(first, last);
-        auto block_count = ceil_div(len, 64);
+        auto block_count = detail::ceil_div(len, 64);
         m_val.resize(static_cast<size_t>(block_count));
 
         for (ptrdiff_t block = 0; block < block_count; ++block) {

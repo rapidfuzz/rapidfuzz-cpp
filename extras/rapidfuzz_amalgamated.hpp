@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-25 14:59:14.196149
+//  Generated: 2022-04-25 15:06:39.168694
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1249,7 +1249,7 @@ struct BlockPatternMatchVector {
     void insert(InputIt first, InputIt last)
     {
         auto len = std::distance(first, last);
-        auto block_count = ceil_div(len, 64);
+        auto block_count = detail::ceil_div(len, 64);
         m_val.resize(static_cast<size_t>(block_count));
 
         for (ptrdiff_t block = 0; block < block_count; ++block) {
