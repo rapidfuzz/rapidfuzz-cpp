@@ -117,11 +117,11 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+std::size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                     InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+std::size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                     InputIt2& last2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
@@ -198,7 +198,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    uint64_t get(int64_t block, CharT key) const
+    uint64_t get(std::size_t block, CharT key) const
     {
         assert(block == 0);
         (void)block;
@@ -210,11 +210,11 @@ private:
     void insert_mask(CharT key, uint64_t mask)
     {
         if (key >= 0 && key <= 255) {
-            m_extendedAscii[(uint8_t)key] |= mask;
+            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
         }
         else {
-            int32_t i = lookup(static_cast<uint64_t>(key));
-            m_map[i].key = key;
+            uint32_t i = lookup(static_cast<uint64_t>(key));
+            m_map[i].key = static_cast<uint64_t>(key);
             m_map[i].value |= mask;
         }
     }
@@ -223,9 +223,9 @@ private:
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    int32_t lookup(uint64_t key) const
+    uint32_t lookup(uint64_t key) const
     {
-        int32_t i = key % 128;
+        uint32_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
@@ -255,38 +255,44 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(int64_t block, CharT ch, int pos)
+    void insert(std::size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
     }
 
+    /**
+     * @warning undefined behavior if iterator \p first is greater than \p last
+     * @tparam InputIt
+     * @param first
+     * @param last
+     */
     template <typename InputIt>
     void insert(InputIt first, InputIt last)
     {
         auto len = std::distance(first, last);
         auto block_count = len / 64 + bool(len % 64);
-        m_val.resize(block_count);
+        m_val.resize(static_cast<std::size_t>(block_count));
 
         for (std::ptrdiff_t block = 0; block < block_count; ++block) {
             if (std::distance(first + block * 64, last) > 64) {
-                m_val[block].insert(first + block * 64, first + (block + 1) * 64);
+                m_val[static_cast<std::size_t>(block)].insert(first + block * 64, first + (block + 1) * 64);
             }
             else {
-                m_val[block].insert(first + block * 64, last);
+                m_val[static_cast<std::size_t>(block)].insert(first + block * 64, last);
             }
         }
     }
 
     template <typename CharT>
-    uint64_t get(std::ptrdiff_t block, CharT ch) const
+    uint64_t get(std::size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, int64_t size = sizeof(CharT1)>
+template <typename CharT1, std::size_t size = sizeof(CharT1)>
 struct CharSet;
 
 template <typename CharT1>
@@ -314,7 +320,7 @@ struct CharSet<CharT1, 1> {
     }
 };
 
-template <typename CharT1, int64_t size>
+template <typename CharT1, std::size_t size>
 struct CharSet {
     std::unordered_set<CharT1> m_val;
 

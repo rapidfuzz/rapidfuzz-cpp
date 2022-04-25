@@ -166,7 +166,7 @@ template <typename InputIt2>
 double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                 double score_cutoff) const
 {
-    int64_t maximum = s1.size() + std::distance(first2, last2);
+    int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -184,7 +184,7 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedIndel<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum = s1.size() + std::distance(first2, last2);
+    int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t dist = distance(first2, last2, cutoff_distance);
     int64_t sim = maximum - dist;

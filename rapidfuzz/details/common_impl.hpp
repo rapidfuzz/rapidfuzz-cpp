@@ -50,20 +50,20 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
  * Removes common prefix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+std::size_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                      InputIt2 last2)
 {
     auto prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
     first2 += prefix;
-    return prefix;
+    return static_cast<std::size_t>(prefix);
 }
 
 /**
  * Removes common suffix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+std::size_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                      InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
@@ -74,7 +74,7 @@ std::ptrdiff_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, In
     auto suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
     last1 -= suffix;
     last2 -= suffix;
-    return suffix;
+    return static_cast<std::size_t>(suffix);
 }
 
 /**
