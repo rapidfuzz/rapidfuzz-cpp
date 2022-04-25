@@ -7,9 +7,9 @@
 #include <cstring>
 #include <limits>
 #include <rapidfuzz/details/SplittedSentenceView.hpp>
+#include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
-#include <tuple>
 #include <unordered_set>
 #include <vector>
 
@@ -36,7 +36,7 @@ namespace common {
  * @{
  */
 
-static inline double NormSim_to_NormDist(double score_cutoff, double imprecision=0.00001)
+static inline double NormSim_to_NormDist(double score_cutoff, double imprecision = 0.00001)
 {
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
 }
@@ -54,7 +54,9 @@ template <int Max = 1>
 constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff = 0)
 {
     double max = static_cast<double>(Max);
-    return result_cutoff((lensum > 0) ? (max - max * dist / lensum) : max, score_cutoff);
+    return result_cutoff(
+        (lensum > 0) ? (max - max * static_cast<double>(dist) / static_cast<double>(lensum)) : max,
+        score_cutoff);
 }
 
 template <int Max = 1>
@@ -115,10 +117,10 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-int64_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
+size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-int64_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
@@ -186,15 +188,15 @@ struct PatternMatchVector {
     uint64_t get(CharT key) const
     {
         if (key >= 0 && key <= 255) {
-            return m_extendedAscii[(uint8_t)key];
+            return m_extendedAscii[static_cast<uint8_t>(key)];
         }
         else {
-            return m_map[lookup((uint64_t)key)].value;
+            return m_map[lookup(static_cast<uint64_t>(key))].value;
         }
     }
 
     template <typename CharT>
-    uint64_t get(int64_t block, CharT key) const
+    uint64_t get(size_t block, CharT key) const
     {
         assert(block == 0);
         (void)block;
@@ -206,11 +208,11 @@ private:
     void insert_mask(CharT key, uint64_t mask)
     {
         if (key >= 0 && key <= 255) {
-            m_extendedAscii[(uint8_t)key] |= mask;
+            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
         }
         else {
-            uint64_t i = lookup((uint64_t)key);
-            m_map[i].key = key;
+            uint32_t i = lookup(static_cast<uint64_t>(key));
+            m_map[i].key = static_cast<uint64_t>(key);
             m_map[i].value |= mask;
         }
     }
@@ -219,9 +221,9 @@ private:
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    uint64_t lookup(uint64_t key) const
+    uint32_t lookup(uint64_t key) const
     {
-        uint64_t i = key % 128;
+        uint32_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
@@ -229,7 +231,7 @@ private:
 
         uint64_t perturb = key;
         while (true) {
-            i = ((i * 5) + perturb + 1) % 128;
+            i = (static_cast<uint64_t>(i) * 5 + perturb + 1) % 128;
             if (!m_map[i].value || m_map[i].key == key) {
                 return i;
             }
@@ -242,8 +244,7 @@ private:
 struct BlockPatternMatchVector {
     std::vector<PatternMatchVector> m_val;
 
-    BlockPatternMatchVector()
-    {}
+    BlockPatternMatchVector() = default;
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
@@ -252,38 +253,45 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(int64_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
     }
 
+    /**
+     * @warning undefined behavior if iterator \p first is greater than \p last
+     * @tparam InputIt
+     * @param first
+     * @param last
+     */
     template <typename InputIt>
     void insert(InputIt first, InputIt last)
     {
-        int64_t len = std::distance(first, last);
-        int64_t block_count = (len / 64) + bool(len % 64);
-        m_val.resize(block_count);
+        auto len = std::distance(first, last);
+        auto block_count = detail::ceil_div(len, 64);
+        m_val.resize(static_cast<size_t>(block_count));
 
-        for (int64_t block = 0; block < block_count; ++block) {
+        for (ptrdiff_t block = 0; block < block_count; ++block) {
             if (std::distance(first + block * 64, last) > 64) {
-                m_val[block].insert(first + block * 64, first + (block + 1) * 64);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64,
+                                                         first + (block + 1) * 64);
             }
             else {
-                m_val[block].insert(first + block * 64, last);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
             }
         }
     }
 
     template <typename CharT>
-    uint64_t get(int64_t block, CharT ch) const
+    uint64_t get(size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, int64_t size = sizeof(CharT1)>
+template <typename CharT1, size_t size = sizeof(CharT1)>
 struct CharSet;
 
 template <typename CharT1>
@@ -311,7 +319,7 @@ struct CharSet<CharT1, 1> {
     }
 };
 
-template <typename CharT1, int64_t size>
+template <typename CharT1, size_t size>
 struct CharSet {
     std::unordered_set<CharT1> m_val;
 
@@ -336,53 +344,62 @@ struct CharSet {
 
 template <typename T>
 struct MatrixVectorView {
-    explicit MatrixVectorView(T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
+
+    using value_type = T;
+
+    MatrixVectorView(T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    T& operator[](int64_t col)
+    value_type& operator[](size_t col) noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    int64_t size() const
+    size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     T* m_vector;
-    int64_t m_cols;
+    size_t m_cols;
 };
 
 template <typename T>
 struct ConstMatrixVectorView {
-    explicit ConstMatrixVectorView(const T* vector, int64_t cols) : m_vector(vector), m_cols(cols)
+
+    using value_type = T;
+
+    ConstMatrixVectorView(const T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    ConstMatrixVectorView(const MatrixVectorView<T>& other)
+    ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept
         : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
-    const T& operator[](int64_t col)
+    const value_type& operator[](size_t col) const noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    int64_t size() const
+    size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     const T* m_vector;
-    int64_t m_cols;
+    size_t m_cols;
 };
 
 template <typename T>
 struct Matrix {
-    Matrix(uint64_t rows, uint64_t cols, uint64_t val)
+
+    using value_type = T;
+
+    Matrix(size_t rows, size_t cols, T val)
         : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
     {
         std::fill_n(m_matrix, m_rows * m_cols, val);
@@ -394,8 +411,7 @@ struct Matrix {
         std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
     }
 
-    Matrix(Matrix&& other) noexcept
-        : m_rows(0), m_cols(0), m_matrix(nullptr)
+    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
     {
         other.swap(*this);
     }
@@ -426,31 +442,31 @@ struct Matrix {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<uint64_t> operator[](uint64_t row)
+    MatrixVectorView<value_type> operator[](size_t row) noexcept
     {
         assert(row < m_rows);
-        return MatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+        return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    ConstMatrixVectorView<uint64_t> operator[](uint64_t row) const
+    ConstMatrixVectorView<value_type> operator[](size_t row) const noexcept
     {
         assert(row < m_rows);
-        return ConstMatrixVectorView<uint64_t>(&m_matrix[row * m_cols], m_cols);
+        return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    uint64_t rows() const
+    size_t rows() const noexcept
     {
         return m_rows;
     }
 
-    uint64_t cols() const
+    size_t cols() const noexcept
     {
         return m_cols;
     }
 
 private:
-    uint64_t m_rows;
-    uint64_t m_cols;
+    size_t m_rows;
+    size_t m_cols;
     T* m_matrix;
 };
 

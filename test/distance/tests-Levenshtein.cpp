@@ -42,8 +42,8 @@ TEST_CASE("Levenshtein_editops")
 
     rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s, d);
     REQUIRE(d == rapidfuzz::editops_apply<char>(ops, s, d));
-    REQUIRE(ops.get_src_len() == (int64_t)s.size());
-    REQUIRE(ops.get_dest_len() == (int64_t)d.size());
+    REQUIRE(ops.get_src_len() == s.size());
+    REQUIRE(ops.get_dest_len() == d.size());
 };
 
 TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
