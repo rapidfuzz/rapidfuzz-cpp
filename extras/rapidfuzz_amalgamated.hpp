@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
-//  RapidFuzz v1.0.0
-//  Generated: 2022-04-13 19:43:41.536491
+//  RapidFuzz v1.0.1
+//  Generated: 2022-04-24 21:56:48.435946
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -908,6 +908,11 @@ namespace common {
  * @{
  */
 
+static inline double NormSim_to_NormDist(double score_cutoff, double imprecision=0.00001)
+{
+    return std::min(1.0, 1.0 - score_cutoff + imprecision);
+}
+
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
                                                               SplittedSentenceView<InputIt2> b);
@@ -1263,16 +1268,42 @@ struct Matrix {
     using value_type = T;
 
     Matrix(std::size_t rows, std::size_t cols, T val)
+        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
     {
-        m_rows = rows;
-        m_cols = cols;
-        if (rows * cols > 0) {
-            m_matrix = new T[rows * cols];
-            std::fill_n(m_matrix, rows * cols, val);
-        }
-        else {
-            m_matrix = nullptr;
-        }
+        std::fill_n(m_matrix, m_rows * m_cols, val);
+    }
+
+    Matrix(const Matrix& other)
+        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
+    {
+        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
+    }
+
+    Matrix(Matrix&& other) noexcept
+        : m_rows(0), m_cols(0), m_matrix(nullptr)
+    {
+        other.swap(*this);
+    }
+
+    Matrix& operator=(Matrix&& other) noexcept
+    {
+        Matrix temp = other;
+        temp.swap(*this);
+        return *this;
+    }
+
+    Matrix& operator=(const Matrix& other)
+    {
+        other.swap(*this);
+        return *this;
+    }
+
+    void swap(Matrix& rhs) noexcept
+    {
+        using std::swap;
+        swap(m_rows, rhs.m_rows);
+        swap(m_cols, rhs.m_cols);
+        swap(m_matrix, rhs.m_matrix);
     }
 
     ~Matrix()
@@ -1487,12 +1518,15 @@ SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
     IteratorViewVec<InputIt> splitted;
     auto second = first;
 
-    for (; second != last && first != last; first = second + 1) {
+    for (; first != last; first = second + 1) {
         second = std::find_if(first, last, is_space<CharT>);
 
         if (first != second) {
             splitted.emplace_back(first, second);
         }
+
+        if (second == last)
+            break;
     }
 
     std::sort(splitted.begin(), splitted.end());
@@ -2666,8 +2700,9 @@ template <typename InputIt1, typename InputIt2>
 double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                      InputIt2 last2, double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_sim =
-        1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
+        1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, cutoff_score);
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
@@ -2754,7 +2789,8 @@ template <typename InputIt2>
 double CachedLCSseq<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                    double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -2766,7 +2802,8 @@ double CachedLCSseq<CharT1>::normalized_similarity(const Sentence2& s2, double s
     return normalized_similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
 
-} // namespace rapidfuzznamespace rapidfuzz {
+} // namespace rapidfuzz
+namespace rapidfuzz {
 namespace detail {
 
 template <typename InputIt1, typename InputIt2>
@@ -2819,8 +2856,9 @@ double indel_normalized_similarity(const common::BlockPatternMatchVector& block,
                                    InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_dist =
-        indel_normalized_distance(block, first1, last1, first2, last2, 1.0 - score_cutoff);
+        indel_normalized_distance(block, first1, last1, first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -2881,7 +2919,8 @@ template <typename InputIt1, typename InputIt2>
 double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
-    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -2962,7 +3001,8 @@ template <typename InputIt2>
 double CachedIndel<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                   double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -3776,7 +3816,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         std::size_t col_pos = col - 1;
         std::size_t col_word = col_pos / 64;
         col_pos = col_pos % 64;
-        uint64_t mask = static_cast<std::uint64_t>(1) << col_pos;
+        uint64_t mask = UINT64_C(1) << col_pos;
 
         /* Deletion */
         if (matrix.VP[row - 1][col_word] & mask) {
@@ -4075,8 +4115,9 @@ double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputI
                                          InputIt2 last2, LevenshteinWeightTable weights,
                                          double score_cutoff)
 {
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
     double norm_dist =
-        levenshtein_normalized_distance(first1, last1, first2, last2, weights, 1.0 - score_cutoff);
+        levenshtein_normalized_distance(first1, last1, first2, last2, weights, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
@@ -4204,7 +4245,8 @@ template <typename InputIt2>
 double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
                                                         double score_cutoff) const
 {
-    double norm_dist = normalized_distance(first2, last2, 1.0 - score_cutoff);
+    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }

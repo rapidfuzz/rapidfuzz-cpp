@@ -20,7 +20,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif()
 
-project(rapidfuzz LANGUAGES CXX VERSION 1.0.0)
+project(rapidfuzz LANGUAGES CXX VERSION 1.0.1)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
@@ -33,29 +33,11 @@ set(TEST_DIR ${BASE_DIR}/test)
 set(BENCHMARK_DIR ${BASE_DIR}/tests/bench)
 set(EXAMPLES_DIR ${BASE_DIR}/examples)
 
-# Please keep these ordered alphabetically
-set(PUBLIC_HEADERS
-    ${SOURCES_DIR}/distance.hpp
-    ${SOURCES_DIR}/fuzz.hpp
-    ${SOURCES_DIR}/fuzz.impl
-    ${SOURCES_DIR}/rapidfuzz_all.hpp
-
-    ${SOURCES_DIR}/distance/Hamming.hpp
-    ${SOURCES_DIR}/distance/Hamming.impl
-    ${SOURCES_DIR}/distance/Indel.hpp
-    ${SOURCES_DIR}/distance/Indel.impl
-    ${SOURCES_DIR}/distance/LCSseq.hpp
-    ${SOURCES_DIR}/distance/LCSseq.impl
-    ${SOURCES_DIR}/distance/Levenshtein.hpp
-    ${SOURCES_DIR}/distance/Levenshtein.impl
-)
-
 add_library(rapidfuzz INTERFACE)
 
 # provide a namespaced alias for clients to 'link' against if RapidFuzz is included as a sub-project
 add_library(rapidfuzz::rapidfuzz ALIAS rapidfuzz)
 
-set_target_properties(rapidfuzz PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
 target_compile_features(rapidfuzz INTERFACE cxx_std_14)
 
 target_include_directories(rapidfuzz

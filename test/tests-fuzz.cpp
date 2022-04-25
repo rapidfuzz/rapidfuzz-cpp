@@ -6,6 +6,35 @@
 namespace fuzz = rapidfuzz::fuzz;
 using Catch::Approx;
 
+using MetricPtr = double(*)(const char*, const char*, double);
+struct Metric
+{
+    MetricPtr call;
+    const char* name;
+    bool symmetric;
+};
+
+#define LIST_OF_METRICS(FUNC) \
+    /*   func                          symmetric */ \
+    FUNC(fuzz::ratio,                    true) \
+    FUNC(fuzz::partial_ratio,            false) \
+    FUNC(fuzz::token_set_ratio,          true)  \
+    FUNC(fuzz::token_sort_ratio,         true)  \
+    FUNC(fuzz::token_ratio,              true)  \
+    FUNC(fuzz::partial_token_set_ratio,  false) \
+    FUNC(fuzz::partial_token_sort_ratio, false) \
+    FUNC(fuzz::partial_token_ratio,      false) \
+    FUNC(fuzz::WRatio,                   false) \
+    FUNC(fuzz::QRatio,                   true)
+
+#define CREATE_METRIC(func, symmetric) Metric{ \
+    [](const char* s1, const char* s2, double score_cutoff){ return func(s1, s2, score_cutoff); }, \
+    #func, symmetric},
+
+std::vector<Metric> metrics = {
+    LIST_OF_METRICS(CREATE_METRIC)
+};
+
 /**
  * @name RatioTest
  *
@@ -98,30 +127,20 @@ TEST_CASE("RatioTest")
 
     SECTION("testFirstStringEmpty")
     {
-        REQUIRE(0 == fuzz::ratio("test", ""));
-        REQUIRE(0 == fuzz::partial_ratio("test", ""));
-        REQUIRE(0 == fuzz::token_sort_ratio("test", ""));
-        REQUIRE(0 == fuzz::token_set_ratio("test", ""));
-        REQUIRE(0 == fuzz::partial_token_sort_ratio("test", ""));
-        REQUIRE(0 == fuzz::partial_token_set_ratio("test", ""));
-        REQUIRE(0 == fuzz::token_ratio("test", ""));
-        REQUIRE(0 == fuzz::partial_token_ratio("test", ""));
-        REQUIRE(0 == fuzz::WRatio("test", ""));
-        REQUIRE(0 == fuzz::QRatio("test", ""));
+        for (auto& metric : metrics)
+        {
+            INFO( "Score not 0 for " << metric.name );
+            REQUIRE(0 == metric.call("test", "", 0));
+        }
     }
 
     SECTION("testSecondStringEmpty")
     {
-        REQUIRE(0 == fuzz::ratio("", "test"));
-        REQUIRE(0 == fuzz::partial_ratio("", "test"));
-        REQUIRE(0 == fuzz::token_sort_ratio("", "test"));
-        REQUIRE(0 == fuzz::token_set_ratio("", "test"));
-        REQUIRE(0 == fuzz::partial_token_sort_ratio("", "test"));
-        REQUIRE(0 == fuzz::partial_token_set_ratio("", "test"));
-        REQUIRE(0 == fuzz::token_ratio("", "test"));
-        REQUIRE(0 == fuzz::partial_token_ratio("", "test"));
-        REQUIRE(0 == fuzz::WRatio("", "test"));
-        REQUIRE(0 == fuzz::QRatio("", "test"));
+        for (auto& metric : metrics)
+        {
+            INFO( "Score not 0 for " << metric.name );
+            REQUIRE(0 == metric.call("", "test", 0));
+        }
     }
 
     SECTION("testPartialRatioShortNeedle")
@@ -135,44 +154,31 @@ TEST_CASE("RatioTest")
         const char* str1 = "South Korea";
         const char* str2 = "North Korea";
 
-        score1 = fuzz::ratio(str1, str2);
-        score2 = fuzz::ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::partial_ratio(str1, str2);
-        score2 = fuzz::partial_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::token_sort_ratio(str1, str2);
-        score2 = fuzz::token_sort_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::token_set_ratio(str1, str2);
-        score2 = fuzz::token_set_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::token_ratio(str1, str2);
-        score2 = fuzz::token_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::partial_token_sort_ratio(str1, str2);
-        score2 = fuzz::partial_token_sort_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::partial_token_set_ratio(str1, str2);
-        score2 = fuzz::partial_token_set_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::partial_token_ratio(str1, str2);
-        score2 = fuzz::partial_token_ratio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::WRatio(str1, str2);
-        score2 = fuzz::WRatio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
-
-        score1 = fuzz::QRatio(str1, str2);
-        score2 = fuzz::QRatio(str1, str2, score1 - 0.0001);
-        REQUIRE(score1 == score2);
+        for (auto& metric : metrics)
+        {
+            double score = metric.call(str1, str2, 0);
+            INFO( "score_cutoff does not work correctly for " << metric.name );
+            REQUIRE(0 == metric.call(str1, str2, score + 0.0001));
+            REQUIRE(score == metric.call(str1, str2, score));
+        }
     }
+
+    SECTION("testIssue210") /* test for https://github.com/maxbachmann/RapidFuzz/issues/210 */
+    {
+        double score1, score2;
+        const char* str1 = "bc";
+        const char* str2 = "bca";
+
+        for (auto& metric : metrics)
+        {
+            double score = metric.call(str1, str2, 0);
+            INFO( "score_cutoff does not work correctly for " << metric.name );
+            REQUIRE(0 == metric.call(str1, str2, score + 0.0001));
+            REQUIRE(score == metric.call(str1, str2, score));
+        }
+    }
+
 }
+
+
+    

@@ -4,16 +4,16 @@
 <h4 align="center">Rapid fuzzy string matching in C++ using the Levenshtein Distance</h4>
 
 <p align="center">
-  <a href="https://github.com/maxbachmann/rapidfuzz/actions">
-    <img src="https://github.com/maxbachmann/rapidfuzz/workflows/Build/badge.svg"
+  <a href="https://github.com/maxbachmann/rapidfuzz-cpp/actions">
+    <img src="https://github.com/maxbachmann/rapidfuzz-cpp/workflows/CMake/badge.svg"
          alt="Continous Integration">
   </a>
-  <a href="https://maxbachmann.github.io/rapidfuzz">
+  <a href="https://maxbachmann.github.io/rapidfuzz-cpp">
     <img src="https://img.shields.io/badge/-documentation-blue"
          alt="Documentation">
   </a>
-  <a href="https://github.com/maxbachmann/rapidfuzz/blob/dev/LICENSE">
-    <img src="https://img.shields.io/github/license/maxbachmann/rapidfuzz"
+  <a href="https://github.com/maxbachmann/rapidfuzz-cpp/blob/dev/LICENSE">
+    <img src="https://img.shields.io/github/license/maxbachmann/rapidfuzz-cpp"
          alt="GitHub license">
   </a>
 </p>
