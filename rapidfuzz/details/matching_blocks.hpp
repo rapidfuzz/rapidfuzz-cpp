@@ -33,10 +33,10 @@
 namespace rapidfuzz {
 namespace detail {
 struct MatchingBlock {
-    std::size_t spos;
-    std::size_t dpos;
-    std::size_t length;
-    MatchingBlock(std::size_t aSPos, std::size_t aDPos, std::size_t aLength)
+    size_t spos;
+    size_t dpos;
+    size_t length;
+    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength)
         : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
@@ -45,17 +45,17 @@ namespace difflib {
 
 template <typename InputIt1, typename InputIt2>
 class SequenceMatcher {
-    using Index = std::size_t;
+    using Index = size_t;
 public:
     using match_t = std::tuple<Index, Index, Index>;
 
     SequenceMatcher(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
         : a_first(first1), a_last(last1), b_first(first2), b_last(last2)
     {
-        auto b_len = static_cast<std::size_t>(std::distance(b_first, b_last));
+        auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
         j2len_.resize(b_len + 1);
         for (Index i = 0; i < b_len; ++i) {
-            b2j_[b_first[static_cast<std::ptrdiff_t>(i)]].push_back(i);
+            b2j_[b_first[static_cast<ptrdiff_t>(i)]].push_back(i);
         }
     }
 
@@ -69,7 +69,7 @@ public:
         {
             for (Index i = a_low; i < a_high; ++i) {
                 bool found = false;
-                auto iter = b2j_.find(a_first[static_cast<std::ptrdiff_t>(i)]);
+                auto iter = b2j_.find(a_first[static_cast<ptrdiff_t>(i)]);
                 if (iter != std::end(b2j_)) {
                     const auto& indexes = iter->second;
 
@@ -106,21 +106,21 @@ public:
                 }
 
                 if (!found) {
-                    std::fill(j2len_.begin() + static_cast<std::ptrdiff_t>(b_low), j2len_.begin() + static_cast<std::ptrdiff_t>(b_high), 0);
+                    std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low), j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
                 }
             }
 
-            std::fill(j2len_.begin() + static_cast<std::ptrdiff_t>(b_low), j2len_.begin() + static_cast<std::ptrdiff_t>(b_high), 0);
+            std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low), j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
         }
 
-        while (best_i > a_low && best_j > b_low && a_first[static_cast<std::ptrdiff_t>(best_i) - 1] == b_first[static_cast<std::ptrdiff_t>(best_j) - 1]) {
+        while (best_i > a_low && best_j > b_low && a_first[static_cast<ptrdiff_t>(best_i) - 1] == b_first[static_cast<ptrdiff_t>(best_j) - 1]) {
             --best_i;
             --best_j;
             ++best_size;
         }
 
         while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               a_first[static_cast<std::ptrdiff_t>(best_i + best_size)] == b_first[static_cast<std::ptrdiff_t>(best_j + best_size)])
+               a_first[static_cast<ptrdiff_t>(best_i + best_size)] == b_first[static_cast<ptrdiff_t>(best_j + best_size)])
         {
             ++best_size;
         }
@@ -130,8 +130,8 @@ public:
 
     std::vector<MatchingBlock> get_matching_blocks()
     {
-        auto a_len = static_cast<std::size_t>(std::distance(a_first, a_last));
-        auto b_len = static_cast<std::size_t>(std::distance(b_first, b_last));
+        auto a_len = static_cast<size_t>(std::distance(a_first, a_last));
+        auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
         // The following are tuple extracting aliases
         std::vector<std::tuple<Index, Index, Index, Index>> queue;
         std::vector<match_t> matching_blocks_pass1;

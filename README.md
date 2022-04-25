@@ -222,7 +222,7 @@ extract(const Sentence1& query, const Iterable& choices, const double score_cuto
   rapidfuzz::fuzz::CachedRatio<typename Sentence1::value_type> scorer(query);
 
   #pragma omp parallel for
-  for (std::size_t i = 0; i < choices.size(); ++i) {
+  for (size_t i = 0; i < choices.size(); ++i) {
     double score = scorer.similarity(choices[i], score_cutoff);
     results[i] = std::make_pair(choices[i], score);
   }

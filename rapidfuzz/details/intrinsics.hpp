@@ -4,7 +4,7 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
+#include <stdint.h>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>

@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-24 21:56:48.435946
+//  Generated: 2022-04-25 14:47:25.934741
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -82,8 +82,8 @@ template <typename InputIt>
 using IteratorViewVec = std::vector<IteratorView<InputIt>>;
 
 struct StringAffix {
-    std::ptrdiff_t prefix_len;
-    std::ptrdiff_t suffix_len;
+    size_t prefix_len;
+    size_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
@@ -114,13 +114,13 @@ enum class EditType {
  */
 struct EditOp {
     EditType type;           /**< type of the edit operation */
-    std::ptrdiff_t src_pos;  /**< index into the source string */
-    std::ptrdiff_t dest_pos; /**< index into the destination string */
+    size_t src_pos;  /**< index into the source string */
+    size_t dest_pos; /**< index into the destination string */
 
     EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
     {}
 
-    EditOp(EditType type_, std::ptrdiff_t src_pos_, std::ptrdiff_t dest_pos_)
+    EditOp(EditType type_, size_t src_pos_, size_t dest_pos_)
         : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
     {}
 };
@@ -145,16 +145,16 @@ inline bool operator==(EditOp a, EditOp b)
  */
 struct Opcode {
     EditType type;             /**< type of the edit operation */
-    std::ptrdiff_t src_begin;  /**< index into the source string */
-    std::ptrdiff_t src_end;    /**< index into the source string */
-    std::ptrdiff_t dest_begin; /**< index into the destination string */
-    std::ptrdiff_t dest_end;   /**< index into the destination string */
+    size_t src_begin;  /**< index into the source string */
+    size_t src_end;    /**< index into the source string */
+    size_t dest_begin; /**< index into the destination string */
+    size_t dest_end;   /**< index into the destination string */
 
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, std::ptrdiff_t src_begin_, std::ptrdiff_t src_end_,
-           std::ptrdiff_t dest_begin_, std::ptrdiff_t dest_end_)
+    Opcode(EditType type_, size_t src_begin_, size_t src_end_,
+           size_t dest_begin_, size_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -193,10 +193,10 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
         }
 
         int count = (stop - 1 - start) / step + 1;
-        new_vec.reserve(count);
+        new_vec.reserve(static_cast<size_t>(count));
 
         for (int i = start; i < stop; i += step) {
-            new_vec.push_back(vec[i]);
+            new_vec.push_back(vec[static_cast<size_t>(i)]);
         }
     }
     else if (step < 0) {
@@ -219,10 +219,10 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
         }
 
         int count = (stop + 1 - start) / step + 1;
-        new_vec.reserve(count);
+        new_vec.reserve(static_cast<size_t>(count));
 
         for (int i = start; i > stop; i += step) {
-            new_vec.push_back(vec[i]);
+            new_vec.push_back(vec[static_cast<size_t>(i)]);
         }
     }
     else {
@@ -323,19 +323,19 @@ public:
         return reversed;
     }
 
-    std::ptrdiff_t get_src_len() const noexcept
+    size_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(std::ptrdiff_t len) noexcept
+    void set_src_len(size_t len) noexcept
     {
         src_len = len;
     }
-    std::ptrdiff_t get_dest_len() const noexcept
+    size_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(std::ptrdiff_t len) noexcept
+    void set_dest_len(size_t len) noexcept
     {
         dest_len = len;
     }
@@ -357,8 +357,8 @@ public:
     }
 
 private:
-    std::ptrdiff_t src_len;
-    std::ptrdiff_t dest_len;
+    size_t src_len;
+    size_t dest_len;
 };
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
@@ -473,19 +473,19 @@ public:
         return reversed;
     }
 
-    std::ptrdiff_t get_src_len() const noexcept
+    size_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(std::ptrdiff_t len) noexcept
+    void set_src_len(size_t len) noexcept
     {
         src_len = len;
     }
-    std::ptrdiff_t get_dest_len() const noexcept
+    size_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(std::ptrdiff_t len) noexcept
+    void set_dest_len(size_t len) noexcept
     {
         dest_len = len;
     }
@@ -508,8 +508,8 @@ public:
     }
 
 private:
-    std::ptrdiff_t src_len;
-    std::ptrdiff_t dest_len;
+    size_t src_len;
+    size_t dest_len;
 };
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
@@ -544,19 +544,19 @@ inline Editops::Editops(const Opcodes& other)
             break;
 
         case EditType::Replace:
-            for (std::ptrdiff_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
             }
             break;
 
         case EditType::Insert:
-            for (std::ptrdiff_t j = 0; j < op.dest_end - op.dest_begin; j++) {
+            for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
                 push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
             }
             break;
 
         case EditType::Delete:
-            for (std::ptrdiff_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
             }
             break;
@@ -568,8 +568,8 @@ inline Opcodes::Opcodes(const Editops& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
-    std::ptrdiff_t src_pos = 0;
-    std::ptrdiff_t dest_pos = 0;
+    size_t src_pos = 0;
+    size_t dest_pos = 0;
     for (size_t i = 0; i < other.size();) {
         if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
             push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
@@ -577,8 +577,8 @@ inline Opcodes::Opcodes(const Editops& other)
             dest_pos = other[i].dest_pos;
         }
 
-        std::ptrdiff_t src_begin = src_pos;
-        std::ptrdiff_t dest_begin = dest_pos;
+        size_t src_begin = src_pos;
+        size_t dest_begin = dest_pos;
         EditType type = other[i].type;
         do {
             switch (type) {
@@ -613,16 +613,16 @@ inline Opcodes::Opcodes(const Editops& other)
 template <typename T>
 struct ScoreAlignment {
     T score;                   /**< resulting score of the algorithm */
-    std::ptrdiff_t src_start;  /**< index into the source string */
-    std::ptrdiff_t src_end;    /**< index into the source string */
-    std::ptrdiff_t dest_start; /**< index into the destination string */
-    std::ptrdiff_t dest_end;   /**< index into the destination string */
+    size_t src_start;  /**< index into the source string */
+    size_t src_end;    /**< index into the source string */
+    size_t dest_start; /**< index into the destination string */
+    size_t dest_end;   /**< index into the destination string */
 
     ScoreAlignment() : score(T()), src_start(0), src_end(0), dest_start(0), dest_end(0)
     {}
 
-    ScoreAlignment(T score_, std::ptrdiff_t src_start_, std::ptrdiff_t src_end_,
-                   std::ptrdiff_t dest_start_, std::ptrdiff_t dest_end_)
+    ScoreAlignment(T score_, size_t src_start_, size_t src_end_,
+                   size_t dest_start_, size_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),
@@ -809,13 +809,14 @@ class SplittedSentenceView {
 public:
     using CharT = iter_value_t<InputIt>;
 
-    SplittedSentenceView(IteratorViewVec<InputIt> sentence) : m_sentence(std::move(sentence))
+    SplittedSentenceView(IteratorViewVec<InputIt> sentence)
+        noexcept(std::is_nothrow_move_constructible<IteratorViewVec<InputIt>>::value) : m_sentence(std::move(sentence))
     {}
 
-    int64_t dedupe();
-    int64_t size() const;
+    size_t dedupe();
+    size_t size() const;
 
-    int64_t length() const
+    size_t length() const
     {
         return size();
     }
@@ -825,7 +826,7 @@ public:
         return m_sentence.empty();
     }
 
-    int64_t word_count() const
+    size_t word_count() const
     {
         return m_sentence.size();
     }
@@ -842,22 +843,22 @@ private:
 };
 
 template <typename InputIt>
-int64_t SplittedSentenceView<InputIt>::dedupe()
+size_t SplittedSentenceView<InputIt>::dedupe()
 {
-    int64_t old_word_count = word_count();
+    size_t old_word_count = word_count();
     m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
     return old_word_count - word_count();
 }
 
 template <typename InputIt>
-int64_t SplittedSentenceView<InputIt>::size() const
+size_t SplittedSentenceView<InputIt>::size() const
 {
     if (m_sentence.empty()) return 0;
 
     // there is a whitespace between each word
-    int64_t result = m_sentence.size() - 1;
+    size_t result = m_sentence.size() - 1;
     for (const auto& word : m_sentence) {
-        result += std::distance(word.first, word.last);
+        result += static_cast<size_t>(std::distance(word.first, word.last));
     }
 
     return result;
@@ -989,11 +990,11 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                     InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                     InputIt2& last2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
@@ -1070,7 +1071,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    uint64_t get(int64_t block, CharT key) const
+    uint64_t get(size_t block, CharT key) const
     {
         assert(block == 0);
         (void)block;
@@ -1082,11 +1083,11 @@ private:
     void insert_mask(CharT key, uint64_t mask)
     {
         if (key >= 0 && key <= 255) {
-            m_extendedAscii[(uint8_t)key] |= mask;
+            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
         }
         else {
-            int32_t i = lookup(static_cast<uint64_t>(key));
-            m_map[i].key = key;
+            uint32_t i = lookup(static_cast<uint64_t>(key));
+            m_map[i].key = static_cast<uint64_t>(key);
             m_map[i].value |= mask;
         }
     }
@@ -1095,9 +1096,9 @@ private:
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    int32_t lookup(uint64_t key) const
+    uint32_t lookup(uint64_t key) const
     {
-        int32_t i = key % 128;
+        uint32_t i = key % 128;
 
         if (!m_map[i].value || m_map[i].key == key) {
             return i;
@@ -1127,38 +1128,44 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(int64_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
     }
 
+    /**
+     * @warning undefined behavior if iterator \p first is greater than \p last
+     * @tparam InputIt
+     * @param first
+     * @param last
+     */
     template <typename InputIt>
     void insert(InputIt first, InputIt last)
     {
         auto len = std::distance(first, last);
         auto block_count = len / 64 + bool(len % 64);
-        m_val.resize(block_count);
+        m_val.resize(static_cast<size_t>(block_count));
 
-        for (std::ptrdiff_t block = 0; block < block_count; ++block) {
+        for (ptrdiff_t block = 0; block < block_count; ++block) {
             if (std::distance(first + block * 64, last) > 64) {
-                m_val[block].insert(first + block * 64, first + (block + 1) * 64);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64, first + (block + 1) * 64);
             }
             else {
-                m_val[block].insert(first + block * 64, last);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
             }
         }
     }
 
     template <typename CharT>
-    uint64_t get(std::ptrdiff_t block, CharT ch) const
+    uint64_t get(size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, int64_t size = sizeof(CharT1)>
+template <typename CharT1, size_t size = sizeof(CharT1)>
 struct CharSet;
 
 template <typename CharT1>
@@ -1186,7 +1193,7 @@ struct CharSet<CharT1, 1> {
     }
 };
 
-template <typename CharT1, int64_t size>
+template <typename CharT1, size_t size>
 struct CharSet {
     std::unordered_set<CharT1> m_val;
 
@@ -1214,23 +1221,23 @@ struct MatrixVectorView {
 
     using value_type = T;
 
-    MatrixVectorView(T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
+    MatrixVectorView(T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    value_type& operator[](std::size_t col) noexcept
+    value_type& operator[](size_t col) noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    std::size_t size() const noexcept
+    size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     T* m_vector;
-    std::size_t m_cols;
+    size_t m_cols;
 };
 
 template <typename T>
@@ -1238,7 +1245,7 @@ struct ConstMatrixVectorView {
 
     using value_type = T;
 
-    ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept
+    ConstMatrixVectorView(const T* vector, size_t cols) noexcept
         : m_vector(vector), m_cols(cols)
     {}
 
@@ -1246,20 +1253,20 @@ struct ConstMatrixVectorView {
         : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
-    const value_type& operator[](std::size_t col) const noexcept
+    const value_type& operator[](size_t col) const noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    std::size_t size() const noexcept
+    size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     const T* m_vector;
-    std::size_t m_cols;
+    size_t m_cols;
 };
 
 template <typename T>
@@ -1267,7 +1274,7 @@ struct Matrix {
 
     using value_type = T;
 
-    Matrix(std::size_t rows, std::size_t cols, T val)
+    Matrix(size_t rows, size_t cols, T val)
         : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
     {
         std::fill_n(m_matrix, m_rows * m_cols, val);
@@ -1311,31 +1318,31 @@ struct Matrix {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<value_type> operator[](std::size_t row) noexcept
+    MatrixVectorView<value_type> operator[](size_t row) noexcept
     {
         assert(row < m_rows);
         return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    ConstMatrixVectorView<value_type> operator[](std::size_t row) const noexcept
+    ConstMatrixVectorView<value_type> operator[](size_t row) const noexcept
     {
         assert(row < m_rows);
         return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    std::size_t rows() const noexcept
+    size_t rows() const noexcept
     {
         return m_rows;
     }
 
-    std::size_t cols() const noexcept
+    size_t cols() const noexcept
     {
         return m_cols;
     }
 
 private:
-    std::size_t m_rows;
-    std::size_t m_cols;
+    size_t m_rows;
+    size_t m_cols;
     T* m_matrix;
 };
 
@@ -1394,20 +1401,20 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
  * Removes common prefix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+size_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                      InputIt2 last2)
 {
     auto prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
     first2 += prefix;
-    return prefix;
+    return static_cast<size_t>(prefix);
 }
 
 /**
  * Removes common suffix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-std::ptrdiff_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+size_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                      InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
@@ -1418,7 +1425,7 @@ std::ptrdiff_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, In
     auto suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
     last1 -= suffix;
     last2 -= suffix;
-    return suffix;
+    return static_cast<size_t>(suffix);
 }
 
 /**
@@ -1739,7 +1746,7 @@ double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 f
                                      InputIt2 last2, double score_cutoff)
 {
     auto maximum = std::distance(first1, last1);
-    int64_t cutoff_distance = maximum - static_cast<std::ptrdiff_t>(score_cutoff);
+    int64_t cutoff_distance = maximum - static_cast<ptrdiff_t>(score_cutoff);
     int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
     double sim = maximum - dist;
     return (sim >= score_cutoff) ? sim : 0;
@@ -1916,7 +1923,7 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 
 #include <cstddef>
-#include <cstdint>
+#include <stdint.h>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>
@@ -2178,15 +2185,15 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     }
 
     auto len_diff = len1 - len2;
-    int64_t max_misses = static_cast<std::ptrdiff_t>(len1) - score_cutoff;
+    int64_t max_misses = static_cast<ptrdiff_t>(len1) - score_cutoff;
     auto possible_ops =
         lcs_seq_mbleven2018_matrix[(max_misses + max_misses * max_misses) / 2 + len_diff - 1];
     int64_t max_len = 0;
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
         uint8_t ops = possible_ops[pos];
-        std::ptrdiff_t s1_pos = 0;
-        std::ptrdiff_t s2_pos = 0;
+        ptrdiff_t s1_pos = 0;
+        ptrdiff_t s2_pos = 0;
         int64_t cur_len = 0;
 
         while (s1_pos < len1 && s2_pos < len2) {
@@ -2211,13 +2218,13 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     return (max_len >= score_cutoff) ? max_len : 0;
 }
 
-template <std::ptrdiff_t N, typename PMV, typename InputIt1, typename InputIt2>
+template <size_t N, typename PMV, typename InputIt1, typename InputIt2>
 static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputIt1, InputIt1,
                                                         InputIt2 first2, InputIt2 last2,
                                                         int64_t score_cutoff)
 {
     uint64_t S[N];
-    for (int64_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         S[i] = ~UINT64_C(0);
     }
 
@@ -2226,7 +2233,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
         uint64_t Matches[N];
         uint64_t u[N];
         uint64_t x[N];
-        for (std::ptrdiff_t i = 0; i < N; ++i) {
+        for (size_t i = 0; i < N; ++i) {
             Matches[i] = block.get(i, *first2);
             u[i] = S[i] & Matches[i];
             x[i] = addc64(S[i], u[i], carry, &carry);
@@ -2235,7 +2242,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
     }
 
     int64_t res = 0;
-    for (int64_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
         res += popcount64(~S[i]);
     }
 
@@ -2248,12 +2255,12 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
                                      InputIt1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff)
 {
-    auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
+    auto words = block.m_val.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
-        for (std::ptrdiff_t word = 0; word < words; ++word) {
+        for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, *first2);
             uint64_t Stemp = S[word];
 
@@ -2401,7 +2408,7 @@ int64_t lcs_seq_similarity(const common::BlockPatternMatchVector& block, InputIt
 
     /* common affix does not effect Levenshtein distance */
     auto affix = common::remove_common_affix(first1, last1, first2, last2);
-    int64_t lcs_sim = affix.prefix_len + affix.suffix_len;
+    int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (std::distance(first1, last1) && std::distance(first2, last2)) {
         lcs_sim += lcs_seq_mbleven2018(first1, last1, first2, last2, score_cutoff - lcs_sim);
     }
@@ -2433,7 +2440,7 @@ int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 
     /* common affix does not effect Levenshtein distance */
     auto affix = common::remove_common_affix(first1, last1, first2, last2);
-    int64_t lcs_sim = affix.prefix_len + affix.suffix_len;
+    int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (std::distance(first1, last1) && std::distance(first2, last2)) {
         if (max_misses < 5) {
             lcs_sim += lcs_seq_mbleven2018(first1, last1, first2, last2, score_cutoff - lcs_sim);
@@ -2448,13 +2455,13 @@ int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
 }
 
 struct LLCSBitMatrix {
-    LLCSBitMatrix(std::size_t rows, std::size_t cols)
+    LLCSBitMatrix(size_t rows, size_t cols)
         : S(rows, cols, ~UINT64_C(0)), dist(0)
     {}
 
     common::Matrix<uint64_t> S;
 
-    std::ptrdiff_t dist;
+    ptrdiff_t dist;
 };
 
 /**
@@ -2466,7 +2473,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    std::ptrdiff_t dist = matrix.dist;
+    auto dist = static_cast<size_t>(matrix.dist);
     Editops editops(dist);
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
     editops.set_dest_len(len2 + affix.prefix_len + affix.suffix_len);
@@ -2531,25 +2538,25 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     return editops;
 }
 
-template <std::ptrdiff_t N, typename PMV, typename InputIt1, typename InputIt2>
+template <size_t N, typename PMV, typename InputIt1, typename InputIt2>
 LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                  InputIt2 last2)
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
     uint64_t S[N];
-    for (std::ptrdiff_t i = 0; i < N; ++i) {
+    for (ptrdiff_t i = 0; i < N; ++i) {
         S[i] = ~UINT64_C(0);
     }
 
     LLCSBitMatrix matrix(len2, N);
 
-    for (std::ptrdiff_t i = 0; i < len2; ++i) {
+    for (ptrdiff_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
         uint64_t Matches[N];
         uint64_t u[N];
         uint64_t x[N];
-        for (std::ptrdiff_t word = 0; word < N; ++word) {
+        for (ptrdiff_t word = 0; word < N; ++word) {
             Matches[word] = block.get(word, first2[i]);
             u[word] = S[word] & Matches[word];
             x[word] = addc64(S[word], u[word], carry, &carry);
@@ -2562,7 +2569,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
         res += popcount64(~S[i]);
     }
 
-    matrix.dist = static_cast<std::ptrdiff_t>(static_cast<int64_t>(len1) + len2 - 2 * res);
+    matrix.dist = static_cast<ptrdiff_t>(static_cast<int64_t>(len1) + len2 - 2 * res);
 
     return matrix;
 }
@@ -2573,15 +2580,15 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    auto words = static_cast<std::ptrdiff_t>(block.m_val.size());
+    auto words = block.m_val.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     std::vector<uint64_t> S(words, ~UINT64_C(0));
     LLCSBitMatrix matrix(len2, words);
 
-    for (std::ptrdiff_t i = 0; i < len2; ++i) {
+    for (size_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
-        for (std::ptrdiff_t word = 0; word < words; ++word) {
+        for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, first2[i]);
             uint64_t Stemp = S[word];
 
@@ -2597,7 +2604,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
         res += popcount64(~Stemp);
     }
 
-    matrix.dist = static_cast<std::ptrdiff_t>(static_cast<std::int64_t>(len1) + len2 - 2 * res);
+    matrix.dist = static_cast<ptrdiff_t>(static_cast<std::int64_t>(len1) + len2 - 2 * res);
 
     return matrix;
 }
@@ -2964,7 +2971,7 @@ template <typename InputIt2>
 double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                 double score_cutoff) const
 {
-    int64_t maximum = s1.size() + std::distance(first2, last2);
+    int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -2982,7 +2989,7 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedIndel<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum = s1.size() + std::distance(first2, last2);
+    int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t dist = distance(first2, last2, cutoff_distance);
     int64_t sim = maximum - dist;
@@ -3335,12 +3342,19 @@ int64_t generalized_levenshtein_wagner_fischer(InputIt1 first1, InputIt1 last1, 
                                                InputIt2 last2, LevenshteinWeightTable weights,
                                                int64_t max)
 {
-    auto len1 = std::distance(first1, last1);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
     auto cache_size = len1 + 1;
     std::vector<int64_t> cache(cache_size);
 
+    // added to suppress a null pointer dereference false positive
+    // due to a bug in GCC
+#ifdef __GNUC__
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wnull-dereference"
     cache[0] = 0;
-    for (std::ptrdiff_t i = 1; i < cache_size; ++i) {
+#   pragma GCC diagnostic pop
+#endif
+    for (size_t i = 1; i < cache_size; ++i) {
         cache[i] = cache[i - 1] + weights.delete_cost;
     }
 
@@ -3466,8 +3480,8 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
 
     for (int pos = 0; possible_ops[pos] != 0; ++pos) {
         uint8_t ops = possible_ops[pos];
-        std::ptrdiff_t s1_pos = 0;
-        std::ptrdiff_t s2_pos = 0;
+        ptrdiff_t s1_pos = 0;
+        ptrdiff_t s2_pos = 0;
         int64_t cur_dist = 0;
         while (s1_pos < len1 && s2_pos < len2) {
             if (first1[s1_pos] != first2[s2_pos]) {
@@ -3552,30 +3566,30 @@ int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector&
                                           InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                           InputIt2 last2, int64_t max)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
-    int64_t currDist = len1;
+    int64_t currDist = static_cast<int64_t>(len1);
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << 63;
 
-    const auto words = static_cast<std::ptrdiff_t>(PM.m_val.size());
+    const auto words = PM.m_val.size();
 
     /* Searching */
-    for (std::ptrdiff_t i = 0; i < len2; ++i) {
+    for (size_t i = 0; i < len2; ++i) {
         /* Step 1: Computing D0 */
         auto word = i / 64;
         auto word_pos = i % 64;
 
-        uint64_t PM_j = PM.get(word, first2[i]) >> word_pos;
+        uint64_t PM_j = PM.get(word, first2[static_cast<ptrdiff_t>(i)]) >> word_pos;
 
         if (word + 1 < words && word_pos != 0) {
-            PM_j |= PM.get(word + 1, first2[i]) << (64 - word_pos);
+            PM_j |= PM.get(word + 1, first2[static_cast<ptrdiff_t>(i)]) << (64 - word_pos);
         }
 
         /* Step 1: Computing D0 */
@@ -3612,7 +3626,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
 
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    auto words = static_cast<std::ptrdiff_t>(PM.m_val.size());
+    auto words = PM.m_val.size();
     int64_t currDist = len1;
 
     /* upper bound */
@@ -3629,11 +3643,11 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
     uint64_t Last = UINT64_C(1) << ((len1 - 1) % 64);
 
     /* Searching */
-    for (std::ptrdiff_t i = 0; i < len2; i++) {
+    for (ptrdiff_t i = 0; i < len2; i++) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        for (std::ptrdiff_t word = 0; word < words - 1; word++) {
+        for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
             uint64_t PM_j = PM.get(word, first2[i]);
             uint64_t VN = vecs[word].VN;
@@ -3781,14 +3795,14 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 }
 
 struct LevenshteinBitMatrix {
-    LevenshteinBitMatrix(std::size_t rows, std::size_t cols)
+    LevenshteinBitMatrix(size_t rows, size_t cols)
         : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
     {}
 
     common::Matrix<uint64_t> VP;
     common::Matrix<uint64_t> VN;
 
-    std::ptrdiff_t dist;
+    size_t dist;
 };
 
 /**
@@ -3798,8 +3812,8 @@ template <typename InputIt1, typename InputIt2>
 Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                           const LevenshteinBitMatrix& matrix, StringAffix affix)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
     auto dist = matrix.dist;
     Editops editops(dist);
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
@@ -3813,8 +3827,8 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     auto row = len2;
 
     while (row && col) {
-        std::size_t col_pos = col - 1;
-        std::size_t col_word = col_pos / 64;
+        size_t col_pos = col - 1;
+        size_t col_word = col_pos / 64;
         col_pos = col_pos % 64;
         uint64_t mask = UINT64_C(1) << col_pos;
 
@@ -3843,7 +3857,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
                 col--;
 
                 /* Replace (Matches are not recorded) */
-                if (first1[col] != first2[row]) {
+                if (first1[static_cast<ptrdiff_t>(col)] != first2[static_cast<ptrdiff_t>(row)]) {
                     assert(dist > 0);
                     dist--;
                     editops[dist].type = EditType::Replace;
@@ -3878,8 +3892,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
                                                    InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                    InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
@@ -3890,9 +3904,9 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
     uint64_t mask = UINT64_C(1) << (len1 - 1);
 
     /* Searching */
-    for (std::ptrdiff_t i = 0; i < len2; ++i) {
+    for (size_t i = 0; i < len2; ++i) {
         /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(first2[i]);
+        uint64_t PM_j = PM.get(first2[static_cast<ptrdiff_t>(i)]);
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -3920,8 +3934,8 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
                                                          InputIt1 first1, InputIt1 last1,
                                                          InputIt2 first2, InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     struct Vectors {
@@ -3932,7 +3946,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
         {}
     };
 
-    auto words = static_cast<std::ptrdiff_t>(PM.m_val.size());
+    auto words = PM.m_val.size();
     LevenshteinBitMatrix matrix(len2, words);
     matrix.dist = len1;
 
@@ -3940,13 +3954,13 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
     uint64_t Last = UINT64_C(1) << ((len1 - 1) % 64);
 
     /* Searching */
-    for (std::ptrdiff_t i = 0; i < len2; i++) {
+    for (size_t i = 0; i < len2; i++) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        for (std::ptrdiff_t word = 0; word < words - 1; word++) {
+        for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, first2[i]);
+            uint64_t PM_j = PM.get(word, first2[static_cast<ptrdiff_t>(i)]);
             uint64_t VN = vecs[word].VN;
             uint64_t VP = vecs[word].VP;
 
@@ -3975,7 +3989,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
 
         {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(words - 1, first2[i]);
+            uint64_t PM_j = PM.get(words - 1, first2[static_cast<ptrdiff_t>(i)]);
             uint64_t VN = vecs[words - 1].VN;
             uint64_t VP = vecs[words - 1].VP;
 
@@ -4006,8 +4020,8 @@ template <typename InputIt1, typename InputIt2>
 LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                         InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
 
     if (!len1 || !len2) {
         LevenshteinBitMatrix matrix(0, 0);
@@ -4266,18 +4280,18 @@ template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
 
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
-    std::ptrdiff_t src_pos = 0;
-    std::ptrdiff_t dest_pos = 0;
+    size_t src_pos = 0;
+    size_t dest_pos = 0;
 
     for (const auto& op : ops) {
         /* matches between last and current editop */
         while (src_pos < op.src_pos) {
-            res_str[dest_pos] = static_cast<CharT>(first1[src_pos]);
+            res_str[dest_pos] = static_cast<CharT>(first1[static_cast<ptrdiff_t>(src_pos)]);
             src_pos++;
             dest_pos++;
         }
@@ -4285,12 +4299,12 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
         switch (op.type) {
         case EditType::None:
         case EditType::Replace:
-            res_str[dest_pos] = static_cast<CharT>(first2[op.dest_pos]);
+            res_str[dest_pos] = static_cast<CharT>(first2[static_cast<ptrdiff_t>(op.dest_pos)]);
             src_pos++;
             dest_pos++;
             break;
         case EditType::Insert:
-            res_str[dest_pos] = static_cast<CharT>(first2[op.dest_pos]);
+            res_str[dest_pos] = static_cast<CharT>(first2[static_cast<ptrdiff_t>(op.dest_pos)]);
             dest_pos++;
             break;
         case EditType::Delete:
@@ -4301,7 +4315,7 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
 
     /* matches after the last editop */
     while (src_pos < len1) {
-        res_str[dest_pos] = static_cast<CharT>(first1[src_pos]);
+        res_str[dest_pos] = static_cast<CharT>(first1[static_cast<ptrdiff_t>(src_pos)]);
         src_pos++;
         dest_pos++;
     }
@@ -4321,24 +4335,24 @@ template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
 
     std::basic_string<CharT> res_str;
     res_str.resize(len1 + len2);
-    std::ptrdiff_t dest_pos = 0;
+    size_t dest_pos = 0;
 
     for (const auto& op : ops) {
         switch (op.type) {
         case EditType::None:
-            for (int64_t i = op.src_begin; i < op.src_end; ++i) {
-                res_str[dest_pos++] = static_cast<CharT>(first1[i]);
+            for (auto i = op.src_begin; i < op.src_end; ++i) {
+                res_str[dest_pos++] = static_cast<CharT>(first1[static_cast<ptrdiff_t>(i)]);
             }
             break;
         case EditType::Replace:
         case EditType::Insert:
-            for (int64_t i = op.dest_begin; i < op.dest_end; ++i) {
-                res_str[dest_pos++] = static_cast<CharT>(first2[i]);
+            for (auto i = op.dest_begin; i < op.dest_end; ++i) {
+                res_str[dest_pos++] = static_cast<CharT>(first2[static_cast<ptrdiff_t>(i)]);
             }
             break;
         case EditType::Delete:
@@ -4481,8 +4495,8 @@ struct CachedPartialRatio {
     CachedPartialRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedPartialRatio(const Sentence1& s1)
-        : CachedPartialRatio(common::to_begin(s1), common::to_end(s1))
+    CachedPartialRatio(const Sentence1& s1_)
+        : CachedPartialRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -4678,8 +4692,8 @@ struct CachedTokenSetRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenSetRatio(const Sentence1& s1)
-        : CachedTokenSetRatio(common::to_begin(s1), common::to_end(s1))
+    CachedTokenSetRatio(const Sentence1& s1_)
+        : CachedTokenSetRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -4737,8 +4751,8 @@ struct CachedPartialTokenSetRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenSetRatio(const Sentence1& s1)
-        : CachedPartialTokenSetRatio(common::to_begin(s1), common::to_end(s1))
+    CachedPartialTokenSetRatio(const Sentence1& s1_)
+        : CachedPartialTokenSetRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -4799,8 +4813,8 @@ struct CachedTokenRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenRatio(const Sentence1& s1)
-        : CachedTokenRatio(common::to_begin(s1), common::to_end(s1))
+    CachedTokenRatio(const Sentence1& s1_)
+        : CachedTokenRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -4862,8 +4876,8 @@ struct CachedPartialTokenRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenRatio(const Sentence1& s1)
-        : CachedPartialTokenRatio(common::to_begin(s1), common::to_end(s1))
+    CachedPartialTokenRatio(const Sentence1& s1_)
+        : CachedPartialTokenRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -4922,7 +4936,7 @@ struct CachedWRatio {
     CachedWRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedWRatio(const Sentence1& s1) : CachedWRatio(common::to_begin(s1), common::to_end(s1))
+    CachedWRatio(const Sentence1& s1_) : CachedWRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -4984,7 +4998,7 @@ struct CachedQRatio {
     {}
 
     template <typename Sentence1>
-    CachedQRatio(const Sentence1& s1) : CachedQRatio(common::to_begin(s1), common::to_end(s1))
+    CachedQRatio(const Sentence1& s1_) : CachedQRatio(common::to_begin(s1_), common::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -5045,10 +5059,10 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 namespace rapidfuzz {
 namespace detail {
 struct MatchingBlock {
-    std::ptrdiff_t spos;
-    std::ptrdiff_t dpos;
-    std::ptrdiff_t length;
-    MatchingBlock(std::ptrdiff_t aSPos, std::ptrdiff_t aDPos, std::ptrdiff_t aLength)
+    size_t spos;
+    size_t dpos;
+    size_t length;
+    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength)
         : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
@@ -5057,17 +5071,17 @@ namespace difflib {
 
 template <typename InputIt1, typename InputIt2>
 class SequenceMatcher {
-    using Index = std::ptrdiff_t;
+    using Index = size_t;
 public:
     using match_t = std::tuple<Index, Index, Index>;
 
     SequenceMatcher(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
         : a_first(first1), a_last(last1), b_first(first2), b_last(last2)
     {
-        auto b_len = std::distance(b_first, b_last);
+        auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
         j2len_.resize(b_len + 1);
         for (Index i = 0; i < b_len; ++i) {
-            b2j_[b_first[i]].push_back(i);
+            b2j_[b_first[static_cast<ptrdiff_t>(i)]].push_back(i);
         }
     }
 
@@ -5081,7 +5095,7 @@ public:
         {
             for (Index i = a_low; i < a_high; ++i) {
                 bool found = false;
-                auto iter = b2j_.find(a_first[i]);
+                auto iter = b2j_.find(a_first[static_cast<ptrdiff_t>(i)]);
                 if (iter != std::end(b2j_)) {
                     const auto& indexes = iter->second;
 
@@ -5118,21 +5132,21 @@ public:
                 }
 
                 if (!found) {
-                    std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
+                    std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low), j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
                 }
             }
 
-            std::fill(j2len_.begin() + b_low, j2len_.begin() + b_high, 0);
+            std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low), j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
         }
 
-        while (best_i > a_low && best_j > b_low && a_first[best_i - 1] == b_first[best_j - 1]) {
+        while (best_i > a_low && best_j > b_low && a_first[static_cast<ptrdiff_t>(best_i) - 1] == b_first[static_cast<ptrdiff_t>(best_j) - 1]) {
             --best_i;
             --best_j;
             ++best_size;
         }
 
         while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               a_first[best_i + best_size] == b_first[best_j + best_size])
+               a_first[static_cast<ptrdiff_t>(best_i + best_size)] == b_first[static_cast<ptrdiff_t>(best_j + best_size)])
         {
             ++best_size;
         }
@@ -5142,8 +5156,8 @@ public:
 
     std::vector<MatchingBlock> get_matching_blocks()
     {
-        auto a_len = std::distance(a_first, a_last);
-        auto b_len = std::distance(b_first, b_last);
+        auto a_len = static_cast<size_t>(std::distance(a_first, a_last));
+        auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
         // The following are tuple extracting aliases
         std::vector<std::tuple<Index, Index, Index, Index>> queue;
         std::vector<match_t> matching_blocks_pass1;
@@ -5273,16 +5287,16 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
                            double score_cutoff)
 {
     ScoreAlignment<double> res;
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
     assert(len2 >= len1);
     res.src_start = 0;
     res.src_end = len1;
     res.dest_start = 0;
     res.dest_end = len1;
 
-    for (std::ptrdiff_t i = 1; i < len1; ++i) {
-        auto substr_last = first2 + i;
+    for (size_t i = 1; i < len1; ++i) {
+        auto substr_last = first2 + static_cast<ptrdiff_t>(i);
 
         if (!s1_char_set.find(*(substr_last - 1))) {
             continue;
@@ -5299,9 +5313,9 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
     }
 
-    for (std::ptrdiff_t i = 0; i < len2 - len1; ++i) {
-        auto substr_first = first2 + i;
-        auto substr_last = substr_first + len1;
+    for (size_t i = 0; i < len2 - len1; ++i) {
+        auto substr_first = first2 + static_cast<ptrdiff_t>(i);
+        auto substr_last = substr_first + static_cast<ptrdiff_t>(len1);
 
         if (!s1_char_set.find(*(substr_last - 1))) {
             continue;
@@ -5318,8 +5332,8 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         }
     }
 
-    for (std::ptrdiff_t i = len2 - len1; i < len2; ++i) {
-        auto substr_first = first2 + i;
+    for (size_t i = len2 - len1; i < len2; ++i) {
+        auto substr_first = first2 + static_cast<ptrdiff_t>(i);
 
         if (!s1_char_set.find(*substr_first)) {
             continue;
@@ -5347,7 +5361,7 @@ ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last
 
     common::CharSet<CharT1> s1_char_set;
     auto len1 = std::distance(first1, last1);
-    for (std::ptrdiff_t i = 0; i < len1; ++i) {
+    for (ptrdiff_t i = 0; i < len1; ++i) {
         s1_char_set.insert(first1[i]);
     }
 
@@ -5361,8 +5375,8 @@ partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
                           const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
 {
     ScoreAlignment<double> res;
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
     assert(len2 >= len1);
     res.src_start = 0;
     res.src_end = len1;
@@ -5375,17 +5389,17 @@ partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     for (const auto& block : blocks) {
         if (block.length == len1) {
             res.score = 100;
-            res.dest_start = std::max<std::ptrdiff_t>(0, block.dpos - block.spos);
+            res.dest_start = std::max<size_t>(0, block.dpos - block.spos);
             res.dest_end = std::min(len2, res.dest_start + len1);
             return res;
         }
     }
 
     for (const auto& block : blocks) {
-        auto long_start = std::max<std::ptrdiff_t>(0, block.dpos - block.spos);
+        auto long_start = std::max<size_t>(0, block.dpos - block.spos);
         auto long_end = std::min(len2, long_start + len1);
-        auto substr_first = first2 + long_start;
-        auto substr_last = first2 + long_end;
+        auto substr_first = first2 + static_cast<ptrdiff_t>(long_start);
+        auto substr_last = first2 + static_cast<ptrdiff_t>(long_end);
 
         double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
         if (ls_ratio > res.score) {
@@ -5413,8 +5427,8 @@ template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                InputIt2 last2, double score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = static_cast<size_t>(std::distance(first1, last1));
+    auto len2 = static_cast<size_t>(std::distance(first2, last2));
 
     if (len1 > len2) {
         ScoreAlignment<double> result =
@@ -5476,8 +5490,8 @@ template <typename InputIt2>
 double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
                                               double score_cutoff) const
 {
-    std::ptrdiff_t len1 = s1.size();
-    std::ptrdiff_t len2 = std::distance(first2, last2);
+    size_t len1 = s1.size();
+    size_t len2 = static_cast<size_t>(std::distance(first2, last2));
 
     if (len1 > len2) {
         return partial_ratio(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
@@ -5615,13 +5629,13 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
-    int64_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.length();
+    size_t ba_len = diff_ba_joined.length();
+    size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
-    int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
+    int64_t sect_ab_len = static_cast<int64_t>(sect_len + bool(sect_len) + ab_len);
+    int64_t sect_ba_len = static_cast<int64_t>(sect_len + bool(sect_len) + ba_len);
 
     double result = 0;
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
@@ -5639,13 +5653,13 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = bool(sect_len) + ab_len;
+    int64_t sect_ab_dist = static_cast<int64_t>(bool(sect_len) + ab_len);
     double sect_ab_ratio =
-        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, static_cast<int64_t>(sect_len) + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = bool(sect_len) + ba_len;
+    int64_t sect_ba_dist = static_cast<int64_t>(bool(sect_len) + ba_len);
     double sect_ba_ratio =
-        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, static_cast<int64_t>(sect_len) + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -5772,15 +5786,15 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
-    int64_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.length();
+    size_t ba_len = diff_ba_joined.length();
+    size_t sect_len = intersect.length();
 
     double result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
-    int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
+    int64_t sect_ab_len = static_cast<int64_t>(sect_len + bool(sect_len) + ab_len);
+    int64_t sect_ba_len = static_cast<int64_t>(sect_len + bool(sect_len) + ba_len);
 
     auto cutoff_distance = common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
@@ -5797,13 +5811,13 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = bool(sect_len) + ab_len;
+    int64_t sect_ab_dist = static_cast<int64_t>(bool(sect_len) + ab_len);
     double sect_ab_ratio =
-        common::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+        common::norm_distance<100>(sect_ab_dist, static_cast<int64_t>(sect_len) + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = bool(sect_len) + ba_len;
+    int64_t sect_ba_dist = static_cast<int64_t>(bool(sect_len) + ba_len);
     double sect_ba_ratio =
-        common::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+        common::norm_distance<100>(sect_ba_dist, static_cast<int64_t>(sect_len) + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -6113,8 +6127,8 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
     constexpr double UNBASE_SCALE = 0.95;
 
-    std::ptrdiff_t len1 = s1.size();
-    std::ptrdiff_t len2 = std::distance(first2, last2);
+    ptrdiff_t len1 = s1.size();
+    ptrdiff_t len2 = std::distance(first2, last2);
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */

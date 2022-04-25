@@ -71,7 +71,7 @@ double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 f
                                      InputIt2 last2, double score_cutoff)
 {
     auto maximum = std::distance(first1, last1);
-    int64_t cutoff_distance = maximum - static_cast<std::ptrdiff_t>(score_cutoff);
+    int64_t cutoff_distance = maximum - static_cast<ptrdiff_t>(score_cutoff);
     int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
     double sim = maximum - dist;
     return (sim >= score_cutoff) ? sim : 0;

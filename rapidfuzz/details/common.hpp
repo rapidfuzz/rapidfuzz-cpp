@@ -117,11 +117,11 @@ StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& fir
                                 InputIt2& last2);
 
 template <typename InputIt1, typename InputIt2>
-std::size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
+size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
                                     InputIt2 last2);
 
 template <typename InputIt1, typename InputIt2>
-std::size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
+size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
                                     InputIt2& last2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
@@ -198,7 +198,7 @@ struct PatternMatchVector {
     }
 
     template <typename CharT>
-    uint64_t get(std::size_t block, CharT key) const
+    uint64_t get(size_t block, CharT key) const
     {
         assert(block == 0);
         (void)block;
@@ -255,7 +255,7 @@ struct BlockPatternMatchVector {
     }
 
     template <typename CharT>
-    void insert(std::size_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos)
     {
         auto* be = &m_val[block];
         be->insert(ch, pos);
@@ -272,27 +272,27 @@ struct BlockPatternMatchVector {
     {
         auto len = std::distance(first, last);
         auto block_count = len / 64 + bool(len % 64);
-        m_val.resize(static_cast<std::size_t>(block_count));
+        m_val.resize(static_cast<size_t>(block_count));
 
-        for (std::ptrdiff_t block = 0; block < block_count; ++block) {
+        for (ptrdiff_t block = 0; block < block_count; ++block) {
             if (std::distance(first + block * 64, last) > 64) {
-                m_val[static_cast<std::size_t>(block)].insert(first + block * 64, first + (block + 1) * 64);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64, first + (block + 1) * 64);
             }
             else {
-                m_val[static_cast<std::size_t>(block)].insert(first + block * 64, last);
+                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
             }
         }
     }
 
     template <typename CharT>
-    uint64_t get(std::size_t block, CharT ch) const
+    uint64_t get(size_t block, CharT ch) const
     {
         auto* be = &m_val[block];
         return be->get(ch);
     }
 };
 
-template <typename CharT1, std::size_t size = sizeof(CharT1)>
+template <typename CharT1, size_t size = sizeof(CharT1)>
 struct CharSet;
 
 template <typename CharT1>
@@ -320,7 +320,7 @@ struct CharSet<CharT1, 1> {
     }
 };
 
-template <typename CharT1, std::size_t size>
+template <typename CharT1, size_t size>
 struct CharSet {
     std::unordered_set<CharT1> m_val;
 
@@ -348,23 +348,23 @@ struct MatrixVectorView {
 
     using value_type = T;
 
-    MatrixVectorView(T* vector, std::size_t cols) noexcept : m_vector(vector), m_cols(cols)
+    MatrixVectorView(T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
-    value_type& operator[](std::size_t col) noexcept
+    value_type& operator[](size_t col) noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    std::size_t size() const noexcept
+    size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     T* m_vector;
-    std::size_t m_cols;
+    size_t m_cols;
 };
 
 template <typename T>
@@ -372,7 +372,7 @@ struct ConstMatrixVectorView {
 
     using value_type = T;
 
-    ConstMatrixVectorView(const T* vector, std::size_t cols) noexcept
+    ConstMatrixVectorView(const T* vector, size_t cols) noexcept
         : m_vector(vector), m_cols(cols)
     {}
 
@@ -380,20 +380,20 @@ struct ConstMatrixVectorView {
         : m_vector(other.m_vector), m_cols(other.cols)
     {}
 
-    const value_type& operator[](std::size_t col) const noexcept
+    const value_type& operator[](size_t col) const noexcept
     {
         assert(col < m_cols);
         return m_vector[col];
     }
 
-    std::size_t size() const noexcept
+    size_t size() const noexcept
     {
         return m_cols;
     }
 
 private:
     const T* m_vector;
-    std::size_t m_cols;
+    size_t m_cols;
 };
 
 template <typename T>
@@ -401,7 +401,7 @@ struct Matrix {
 
     using value_type = T;
 
-    Matrix(std::size_t rows, std::size_t cols, T val)
+    Matrix(size_t rows, size_t cols, T val)
         : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
     {
         std::fill_n(m_matrix, m_rows * m_cols, val);
@@ -445,31 +445,31 @@ struct Matrix {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<value_type> operator[](std::size_t row) noexcept
+    MatrixVectorView<value_type> operator[](size_t row) noexcept
     {
         assert(row < m_rows);
         return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    ConstMatrixVectorView<value_type> operator[](std::size_t row) const noexcept
+    ConstMatrixVectorView<value_type> operator[](size_t row) const noexcept
     {
         assert(row < m_rows);
         return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
     }
 
-    std::size_t rows() const noexcept
+    size_t rows() const noexcept
     {
         return m_rows;
     }
 
-    std::size_t cols() const noexcept
+    size_t cols() const noexcept
     {
         return m_cols;
     }
 
 private:
-    std::size_t m_rows;
-    std::size_t m_cols;
+    size_t m_rows;
+    size_t m_cols;
     T* m_matrix;
 };
 

@@ -63,8 +63,8 @@ template <typename InputIt>
 using IteratorViewVec = std::vector<IteratorView<InputIt>>;
 
 struct StringAffix {
-    std::size_t prefix_len;
-    std::size_t suffix_len;
+    size_t prefix_len;
+    size_t suffix_len;
 };
 
 struct LevenshteinWeightTable {
@@ -95,13 +95,13 @@ enum class EditType {
  */
 struct EditOp {
     EditType type;           /**< type of the edit operation */
-    std::size_t src_pos;  /**< index into the source string */
-    std::size_t dest_pos; /**< index into the destination string */
+    size_t src_pos;  /**< index into the source string */
+    size_t dest_pos; /**< index into the destination string */
 
     EditOp() : type(EditType::None), src_pos(0), dest_pos(0)
     {}
 
-    EditOp(EditType type_, std::size_t src_pos_, std::size_t dest_pos_)
+    EditOp(EditType type_, size_t src_pos_, size_t dest_pos_)
         : type(type_), src_pos(src_pos_), dest_pos(dest_pos_)
     {}
 };
@@ -126,16 +126,16 @@ inline bool operator==(EditOp a, EditOp b)
  */
 struct Opcode {
     EditType type;             /**< type of the edit operation */
-    std::size_t src_begin;  /**< index into the source string */
-    std::size_t src_end;    /**< index into the source string */
-    std::size_t dest_begin; /**< index into the destination string */
-    std::size_t dest_end;   /**< index into the destination string */
+    size_t src_begin;  /**< index into the source string */
+    size_t src_end;    /**< index into the source string */
+    size_t dest_begin; /**< index into the destination string */
+    size_t dest_end;   /**< index into the destination string */
 
     Opcode() : type(EditType::None), src_begin(0), src_end(0), dest_begin(0), dest_end(0)
     {}
 
-    Opcode(EditType type_, std::size_t src_begin_, std::size_t src_end_,
-           std::size_t dest_begin_, std::size_t dest_end_)
+    Opcode(EditType type_, size_t src_begin_, size_t src_end_,
+           size_t dest_begin_, size_t dest_end_)
         : type(type_),
           src_begin(src_begin_),
           src_end(src_end_),
@@ -174,10 +174,10 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
         }
 
         int count = (stop - 1 - start) / step + 1;
-        new_vec.reserve(static_cast<std::size_t>(count));
+        new_vec.reserve(static_cast<size_t>(count));
 
         for (int i = start; i < stop; i += step) {
-            new_vec.push_back(vec[static_cast<std::size_t>(i)]);
+            new_vec.push_back(vec[static_cast<size_t>(i)]);
         }
     }
     else if (step < 0) {
@@ -200,10 +200,10 @@ void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start,
         }
 
         int count = (stop + 1 - start) / step + 1;
-        new_vec.reserve(static_cast<std::size_t>(count));
+        new_vec.reserve(static_cast<size_t>(count));
 
         for (int i = start; i > stop; i += step) {
-            new_vec.push_back(vec[static_cast<std::size_t>(i)]);
+            new_vec.push_back(vec[static_cast<size_t>(i)]);
         }
     }
     else {
@@ -304,19 +304,19 @@ public:
         return reversed;
     }
 
-    std::size_t get_src_len() const noexcept
+    size_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(std::size_t len) noexcept
+    void set_src_len(size_t len) noexcept
     {
         src_len = len;
     }
-    std::size_t get_dest_len() const noexcept
+    size_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(std::size_t len) noexcept
+    void set_dest_len(size_t len) noexcept
     {
         dest_len = len;
     }
@@ -338,8 +338,8 @@ public:
     }
 
 private:
-    std::size_t src_len;
-    std::size_t dest_len;
+    size_t src_len;
+    size_t dest_len;
 };
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
@@ -454,19 +454,19 @@ public:
         return reversed;
     }
 
-    std::size_t get_src_len() const noexcept
+    size_t get_src_len() const noexcept
     {
         return src_len;
     }
-    void set_src_len(std::size_t len) noexcept
+    void set_src_len(size_t len) noexcept
     {
         src_len = len;
     }
-    std::size_t get_dest_len() const noexcept
+    size_t get_dest_len() const noexcept
     {
         return dest_len;
     }
-    void set_dest_len(std::size_t len) noexcept
+    void set_dest_len(size_t len) noexcept
     {
         dest_len = len;
     }
@@ -489,8 +489,8 @@ public:
     }
 
 private:
-    std::size_t src_len;
-    std::size_t dest_len;
+    size_t src_len;
+    size_t dest_len;
 };
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
@@ -525,19 +525,19 @@ inline Editops::Editops(const Opcodes& other)
             break;
 
         case EditType::Replace:
-            for (std::size_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
             }
             break;
 
         case EditType::Insert:
-            for (std::size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
+            for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
                 push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
             }
             break;
 
         case EditType::Delete:
-            for (std::size_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
                 push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
             }
             break;
@@ -549,17 +549,17 @@ inline Opcodes::Opcodes(const Editops& other)
 {
     src_len = other.get_src_len();
     dest_len = other.get_dest_len();
-    std::size_t src_pos = 0;
-    std::size_t dest_pos = 0;
-    for (std::size_t i = 0; i < other.size();) {
+    size_t src_pos = 0;
+    size_t dest_pos = 0;
+    for (size_t i = 0; i < other.size();) {
         if (src_pos < other[i].src_pos || dest_pos < other[i].dest_pos) {
             push_back({EditType::None, src_pos, other[i].src_pos, dest_pos, other[i].dest_pos});
             src_pos = other[i].src_pos;
             dest_pos = other[i].dest_pos;
         }
 
-        std::size_t src_begin = src_pos;
-        std::size_t dest_begin = dest_pos;
+        size_t src_begin = src_pos;
+        size_t dest_begin = dest_pos;
         EditType type = other[i].type;
         do {
             switch (type) {
@@ -594,16 +594,16 @@ inline Opcodes::Opcodes(const Editops& other)
 template <typename T>
 struct ScoreAlignment {
     T score;                   /**< resulting score of the algorithm */
-    std::size_t src_start;  /**< index into the source string */
-    std::size_t src_end;    /**< index into the source string */
-    std::size_t dest_start; /**< index into the destination string */
-    std::size_t dest_end;   /**< index into the destination string */
+    size_t src_start;  /**< index into the source string */
+    size_t src_end;    /**< index into the source string */
+    size_t dest_start; /**< index into the destination string */
+    size_t dest_end;   /**< index into the destination string */
 
     ScoreAlignment() : score(T()), src_start(0), src_end(0), dest_start(0), dest_end(0)
     {}
 
-    ScoreAlignment(T score_, std::size_t src_start_, std::size_t src_end_,
-                   std::size_t dest_start_, std::size_t dest_end_)
+    ScoreAlignment(T score_, size_t src_start_, size_t src_end_,
+                   size_t dest_start_, size_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),
