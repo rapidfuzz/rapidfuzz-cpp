@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-25 15:06:39.168694
+//  Generated: 2022-04-26 13:08:46.141894
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1019,6 +1019,20 @@ namespace common {
 static inline double NormSim_to_NormDist(double score_cutoff, double imprecision = 0.00001)
 {
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
+}
+
+static inline void assume(bool b)
+{
+#if defined(__clang__)
+    __builtin_assume(b);
+#elif defined(__GNUC__) || defined(__GNUG__)
+    if (!b)
+    {
+        __builtin_unreachable();
+    }
+#elif defined(_MSC_VER)
+    __assume(b);
+#endif
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3343,15 +3357,11 @@ int64_t generalized_levenshtein_wagner_fischer(InputIt1 first1, InputIt1 last1, 
     auto len1 = static_cast<size_t>(std::distance(first1, last1));
     auto cache_size = len1 + 1;
     std::vector<int64_t> cache(cache_size);
+    /* we assume that std::distance(first1, last1) can not be below 0
+     * which prevents warnings on gcc */
+    common::assume(cache_size != 0);
 
-    // added to suppress a null pointer dereference false positive
-    // due to a bug in GCC
-#ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wnull-dereference"
     cache[0] = 0;
-#    pragma GCC diagnostic pop
-#endif
     for (size_t i = 1; i < cache_size; ++i) {
         cache[i] = cache[i - 1] + weights.delete_cost;
     }
