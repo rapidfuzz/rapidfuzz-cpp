@@ -80,7 +80,14 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
                     s1_pos++;
                 else if (ops & 2)
                     s2_pos++;
+#if defined(__GNUC__) && __GNUC__ < 10
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 ops >>= 2;
+#if defined(__GNUC__) && __GNUC__ < 10
+#    pragma GCC diagnostic pop
+#endif
             }
             else {
                 cur_len++;
