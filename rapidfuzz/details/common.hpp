@@ -41,6 +41,20 @@ static inline double NormSim_to_NormDist(double score_cutoff, double imprecision
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
 }
 
+static inline void assume(bool b)
+{
+#if defined(__clang__)
+    __builtin_assume(b);
+#elif defined(__GNUC__) || defined(__GNUG__)
+    if (!b)
+    {
+        __builtin_unreachable();
+    }
+#elif defined(_MSC_VER)
+    __assume(b);
+#endif
+}
+
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
                                                               SplittedSentenceView<InputIt2> b);
