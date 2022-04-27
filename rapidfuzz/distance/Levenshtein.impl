@@ -154,7 +154,14 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
                 if (!ops) break;
                 if (ops & 1) s1_pos++;
                 if (ops & 2) s2_pos++;
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 ops >>= 2;
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
+#    pragma GCC diagnostic pop
+#endif
             }
             else {
                 s1_pos++;

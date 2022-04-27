@@ -22,4 +22,4 @@ TEST_CASE("Hamming")
     {
         REQUIRE_THROWS_AS(rapidfuzz::hamming_distance(test, diff_len), std::invalid_argument);
     }
-};
+}
