@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-26 13:08:46.141894
+//  Generated: 2022-04-28 23:04:57.760485
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -884,6 +884,7 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 
 #include <cstddef>
 #include <stdint.h>
+#include <bitset>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>
@@ -892,7 +893,7 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 namespace rapidfuzz {
 namespace detail {
 
-static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */
     a += carryin;
@@ -903,29 +904,22 @@ static inline uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t
 }
 
 template <typename T, typename U>
-T ceil_div(T a, U divisor)
+constexpr T ceil_div(T a, U divisor)
 {
     return a / divisor + static_cast<T>(a % divisor != 0);
 }
 
-static inline int64_t popcount64(uint64_t x)
+template <typename T>
+constexpr int popcount(T x)
 {
-    const uint64_t m1 = 0x5555555555555555;
-    const uint64_t m2 = 0x3333333333333333;
-    const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;
-    const uint64_t h01 = 0x0101010101010101;
-
-    x -= (x >> 1) & m1;
-    x = (x & m2) + ((x >> 2) & m2);
-    x = (x + (x >> 4)) & m4;
-    return static_cast<int64_t>((x * h01) >> 56);
+    return static_cast<int>(std::bitset<sizeof(T) * 8>(x).count());
 }
 
 /**
  * Extract the lowest set bit from a. If no bits are set in a returns 0.
  */
 template <typename T>
-T blsi(T a)
+constexpr T blsi(T a)
 {
     return a & -a;
 }
@@ -934,7 +928,7 @@ T blsi(T a)
  * Clear the lowest set bit in a.
  */
 template <typename T>
-T blsr(T x)
+constexpr T blsr(T x)
 {
     return x & (x - 1);
 }
@@ -944,13 +938,13 @@ T blsr(T x)
  * If a is zero, blsmsk sets all bits to 1.
  */
 template <typename T>
-T blsmsk(T a)
+constexpr T blsmsk(T a)
 {
     return a ^ (a - 1);
 }
 
 #if defined(_MSC_VER) && !defined(__clang__)
-static inline int tzcnt(uint32_t x)
+static inline int countr_zero(uint32_t x)
 {
     unsigned long trailing_zero = 0;
     _BitScanForward(&trailing_zero, x);
@@ -958,31 +952,31 @@ static inline int tzcnt(uint32_t x)
 }
 
 #    if defined(_M_ARM) || defined(_M_X64)
-static inline int tzcnt(uint64_t x)
+static inline int countr_zero(uint64_t x)
 {
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
 #    else
-static inline int tzcnt(uint64_t x)
+static inline int countr_zero(uint64_t x)
 {
     uint32_t msh = (uint32_t)(x >> 32);
     uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
     if (lsh != 0) {
-        return tzcnt(lsh);
+        return countr_zero(lsh);
     }
-    return 32 + tzcnt(msh);
+    return 32 + countr_zero(msh);
 }
 #    endif
 
 #else /*  gcc / clang */
-static inline int tzcnt(uint32_t x)
+static inline int countr_zero(uint32_t x)
 {
     return __builtin_ctz(x);
 }
 
-static inline int tzcnt(uint64_t x)
+static inline int countr_zero(uint64_t x)
 {
     return __builtin_ctzll(x);
 }
@@ -1007,6 +1001,31 @@ struct DecomposedSet {
           intersection(std::move(intersect))
     {}
 };
+
+namespace detail {
+template<typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+struct UnrollImpl;
+
+template<typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, false> {
+    template <typename F>
+    static void call(F&& f) {
+        f(Pos);
+        UnrollImpl<T, N-1, Pos + 1>::call(std::forward<F>(f));
+    }
+};
+
+template<typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, true> {
+    template <typename F>
+    static void call(F&&) {}
+};
+
+template<typename T, int N, class F>
+constexpr void unroll(F&& f) {
+  detail::UnrollImpl<T, N>::call(f);
+}
+}
 
 namespace common {
 
@@ -1176,6 +1195,11 @@ struct PatternMatchVector {
     void insert(CharT key, int64_t pos)
     {
         insert_mask(key, UINT64_C(1) << pos);
+    }
+
+    uint64_t get(char key) const
+    {
+        return m_extendedAscii[static_cast<uint8_t>(key)];
     }
 
     template <typename CharT>
@@ -2211,7 +2235,14 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
                     s1_pos++;
                 else if (ops & 2)
                     s2_pos++;
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 ops >>= 2;
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
+#    pragma GCC diagnostic pop
+#endif
             }
             else {
                 cur_len++;
@@ -2232,27 +2263,24 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
                                                         int64_t score_cutoff)
 {
     uint64_t S[N];
-    for (size_t i = 0; i < N; ++i) {
+    unroll<size_t, N>([&](size_t i){
         S[i] = ~UINT64_C(0);
-    }
+    });
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
-        uint64_t Matches[N];
-        uint64_t u[N];
-        uint64_t x[N];
-        for (size_t i = 0; i < N; ++i) {
-            Matches[i] = block.get(i, *first2);
-            u[i] = S[i] & Matches[i];
-            x[i] = addc64(S[i], u[i], carry, &carry);
-            S[i] = x[i] | (S[i] - u[i]);
-        }
+        unroll<size_t, N>([&](size_t i){
+            uint64_t Matches = block.get(i, *first2);
+            uint64_t u = S[i] & Matches;
+            uint64_t x = addc64(S[i], u, carry, &carry);
+            S[i] = x | (S[i] - u);
+        });
     }
 
     int64_t res = 0;
-    for (size_t i = 0; i < N; ++i) {
-        res += popcount64(~S[i]);
-    }
+    unroll<size_t, N>([&](size_t i){
+        res += popcount(~S[i]);
+    });
 
     return (res >= score_cutoff) ? res : 0;
 }
@@ -2281,7 +2309,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
 
     int64_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += popcount(~Stemp);
     }
 
     return (res >= score_cutoff) ? res : 0;
@@ -2552,29 +2580,26 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
     uint64_t S[N];
-    for (ptrdiff_t i = 0; i < N; ++i) {
+    unroll<size_t, N>([&](size_t i){
         S[i] = ~UINT64_C(0);
-    }
+    });
 
     LLCSBitMatrix matrix(len2, N);
 
     for (ptrdiff_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
-        uint64_t Matches[N];
-        uint64_t u[N];
-        uint64_t x[N];
-        for (ptrdiff_t word = 0; word < N; ++word) {
-            Matches[word] = block.get(word, first2[i]);
-            u[word] = S[word] & Matches[word];
-            x[word] = addc64(S[word], u[word], carry, &carry);
-            S[word] = matrix.S[i][word] = x[word] | (S[word] - u[word]);
-        }
+        unroll<size_t, N>([&](size_t word){
+            uint64_t Matches = block.get(word, first2[i]);
+            uint64_t u = S[word] & Matches;
+            uint64_t x = addc64(S[word], u, carry, &carry);
+            S[word] = matrix.S[i][word] = x | (S[word] - u);
+        });
     }
 
     int64_t res = 0;
-    for (int64_t i = 0; i < N; ++i) {
-        res += popcount64(~S[i]);
-    }
+    unroll<size_t, N>([&](size_t i){
+        res += popcount(~S[i]);
+    });
 
     matrix.dist = static_cast<ptrdiff_t>(static_cast<int64_t>(len1) + len2 - 2 * res);
 
@@ -2608,7 +2633,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
 
     int64_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += popcount(~Stemp);
     }
 
     matrix.dist = static_cast<ptrdiff_t>(static_cast<std::int64_t>(len1) + len2 - 2 * res);
@@ -3497,7 +3522,14 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
                 if (!ops) break;
                 if (ops & 1) s1_pos++;
                 if (ops & 2) s2_pos++;
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wconversion"
+#endif
                 ops >>= 2;
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
+#    pragma GCC diagnostic pop
+#endif
             }
             else {
                 s1_pos++;

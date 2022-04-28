@@ -108,27 +108,24 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
                                                         int64_t score_cutoff)
 {
     uint64_t S[N];
-    for (size_t i = 0; i < N; ++i) {
+    unroll<size_t, N>([&](size_t i){
         S[i] = ~UINT64_C(0);
-    }
+    });
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
-        uint64_t Matches[N];
-        uint64_t u[N];
-        uint64_t x[N];
-        for (size_t i = 0; i < N; ++i) {
-            Matches[i] = block.get(i, *first2);
-            u[i] = S[i] & Matches[i];
-            x[i] = addc64(S[i], u[i], carry, &carry);
-            S[i] = x[i] | (S[i] - u[i]);
-        }
+        unroll<size_t, N>([&](size_t i){
+            uint64_t Matches = block.get(i, *first2);
+            uint64_t u = S[i] & Matches;
+            uint64_t x = addc64(S[i], u, carry, &carry);
+            S[i] = x | (S[i] - u);
+        });
     }
 
     int64_t res = 0;
-    for (size_t i = 0; i < N; ++i) {
-        res += popcount64(~S[i]);
-    }
+    unroll<size_t, N>([&](size_t i){
+        res += popcount(~S[i]);
+    });
 
     return (res >= score_cutoff) ? res : 0;
 }
@@ -157,7 +154,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
 
     int64_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += popcount(~Stemp);
     }
 
     return (res >= score_cutoff) ? res : 0;
@@ -428,29 +425,26 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
     uint64_t S[N];
-    for (ptrdiff_t i = 0; i < N; ++i) {
+    unroll<size_t, N>([&](size_t i){
         S[i] = ~UINT64_C(0);
-    }
+    });
 
     LLCSBitMatrix matrix(len2, N);
 
     for (ptrdiff_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
-        uint64_t Matches[N];
-        uint64_t u[N];
-        uint64_t x[N];
-        for (ptrdiff_t word = 0; word < N; ++word) {
-            Matches[word] = block.get(word, first2[i]);
-            u[word] = S[word] & Matches[word];
-            x[word] = addc64(S[word], u[word], carry, &carry);
-            S[word] = matrix.S[i][word] = x[word] | (S[word] - u[word]);
-        }
+        unroll<size_t, N>([&](size_t word){
+            uint64_t Matches = block.get(word, first2[i]);
+            uint64_t u = S[word] & Matches;
+            uint64_t x = addc64(S[word], u, carry, &carry);
+            S[word] = matrix.S[i][word] = x | (S[word] - u);
+        });
     }
 
     int64_t res = 0;
-    for (int64_t i = 0; i < N; ++i) {
-        res += popcount64(~S[i]);
-    }
+    unroll<size_t, N>([&](size_t i){
+        res += popcount(~S[i]);
+    });
 
     matrix.dist = static_cast<ptrdiff_t>(static_cast<int64_t>(len1) + len2 - 2 * res);
 
@@ -484,7 +478,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
 
     int64_t res = 0;
     for (uint64_t Stemp : S) {
-        res += popcount64(~Stemp);
+        res += popcount(~Stemp);
     }
 
     matrix.dist = static_cast<ptrdiff_t>(static_cast<std::int64_t>(len1) + len2 - 2 * res);

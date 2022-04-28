@@ -28,6 +28,31 @@ struct DecomposedSet {
     {}
 };
 
+namespace detail {
+template<typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+struct UnrollImpl;
+
+template<typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, false> {
+    template <typename F>
+    static void call(F&& f) {
+        f(Pos);
+        UnrollImpl<T, N-1, Pos + 1>::call(std::forward<F>(f));
+    }
+};
+
+template<typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, true> {
+    template <typename F>
+    static void call(F&&) {}
+};
+
+template<typename T, int N, class F>
+constexpr void unroll(F&& f) {
+  detail::UnrollImpl<T, N>::call(f);
+}
+}
+
 namespace common {
 
 /**
@@ -196,6 +221,11 @@ struct PatternMatchVector {
     void insert(CharT key, int64_t pos)
     {
         insert_mask(key, UINT64_C(1) << pos);
+    }
+
+    uint64_t get(char key) const
+    {
+        return m_extendedAscii[static_cast<uint8_t>(key)];
     }
 
     template <typename CharT>
