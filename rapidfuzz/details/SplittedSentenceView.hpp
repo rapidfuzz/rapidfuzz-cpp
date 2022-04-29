@@ -8,15 +8,17 @@ namespace rapidfuzz {
 template <typename InputIt>
 class SplittedSentenceView {
 public:
-    using CharT = iterator_type<InputIt>;
+    using CharT = iter_value_t<InputIt>;
 
-    SplittedSentenceView(IteratorViewVec<InputIt> sentence) : m_sentence(std::move(sentence))
+    SplittedSentenceView(IteratorViewVec<InputIt> sentence) noexcept(
+        std::is_nothrow_move_constructible<IteratorViewVec<InputIt>>::value)
+        : m_sentence(std::move(sentence))
     {}
 
-    int64_t dedupe();
-    int64_t size() const;
+    size_t dedupe();
+    size_t size() const;
 
-    int64_t length() const
+    size_t length() const
     {
         return size();
     }
@@ -26,7 +28,7 @@ public:
         return m_sentence.empty();
     }
 
-    int64_t word_count() const
+    size_t word_count() const
     {
         return m_sentence.size();
     }
@@ -43,22 +45,22 @@ private:
 };
 
 template <typename InputIt>
-int64_t SplittedSentenceView<InputIt>::dedupe()
+size_t SplittedSentenceView<InputIt>::dedupe()
 {
-    int64_t old_word_count = word_count();
+    size_t old_word_count = word_count();
     m_sentence.erase(std::unique(m_sentence.begin(), m_sentence.end()), m_sentence.end());
     return old_word_count - word_count();
 }
 
 template <typename InputIt>
-int64_t SplittedSentenceView<InputIt>::size() const
+size_t SplittedSentenceView<InputIt>::size() const
 {
     if (m_sentence.empty()) return 0;
 
     // there is a whitespace between each word
-    int64_t result = m_sentence.size() - 1;
+    size_t result = m_sentence.size() - 1;
     for (const auto& word : m_sentence) {
-        result += std::distance(word.first, word.last);
+        result += static_cast<size_t>(std::distance(word.first, word.last));
     }
 
     return result;

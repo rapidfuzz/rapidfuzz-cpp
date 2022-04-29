@@ -1,5 +1,11 @@
 ## Changelog
 
+### [1.0.1] - 2022-04-
+#### Fixed
+- fix undefined behavior in sorted_split incrementing iterator past the end
+- fix use after free in editops calculation
+- reduce compiler warnings
+
 ### [1.0.1] - 2022-04-16
 #### Added
 - added LCSseq (longest common subsequence) implementation

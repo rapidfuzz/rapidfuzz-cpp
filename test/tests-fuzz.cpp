@@ -150,7 +150,6 @@ TEST_CASE("RatioTest")
 
     SECTION("testIssue206") /* test for https://github.com/maxbachmann/RapidFuzz/issues/206 */
     {
-        double score1, score2;
         const char* str1 = "South Korea";
         const char* str2 = "North Korea";
 
@@ -165,7 +164,6 @@ TEST_CASE("RatioTest")
 
     SECTION("testIssue210") /* test for https://github.com/maxbachmann/RapidFuzz/issues/210 */
     {
-        double score1, score2;
         const char* str1 = "bc";
         const char* str2 = "bca";
 

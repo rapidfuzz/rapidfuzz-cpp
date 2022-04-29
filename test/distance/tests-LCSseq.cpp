@@ -53,4 +53,4 @@ TEST_CASE("Indel")
         REQUIRE(1 == rapidfuzz::lcs_seq_similarity(a, b));
         REQUIRE(1 == rapidfuzz::CachedLCSseq<char>(a).similarity(b));
     }
-};
+}

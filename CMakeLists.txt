@@ -125,7 +125,7 @@ if (NOT_SUBPROJECT)
     if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
         set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
     endif()
-    
+
     set(CPACK_PACKAGE_VENDOR "Max Bachmann")
     set(CPACK_PACKAGE_CONTACT "https://github.com/maxbachmann/rapidfuzz-cpp")
     include(CPack)

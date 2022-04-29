@@ -64,4 +64,4 @@ TEST_CASE("Indel")
         REQUIRE(Approx(0.3333333) == rapidfuzz::indel_normalized_similarity(a, b));
         REQUIRE(Approx(0.3333333) == rapidfuzz::CachedIndel<char>(a).normalized_similarity(b));
     }
-};
+}

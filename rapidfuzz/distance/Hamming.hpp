@@ -133,7 +133,7 @@ template <typename Sentence1>
 CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iterator_type<InputIt1>>;
+CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
 #endif
 
 /**@}*/

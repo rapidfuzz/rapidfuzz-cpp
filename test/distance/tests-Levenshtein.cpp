@@ -33,7 +33,7 @@ TEST_CASE("Levenshtein")
                 Catch::Approx(0.75).epsilon(0.0001));
         REQUIRE(rapidfuzz::levenshtein_normalized_similarity(test, replace_all, {1, 1, 2}) == 0.0);
     }
-};
+}
 
 TEST_CASE("Levenshtein_editops")
 {
@@ -42,9 +42,9 @@ TEST_CASE("Levenshtein_editops")
 
     rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s, d);
     REQUIRE(d == rapidfuzz::editops_apply<char>(ops, s, d));
-    REQUIRE(ops.get_src_len() == (int64_t)s.size());
-    REQUIRE(ops.get_dest_len() == (int64_t)d.size());
-};
+    REQUIRE(ops.get_src_len() == s.size());
+    REQUIRE(ops.get_dest_len() == d.size());
+}
 
 TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
 {
@@ -64,4 +64,4 @@ TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
 
     rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
     REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops, s1, s2));
-};
+}
