@@ -131,7 +131,7 @@ static inline void longest_common_subsequence_simd(
 
         auto counts = popcount(S);
         unroll<int, counts.size()>([&](auto i) {
-            *scores = (counts[i] >= score_cutoff) ? counts[i] : 0;
+            *scores = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
             scores++;
         });
     }

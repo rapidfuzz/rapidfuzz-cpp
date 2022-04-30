@@ -3,7 +3,7 @@
 
 #pragma once
 #include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/simd_avx2.hpp>
+#include <rapidfuzz/details/simd_sse2.hpp>
 
 #include <cmath>
 #include <limits>
