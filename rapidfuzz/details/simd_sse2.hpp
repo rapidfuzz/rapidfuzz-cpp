@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <emmintrin.h>
+#include <tmmintrin.h>
 #include <array>
 #include <rapidfuzz/details/intrinsics.hpp>
 
@@ -25,8 +26,10 @@ public:
 
     native_simd(uint64_t a)
     {
-        xmm = _mm_set1_epi64((__m64)a);
+        xmm = _mm_set1_epi64(reinterpret_cast<__m64>(a));
     }
+
+    native_simd(const uint64_t* p) { load(p); }
 
     operator __m128i() const {
         return xmm;
@@ -36,14 +39,14 @@ public:
 
     native_simd load(const uint64_t* p) {
         xmm = _mm_set_epi64x(
-            p[0],
-            p[1]
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
         );
         return *this;
     }
 
-    void store(const uint64_t* p) const {
-        _mm_store_si128((__m128i*)p, xmm);
+    void store(uint64_t* p) const {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
     native_simd operator+(const native_simd b) const {
@@ -63,17 +66,6 @@ public:
         xmm = _mm_sub_epi64(xmm, b);
         return *this;
     }
-
-    std::array<int64_t, _size> popcount() const {
-        uint64_t stored[_size];
-        store(stored);
-
-        std::array<int64_t, _size> res;
-        unroll<int, _size>([&](auto i) {
-            res[i] = rapidfuzz::detail::popcount(stored[i]);
-        });
-        return res;
-    }
 };
 
 template <>
@@ -90,8 +82,10 @@ public:
 
     native_simd(uint32_t a)
     {
-        xmm = _mm_set1_epi32((int)a);
+        xmm = _mm_set1_epi32(static_cast<int>(a));
     }
+
+    native_simd(const uint64_t* p) { load(p); }
 
     operator __m128i() const {
         return xmm;
@@ -101,14 +95,14 @@ public:
 
     native_simd load(const uint64_t* p) {
         xmm = _mm_set_epi64x(
-            p[0],
-            p[1]
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
         );
         return *this;
     }
 
-    void store(const uint32_t* p) const {
-        _mm_store_si128((__m128i*)p, xmm);
+    void store(uint32_t* p) const {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
     native_simd operator+(const native_simd b) const {
@@ -128,17 +122,6 @@ public:
         xmm = _mm_sub_epi32(xmm, b);
         return *this;
     }
-
-    std::array<int64_t, _size> popcount() const {
-        uint32_t stored[_size];
-        store(stored);
-
-        std::array<int64_t, _size> res;
-        unroll<int, _size>([&](auto i) {
-            res[i] = rapidfuzz::detail::popcount(stored[i]);
-        });
-        return res;
-    }
 };
 
 template <>
@@ -155,8 +138,10 @@ public:
 
     native_simd(uint16_t a)
     {
-        xmm = _mm_set1_epi16((short)a);
+        xmm = _mm_set1_epi16(static_cast<short>(a));
     }
+
+    native_simd(const uint64_t* p) { load(p); }
 
     operator __m128i() const {
         return xmm;
@@ -166,14 +151,14 @@ public:
 
     native_simd load(const uint64_t* p) {
         xmm = _mm_set_epi64x(
-            p[0],
-            p[1]
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
         );
         return *this;
     }
 
-    void store(const uint16_t* p) const {
-        _mm_store_si128((__m128i*)p, xmm);
+    void store(uint16_t* p) const {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
     native_simd operator+(const native_simd b) const {
@@ -193,17 +178,6 @@ public:
         xmm = _mm_sub_epi16(xmm, b);
         return *this;
     }
-
-    std::array<int64_t, _size> popcount() const {
-        uint16_t stored[_size];
-        store(stored);
-
-        std::array<int64_t, _size> res;
-        unroll<int, _size>([&](auto i) {
-            res[i] = rapidfuzz::detail::popcount(stored[i]);
-        });
-        return res;
-    }
 };
 
 template <>
@@ -220,8 +194,10 @@ public:
 
     native_simd(uint8_t a)
     {
-        xmm = _mm_set1_epi8((char)a);
+        xmm = _mm_set1_epi8(static_cast<char>(a));
     }
+
+    native_simd(const uint64_t* p) { load(p); }
 
     operator __m128i() const {
         return xmm;
@@ -231,14 +207,14 @@ public:
 
     native_simd load(const uint64_t* p) {
         xmm = _mm_set_epi64x(
-            p[0],
-            p[1]
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
         );
         return *this;
     }
 
-    void store(const uint8_t* p) const {
-        _mm_store_si128((__m128i*)p, xmm);
+    void store(uint8_t* p) const {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
     native_simd operator+(const native_simd b) const {
@@ -258,18 +234,80 @@ public:
         xmm = _mm_sub_epi8(xmm, b);
         return *this;
     }
-
-    std::array<int64_t, _size> popcount() const {
-        uint8_t stored[_size];
-        store(stored);
-
-        std::array<int64_t, _size> res;
-        unroll<int, _size>([&](auto i) {
-            res[i] = rapidfuzz::detail::popcount(stored[i]);
-        });
-        return res;
-    }
 };
+
+template <typename T>
+__m128i hadd_impl(const __m128i& v);
+
+template <>
+__m128i hadd_impl<uint8_t>(const __m128i& v) {
+    return v;
+}
+
+template <>
+__m128i hadd_impl<uint16_t>(const __m128i& v) {
+    __m128i mask = _mm_set_epi16(
+        static_cast<short>(-1), static_cast<short>(0),
+        static_cast<short>(-1), static_cast<short>(0),
+        static_cast<short>(-1), static_cast<short>(0),
+        static_cast<short>(-1), static_cast<short>(0)
+    );
+    __m128i lo = _mm_and_si128(v, mask);
+    __m128i hi = _mm_srli_epi16(v, 8);
+    return _mm_add_epi16(lo, hi);
+    // todo sse3
+    //return _mm_maddubs_epi16(v, _mm_set1_epi8(1));
+}
+
+template <>
+__m128i hadd_impl<uint32_t>(const __m128i& v) {
+    return _mm_madd_epi16(hadd_impl<uint16_t>(v), _mm_set1_epi16(1));
+}
+
+template <>
+__m128i hadd_impl<uint64_t>(const __m128i& v) {
+    return _mm_sad_epu8(v, _mm_setzero_si128());
+}
+
+template <typename T>
+native_simd<T> popcount_impl(const native_simd<T>& v) {
+    __m128i n, x, total;
+    const __m128i popcount_mask1 = _mm_set1_epi8(0x77);
+    const __m128i popcount_mask2 = _mm_set1_epi8(0x0F);
+
+    // Count bits in each 4-bit field.
+    x = v;
+    n = _mm_srli_epi64(x, 1);
+    n = _mm_and_si128(popcount_mask1, n);
+    x = _mm_sub_epi8(x, n);
+    n = _mm_srli_epi64(n, 1);
+    n = _mm_and_si128(popcount_mask1, n);
+    x = _mm_sub_epi8(x, n);
+    n = _mm_srli_epi64(n, 1);
+    n = _mm_and_si128(popcount_mask1, n);
+    x = _mm_sub_epi8(x, n);
+    x = _mm_add_epi8(x, _mm_srli_epi16(x, 4));
+    total = _mm_and_si128(popcount_mask2, x);
+
+    /* todo use when sse3 available
+    __m128i lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+    const __m128i low_mask = _mm_set1_epi8(0x0F);
+    __m128i lo = _mm_and_si128(v, low_mask);
+    __m128i hi = _mm_and_si256(_mm_srli_epi32(v, 4), low_mask);
+    __m128i popcnt1 = _mm_shuffle_epi8(lookup, lo);
+    __m128i popcnt2 = _mm_shuffle_epi8(lookup, hi);
+    __m128i total = _mm_add_epi8(popcnt1, popcnt2);*/
+
+    return hadd_impl<T>(total);
+}
+
+template <typename T>
+std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) {
+    alignas(16) std::array<T, native_simd<T>::size()> res;
+    popcount_impl(a).store(&res[0]);
+    return res;
+}
+
 
 template <typename T>
 native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b)

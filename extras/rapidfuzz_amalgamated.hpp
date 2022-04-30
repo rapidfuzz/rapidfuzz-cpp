@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-29 02:28:58.448672
+//  Generated: 2022-04-30 19:27:35.774984
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -885,6 +885,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 #include <cstddef>
 #include <stdint.h>
 #include <bitset>
+#include <limits>
+#include <type_traits>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>
@@ -953,6 +955,15 @@ static inline int popcount(uint8_t x)
     return bit_count[x];
 }
 
+template <typename T>
+constexpr T rotl(T x, unsigned int n)
+{
+    unsigned int num_bits = std::numeric_limits<T>::digits;
+    assert(n < num_bits);
+    unsigned int count_mask = num_bits - 1;
+  
+    return (x << n) | (x >> ( -n & count_mask));
+}
 
 /**
  * Extract the lowest set bit from a. If no bits are set in a returns 0.
@@ -1201,82 +1212,42 @@ bool CanTypeFitValue(const U value)
              (topT < topU && value > static_cast<U>(topT)));
 }
 
-struct PatternMatchVector {
+struct BitvectorHashmap {
     struct MapElem {
         uint64_t key = 0;
         uint64_t value = 0;
     };
-    std::array<MapElem, 128> m_map;
-    std::array<uint64_t, 256> m_extendedAscii;
 
-    PatternMatchVector() : m_map(), m_extendedAscii()
+    BitvectorHashmap() : m_map()
     {}
 
-    template <typename InputIt>
-    PatternMatchVector(InputIt first, InputIt last) : m_map(), m_extendedAscii()
-    {
-        insert(first, last);
-    }
-
-    template <typename InputIt>
-    void insert(InputIt first, InputIt last)
-    {
-        uint64_t mask = 1;
-        for (; first != last; ++first) {
-            insert_mask(*first, mask);
-            mask <<= 1;
-        }
-    }
-
     template <typename CharT>
-    void insert(CharT key, int64_t pos)
+    void insert(CharT key, int64_t pos) noexcept
     {
         insert_mask(key, UINT64_C(1) << pos);
     }
 
-    uint64_t get(char key) const
+    template <typename CharT>
+    void insert_mask(CharT key_, uint64_t mask) noexcept
     {
-        return m_extendedAscii[static_cast<uint8_t>(key)];
+        uint64_t key = static_cast<uint64_t>(key_);
+        uint64_t i = lookup(key);
+        m_map[i].key = key;
+        m_map[i].value |= mask;
     }
 
     template <typename CharT>
-    uint64_t get(CharT key) const
+    uint64_t get(CharT key) const noexcept
     {
-        if (key >= 0 && key <= 255) {
-            return m_extendedAscii[static_cast<uint8_t>(key)];
-        }
-        else {
-            return m_map[lookup(static_cast<uint64_t>(key))].value;
-        }
-    }
-
-    template <typename CharT>
-    uint64_t get(size_t block, CharT key) const
-    {
-        assert(block == 0);
-        (void)block;
-        return get(key);
+        return m_map[lookup(static_cast<uint64_t>(key))].value;
     }
 
 private:
-    template <typename CharT>
-    void insert_mask(CharT key, uint64_t mask)
-    {
-        if (key >= 0 && key <= 255) {
-            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
-        }
-        else {
-            uint32_t i = lookup(static_cast<uint64_t>(key));
-            m_map[i].key = static_cast<uint64_t>(key);
-            m_map[i].value |= mask;
-        }
-    }
-
     /**
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    uint32_t lookup(uint64_t key) const
+    uint32_t lookup(uint64_t key) const noexcept
     {
         uint32_t i = key % 128;
 
@@ -1294,107 +1265,8 @@ private:
             perturb >>= 5;
         }
     }
-};
 
-struct BlockPatternMatchVector {
-    std::vector<PatternMatchVector> m_val;
-
-    BlockPatternMatchVector() = default;
-
-    template <typename InputIt>
-    BlockPatternMatchVector(InputIt first, InputIt last)
-    {
-        insert(first, last);
-    }
-
-    template <typename CharT>
-    void insert(size_t block, CharT ch, int pos)
-    {
-        auto* be = &m_val[block];
-        be->insert(ch, pos);
-    }
-
-    /**
-     * @warning undefined behavior if iterator \p first is greater than \p last
-     * @tparam InputIt
-     * @param first
-     * @param last
-     */
-    template <typename InputIt>
-    void insert(InputIt first, InputIt last)
-    {
-        auto len = std::distance(first, last);
-        auto block_count = detail::ceil_div(len, 64);
-        m_val.resize(static_cast<size_t>(block_count));
-
-        for (ptrdiff_t block = 0; block < block_count; ++block) {
-            if (std::distance(first + block * 64, last) > 64) {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64,
-                                                         first + (block + 1) * 64);
-            }
-            else {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
-            }
-        }
-    }
-
-    template <typename CharT>
-    uint64_t get(size_t block, CharT ch) const
-    {
-        auto* be = &m_val[block];
-        return be->get(ch);
-    }
-};
-
-template <typename CharT1, size_t size = sizeof(CharT1)>
-struct CharSet;
-
-template <typename CharT1>
-struct CharSet<CharT1, 1> {
-    using UCharT1 = typename std::make_unsigned<CharT1>::type;
-
-    std::array<bool, std::numeric_limits<UCharT1>::max() + 1> m_val;
-
-    CharSet() : m_val{}
-    {}
-
-    void insert(CharT1 ch)
-    {
-        m_val[UCharT1(ch)] = true;
-    }
-
-    template <typename CharT2>
-    bool find(CharT2 ch) const
-    {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return false;
-        }
-
-        return m_val[UCharT1(ch)];
-    }
-};
-
-template <typename CharT1, size_t size>
-struct CharSet {
-    std::unordered_set<CharT1> m_val;
-
-    CharSet() : m_val{}
-    {}
-
-    void insert(CharT1 ch)
-    {
-        m_val.insert(ch);
-    }
-
-    template <typename CharT2>
-    bool find(CharT2 ch) const
-    {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return false;
-        }
-
-        return m_val.find(CharT1(ch)) != m_val.end();
-    }
+    std::array<MapElem, 128> m_map;
 };
 
 template <typename T>
@@ -1523,6 +1395,214 @@ private:
     size_t m_rows;
     size_t m_cols;
     T* m_matrix;
+};
+
+struct PatternMatchVector {
+    PatternMatchVector() : m_map(), m_extendedAscii()
+    {}
+
+    template <typename InputIt>
+    PatternMatchVector(InputIt first, InputIt last) : m_map(), m_extendedAscii()
+    {
+        insert(first, last);
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last) noexcept
+    {
+        uint64_t mask = 1;
+        for (; first != last; ++first) {
+            insert_mask(*first, mask);
+            mask <<= 1;
+        }
+    }
+
+    template <typename CharT>
+    void insert(CharT key, int64_t pos) noexcept
+    {
+        insert_mask(key, UINT64_C(1) << pos);
+    }
+
+    template <typename CharT>
+    uint64_t get(CharT key) const noexcept
+    {
+        if (key >= 0 && key <= 255) {
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        }
+        else {
+            return m_map.get(key);
+        }
+    }
+
+    /*
+     * @note treat char as value between 0 and 127
+     * which is significantly faster, since it allows
+     * any branches to be compiled out
+     */
+    uint64_t get(char key) const noexcept
+    {
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT key) const noexcept
+    {
+        assert(block == 0);
+        (void)block;
+        return get(key);
+    }
+
+private:
+    template <typename CharT>
+    void insert_mask(CharT key, uint64_t mask) noexcept
+    {
+        if (key >= 0 && key <= 255) {
+            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+        }
+        else {
+            m_map.insert_mask(key, mask);
+        }
+    }
+
+    void insert_mask(char key, uint64_t mask) noexcept
+    {
+        insert_mask(static_cast<uint8_t>(key), mask);
+    }
+
+    BitvectorHashmap m_map;
+    std::array<uint64_t, 256> m_extendedAscii;
+};
+
+struct BlockPatternMatchVector {
+    BlockPatternMatchVector(size_t block_count)
+        : m_block_count(block_count),
+          m_map(block_count),
+          m_extendedAscii(256, block_count, 0)
+    {}
+
+    template <typename InputIt>
+    BlockPatternMatchVector(InputIt first, InputIt last)
+        : BlockPatternMatchVector(static_cast<size_t>(std::distance(first, last)))
+    {
+        insert(first, last);
+    }
+
+    size_t size() const noexcept {
+        return m_block_count;
+    }
+
+    template <typename CharT>
+    void insert(size_t block, CharT ch, int pos)
+    {
+        uint64_t mask = UINT64_C(1) << pos;
+        insert_mask(block, ch, mask);
+    }
+
+    /**
+     * @warning undefined behavior if iterator \p first is greater than \p last
+     * @tparam InputIt
+     * @param first
+     * @param last
+     */
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last)
+    {
+        auto len = std::distance(first, last);
+        uint64_t mask = 1;
+        for (ptrdiff_t i = 0; i < len; ++i) {
+            size_t block = static_cast<size_t>(i) / 64;
+            insert_mask(block, first[i], mask);
+            mask = detail::rotl(mask, 1);
+        }
+    }
+
+    template <typename CharT>
+    void insert_mask(size_t block, CharT key, uint64_t mask)
+    {
+        if (key >= 0 && key <= 255) {
+            m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
+        }
+        else {
+            m_map[block].insert_mask(key, mask);
+        }
+    }
+
+    void insert_mask(size_t block, char key, uint64_t mask)
+    {
+        insert_mask(block, static_cast<uint8_t>(key), mask);
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT key) const
+    {
+        if (key >= 0 && key <= 255) {
+            return m_extendedAscii[static_cast<uint8_t>(key)][block];
+        }
+        else {
+            return m_map[block].get(key);
+        }
+    }
+
+    uint64_t get(size_t block, char ch) const
+    {
+        return get(block, static_cast<uint8_t>(ch));
+    }
+
+private:
+    size_t m_block_count;
+    std::vector<BitvectorHashmap> m_map;
+    Matrix<uint64_t> m_extendedAscii;
+};
+
+template <typename CharT1, size_t size = sizeof(CharT1)>
+struct CharSet;
+
+template <typename CharT1>
+struct CharSet<CharT1, 1> {
+    using UCharT1 = typename std::make_unsigned<CharT1>::type;
+
+    std::array<bool, std::numeric_limits<UCharT1>::max() + 1> m_val;
+
+    CharSet() : m_val{}
+    {}
+
+    void insert(CharT1 ch)
+    {
+        m_val[UCharT1(ch)] = true;
+    }
+
+    template <typename CharT2>
+    bool find(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return false;
+        }
+
+        return m_val[UCharT1(ch)];
+    }
+};
+
+template <typename CharT1, size_t size>
+struct CharSet {
+    std::unordered_set<CharT1> m_val;
+
+    CharSet() : m_val{}
+    {}
+
+    void insert(CharT1 ch)
+    {
+        m_val.insert(ch);
+    }
+
+    template <typename CharT2>
+    bool find(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return false;
+        }
+
+        return m_val.find(CharT1(ch)) != m_val.end();
+    }
 };
 
 /**@}*/
@@ -2101,6 +2181,349 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 
 
+#include <stdint.h>
+#include <immintrin.h>
+#include <array>
+
+namespace rapidfuzz {
+namespace detail {
+
+template <typename T>
+class native_simd;
+
+template <>
+class native_simd<uint64_t>
+{
+public:
+    using value_type = uint64_t;
+
+    static const int _size = 4;
+    __m256i xmm;
+
+    native_simd() {}
+
+    native_simd(__m256i val)
+        : xmm(val) {}
+
+    native_simd(uint64_t a)
+    {
+        xmm = _mm256_set1_epi64x(static_cast<long long int>(a));
+    }
+
+    native_simd(const uint64_t* p) { load(p); }
+
+    operator __m256i() const {
+        return xmm;
+    }
+
+    constexpr static int size() { return _size; }
+
+    native_simd load(const uint64_t* p) {
+        xmm = _mm256_set_epi64x(
+            static_cast<long long int>(p[3]),
+            static_cast<long long int>(p[2]),
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
+        );
+        return *this;
+    }
+
+    void store(uint64_t* p) const {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const {
+        return _mm256_add_epi64(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) {
+        xmm = _mm256_add_epi64(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const {
+        return _mm256_sub_epi64(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) {
+        xmm = _mm256_sub_epi64(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint32_t>
+{
+public:
+    using value_type = uint32_t;
+
+    static const int _size = 8;
+    __m256i xmm;
+
+    native_simd() {}
+
+    native_simd(__m256i val)
+        : xmm(val) {}
+
+    native_simd(uint32_t a)
+    {
+        xmm = _mm256_set1_epi32(static_cast<int>(a));
+    }
+
+    native_simd(const uint64_t* p) { load(p); }
+
+    operator __m256i() const {
+        return xmm;
+    }
+
+    constexpr static int size() { return _size; }
+
+    native_simd load(const uint64_t* p) {
+        xmm = _mm256_set_epi64x(
+            static_cast<long long int>(p[3]),
+            static_cast<long long int>(p[2]),
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
+        );
+        return *this;
+    }
+
+    void store(uint32_t* p) const {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const {
+        return _mm256_add_epi32(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) {
+        xmm = _mm256_add_epi32(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const {
+        return _mm256_sub_epi32(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) {
+        xmm = _mm256_sub_epi32(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint16_t>
+{
+public:
+    using value_type = uint16_t;
+
+    static const int _size = 16;
+    __m256i xmm;
+
+    native_simd() {}
+
+    native_simd(__m256i val)
+        : xmm(val) {}
+
+    native_simd(uint16_t a)
+    {
+        xmm = _mm256_set1_epi16(static_cast<short>(a));
+    }
+
+    native_simd(const uint64_t* p) { load(p); }
+
+    operator __m256i() const {
+        return xmm;
+    }
+
+    constexpr static int size() { return _size; }
+
+    native_simd load(const uint64_t* p) {
+        xmm = _mm256_set_epi64x(
+            static_cast<long long int>(p[3]),
+            static_cast<long long int>(p[2]),
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
+        );
+        return *this;
+    }
+
+    void store(uint16_t* p) const {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const {
+        return _mm256_add_epi16(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) {
+        xmm = _mm256_add_epi16(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const {
+        return _mm256_sub_epi16(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) {
+        xmm = _mm256_sub_epi16(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint8_t>
+{
+public:
+    using value_type = uint8_t;
+
+    static const int _size = 32;
+    __m256i xmm;
+
+    native_simd() {}
+
+    native_simd(__m256i val)
+        : xmm(val) {}
+
+    native_simd(uint8_t a)
+    {
+        xmm = _mm256_set1_epi8(static_cast<char>(a));
+    }
+
+    native_simd(const uint64_t* p) { load(p); }
+
+    operator __m256i() const {
+        return xmm;
+    }
+
+    constexpr static int size() { return _size; }
+
+    native_simd load(const uint64_t* p) {
+        /*xmm = _mm256_set_epi64x(
+            static_cast<long long int>(p[3]),
+            static_cast<long long int>(p[2]),
+            static_cast<long long int>(p[1]),
+            static_cast<long long int>(p[0])
+        );*/
+        xmm = _mm256_load_si256(reinterpret_cast<const __m256i*>(p));
+        return *this;
+    }
+
+    void store(uint8_t* p) const {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const {
+        return _mm256_add_epi8(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) {
+        xmm = _mm256_add_epi8(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const {
+        return _mm256_sub_epi8(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) {
+        xmm = _mm256_sub_epi8(xmm, b);
+        return *this;
+    }
+};
+
+template <typename T>
+__m256i hadd_impl(const __m256i& v);
+
+template <>
+__m256i hadd_impl<uint8_t>(const __m256i& v) {
+    return v;
+}
+
+template <>
+__m256i hadd_impl<uint16_t>(const __m256i& v) {
+    return _mm256_maddubs_epi16(v, _mm256_set1_epi8(1));
+}
+
+template <>
+__m256i hadd_impl<uint32_t>(const __m256i& v) {
+    return _mm256_madd_epi16(hadd_impl<uint16_t>(v), _mm256_set1_epi16(1));
+}
+
+template <>
+__m256i hadd_impl<uint64_t>(const __m256i& v) {
+    return _mm256_sad_epu8(v, _mm256_setzero_si256());
+}
+
+template <typename T>
+native_simd<T> popcount_impl(const native_simd<T>& v) {
+    __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2,
+                    2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1, 2, 2, 3,
+                    1, 2, 2, 3, 2, 3, 3, 4);
+    const __m256i low_mask = _mm256_set1_epi8(0x0F);
+    __m256i lo = _mm256_and_si256(v, low_mask);
+    __m256i hi = _mm256_and_si256(_mm256_srli_epi32(v, 4), low_mask);
+    __m256i popcnt1 = _mm256_shuffle_epi8(lookup, lo);
+    __m256i popcnt2 = _mm256_shuffle_epi8(lookup, hi);
+    __m256i total = _mm256_add_epi8(popcnt1, popcnt2);
+    return hadd_impl<T>(total);
+}
+
+template <typename T>
+std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) {
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    popcount_impl(a).store(&res[0]);
+    return res;
+}
+
+template <typename T>
+native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm256_and_si256(a, b);
+}
+
+template <typename T>
+native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b)
+{
+    a = a & b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm256_or_si256(a, b);
+}
+
+template <typename T>
+native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b)
+{
+    a = a | b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm256_xor_si256(a, b);
+}
+
+template <typename T>
+native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b)
+{
+    a = a ^ b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator~(const native_simd<T>& a)
+{
+    return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
+}
+
+} // namespace detail
+} // namespace rapidfuzz
+
 #include <cmath>
 #include <limits>
 
@@ -2145,7 +2568,25 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 
 template <int MaxLen>
 struct MultiLCSseq {
-    MultiLCSseq() : pos(0) {}
+private:
+    static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = 0;
+        switch (MaxLen)
+        {
+        case 8:  vec_size = detail::native_simd<uint8_t>::size(); break;
+        case 16: vec_size = detail::native_simd<uint16_t>::size(); break;
+        case 32: vec_size = detail::native_simd<uint32_t>::size(); break;
+        case 64: vec_size = detail::native_simd<uint64_t>::size(); break;
+        }
+
+        size_t simd_vec_count = detail::ceil_div(count * MaxLen, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size, 64);
+    }
+
+public:
+    MultiLCSseq(size_t count)
+      : pos(0), PM(find_block_count(count)) {}
 
     template <typename Sentence1>
     void insert(const Sentence1& s1_)
@@ -2159,8 +2600,7 @@ struct MultiLCSseq {
         auto len = std::distance(first1, last1);
         auto block_pos = pos % 64;
         auto block = pos / 64;
-
-        PM.m_val.resize(block + 1);
+        assert(len <= MaxLen);
 
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
@@ -2233,342 +2673,8 @@ CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<Input
 
 
 
-#include <stdint.h>
-#include <immintrin.h>
-#include <array>
-
-namespace rapidfuzz {
-namespace detail {
-
-template <typename T>
-__m256i sum_impl(const __m256i& v);
-
-template <>
-__m256i sum_impl<uint8_t>(const __m256i& v) {
-    return v;
-}
-
-template <>
-__m256i sum_impl<uint16_t>(const __m256i& v) {
-    return _mm256_maddubs_epi16(v, _mm256_set1_epi8(1));
-}
-
-template <>
-__m256i sum_impl<uint32_t>(const __m256i& v) {
-    __m256i x = _mm256_maddubs_epi16(v, _mm256_set1_epi8(1));
-    return _mm256_madd_epi16(x, _mm256_set1_epi16(1));
-}
-
-template <>
-__m256i sum_impl<uint64_t>(const __m256i& v) {
-    return _mm256_sad_epu8(v, _mm256_setzero_si256());
-}
-
-template <typename T>
-__m256i popcount_impl(const __m256i& v) {
-    __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2,
-                    2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1, 2, 2, 3,
-                    1, 2, 2, 3, 2, 3, 3, 4);
-    const __m256i low_mask = _mm256_set1_epi8(0x0F);
-    __m256i lo = _mm256_and_si256(v, low_mask);
-    __m256i hi = _mm256_and_si256(_mm256_srli_epi32(v, 4), low_mask);
-    __m256i popcnt1 = _mm256_shuffle_epi8(lookup, lo);
-    __m256i popcnt2 = _mm256_shuffle_epi8(lookup, hi);
-    __m256i total = _mm256_add_epi8(popcnt1, popcnt2);
-    return sum_impl<T>(total);
-}
-
-template <typename T>
-class native_simd;
-
-template <>
-class native_simd<uint64_t>
-{
-public:
-    using value_type = uint64_t;
-
-    static const int _size = 4;
-    __m256i xmm;
-
-    native_simd() {}
-
-    native_simd(__m256i val)
-        : xmm(val) {}
-
-    native_simd(uint64_t a)
-    {
-        xmm = _mm256_set1_epi64x(static_cast<long long int>(a));
-    }
-
-    operator __m256i() const {
-        return xmm;
-    }
-
-    constexpr static int size() { return _size; }
-
-    native_simd load(const uint64_t* p) {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[0]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[3])
-        );
-        return *this;
-    }
-
-    void store(uint64_t* p) const {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const {
-        return _mm256_add_epi64(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) {
-        xmm = _mm256_add_epi64(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const {
-        return _mm256_sub_epi64(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) {
-        xmm = _mm256_sub_epi64(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint32_t>
-{
-public:
-    using value_type = uint32_t;
-
-    static const int _size = 8;
-    __m256i xmm;
-
-    native_simd() {}
-
-    native_simd(__m256i val)
-        : xmm(val) {}
-
-    native_simd(uint32_t a)
-    {
-        xmm = _mm256_set1_epi32(static_cast<int>(a));
-    }
-
-    operator __m256i() const {
-        return xmm;
-    }
-
-    constexpr static int size() { return _size; }
-
-    native_simd load(const uint64_t* p) {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[0]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[3])
-        );
-        return *this;
-    }
-
-    void store(uint32_t* p) const {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const {
-        return _mm256_add_epi32(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) {
-        xmm = _mm256_add_epi32(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const {
-        return _mm256_sub_epi32(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) {
-        xmm = _mm256_sub_epi32(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint16_t>
-{
-public:
-    using value_type = uint16_t;
-
-    static const int _size = 16;
-    __m256i xmm;
-
-    native_simd() {}
-
-    native_simd(__m256i val)
-        : xmm(val) {}
-
-    native_simd(uint16_t a)
-    {
-        xmm = _mm256_set1_epi16(static_cast<short>(a));
-    }
-
-    operator __m256i() const {
-        return xmm;
-    }
-
-    constexpr static int size() { return _size; }
-
-    native_simd load(const uint64_t* p) {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[0]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[3])
-        );
-        return *this;
-    }
-
-    void store(uint16_t* p) const {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const {
-        return _mm256_add_epi16(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) {
-        xmm = _mm256_add_epi16(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const {
-        return _mm256_sub_epi16(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) {
-        xmm = _mm256_sub_epi16(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint8_t>
-{
-public:
-    using value_type = uint8_t;
-
-    static const int _size = 32;
-    __m256i xmm;
-
-    native_simd() {}
-
-    native_simd(__m256i val)
-        : xmm(val) {}
-
-    native_simd(uint8_t a)
-    {
-        xmm = _mm256_set1_epi8(static_cast<char>(a));
-    }
-
-    operator __m256i() const {
-        return xmm;
-    }
-
-    constexpr static int size() { return _size; }
-
-    native_simd load(const uint64_t* p) {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[0]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[3])
-        );
-        return *this;
-    }
-
-    void store(uint8_t* p) const {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const {
-        return _mm256_add_epi8(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) {
-        xmm = _mm256_add_epi8(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const {
-        return _mm256_sub_epi8(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) {
-        xmm = _mm256_sub_epi8(xmm, b);
-        return *this;
-    }
-};
-
-template <typename T>
-std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) {
-    alignas(32) std::array<T, native_simd<T>::size()> res;
-    _mm256_store_si256(reinterpret_cast<__m256i*>(&res[0]), popcount_impl<T>(a));
-    return res;
-}
-
-template <typename T>
-native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b)
-{
-    return _mm256_and_si256(a, b);
-}
-
-template <typename T>
-native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b)
-{
-    a = a & b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b)
-{
-    return _mm256_or_si256(a, b);
-}
-
-template <typename T>
-native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b)
-{
-    a = a | b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b)
-{
-    return _mm256_xor_si256(a, b);
-}
-
-template <typename T>
-native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b)
-{
-    a = a ^ b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator~(const native_simd<T>& a)
-{
-    return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
-}
-
-} // namespace detail
-} // namespace rapidfuzz
-
 #include <algorithm>
+#include <iostream>
 
 namespace rapidfuzz {
 namespace detail {
@@ -2672,31 +2778,30 @@ static inline void longest_common_subsequence_simd(
     const common::BlockPatternMatchVector& block,
     InputIt first2, InputIt last2, int64_t score_cutoff)
 {
-    static constexpr int vec_count = detail::native_simd<VecType>::size();
-    static constexpr int vecs = vec_count * sizeof(VecType) / 8;
-    size_t block_count = block.m_val.size();
-
-    for (size_t cur_vec = 0; cur_vec < (block_count / vecs); ++cur_vec)
+    static constexpr size_t vecs = static_cast<size_t>(detail::native_simd<VecType>::size()) * sizeof(VecType) / 8;
+    
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs)
     {
-        detail::native_simd<VecType> S = static_cast<VecType>(-1);
+        detail::native_simd<VecType> S(static_cast<VecType>(-1));
 
-        for (; first2 != last2; ++first2) {
-            uint64_t stored[static_cast<unsigned int>(vecs)];
-            unroll<int, vecs>([&](auto i) {
-                stored[i] = block.get(cur_vec * vecs + i, *first2);
+        for (InputIt temp_first2 = first2; temp_first2 != last2; ++temp_first2) {
+
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, stored.size()>([&](auto i) {
+                stored[i] = block.get(cur_vec + i, *temp_first2);
             });
 
-            detail::native_simd<VecType> Matches;
-
-            Matches.load(stored);
+            detail::native_simd<VecType> Matches(stored.data());
             detail::native_simd<VecType> u = S & Matches;
             S = (S + u) | (S - u);
         }
 
         S = ~S;
+
         auto counts = popcount(S);
-        unroll<int, vec_count>([&](auto i) {
-            scores[cur_vec * vecs + i] = (counts[i] >= score_cutoff) ? counts[i] : 0;
+        unroll<int, counts.size()>([&](auto i) {
+            *scores = (counts[i] >= score_cutoff) ? counts[i] : 0;
+            scores++;
         });
     }
 }
@@ -2735,7 +2840,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
                                      InputIt1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff)
 {
-    auto words = block.m_val.size();
+    auto words = block.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     for (; first2 != last2; ++first2) {
@@ -3056,7 +3161,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    auto words = block.m_val.size();
+    auto words = block.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     std::vector<uint64_t> S(words, ~UINT64_C(0));
@@ -3101,7 +3206,7 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     }
     else {
         common::BlockPatternMatchVector block(first1, last1);
-        switch (block.m_val.size()) {
+        switch (block.size()) {
         case 1:
             return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
         case 2:
@@ -4027,8 +4132,8 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
  *
  * @return returns the levenshtein distance between s1 and s2
  */
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 first1,
+template <typename PMV, typename InputIt1, typename InputIt2>
+int64_t levenshtein_hyrroe2003(const PMV& PM, InputIt1 first1,
                                InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
@@ -4044,7 +4149,7 @@ int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 fi
     /* Searching */
     for (; first2 != last2; ++first2) {
         /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(*first2);
+        uint64_t PM_j = PM.get(0, *first2);
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -4084,7 +4189,7 @@ int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector&
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << 63;
 
-    const auto words = PM.m_val.size();
+    const auto words = PM.size();
 
     /* Searching */
     for (size_t i = 0; i < len2; ++i) {
@@ -4132,7 +4237,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
 
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    auto words = PM.m_val.size();
+    auto words = PM.size();
     int64_t currDist = len1;
 
     /* upper bound */
@@ -4237,7 +4342,7 @@ int64_t uniform_levenshtein_distance(const common::BlockPatternMatchVector& bloc
      */
     if (max >= 4) {
         if (len1 < 65) {
-            return levenshtein_hyrroe2003(block.m_val[0], first1, last1, first2, last2, max);
+            return levenshtein_hyrroe2003(block, first1, last1, first2, last2, max);
         }
         else {
             return levenshtein_myers1999_block(block, first1, last1, first2, last2, max);
@@ -4452,7 +4557,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatt
         {}
     };
 
-    auto words = PM.m_val.size();
+    auto words = PM.size();
     LevenshteinBitMatrix matrix(len2, words);
     matrix.dist = len1;
 

@@ -3,6 +3,7 @@
 
 #pragma once
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/simd_avx2.hpp>
 
 #include <cmath>
 #include <limits>
@@ -48,7 +49,25 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 
 template <int MaxLen>
 struct MultiLCSseq {
-    MultiLCSseq() : pos(0) {}
+private:
+    static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = 0;
+        switch (MaxLen)
+        {
+        case 8:  vec_size = detail::native_simd<uint8_t>::size(); break;
+        case 16: vec_size = detail::native_simd<uint16_t>::size(); break;
+        case 32: vec_size = detail::native_simd<uint32_t>::size(); break;
+        case 64: vec_size = detail::native_simd<uint64_t>::size(); break;
+        }
+
+        size_t simd_vec_count = detail::ceil_div(count * MaxLen, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size, 64);
+    }
+
+public:
+    MultiLCSseq(size_t count)
+      : pos(0), PM(find_block_count(count)) {}
 
     template <typename Sentence1>
     void insert(const Sentence1& s1_)
@@ -62,8 +81,7 @@ struct MultiLCSseq {
         auto len = std::distance(first1, last1);
         auto block_pos = pos % 64;
         auto block = pos / 64;
-
-        PM.m_val.resize(block + 1);
+        assert(len <= MaxLen);
 
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);

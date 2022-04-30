@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <stdint.h>
 #include <bitset>
+#include <limits>
+#include <type_traits>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>
@@ -74,6 +76,15 @@ static inline int popcount(uint8_t x)
     return bit_count[x];
 }
 
+template <typename T>
+constexpr T rotl(T x, unsigned int n)
+{
+    unsigned int num_bits = std::numeric_limits<T>::digits;
+    assert(n < num_bits);
+    unsigned int count_mask = num_bits - 1;
+  
+    return (x << n) | (x >> ( -n & count_mask));
+}
 
 /**
  * Extract the lowest set bit from a. If no bits are set in a returns 0.
