@@ -431,7 +431,8 @@ struct BlockPatternMatchVector {
         : m_block_count(block_count),
           m_map(block_count),
           m_extendedAscii(256, block_count, 0)
-    {}
+    {
+    }
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)

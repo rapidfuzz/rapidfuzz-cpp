@@ -19,25 +19,25 @@ public:
     static const int _size = 2;
     __m128i xmm;
 
-    native_simd() {}
+    native_simd() noexcept {}
 
-    native_simd(__m128i val)
+    native_simd(__m128i val) noexcept
         : xmm(val) {}
 
-    native_simd(uint64_t a)
+    native_simd(uint64_t a) noexcept
     {
         xmm = _mm_set1_epi64(reinterpret_cast<__m64>(a));
     }
 
-    native_simd(const uint64_t* p) { load(p); }
+    native_simd(const uint64_t* p) noexcept { load(p); }
 
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
 
-    constexpr static int size() { return _size; }
+    constexpr static int size() noexcept { return _size; }
 
-    native_simd load(const uint64_t* p) {
+    native_simd load(const uint64_t* p) noexcept {
         xmm = _mm_set_epi64x(
             static_cast<long long int>(p[1]),
             static_cast<long long int>(p[0])
@@ -45,24 +45,24 @@ public:
         return *this;
     }
 
-    void store(uint64_t* p) const {
+    void store(uint64_t* p) const noexcept {
         _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
-    native_simd operator+(const native_simd b) const {
+    native_simd operator+(const native_simd b) const noexcept {
         return _mm_add_epi64(xmm, b);
     }
 
-    native_simd& operator+=(const native_simd b) {
+    native_simd& operator+=(const native_simd b) noexcept {
         xmm = _mm_add_epi64(xmm, b);
         return *this;
     }
 
-    native_simd operator-(const native_simd b) const {
+    native_simd operator-(const native_simd b) const noexcept {
         return _mm_sub_epi64(xmm, b);
     }
 
-    native_simd& operator-=(const native_simd b) {
+    native_simd& operator-=(const native_simd b) noexcept {
         xmm = _mm_sub_epi64(xmm, b);
         return *this;
     }
@@ -75,25 +75,25 @@ public:
     static const int _size = 4;
     __m128i xmm;
 
-    native_simd() {}
+    native_simd() noexcept {}
 
-    native_simd(__m128i val)
+    native_simd(__m128i val) noexcept
         : xmm(val) {}
 
-    native_simd(uint32_t a)
+    native_simd(uint32_t a) noexcept
     {
         xmm = _mm_set1_epi32(static_cast<int>(a));
     }
 
-    native_simd(const uint64_t* p) { load(p); }
+    native_simd(const uint64_t* p) noexcept { load(p); }
 
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
 
-    constexpr static int size() { return _size; }
+    constexpr static int size() noexcept { return _size; }
 
-    native_simd load(const uint64_t* p) {
+    native_simd load(const uint64_t* p) noexcept {
         xmm = _mm_set_epi64x(
             static_cast<long long int>(p[1]),
             static_cast<long long int>(p[0])
@@ -101,24 +101,24 @@ public:
         return *this;
     }
 
-    void store(uint32_t* p) const {
+    void store(uint32_t* p) const noexcept {
         _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
-    native_simd operator+(const native_simd b) const {
+    native_simd operator+(const native_simd b) const noexcept {
         return _mm_add_epi32(xmm, b);
     }
 
-    native_simd& operator+=(const native_simd b) {
+    native_simd& operator+=(const native_simd b) noexcept {
         xmm = _mm_add_epi32(xmm, b);
         return *this;
     }
 
-    native_simd operator-(const native_simd b) const {
+    native_simd operator-(const native_simd b) const noexcept {
         return _mm_sub_epi32(xmm, b);
     }
 
-    native_simd& operator-=(const native_simd b) {
+    native_simd& operator-=(const native_simd b) noexcept {
         xmm = _mm_sub_epi32(xmm, b);
         return *this;
     }
@@ -131,25 +131,25 @@ public:
     static const int _size = 8;
     __m128i xmm;
 
-    native_simd() {}
+    native_simd() noexcept {}
 
-    native_simd(__m128i val)
+    native_simd(__m128i val) noexcept
         : xmm(val) {}
 
-    native_simd(uint16_t a)
+    native_simd(uint16_t a) noexcept
     {
         xmm = _mm_set1_epi16(static_cast<short>(a));
     }
 
-    native_simd(const uint64_t* p) { load(p); }
+    native_simd(const uint64_t* p) noexcept { load(p); }
 
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
 
-    constexpr static int size() { return _size; }
+    constexpr static int size() noexcept { return _size; }
 
-    native_simd load(const uint64_t* p) {
+    native_simd load(const uint64_t* p) noexcept {
         xmm = _mm_set_epi64x(
             static_cast<long long int>(p[1]),
             static_cast<long long int>(p[0])
@@ -157,24 +157,24 @@ public:
         return *this;
     }
 
-    void store(uint16_t* p) const {
+    void store(uint16_t* p) const noexcept {
         _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
-    native_simd operator+(const native_simd b) const {
+    native_simd operator+(const native_simd b) const noexcept {
         return _mm_add_epi16(xmm, b);
     }
 
-    native_simd& operator+=(const native_simd b) {
+    native_simd& operator+=(const native_simd b) noexcept {
         xmm = _mm_add_epi16(xmm, b);
         return *this;
     }
 
-    native_simd operator-(const native_simd b) const {
+    native_simd operator-(const native_simd b) const noexcept {
         return _mm_sub_epi16(xmm, b);
     }
 
-    native_simd& operator-=(const native_simd b) {
+    native_simd& operator-=(const native_simd b) noexcept {
         xmm = _mm_sub_epi16(xmm, b);
         return *this;
     }
@@ -187,25 +187,25 @@ public:
     static const int _size = 16;
     __m128i xmm;
 
-    native_simd() {}
+    native_simd() noexcept {}
 
-    native_simd(__m128i val)
+    native_simd(__m128i val) noexcept
         : xmm(val) {}
 
-    native_simd(uint8_t a)
+    native_simd(uint8_t a) noexcept
     {
         xmm = _mm_set1_epi8(static_cast<char>(a));
     }
 
-    native_simd(const uint64_t* p) { load(p); }
+    native_simd(const uint64_t* p) noexcept { load(p); }
 
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
 
-    constexpr static int size() { return _size; }
+    constexpr static int size() noexcept { return _size; }
 
-    native_simd load(const uint64_t* p) {
+    native_simd load(const uint64_t* p) noexcept {
         xmm = _mm_set_epi64x(
             static_cast<long long int>(p[1]),
             static_cast<long long int>(p[0])
@@ -213,39 +213,39 @@ public:
         return *this;
     }
 
-    void store(uint8_t* p) const {
+    void store(uint8_t* p) const noexcept {
         _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
     }
 
-    native_simd operator+(const native_simd b) const {
+    native_simd operator+(const native_simd b) const noexcept {
         return _mm_add_epi8(xmm, b);
     }
 
-    native_simd& operator+=(const native_simd b) {
+    native_simd& operator+=(const native_simd b) noexcept {
         xmm = _mm_add_epi8(xmm, b);
         return *this;
     }
 
-    native_simd operator-(const native_simd b) const {
+    native_simd operator-(const native_simd b) const noexcept {
         return _mm_sub_epi8(xmm, b);
     }
 
-    native_simd& operator-=(const native_simd b) {
+    native_simd& operator-=(const native_simd b) noexcept {
         xmm = _mm_sub_epi8(xmm, b);
         return *this;
     }
 };
 
 template <typename T>
-__m128i hadd_impl(const __m128i& v);
+__m128i hadd_impl(const __m128i& v) noexcept;
 
 template <>
-__m128i hadd_impl<uint8_t>(const __m128i& v) {
+inline __m128i hadd_impl<uint8_t>(const __m128i& v) noexcept {
     return v;
 }
 
 template <>
-__m128i hadd_impl<uint16_t>(const __m128i& v) {
+inline __m128i hadd_impl<uint16_t>(const __m128i& v) noexcept {
     __m128i mask = _mm_set_epi16(
         static_cast<short>(-1), static_cast<short>(0),
         static_cast<short>(-1), static_cast<short>(0),
@@ -260,17 +260,17 @@ __m128i hadd_impl<uint16_t>(const __m128i& v) {
 }
 
 template <>
-__m128i hadd_impl<uint32_t>(const __m128i& v) {
+inline __m128i hadd_impl<uint32_t>(const __m128i& v) noexcept {
     return _mm_madd_epi16(hadd_impl<uint16_t>(v), _mm_set1_epi16(1));
 }
 
 template <>
-__m128i hadd_impl<uint64_t>(const __m128i& v) {
+inline __m128i hadd_impl<uint64_t>(const __m128i& v) noexcept {
     return _mm_sad_epu8(v, _mm_setzero_si128());
 }
 
 template <typename T>
-native_simd<T> popcount_impl(const native_simd<T>& v) {
+native_simd<T> popcount_impl(const native_simd<T>& v) noexcept {
     __m128i n, x, total;
     const __m128i popcount_mask1 = _mm_set1_epi8(0x77);
     const __m128i popcount_mask2 = _mm_set1_epi8(0x0F);
@@ -302,7 +302,7 @@ native_simd<T> popcount_impl(const native_simd<T>& v) {
 }
 
 template <typename T>
-std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) {
+std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept {
     alignas(16) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
@@ -310,46 +310,46 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) {
 
 
 template <typename T>
-native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b)
+native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     return _mm_and_si128(a, b);
 }
 
 template <typename T>
-native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b)
+native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     a = a & b;
     return a;
 }
 
 template <typename T>
-native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b)
+native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     return _mm_or_si128(a, b);
 }
 
 template <typename T>
-native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b)
+native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     a = a | b;
     return a;
 }
 
 template <typename T>
-native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b)
+native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     return _mm_xor_si128(a, b);
 }
 
 template <typename T>
-native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b)
+native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     a = a ^ b;
     return a;
 }
 
 template <typename T>
-native_simd<T> operator~(const native_simd<T>& a)
+native_simd<T> operator~(const native_simd<T>& a) noexcept
 {
     return _mm_xor_si128(a, _mm_set1_epi32(-1));
 }

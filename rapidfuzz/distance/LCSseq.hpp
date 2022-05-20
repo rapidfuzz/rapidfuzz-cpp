@@ -3,7 +3,7 @@
 
 #pragma once
 #include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/simd_sse2.hpp>
+#include <rapidfuzz/details/simd.hpp>
 
 #include <cmath>
 #include <limits>
@@ -47,27 +47,42 @@ Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputI
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 
+#if defined(__SSE2__) || defined(__AVX2__)
+/**
+ * @note scores always need to be big enough to store find_result_count(count)
+ */
 template <int MaxLen>
 struct MultiLCSseq {
 private:
-    static size_t find_block_count(size_t count)
+    constexpr static size_t get_vec_size()
     {
-        size_t vec_size = 0;
         switch (MaxLen)
         {
-        case 8:  vec_size = detail::native_simd<uint8_t>::size(); break;
-        case 16: vec_size = detail::native_simd<uint16_t>::size(); break;
-        case 32: vec_size = detail::native_simd<uint32_t>::size(); break;
-        case 64: vec_size = detail::native_simd<uint64_t>::size(); break;
+        case 8:  return detail::native_simd<uint8_t>::size(); break;
+        case 16: return detail::native_simd<uint16_t>::size(); break;
+        case 32: return detail::native_simd<uint32_t>::size(); break;
+        case 64: return detail::native_simd<uint64_t>::size(); break;
         }
+        assert(false);
+    }
 
-        size_t simd_vec_count = detail::ceil_div(count * MaxLen, vec_size);
-        return detail::ceil_div(simd_vec_count * vec_size, 64);
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+    constexpr static size_t find_result_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return simd_vec_count * vec_size;
     }
 
 public:
     MultiLCSseq(size_t count)
-      : pos(0), PM(find_block_count(count)) {}
+      : pos(0), input_count(count), PM(find_block_count(count)) {}
 
     template <typename Sentence1>
     void insert(const Sentence1& s1_)
@@ -82,6 +97,7 @@ public:
         auto block_pos = pos % 64;
         auto block = pos / 64;
         assert(len <= MaxLen);
+        str_lens.push_back(static_cast<size_t>(len));
 
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
@@ -91,15 +107,38 @@ public:
     }
 
     template <typename InputIt2>
-    void similarity(int64_t* scores, InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
+    void distance(int64_t* scores, InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
 
-    //template <typename Sentence2>
-    //int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
+    template <typename Sentence2>
+    void distance(int64_t* scores, const Sentence2& s2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+
+    template <typename InputIt2>
+    void similarity(int64_t* scores, InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const noexcept;
+
+    template <typename Sentence2>
+    void similarity(int64_t* scores, const Sentence2& s2, int64_t score_cutoff = 0) const noexcept;
+
+    template <typename InputIt2>
+    void normalized_distance(double* scores, InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename Sentence2>
+    void normalized_distance(double* scores, const Sentence2& s2, double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename InputIt2>
+    void normalized_similarity(double* scores, InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename Sentence2>
+    void normalized_similarity(double* scores, const Sentence2& s2, double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
 
 private:
-    std::ptrdiff_t pos;
+    size_t input_count;
+    ptrdiff_t pos;
     common::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
 };
+#endif
 
 template <typename CharT1>
 struct CachedLCSseq {
