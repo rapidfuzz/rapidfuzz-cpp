@@ -912,12 +912,6 @@ constexpr T ceil_div(T a, U divisor)
     return a / _div + static_cast<T>(a % _div != 0);
 }
 
-template <typename T>
-constexpr int popcount(T x)
-{
-    return static_cast<int>(std::bitset<sizeof(T) * 8>(x).count());
-}
-
 static inline int popcount(uint64_t x)
 {
     return static_cast<int>(std::bitset<64>(x).count());
