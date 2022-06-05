@@ -28,31 +28,6 @@ struct DecomposedSet {
     {}
 };
 
-namespace detail {
-template<typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
-struct UnrollImpl;
-
-template<typename T, T N, T Pos>
-struct UnrollImpl<T, N, Pos, false> {
-    template <typename F>
-    static void call(F&& f) {
-        f(Pos);
-        UnrollImpl<T, N-1, Pos + 1>::call(std::forward<F>(f));
-    }
-};
-
-template<typename T, T N, T Pos>
-struct UnrollImpl<T, N, Pos, true> {
-    template <typename F>
-    static void call(F&&) {}
-};
-
-template<typename T, int N, class F>
-constexpr void unroll(F&& f) {
-  detail::UnrollImpl<T, N>::call(f);
-}
-}
-
 namespace common {
 
 /**
@@ -71,8 +46,7 @@ static inline void assume(bool b)
 #if defined(__clang__)
     __builtin_assume(b);
 #elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b)
-    {
+    if (!b) {
         __builtin_unreachable();
     }
 #elif defined(_MSC_VER)

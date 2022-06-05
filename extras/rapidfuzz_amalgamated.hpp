@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-04-28 23:04:57.760485
+//  Generated: 2022-06-05 17:53:36.894499
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -882,9 +882,11 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 
 } // namespace rapidfuzz
 
-#include <cstddef>
-#include <stdint.h>
 #include <bitset>
+#include <cstddef>
+#include <limits>
+#include <stdint.h>
+#include <type_traits>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #    include <intrin.h>
@@ -906,13 +908,48 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 template <typename T, typename U>
 constexpr T ceil_div(T a, U divisor)
 {
-    return a / divisor + static_cast<T>(a % divisor != 0);
+    T _div = static_cast<T>(divisor);
+    return a / _div + static_cast<T>(a % _div != 0);
+}
+
+static inline int popcount(uint64_t x)
+{
+    return static_cast<int>(std::bitset<64>(x).count());
+}
+
+static inline int popcount(uint32_t x)
+{
+    return static_cast<int>(std::bitset<32>(x).count());
+}
+
+static inline int popcount(uint16_t x)
+{
+    return static_cast<int>(std::bitset<16>(x).count());
+}
+
+static inline int popcount(uint8_t x)
+{
+    static constexpr int bit_count[256] = {
+        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3,
+        4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4,
+        4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4,
+        5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5,
+        4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2,
+        3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5,
+        5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4,
+        5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6,
+        4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
+    return bit_count[x];
 }
 
 template <typename T>
-constexpr int popcount(T x)
+constexpr T rotl(T x, unsigned int n)
 {
-    return static_cast<int>(std::bitset<sizeof(T) * 8>(x).count());
+    unsigned int num_bits = std::numeric_limits<T>::digits;
+    assert(n < num_bits);
+    unsigned int count_mask = num_bits - 1;
+
+    return (x << n) | (x >> (-n & count_mask));
 }
 
 /**
@@ -982,6 +1019,32 @@ static inline int countr_zero(uint64_t x)
 }
 #endif
 
+template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+struct UnrollImpl;
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, false> {
+    template <typename F>
+    static void call(F&& f)
+    {
+        f(Pos);
+        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
+    }
+};
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, true> {
+    template <typename F>
+    static void call(F&&)
+    {}
+};
+
+template <typename T, int N, class F>
+constexpr void unroll(F&& f)
+{
+    detail::UnrollImpl<T, N>::call(f);
+}
+
 } // namespace detail
 } // namespace rapidfuzz
 #include <unordered_set>
@@ -1002,31 +1065,6 @@ struct DecomposedSet {
     {}
 };
 
-namespace detail {
-template<typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
-struct UnrollImpl;
-
-template<typename T, T N, T Pos>
-struct UnrollImpl<T, N, Pos, false> {
-    template <typename F>
-    static void call(F&& f) {
-        f(Pos);
-        UnrollImpl<T, N-1, Pos + 1>::call(std::forward<F>(f));
-    }
-};
-
-template<typename T, T N, T Pos>
-struct UnrollImpl<T, N, Pos, true> {
-    template <typename F>
-    static void call(F&&) {}
-};
-
-template<typename T, int N, class F>
-constexpr void unroll(F&& f) {
-  detail::UnrollImpl<T, N>::call(f);
-}
-}
-
 namespace common {
 
 /**
@@ -1045,8 +1083,7 @@ static inline void assume(bool b)
 #if defined(__clang__)
     __builtin_assume(b);
 #elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b)
-    {
+    if (!b) {
         __builtin_unreachable();
     }
 #elif defined(_MSC_VER)
@@ -2263,13 +2300,11 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
                                                         int64_t score_cutoff)
 {
     uint64_t S[N];
-    unroll<size_t, N>([&](size_t i){
-        S[i] = ~UINT64_C(0);
-    });
+    unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     for (; first2 != last2; ++first2) {
         uint64_t carry = 0;
-        unroll<size_t, N>([&](size_t i){
+        unroll<size_t, N>([&](size_t i) {
             uint64_t Matches = block.get(i, *first2);
             uint64_t u = S[i] & Matches;
             uint64_t x = addc64(S[i], u, carry, &carry);
@@ -2278,9 +2313,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
     }
 
     int64_t res = 0;
-    unroll<size_t, N>([&](size_t i){
-        res += popcount(~S[i]);
-    });
+    unroll<size_t, N>([&](size_t i) { res += popcount(~S[i]); });
 
     return (res >= score_cutoff) ? res : 0;
 }
@@ -2580,15 +2613,13 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
     uint64_t S[N];
-    unroll<size_t, N>([&](size_t i){
-        S[i] = ~UINT64_C(0);
-    });
+    unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LLCSBitMatrix matrix(len2, N);
 
     for (ptrdiff_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
-        unroll<size_t, N>([&](size_t word){
+        unroll<size_t, N>([&](size_t word) {
             uint64_t Matches = block.get(word, first2[i]);
             uint64_t u = S[word] & Matches;
             uint64_t x = addc64(S[word], u, carry, &carry);
@@ -2597,9 +2628,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     }
 
     int64_t res = 0;
-    unroll<size_t, N>([&](size_t i){
-        res += popcount(~S[i]);
-    });
+    unroll<size_t, N>([&](size_t i) { res += popcount(~S[i]); });
 
     matrix.dist = static_cast<ptrdiff_t>(static_cast<int64_t>(len1) + len2 - 2 * res);
 
