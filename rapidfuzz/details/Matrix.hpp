@@ -2,13 +2,12 @@
 /* Copyright (c) 2022 Max Bachmann */
 
 #pragma once
-#include <stdio.h>
 #include <algorithm>
 #include <cassert>
+#include <stdio.h>
 
 namespace rapidfuzz {
 namespace detail {
-
 
 template <typename T, bool IsConst>
 struct MatrixVectorView {
@@ -113,5 +112,5 @@ private:
     T* m_matrix;
 };
 
-}
-}
+} // namespace detail
+} // namespace rapidfuzz

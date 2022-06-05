@@ -2,8 +2,8 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #include <cmath>
-#include <rapidfuzz/distance/Indel.hpp>
 #include <rapidfuzz/details/Matrix.hpp>
+#include <rapidfuzz/distance/Indel.hpp>
 
 namespace rapidfuzz {
 namespace detail {

@@ -3,6 +3,7 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
+#include <rapidfuzz/details/CharSet.hpp>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 
@@ -139,7 +140,7 @@ struct CachedPartialRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    common::CharSet<CharT1> s1_char_set;
+    detail::CharSet<CharT1> s1_char_set;
     CachedRatio<CharT1> cached_ratio;
 };
 
