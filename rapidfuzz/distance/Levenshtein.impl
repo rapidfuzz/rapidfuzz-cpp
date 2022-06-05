@@ -194,8 +194,8 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename PMV, typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const PMV& PM, InputIt1 first1,
-                               InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
+int64_t levenshtein_hyrroe2003(const PMV& PM, InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                               InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
 

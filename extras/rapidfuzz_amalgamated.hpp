@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-05 17:07:43.345078
+//  Generated: 2022-06-05 17:31:33.947663
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -882,10 +882,10 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 
 } // namespace rapidfuzz
 
-#include <cstddef>
-#include <stdint.h>
 #include <bitset>
+#include <cstddef>
 #include <limits>
+#include <stdint.h>
 #include <type_traits>
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -936,23 +936,15 @@ static inline int popcount(uint16_t x)
 static inline int popcount(uint8_t x)
 {
     static constexpr int bit_count[256] = {
-        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-    };
+        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3,
+        4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4,
+        4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4,
+        5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5,
+        4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2,
+        3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5,
+        5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4,
+        5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6,
+        4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
     return bit_count[x];
 }
 
@@ -962,8 +954,8 @@ constexpr T rotl(T x, unsigned int n)
     unsigned int num_bits = std::numeric_limits<T>::digits;
     assert(n < num_bits);
     unsigned int count_mask = num_bits - 1;
-  
-    return (x << n) | (x >> ( -n & count_mask));
+
+    return (x << n) | (x >> (-n & count_mask));
 }
 
 /**
@@ -1033,27 +1025,30 @@ static inline int countr_zero(uint64_t x)
 }
 #endif
 
-template<typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
 struct UnrollImpl;
 
-template<typename T, T N, T Pos>
+template <typename T, T N, T Pos>
 struct UnrollImpl<T, N, Pos, false> {
     template <typename F>
-    static void call(F&& f) {
+    static void call(F&& f)
+    {
         f(Pos);
-        UnrollImpl<T, N-1, Pos + 1>::call(std::forward<F>(f));
+        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
     }
 };
 
-template<typename T, T N, T Pos>
+template <typename T, T N, T Pos>
 struct UnrollImpl<T, N, Pos, true> {
     template <typename F>
-    static void call(F&&) {}
+    static void call(F&&)
+    {}
 };
 
-template<typename T, int N, class F>
-constexpr void unroll(F&& f) {
-  detail::UnrollImpl<T, N>::call(f);
+template <typename T, int N, class F>
+constexpr void unroll(F&& f)
+{
+    detail::UnrollImpl<T, N>::call(f);
 }
 
 } // namespace detail
@@ -1094,8 +1089,7 @@ static inline void assume(bool b)
 #if defined(__clang__)
     __builtin_assume(b);
 #elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b)
-    {
+    if (!b) {
         __builtin_unreachable();
     }
 #elif defined(_MSC_VER)
@@ -1476,11 +1470,8 @@ private:
 
 struct BlockPatternMatchVector {
     BlockPatternMatchVector(size_t block_count)
-        : m_block_count(block_count),
-          m_map(block_count),
-          m_extendedAscii(256, block_count, 0)
-    {
-    }
+        : m_block_count(block_count), m_map(block_count), m_extendedAscii(256, block_count, 0)
+    {}
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
@@ -1489,7 +1480,8 @@ struct BlockPatternMatchVector {
         insert(first, last);
     }
 
-    size_t size() const noexcept {
+    size_t size() const noexcept
+    {
         return m_block_count;
     }
 
@@ -2183,712 +2175,603 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 
 #if defined(_M_X64) && !defined(__SSE2__)
-#   define __SSE2__
+#    define __SSE2__
 #endif
 
 #ifdef __x86_64__
-#ifdef __AVX2__
+#    ifdef __AVX2__
+#        include <rapidfuzz/details/simd_avx2.hpp>
+#    elif defined(__SSE2__)
+#        include <rapidfuzz/details/simd_sse2.hpp>
+#    endif
+#endif
+/*
+This is an implementation of C++20's std::span
+http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf
+*/
 
-#include <stdint.h>
-#include <immintrin.h>
+//          Copyright Tristan Brindle 2018.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file ../../LICENSE_1_0.txt or copy at
+//          https://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef TCB_SPAN_HPP_INCLUDED
+#define TCB_SPAN_HPP_INCLUDED
+
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
 
-namespace rapidfuzz {
+#ifndef TCB_SPAN_NO_EXCEPTIONS
+// Attempt to discover whether we're being compiled with exception support
+#    if !(defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND))
+#        define TCB_SPAN_NO_EXCEPTIONS
+#    endif
+#endif
+
+#ifndef TCB_SPAN_NO_EXCEPTIONS
+#    include <cstdio>
+#    include <stdexcept>
+#endif
+
+// Various feature test macros
+
+#ifndef TCB_SPAN_NAMESPACE_NAME
+#    define TCB_SPAN_NAMESPACE_NAME tcb
+#endif
+
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#    define TCB_SPAN_HAVE_CPP17
+#endif
+
+#if __cplusplus >= 201402L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
+#    define TCB_SPAN_HAVE_CPP14
+#endif
+
+namespace TCB_SPAN_NAMESPACE_NAME {
+
+// Establish default contract checking behavior
+#if !defined(TCB_SPAN_THROW_ON_CONTRACT_VIOLATION) &&                                              \
+    !defined(TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION) && !defined(TCB_SPAN_NO_CONTRACT_CHECKING)
+#    if defined(NDEBUG) || !defined(TCB_SPAN_HAVE_CPP14)
+#        define TCB_SPAN_NO_CONTRACT_CHECKING
+#    else
+#        define TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION
+#    endif
+#endif
+
+#if defined(TCB_SPAN_THROW_ON_CONTRACT_VIOLATION)
+struct contract_violation_error : std::logic_error {
+    explicit contract_violation_error(const char* msg) : std::logic_error(msg)
+    {}
+};
+
+inline void contract_violation(const char* msg)
+{
+    throw contract_violation_error(msg);
+}
+
+#elif defined(TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION)
+[[noreturn]] inline void contract_violation(const char* /*unused*/)
+{
+    std::terminate();
+}
+#endif
+
+#if !defined(TCB_SPAN_NO_CONTRACT_CHECKING)
+#    define TCB_SPAN_STRINGIFY(cond) #    cond
+#    define TCB_SPAN_EXPECT(cond)                                                                  \
+        cond ? (void)0 : contract_violation("Expected " TCB_SPAN_STRINGIFY(cond))
+#else
+#    define TCB_SPAN_EXPECT(cond)
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_inline_variables)
+#    define TCB_SPAN_INLINE_VAR inline
+#else
+#    define TCB_SPAN_INLINE_VAR
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP14) || (defined(__cpp_constexpr) && __cpp_constexpr >= 201304)
+#    define TCB_SPAN_HAVE_CPP14_CONSTEXPR
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP14_CONSTEXPR)
+#    define TCB_SPAN_CONSTEXPR14 constexpr
+#else
+#    define TCB_SPAN_CONSTEXPR14
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP14_CONSTEXPR) && (!defined(_MSC_VER) || _MSC_VER > 1900)
+#    define TCB_SPAN_CONSTEXPR_ASSIGN constexpr
+#else
+#    define TCB_SPAN_CONSTEXPR_ASSIGN
+#endif
+
+#if defined(TCB_SPAN_NO_CONTRACT_CHECKING)
+#    define TCB_SPAN_CONSTEXPR11 constexpr
+#else
+#    define TCB_SPAN_CONSTEXPR11 TCB_SPAN_CONSTEXPR14
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_deduction_guides)
+#    define TCB_SPAN_HAVE_DEDUCTION_GUIDES
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_byte)
+#    define TCB_SPAN_HAVE_STD_BYTE
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_array_constexpr)
+#    define TCB_SPAN_HAVE_CONSTEXPR_STD_ARRAY_ETC
+#endif
+
+#if defined(TCB_SPAN_HAVE_CONSTEXPR_STD_ARRAY_ETC)
+#    define TCB_SPAN_ARRAY_CONSTEXPR constexpr
+#else
+#    define TCB_SPAN_ARRAY_CONSTEXPR
+#endif
+
+#ifdef TCB_SPAN_HAVE_STD_BYTE
+using byte = std::byte;
+#else
+using byte = unsigned char;
+#endif
+
+#if defined(TCB_SPAN_HAVE_CPP17)
+#    define TCB_SPAN_NODISCARD [[nodiscard]]
+#else
+#    define TCB_SPAN_NODISCARD
+#endif
+
+TCB_SPAN_INLINE_VAR constexpr std::size_t dynamic_extent = SIZE_MAX;
+
+template <typename ElementType, std::size_t Extent = dynamic_extent>
+class span;
+
 namespace detail {
 
+template <typename E, std::size_t S>
+struct span_storage {
+    constexpr span_storage() noexcept = default;
+
+    constexpr span_storage(E* p_ptr, std::size_t /*unused*/) noexcept : ptr(p_ptr)
+    {}
+
+    E* ptr = nullptr;
+    static constexpr std::size_t size = S;
+};
+
+template <typename E>
+struct span_storage<E, dynamic_extent> {
+    constexpr span_storage() noexcept = default;
+
+    constexpr span_storage(E* p_ptr, std::size_t p_size) noexcept : ptr(p_ptr), size(p_size)
+    {}
+
+    E* ptr = nullptr;
+    std::size_t size = 0;
+};
+
+// Reimplementation of C++17 std::size() and std::data()
+#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_nonmember_container_access)
+using std::data;
+using std::size;
+#else
+template <class C>
+constexpr auto size(const C& c) -> decltype(c.size())
+{
+    return c.size();
+}
+
+template <class T, std::size_t N>
+constexpr std::size_t size(const T (&)[N]) noexcept
+{
+    return N;
+}
+
+template <class C>
+constexpr auto data(C& c) -> decltype(c.data())
+{
+    return c.data();
+}
+
+template <class C>
+constexpr auto data(const C& c) -> decltype(c.data())
+{
+    return c.data();
+}
+
+template <class T, std::size_t N>
+constexpr T* data(T (&array)[N]) noexcept
+{
+    return array;
+}
+
+template <class E>
+constexpr const E* data(std::initializer_list<E> il) noexcept
+{
+    return il.begin();
+}
+#endif // TCB_SPAN_HAVE_CPP17
+
+#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_void_t)
+using std::void_t;
+#else
+template <typename...>
+using void_t = void;
+#endif
+
 template <typename T>
-class native_simd;
+using uncvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
-template <>
-class native_simd<uint64_t>
-{
-public:
-    using value_type = uint64_t;
+template <typename>
+struct is_span : std::false_type {};
 
-    static const int _size = 4;
-    __m256i xmm;
+template <typename T, std::size_t S>
+struct is_span<span<T, S>> : std::true_type {};
 
-    native_simd() noexcept {}
+template <typename>
+struct is_std_array : std::false_type {};
 
-    native_simd(__m256i val) noexcept
-        : xmm(val) {}
+template <typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : std::true_type {};
 
-    native_simd(uint64_t a) noexcept
-    {
-        xmm = _mm256_set1_epi64x(static_cast<long long int>(a));
-    }
+template <typename, typename = void>
+struct has_size_and_data : std::false_type {};
 
-    native_simd(const uint64_t* p) noexcept { load(p); }
+template <typename T>
+struct has_size_and_data<
+    T, void_t<decltype(detail::size(std::declval<T>())), decltype(detail::data(std::declval<T>()))>>
+    : std::true_type {};
 
-    operator __m256i() const noexcept {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[3]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint64_t* p) const noexcept {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm256_add_epi64(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm256_add_epi64(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm256_sub_epi64(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm256_sub_epi64(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint32_t>
-{
-public:
-    using value_type = uint32_t;
-
-    static const int _size = 8;
-    __m256i xmm;
-
-    native_simd() noexcept {}
-
-    native_simd(__m256i val) noexcept
-        : xmm(val) {}
-
-    native_simd(uint32_t a) noexcept
-    {
-        xmm = _mm256_set1_epi32(static_cast<int>(a));
-    }
-
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m256i() const {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[3]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint32_t* p) const noexcept {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm256_add_epi32(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm256_add_epi32(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm256_sub_epi32(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm256_sub_epi32(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint16_t>
-{
-public:
-    using value_type = uint16_t;
-
-    static const int _size = 16;
-    __m256i xmm;
-
-    native_simd() noexcept {}
-
-    native_simd(__m256i val)
-        : xmm(val) {}
-
-    native_simd(uint16_t a) noexcept
-    {
-        xmm = _mm256_set1_epi16(static_cast<short>(a));
-    }
-
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m256i() const noexcept {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[3]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint16_t* p) const noexcept {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm256_add_epi16(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm256_add_epi16(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm256_sub_epi16(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm256_sub_epi16(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint8_t>
-{
-public:
-    using value_type = uint8_t;
-
-    static const int _size = 32;
-    __m256i xmm;
-
-    native_simd() noexcept {}
-
-    native_simd(__m256i val) noexcept
-        : xmm(val) {}
-
-    native_simd(uint8_t a) noexcept
-    {
-        xmm = _mm256_set1_epi8(static_cast<char>(a));
-    }
-
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m256i() const noexcept {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm256_set_epi64x(
-            static_cast<long long int>(p[3]),
-            static_cast<long long int>(p[2]),
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint8_t* p) const noexcept {
-        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm256_add_epi8(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm256_add_epi8(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm256_sub_epi8(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm256_sub_epi8(xmm, b);
-        return *this;
-    }
+template <typename C, typename U = uncvref_t<C>>
+struct is_container {
+    static constexpr bool value = !is_span<U>::value && !is_std_array<U>::value &&
+                                  !std::is_array<U>::value && has_size_and_data<C>::value;
 };
 
 template <typename T>
-__m256i hadd_impl(const __m256i& v) noexcept;
+using remove_pointer_t = typename std::remove_pointer<T>::type;
 
-template <>
-inline __m256i hadd_impl<uint8_t>(const __m256i& v) noexcept {
-    return v;
-}
+template <typename, typename, typename = void>
+struct is_container_element_type_compatible : std::false_type {};
 
-template <>
-inline __m256i hadd_impl<uint16_t>(const __m256i& v) noexcept {
-    return _mm256_maddubs_epi16(v, _mm256_set1_epi8(1));
-}
+template <typename T, typename E>
+struct is_container_element_type_compatible<
+    T, E,
+    typename std::enable_if<
+        !std::is_same<typename std::remove_cv<decltype(detail::data(std::declval<T>()))>::type,
+                      void>::value &&
+        std::is_convertible<remove_pointer_t<decltype(detail::data(std::declval<T>()))> (*)[],
+                            E (*)[]>::value>::type> : std::true_type {};
 
-template <>
-inline __m256i hadd_impl<uint32_t>(const __m256i& v) noexcept {
-    return _mm256_madd_epi16(hadd_impl<uint16_t>(v), _mm256_set1_epi16(1));
-}
-
-template <>
-inline __m256i hadd_impl<uint64_t>(const __m256i& v) noexcept {
-    return _mm256_sad_epu8(v, _mm256_setzero_si256());
-}
+template <typename, typename = size_t>
+struct is_complete : std::false_type {};
 
 template <typename T>
-native_simd<T> popcount_impl(const native_simd<T>& v) noexcept {
-    __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2,
-                    2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1, 2, 2, 3,
-                    1, 2, 2, 3, 2, 3, 3, 4);
-    const __m256i low_mask = _mm256_set1_epi8(0x0F);
-    __m256i lo = _mm256_and_si256(v, low_mask);
-    __m256i hi = _mm256_and_si256(_mm256_srli_epi32(v, 4), low_mask);
-    __m256i popcnt1 = _mm256_shuffle_epi8(lookup, lo);
-    __m256i popcnt2 = _mm256_shuffle_epi8(lookup, hi);
-    __m256i total = _mm256_add_epi8(popcnt1, popcnt2);
-    return hadd_impl<T>(total);
-}
-
-template <typename T>
-std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept {
-    alignas(32) std::array<T, native_simd<T>::size()> res;
-    popcount_impl(a).store(&res[0]);
-    return res;
-}
-
-template <typename T>
-native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    return _mm256_and_si256(a, b);
-}
-
-template <typename T>
-native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    a = a & b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    return _mm256_or_si256(a, b);
-}
-
-template <typename T>
-native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    a = a | b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    return _mm256_xor_si256(a, b);
-}
-
-template <typename T>
-native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    a = a ^ b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator~(const native_simd<T>& a) noexcept
-{
-    return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
-}
+struct is_complete<T, decltype(sizeof(T))> : std::true_type {};
 
 } // namespace detail
-} // namespace rapidfuzz
-#elif defined(__SSE2__)
 
-#include <stdint.h>
-#include <emmintrin.h>
-#include <tmmintrin.h>
-#include <array>
+template <typename ElementType, std::size_t Extent>
+class span {
+    static_assert(std::is_object<ElementType>::value,
+                  "A span's ElementType must be an object type (not a "
+                  "reference type or void)");
+    static_assert(detail::is_complete<ElementType>::value,
+                  "A span's ElementType must be a complete type (not a forward "
+                  "declaration)");
+    static_assert(!std::is_abstract<ElementType>::value,
+                  "A span's ElementType cannot be an abstract class type");
 
-namespace rapidfuzz {
-namespace detail {
+    using storage_type = detail::span_storage<ElementType, Extent>;
 
-template <typename T>
-class native_simd;
-
-template <>
-class native_simd<uint64_t>
-{
 public:
-    static const int _size = 2;
-    __m128i xmm;
+    // constants and types
+    using element_type = ElementType;
+    using value_type = typename std::remove_cv<ElementType>::type;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using pointer = element_type*;
+    using const_pointer = const element_type*;
+    using reference = element_type&;
+    using const_reference = const element_type&;
+    using iterator = pointer;
+    using reverse_iterator = std::reverse_iterator<iterator>;
 
-    native_simd() noexcept {}
+    static constexpr size_type extent = Extent;
 
-    native_simd(__m128i val) noexcept
-        : xmm(val) {}
+    // [span.cons], span constructors, copy, assignment, and destructor
+    template <std::size_t E = Extent,
+              typename std::enable_if<(E == dynamic_extent || E <= 0), int>::type = 0>
+    constexpr span() noexcept
+    {}
 
-    native_simd(uint64_t a) noexcept
+    TCB_SPAN_CONSTEXPR11 span(pointer ptr, size_type count) : storage_(ptr, count)
     {
-        xmm = _mm_set1_epi64(reinterpret_cast<__m64>(a));
+        TCB_SPAN_EXPECT(extent == dynamic_extent || count == extent);
     }
 
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m128i() const noexcept {
-        return xmm;
+    TCB_SPAN_CONSTEXPR11 span(pointer first_elem, pointer last_elem)
+        : storage_(first_elem, last_elem - first_elem)
+    {
+        TCB_SPAN_EXPECT(extent == dynamic_extent ||
+                        last_elem - first_elem == static_cast<std::ptrdiff_t>(extent));
     }
 
-    constexpr static int size() noexcept { return _size; }
+    template <std::size_t N, std::size_t E = Extent,
+              typename std::enable_if<(E == dynamic_extent || N == E) &&
+                                          detail::is_container_element_type_compatible<
+                                              element_type (&)[N], ElementType>::value,
+                                      int>::type = 0>
+    constexpr span(element_type (&arr)[N]) noexcept : storage_(arr, N)
+    {}
 
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm_set_epi64x(
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
+    template <typename T, std::size_t N, std::size_t E = Extent,
+              typename std::enable_if<(E == dynamic_extent || N == E) &&
+                                          detail::is_container_element_type_compatible<
+                                              std::array<T, N>&, ElementType>::value,
+                                      int>::type = 0>
+    TCB_SPAN_ARRAY_CONSTEXPR span(std::array<T, N>& arr) noexcept : storage_(arr.data(), N)
+    {}
+
+    template <typename T, std::size_t N, std::size_t E = Extent,
+              typename std::enable_if<(E == dynamic_extent || N == E) &&
+                                          detail::is_container_element_type_compatible<
+                                              const std::array<T, N>&, ElementType>::value,
+                                      int>::type = 0>
+    TCB_SPAN_ARRAY_CONSTEXPR span(const std::array<T, N>& arr) noexcept : storage_(arr.data(), N)
+    {}
+
+    template <typename Container, std::size_t E = Extent,
+              typename std::enable_if<
+                  E == dynamic_extent && detail::is_container<Container>::value &&
+                      detail::is_container_element_type_compatible<Container&, ElementType>::value,
+                  int>::type = 0>
+    constexpr span(Container& cont) : storage_(detail::data(cont), detail::size(cont))
+    {}
+
+    template <
+        typename Container, std::size_t E = Extent,
+        typename std::enable_if<
+            E == dynamic_extent && detail::is_container<Container>::value &&
+                detail::is_container_element_type_compatible<const Container&, ElementType>::value,
+            int>::type = 0>
+    constexpr span(const Container& cont) : storage_(detail::data(cont), detail::size(cont))
+    {}
+
+    constexpr span(const span& other) noexcept = default;
+
+    template <typename OtherElementType, std::size_t OtherExtent,
+              typename std::enable_if<
+                  (Extent == OtherExtent || Extent == dynamic_extent) &&
+                      std::is_convertible<OtherElementType (*)[], ElementType (*)[]>::value,
+                  int>::type = 0>
+    constexpr span(const span<OtherElementType, OtherExtent>& other) noexcept
+        : storage_(other.data(), other.size())
+    {}
+
+    ~span() noexcept = default;
+
+    TCB_SPAN_CONSTEXPR_ASSIGN span& operator=(const span& other) noexcept = default;
+
+    // [span.sub], span subviews
+    template <std::size_t Count>
+    TCB_SPAN_CONSTEXPR11 span<element_type, Count> first() const
+    {
+        TCB_SPAN_EXPECT(Count <= size());
+        return {data(), Count};
     }
 
-    void store(uint64_t* p) const noexcept {
-        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
+    template <std::size_t Count>
+    TCB_SPAN_CONSTEXPR11 span<element_type, Count> last() const
+    {
+        TCB_SPAN_EXPECT(Count <= size());
+        return {data() + (size() - Count), Count};
     }
 
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm_add_epi64(xmm, b);
+    template <std::size_t Offset, std::size_t Count = dynamic_extent>
+    using subspan_return_t =
+        span<ElementType, Count != dynamic_extent
+                              ? Count
+                              : (Extent != dynamic_extent ? Extent - Offset : dynamic_extent)>;
+
+    template <std::size_t Offset, std::size_t Count = dynamic_extent>
+    TCB_SPAN_CONSTEXPR11 subspan_return_t<Offset, Count> subspan() const
+    {
+        TCB_SPAN_EXPECT(Offset <= size() && (Count == dynamic_extent || Offset + Count <= size()));
+        return {data() + Offset, Count != dynamic_extent ? Count : size() - Offset};
     }
 
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm_add_epi64(xmm, b);
-        return *this;
+    TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent> first(size_type count) const
+    {
+        TCB_SPAN_EXPECT(count <= size());
+        return {data(), count};
     }
 
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm_sub_epi64(xmm, b);
+    TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent> last(size_type count) const
+    {
+        TCB_SPAN_EXPECT(count <= size());
+        return {data() + (size() - count), count};
     }
 
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm_sub_epi64(xmm, b);
-        return *this;
+    TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
+    subspan(size_type offset, size_type count = dynamic_extent) const
+    {
+        TCB_SPAN_EXPECT(offset <= size() && (count == dynamic_extent || offset + count <= size()));
+        return {data() + offset, count == dynamic_extent ? size() - offset : count};
     }
+
+    // [span.obs], span observers
+    constexpr size_type size() const noexcept
+    {
+        return storage_.size;
+    }
+
+    constexpr size_type size_bytes() const noexcept
+    {
+        return size() * sizeof(element_type);
+    }
+
+    TCB_SPAN_NODISCARD constexpr bool empty() const noexcept
+    {
+        return size() == 0;
+    }
+
+    // [span.elem], span element access
+    TCB_SPAN_CONSTEXPR11 reference operator[](size_type idx) const
+    {
+        TCB_SPAN_EXPECT(idx < size());
+        return *(data() + idx);
+    }
+
+    TCB_SPAN_CONSTEXPR11 reference front() const
+    {
+        TCB_SPAN_EXPECT(!empty());
+        return *data();
+    }
+
+    TCB_SPAN_CONSTEXPR11 reference back() const
+    {
+        TCB_SPAN_EXPECT(!empty());
+        return *(data() + (size() - 1));
+    }
+
+    constexpr pointer data() const noexcept
+    {
+        return storage_.ptr;
+    }
+
+    // [span.iterators], span iterator support
+    constexpr iterator begin() const noexcept
+    {
+        return data();
+    }
+
+    constexpr iterator end() const noexcept
+    {
+        return data() + size();
+    }
+
+    TCB_SPAN_ARRAY_CONSTEXPR reverse_iterator rbegin() const noexcept
+    {
+        return reverse_iterator(end());
+    }
+
+    TCB_SPAN_ARRAY_CONSTEXPR reverse_iterator rend() const noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
+private:
+    storage_type storage_{};
 };
 
-template <>
-class native_simd<uint32_t>
+#ifdef TCB_SPAN_HAVE_DEDUCTION_GUIDES
+
+/* Deduction Guides */
+template <class T, size_t N>
+span(T (&)[N]) -> span<T, N>;
+
+template <class T, size_t N>
+span(std::array<T, N>&) -> span<T, N>;
+
+template <class T, size_t N>
+span(const std::array<T, N>&) -> span<const T, N>;
+
+template <class Container>
+span(Container&) -> span<
+    typename std::remove_reference<decltype(*detail::data(std::declval<Container&>()))>::type>;
+
+template <class Container>
+span(const Container&) -> span<const typename Container::value_type>;
+
+#endif // TCB_HAVE_DEDUCTION_GUIDES
+
+template <typename ElementType, std::size_t Extent>
+constexpr span<ElementType, Extent> make_span(span<ElementType, Extent> s) noexcept
 {
+    return s;
+}
+
+template <typename T, std::size_t N>
+constexpr span<T, N> make_span(T (&arr)[N]) noexcept
+{
+    return {arr};
+}
+
+template <typename T, std::size_t N>
+TCB_SPAN_ARRAY_CONSTEXPR span<T, N> make_span(std::array<T, N>& arr) noexcept
+{
+    return {arr};
+}
+
+template <typename T, std::size_t N>
+TCB_SPAN_ARRAY_CONSTEXPR span<const T, N> make_span(const std::array<T, N>& arr) noexcept
+{
+    return {arr};
+}
+
+template <typename Container>
+constexpr span<
+    typename std::remove_reference<decltype(*detail::data(std::declval<Container&>()))>::type>
+make_span(Container& cont)
+{
+    return {cont};
+}
+
+template <typename Container>
+constexpr span<const typename Container::value_type> make_span(const Container& cont)
+{
+    return {cont};
+}
+
+template <typename ElementType, std::size_t Extent>
+span<const byte, ((Extent == dynamic_extent) ? dynamic_extent : sizeof(ElementType) * Extent)>
+as_bytes(span<ElementType, Extent> s) noexcept
+{
+    return {reinterpret_cast<const byte*>(s.data()), s.size_bytes()};
+}
+
+template <class ElementType, size_t Extent,
+          typename std::enable_if<!std::is_const<ElementType>::value, int>::type = 0>
+span<byte, ((Extent == dynamic_extent) ? dynamic_extent : sizeof(ElementType) * Extent)>
+as_writable_bytes(span<ElementType, Extent> s) noexcept
+{
+    return {reinterpret_cast<byte*>(s.data()), s.size_bytes()};
+}
+
+template <std::size_t N, typename E, std::size_t S>
+constexpr auto get(span<E, S> s) -> decltype(s[N])
+{
+    return s[N];
+}
+
+} // namespace TCB_SPAN_NAMESPACE_NAME
+
+namespace std {
+
+template <typename ElementType, size_t Extent>
+class tuple_size<TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>>
+    : public integral_constant<size_t, Extent> {};
+
+template <typename ElementType>
+class tuple_size<TCB_SPAN_NAMESPACE_NAME::span<
+    ElementType, TCB_SPAN_NAMESPACE_NAME::dynamic_extent>>; // not defined
+
+template <size_t I, typename ElementType, size_t Extent>
+class tuple_element<I, TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>> {
 public:
-    static const int _size = 4;
-    __m128i xmm;
-
-    native_simd() noexcept {}
-
-    native_simd(__m128i val) noexcept
-        : xmm(val) {}
-
-    native_simd(uint32_t a) noexcept
-    {
-        xmm = _mm_set1_epi32(static_cast<int>(a));
-    }
-
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m128i() const noexcept {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm_set_epi64x(
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint32_t* p) const noexcept {
-        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm_add_epi32(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm_add_epi32(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm_sub_epi32(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm_sub_epi32(xmm, b);
-        return *this;
-    }
+    static_assert(Extent != TCB_SPAN_NAMESPACE_NAME::dynamic_extent && I < Extent, "");
+    using type = ElementType;
 };
 
-template <>
-class native_simd<uint16_t>
-{
-public:
-    static const int _size = 8;
-    __m128i xmm;
+} // end namespace std
 
-    native_simd() noexcept {}
+#endif // TCB_SPAN_HPP_INCLUDED
 
-    native_simd(__m128i val) noexcept
-        : xmm(val) {}
-
-    native_simd(uint16_t a) noexcept
-    {
-        xmm = _mm_set1_epi16(static_cast<short>(a));
-    }
-
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m128i() const noexcept {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm_set_epi64x(
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint16_t* p) const noexcept {
-        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm_add_epi16(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm_add_epi16(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm_sub_epi16(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm_sub_epi16(xmm, b);
-        return *this;
-    }
-};
-
-template <>
-class native_simd<uint8_t>
-{
-public:
-    static const int _size = 16;
-    __m128i xmm;
-
-    native_simd() noexcept {}
-
-    native_simd(__m128i val) noexcept
-        : xmm(val) {}
-
-    native_simd(uint8_t a) noexcept
-    {
-        xmm = _mm_set1_epi8(static_cast<char>(a));
-    }
-
-    native_simd(const uint64_t* p) noexcept { load(p); }
-
-    operator __m128i() const noexcept {
-        return xmm;
-    }
-
-    constexpr static int size() noexcept { return _size; }
-
-    native_simd load(const uint64_t* p) noexcept {
-        xmm = _mm_set_epi64x(
-            static_cast<long long int>(p[1]),
-            static_cast<long long int>(p[0])
-        );
-        return *this;
-    }
-
-    void store(uint8_t* p) const noexcept {
-        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
-    }
-
-    native_simd operator+(const native_simd b) const noexcept {
-        return _mm_add_epi8(xmm, b);
-    }
-
-    native_simd& operator+=(const native_simd b) noexcept {
-        xmm = _mm_add_epi8(xmm, b);
-        return *this;
-    }
-
-    native_simd operator-(const native_simd b) const noexcept {
-        return _mm_sub_epi8(xmm, b);
-    }
-
-    native_simd& operator-=(const native_simd b) noexcept {
-        xmm = _mm_sub_epi8(xmm, b);
-        return *this;
-    }
-};
-
-template <typename T>
-__m128i hadd_impl(const __m128i& v) noexcept;
-
-template <>
-inline __m128i hadd_impl<uint8_t>(const __m128i& v) noexcept {
-    return v;
-}
-
-template <>
-inline __m128i hadd_impl<uint16_t>(const __m128i& v) noexcept {
-    __m128i mask = _mm_set_epi16(
-        static_cast<short>(-1), static_cast<short>(0),
-        static_cast<short>(-1), static_cast<short>(0),
-        static_cast<short>(-1), static_cast<short>(0),
-        static_cast<short>(-1), static_cast<short>(0)
-    );
-    __m128i lo = _mm_and_si128(v, mask);
-    __m128i hi = _mm_srli_epi16(v, 8);
-    return _mm_add_epi16(lo, hi);
-    // todo sse3
-    //return _mm_maddubs_epi16(v, _mm_set1_epi8(1));
-}
-
-template <>
-inline __m128i hadd_impl<uint32_t>(const __m128i& v) noexcept {
-    return _mm_madd_epi16(hadd_impl<uint16_t>(v), _mm_set1_epi16(1));
-}
-
-template <>
-inline __m128i hadd_impl<uint64_t>(const __m128i& v) noexcept {
-    return _mm_sad_epu8(v, _mm_setzero_si128());
-}
-
-template <typename T>
-native_simd<T> popcount_impl(const native_simd<T>& v) noexcept {
-    __m128i n, x, total;
-    const __m128i popcount_mask1 = _mm_set1_epi8(0x77);
-    const __m128i popcount_mask2 = _mm_set1_epi8(0x0F);
-
-    // Count bits in each 4-bit field.
-    x = v;
-    n = _mm_srli_epi64(x, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    n = _mm_srli_epi64(n, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    n = _mm_srli_epi64(n, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    x = _mm_add_epi8(x, _mm_srli_epi16(x, 4));
-    total = _mm_and_si128(popcount_mask2, x);
-
-    /* todo use when sse3 available
-    __m128i lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
-    const __m128i low_mask = _mm_set1_epi8(0x0F);
-    __m128i lo = _mm_and_si128(v, low_mask);
-    __m128i hi = _mm_and_si256(_mm_srli_epi32(v, 4), low_mask);
-    __m128i popcnt1 = _mm_shuffle_epi8(lookup, lo);
-    __m128i popcnt2 = _mm_shuffle_epi8(lookup, hi);
-    __m128i total = _mm_add_epi8(popcnt1, popcnt2);*/
-
-    return hadd_impl<T>(total);
-}
-
-template <typename T>
-std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept {
-    alignas(16) std::array<T, native_simd<T>::size()> res;
-    popcount_impl(a).store(&res[0]);
-    return res;
-}
-
-
-template <typename T>
-native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    return _mm_and_si128(a, b);
-}
-
-template <typename T>
-native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    a = a & b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    return _mm_or_si128(a, b);
-}
-
-template <typename T>
-native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    a = a | b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    return _mm_xor_si128(a, b);
-}
-
-template <typename T>
-native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b) noexcept
-{
-    a = a ^ b;
-    return a;
-}
-
-template <typename T>
-native_simd<T> operator~(const native_simd<T>& a) noexcept
-{
-    return _mm_xor_si128(a, _mm_set1_epi32(-1));
-}
-
-} // namespace detail
-} // namespace rapidfuzz
-#endif
-#endif
 #include <cmath>
 #include <limits>
 
@@ -2940,12 +2823,19 @@ struct MultiLCSseq {
 private:
     constexpr static size_t get_vec_size()
     {
-        switch (MaxLen)
-        {
-        case 8:  return detail::native_simd<uint8_t>::size(); break;
-        case 16: return detail::native_simd<uint16_t>::size(); break;
-        case 32: return detail::native_simd<uint32_t>::size(); break;
-        case 64: return detail::native_simd<uint64_t>::size(); break;
+        switch (MaxLen) {
+        case 8:
+            return detail::native_simd<uint8_t>::size();
+            break;
+        case 16:
+            return detail::native_simd<uint16_t>::size();
+            break;
+        case 32:
+            return detail::native_simd<uint32_t>::size();
+            break;
+        case 64:
+            return detail::native_simd<uint64_t>::size();
+            break;
         }
         assert(false);
     }
@@ -2965,8 +2855,8 @@ private:
     }
 
 public:
-    MultiLCSseq(size_t count)
-      : pos(0), input_count(count), PM(find_block_count(count)) {}
+    MultiLCSseq(size_t count) : pos(0), input_count(count), PM(find_block_count(count))
+    {}
 
     template <typename Sentence1>
     void insert(const Sentence1& s1_)
@@ -2991,30 +2881,40 @@ public:
     }
 
     template <typename InputIt2>
-    void distance(int64_t* scores, InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+    void distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
 
     template <typename Sentence2>
-    void distance(int64_t* scores, const Sentence2& s2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+    void distance(tcb::span<int64_t> scores, const Sentence2& s2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
 
     template <typename InputIt2>
-    void similarity(int64_t* scores, InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const noexcept;
+    void similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                    int64_t score_cutoff = 0) const noexcept;
 
     template <typename Sentence2>
-    void similarity(int64_t* scores, const Sentence2& s2, int64_t score_cutoff = 0) const noexcept;
+    void similarity(tcb::span<int64_t> scores, const Sentence2& s2,
+                    int64_t score_cutoff = 0) const noexcept;
 
     template <typename InputIt2>
-    void normalized_distance(double* scores, InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                             double score_cutoff = 1.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
 
     template <typename Sentence2>
-    void normalized_distance(double* scores, const Sentence2& s2, double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_distance(tcb::span<double> scores, const Sentence2& s2,
+                             double score_cutoff = 1.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
 
     template <typename InputIt2>
-    void normalized_similarity(double* scores, InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_similarity(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff = 0.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
 
     template <typename Sentence2>
-    void normalized_similarity(double* scores, const Sentence2& s2, double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
+                               double score_cutoff = 0.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
 
 private:
     size_t input_count;
@@ -3177,11 +3077,12 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 
 #if defined(__SSE2__) || defined(__AVX2__)
 template <typename VecType, typename InputIt>
-static inline void longest_common_subsequence_simd(int64_t* scores, size_t score_counts,
+static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
                                                    const common::BlockPatternMatchVector& block,
                                                    InputIt first2, InputIt last2,
                                                    int64_t score_cutoff) noexcept
 {
+    auto score_iter = scores.begin();
     static constexpr size_t vecs =
         static_cast<size_t>(detail::native_simd<VecType>::size()) * sizeof(VecType) / 8;
 
@@ -3203,8 +3104,8 @@ static inline void longest_common_subsequence_simd(int64_t* scores, size_t score
 
         auto counts = popcount(S);
         unroll<int, counts.size()>([&](auto i) {
-            *scores = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
-            scores++;
+            *score_iter = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
+            score_iter++;
         });
     }
 }
@@ -3718,7 +3619,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 #if defined(__SSE2__) || defined(__AVX2__)
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::distance(int64_t* scores, InputIt2 first2, InputIt2 last2,
+void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
                                    int64_t score_cutoff) const noexcept
 {
     similarity(scores, first2, last2);
@@ -3732,7 +3633,7 @@ void MultiLCSseq<MaxLen>::distance(int64_t* scores, InputIt2 first2, InputIt2 la
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::distance(int64_t* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s2,
                                    int64_t score_cutoff) const noexcept
 {
     return distance(scores, common::to_begin(s2), common::to_end(s2), score_cutoff);
@@ -3740,30 +3641,26 @@ void MultiLCSseq<MaxLen>::distance(int64_t* scores, const Sentence2& s2,
 
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::similarity(int64_t* scores, InputIt2 first2, InputIt2 last2,
+void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff) const noexcept
 {
     if (MaxLen == 8) {
-        detail::longest_common_subsequence_simd<uint8_t>(scores, input_count, PM, first2, last2,
-                                                         score_cutoff);
+        detail::longest_common_subsequence_simd<uint8_t>(scores, PM, first2, last2, score_cutoff);
     }
     else if (MaxLen == 16) {
-        detail::longest_common_subsequence_simd<uint16_t>(scores, input_count, PM, first2, last2,
-                                                          score_cutoff);
+        detail::longest_common_subsequence_simd<uint16_t>(scores, PM, first2, last2, score_cutoff);
     }
     else if (MaxLen == 32) {
-        detail::longest_common_subsequence_simd<uint32_t>(scores, input_count, PM, first2, last2,
-                                                          score_cutoff);
+        detail::longest_common_subsequence_simd<uint32_t>(scores, PM, first2, last2, score_cutoff);
     }
     else if (MaxLen == 64) {
-        detail::longest_common_subsequence_simd<uint64_t>(scores, input_count, PM, first2, last2,
-                                                          score_cutoff);
+        detail::longest_common_subsequence_simd<uint64_t>(scores, PM, first2, last2, score_cutoff);
     }
 }
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::similarity(int64_t* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, const Sentence2& s2,
                                      int64_t score_cutoff) const noexcept
 {
     return similarity(scores, common::to_begin(s2), common::to_end(s2), score_cutoff);
@@ -3771,13 +3668,14 @@ void MultiLCSseq<MaxLen>::similarity(int64_t* scores, const Sentence2& s2,
 
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::normalized_distance(double* scores, InputIt2 first2, InputIt2 last2,
-                                              double score_cutoff) const
+void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, InputIt2 first2,
+                                              InputIt2 last2, double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
     // reinterpretation only works when the types have the same size
-    int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t)) ? reinterpret_cast<int64_t*>(scores)
-                                                              : new int64_t[find_result_count(input_count)];
+    int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t))
+                              ? reinterpret_cast<int64_t*>(scores.data())
+                              : new int64_t[find_result_count(input_count)];
     distance(scores_i64, first2, last2);
 
     for (size_t i = 0; i < input_count; ++i) {
@@ -3791,7 +3689,7 @@ void MultiLCSseq<MaxLen>::normalized_distance(double* scores, InputIt2 first2, I
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::normalized_distance(double* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, const Sentence2& s2,
                                               double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
@@ -3800,8 +3698,8 @@ void MultiLCSseq<MaxLen>::normalized_distance(double* scores, const Sentence2& s
 
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::normalized_similarity(double* scores, InputIt2 first2, InputIt2 last2,
-                                                double score_cutoff) const
+void MultiLCSseq<MaxLen>::normalized_similarity(tcb::span<double> scores, InputIt2 first2,
+                                                InputIt2 last2, double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
     normalized_distance(scores, first2, last2);
@@ -3814,7 +3712,7 @@ void MultiLCSseq<MaxLen>::normalized_similarity(double* scores, InputIt2 first2,
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::normalized_similarity(double* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
                                                 double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
@@ -4614,8 +4512,8 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename PMV, typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const PMV& PM, InputIt1 first1,
-                               InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
+int64_t levenshtein_hyrroe2003(const PMV& PM, InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                               InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
 

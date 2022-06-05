@@ -104,11 +104,12 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 
 #if defined(__SSE2__) || defined(__AVX2__)
 template <typename VecType, typename InputIt>
-static inline void longest_common_subsequence_simd(int64_t* scores, size_t score_counts,
+static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
                                                    const common::BlockPatternMatchVector& block,
                                                    InputIt first2, InputIt last2,
                                                    int64_t score_cutoff) noexcept
 {
+    auto score_iter = scores.begin();
     static constexpr size_t vecs =
         static_cast<size_t>(detail::native_simd<VecType>::size()) * sizeof(VecType) / 8;
 
@@ -130,8 +131,8 @@ static inline void longest_common_subsequence_simd(int64_t* scores, size_t score
 
         auto counts = popcount(S);
         unroll<int, counts.size()>([&](auto i) {
-            *scores = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
-            scores++;
+            *score_iter = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
+            score_iter++;
         });
     }
 }
@@ -645,7 +646,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 #if defined(__SSE2__) || defined(__AVX2__)
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::distance(int64_t* scores, InputIt2 first2, InputIt2 last2,
+void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
                                    int64_t score_cutoff) const noexcept
 {
     similarity(scores, first2, last2);
@@ -659,7 +660,7 @@ void MultiLCSseq<MaxLen>::distance(int64_t* scores, InputIt2 first2, InputIt2 la
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::distance(int64_t* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s2,
                                    int64_t score_cutoff) const noexcept
 {
     return distance(scores, common::to_begin(s2), common::to_end(s2), score_cutoff);
@@ -667,30 +668,26 @@ void MultiLCSseq<MaxLen>::distance(int64_t* scores, const Sentence2& s2,
 
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::similarity(int64_t* scores, InputIt2 first2, InputIt2 last2,
+void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff) const noexcept
 {
     if (MaxLen == 8) {
-        detail::longest_common_subsequence_simd<uint8_t>(scores, input_count, PM, first2, last2,
-                                                         score_cutoff);
+        detail::longest_common_subsequence_simd<uint8_t>(scores, PM, first2, last2, score_cutoff);
     }
     else if (MaxLen == 16) {
-        detail::longest_common_subsequence_simd<uint16_t>(scores, input_count, PM, first2, last2,
-                                                          score_cutoff);
+        detail::longest_common_subsequence_simd<uint16_t>(scores, PM, first2, last2, score_cutoff);
     }
     else if (MaxLen == 32) {
-        detail::longest_common_subsequence_simd<uint32_t>(scores, input_count, PM, first2, last2,
-                                                          score_cutoff);
+        detail::longest_common_subsequence_simd<uint32_t>(scores, PM, first2, last2, score_cutoff);
     }
     else if (MaxLen == 64) {
-        detail::longest_common_subsequence_simd<uint64_t>(scores, input_count, PM, first2, last2,
-                                                          score_cutoff);
+        detail::longest_common_subsequence_simd<uint64_t>(scores, PM, first2, last2, score_cutoff);
     }
 }
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::similarity(int64_t* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, const Sentence2& s2,
                                      int64_t score_cutoff) const noexcept
 {
     return similarity(scores, common::to_begin(s2), common::to_end(s2), score_cutoff);
@@ -698,13 +695,14 @@ void MultiLCSseq<MaxLen>::similarity(int64_t* scores, const Sentence2& s2,
 
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::normalized_distance(double* scores, InputIt2 first2, InputIt2 last2,
-                                              double score_cutoff) const
+void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, InputIt2 first2,
+                                              InputIt2 last2, double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
     // reinterpretation only works when the types have the same size
-    int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t)) ? reinterpret_cast<int64_t*>(scores)
-                                                              : new int64_t[find_result_count(input_count)];
+    int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t))
+                              ? reinterpret_cast<int64_t*>(scores.data())
+                              : new int64_t[find_result_count(input_count)];
     distance(scores_i64, first2, last2);
 
     for (size_t i = 0; i < input_count; ++i) {
@@ -718,7 +716,7 @@ void MultiLCSseq<MaxLen>::normalized_distance(double* scores, InputIt2 first2, I
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::normalized_distance(double* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, const Sentence2& s2,
                                               double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
@@ -727,8 +725,8 @@ void MultiLCSseq<MaxLen>::normalized_distance(double* scores, const Sentence2& s
 
 template <int MaxLen>
 template <typename InputIt2>
-void MultiLCSseq<MaxLen>::normalized_similarity(double* scores, InputIt2 first2, InputIt2 last2,
-                                                double score_cutoff) const
+void MultiLCSseq<MaxLen>::normalized_similarity(tcb::span<double> scores, InputIt2 first2,
+                                                InputIt2 last2, double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
     normalized_distance(scores, first2, last2);
@@ -741,7 +739,7 @@ void MultiLCSseq<MaxLen>::normalized_similarity(double* scores, InputIt2 first2,
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::normalized_similarity(double* scores, const Sentence2& s2,
+void MultiLCSseq<MaxLen>::normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
                                                 double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {

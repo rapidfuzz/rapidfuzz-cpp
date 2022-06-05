@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <cstddef>
-#include <stdint.h>
 #include <bitset>
+#include <cstddef>
 #include <limits>
+#include <stdint.h>
 #include <type_traits>
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -57,23 +57,15 @@ static inline int popcount(uint16_t x)
 static inline int popcount(uint8_t x)
 {
     static constexpr int bit_count[256] = {
-        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-    };
+        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3,
+        4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4,
+        4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4,
+        5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5,
+        4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2,
+        3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5,
+        5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4,
+        5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6,
+        4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
     return bit_count[x];
 }
 
@@ -83,8 +75,8 @@ constexpr T rotl(T x, unsigned int n)
     unsigned int num_bits = std::numeric_limits<T>::digits;
     assert(n < num_bits);
     unsigned int count_mask = num_bits - 1;
-  
-    return (x << n) | (x >> ( -n & count_mask));
+
+    return (x << n) | (x >> (-n & count_mask));
 }
 
 /**
@@ -154,27 +146,30 @@ static inline int countr_zero(uint64_t x)
 }
 #endif
 
-template<typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
 struct UnrollImpl;
 
-template<typename T, T N, T Pos>
+template <typename T, T N, T Pos>
 struct UnrollImpl<T, N, Pos, false> {
     template <typename F>
-    static void call(F&& f) {
+    static void call(F&& f)
+    {
         f(Pos);
-        UnrollImpl<T, N-1, Pos + 1>::call(std::forward<F>(f));
+        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
     }
 };
 
-template<typename T, T N, T Pos>
+template <typename T, T N, T Pos>
 struct UnrollImpl<T, N, Pos, true> {
     template <typename F>
-    static void call(F&&) {}
+    static void call(F&&)
+    {}
 };
 
-template<typename T, int N, class F>
-constexpr void unroll(F&& f) {
-  detail::UnrollImpl<T, N>::call(f);
+template <typename T, int N, class F>
+constexpr void unroll(F&& f)
+{
+    detail::UnrollImpl<T, N>::call(f);
 }
 
 } // namespace detail

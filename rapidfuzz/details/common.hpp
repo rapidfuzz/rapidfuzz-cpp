@@ -46,8 +46,7 @@ static inline void assume(bool b)
 #if defined(__clang__)
     __builtin_assume(b);
 #elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b)
-    {
+    if (!b) {
         __builtin_unreachable();
     }
 #elif defined(_MSC_VER)
@@ -428,11 +427,8 @@ private:
 
 struct BlockPatternMatchVector {
     BlockPatternMatchVector(size_t block_count)
-        : m_block_count(block_count),
-          m_map(block_count),
-          m_extendedAscii(256, block_count, 0)
-    {
-    }
+        : m_block_count(block_count), m_map(block_count), m_extendedAscii(256, block_count, 0)
+    {}
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
@@ -441,7 +437,8 @@ struct BlockPatternMatchVector {
         insert(first, last);
     }
 
-    size_t size() const noexcept {
+    size_t size() const noexcept
+    {
         return m_block_count;
     }
 
