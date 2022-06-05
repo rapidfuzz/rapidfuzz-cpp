@@ -164,82 +164,36 @@ bool CanTypeFitValue(const U value)
              (topT < topU && value > static_cast<U>(topT)));
 }
 
-struct PatternMatchVector {
-    struct MapElem {
-        uint64_t key = 0;
-        uint64_t value = 0;
-    };
-    std::array<MapElem, 128> m_map;
-    std::array<uint64_t, 256> m_extendedAscii;
-
-    PatternMatchVector() : m_map(), m_extendedAscii()
+struct BitvectorHashmap {
+    BitvectorHashmap() : m_map()
     {}
 
-    template <typename InputIt>
-    PatternMatchVector(InputIt first, InputIt last) : m_map(), m_extendedAscii()
-    {
-        insert(first, last);
-    }
-
-    template <typename InputIt>
-    void insert(InputIt first, InputIt last)
-    {
-        uint64_t mask = 1;
-        for (; first != last; ++first) {
-            insert_mask(*first, mask);
-            mask <<= 1;
-        }
-    }
-
     template <typename CharT>
-    void insert(CharT key, int64_t pos)
+    void insert(CharT key, int64_t pos) noexcept
     {
         insert_mask(key, UINT64_C(1) << pos);
     }
 
-    uint64_t get(char key) const
+    template <typename CharT>
+    void insert_mask(CharT key, uint64_t mask) noexcept
     {
-        return m_extendedAscii[static_cast<uint8_t>(key)];
+        uint32_t i = lookup(static_cast<uint64_t>(key));
+        m_map[i].key = static_cast<uint64_t>(key);
+        m_map[i].value |= mask;
     }
 
     template <typename CharT>
-    uint64_t get(CharT key) const
+    uint64_t get(CharT key) const noexcept
     {
-        if (key >= 0 && key <= 255) {
-            return m_extendedAscii[static_cast<uint8_t>(key)];
-        }
-        else {
-            return m_map[lookup(static_cast<uint64_t>(key))].value;
-        }
-    }
-
-    template <typename CharT>
-    uint64_t get(size_t block, CharT key) const
-    {
-        assert(block == 0);
-        (void)block;
-        return get(key);
+        return m_map[lookup(static_cast<uint64_t>(key))].value;
     }
 
 private:
-    template <typename CharT>
-    void insert_mask(CharT key, uint64_t mask)
-    {
-        if (key >= 0 && key <= 255) {
-            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
-        }
-        else {
-            uint32_t i = lookup(static_cast<uint64_t>(key));
-            m_map[i].key = static_cast<uint64_t>(key);
-            m_map[i].value |= mask;
-        }
-    }
-
     /**
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    uint32_t lookup(uint64_t key) const
+    uint32_t lookup(uint64_t key) const noexcept
     {
         uint32_t i = key % 128;
 
@@ -257,6 +211,82 @@ private:
             perturb >>= 5;
         }
     }
+
+    struct MapElem {
+        uint64_t key = 0;
+        uint64_t value = 0;
+    };
+    std::array<MapElem, 128> m_map;
+};
+
+struct PatternMatchVector {
+    PatternMatchVector() : m_extendedAscii()
+    {}
+
+    template <typename InputIt>
+    PatternMatchVector(InputIt first, InputIt last) : m_extendedAscii()
+    {
+        insert(first, last);
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last) noexcept
+    {
+        uint64_t mask = 1;
+        for (; first != last; ++first) {
+            insert_mask(*first, mask);
+            mask <<= 1;
+        }
+    }
+
+    template <typename CharT>
+    void insert(CharT key, int64_t pos) noexcept
+    {
+        insert_mask(key, UINT64_C(1) << pos);
+    }
+
+    uint64_t get(char key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    uint64_t get(CharT key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map.get(key);
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT key) const noexcept
+    {
+        assert(block == 0);
+        (void)block;
+        return get(key);
+    }
+
+    void insert_mask(char key, uint64_t mask) noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+    }
+
+    template <typename CharT>
+    void insert_mask(CharT key, uint64_t mask) noexcept
+    {
+        if (key >= 0 && key <= 255)
+            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+        else
+            m_map.insert_mask(key, mask);
+    }
+
+private:
+    BitvectorHashmap m_map;
+    std::array<uint64_t, 256> m_extendedAscii;
 };
 
 struct BlockPatternMatchVector {
@@ -306,57 +336,6 @@ struct BlockPatternMatchVector {
     {
         auto* be = &m_val[block];
         return be->get(ch);
-    }
-};
-
-template <typename CharT1, size_t size = sizeof(CharT1)>
-struct CharSet;
-
-template <typename CharT1>
-struct CharSet<CharT1, 1> {
-    using UCharT1 = typename std::make_unsigned<CharT1>::type;
-
-    std::array<bool, std::numeric_limits<UCharT1>::max() + 1> m_val;
-
-    CharSet() : m_val{}
-    {}
-
-    void insert(CharT1 ch)
-    {
-        m_val[UCharT1(ch)] = true;
-    }
-
-    template <typename CharT2>
-    bool find(CharT2 ch) const
-    {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return false;
-        }
-
-        return m_val[UCharT1(ch)];
-    }
-};
-
-template <typename CharT1, size_t size>
-struct CharSet {
-    std::unordered_set<CharT1> m_val;
-
-    CharSet() : m_val{}
-    {}
-
-    void insert(CharT1 ch)
-    {
-        m_val.insert(ch);
-    }
-
-    template <typename CharT2>
-    bool find(CharT2 ch) const
-    {
-        if (!CanTypeFitValue<CharT1>(ch)) {
-            return false;
-        }
-
-        return m_val.find(CharT1(ch)) != m_val.end();
     }
 };
 
@@ -486,6 +465,57 @@ private:
     size_t m_rows;
     size_t m_cols;
     T* m_matrix;
+};
+
+template <typename CharT1, size_t size = sizeof(CharT1)>
+struct CharSet;
+
+template <typename CharT1>
+struct CharSet<CharT1, 1> {
+    using UCharT1 = typename std::make_unsigned<CharT1>::type;
+
+    std::array<bool, std::numeric_limits<UCharT1>::max() + 1> m_val;
+
+    CharSet() : m_val{}
+    {}
+
+    void insert(CharT1 ch)
+    {
+        m_val[UCharT1(ch)] = true;
+    }
+
+    template <typename CharT2>
+    bool find(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return false;
+        }
+
+        return m_val[UCharT1(ch)];
+    }
+};
+
+template <typename CharT1, size_t size>
+struct CharSet {
+    std::unordered_set<CharT1> m_val;
+
+    CharSet() : m_val{}
+    {}
+
+    void insert(CharT1 ch)
+    {
+        m_val.insert(ch);
+    }
+
+    template <typename CharT2>
+    bool find(CharT2 ch) const
+    {
+        if (!CanTypeFitValue<CharT1>(ch)) {
+            return false;
+        }
+
+        return m_val.find(CharT1(ch)) != m_val.end();
+    }
 };
 
 /**@}*/
