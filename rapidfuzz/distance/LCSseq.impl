@@ -3,6 +3,7 @@
 
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
+#include <rapidfuzz/details/Matrix.hpp>
 
 #include <algorithm>
 
@@ -335,7 +336,7 @@ struct LLCSBitMatrix {
     LLCSBitMatrix(size_t rows, size_t cols) : S(rows, cols, ~UINT64_C(0)), dist(0)
     {}
 
-    common::Matrix<uint64_t> S;
+    detail::Matrix<uint64_t> S;
 
     ptrdiff_t dist;
 };

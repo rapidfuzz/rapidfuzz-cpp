@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-05 22:32:25.379644
+//  Generated: 2022-06-05 22:51:06.496900
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1337,6 +1337,11 @@ struct BlockPatternMatchVector {
         insert(first, last);
     }
 
+    size_t size() const noexcept
+    {
+        return m_val.size();
+    }
+
     template <typename CharT>
     void insert(size_t block, CharT ch, int pos)
     {
@@ -1374,134 +1379,6 @@ struct BlockPatternMatchVector {
         auto* be = &m_val[block];
         return be->get(ch);
     }
-};
-
-template <typename T>
-struct MatrixVectorView {
-
-    using value_type = T;
-
-    MatrixVectorView(T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
-    {}
-
-    value_type& operator[](size_t col) noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_t size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    T* m_vector;
-    size_t m_cols;
-};
-
-template <typename T>
-struct ConstMatrixVectorView {
-
-    using value_type = T;
-
-    ConstMatrixVectorView(const T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
-    {}
-
-    ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept
-        : m_vector(other.m_vector), m_cols(other.cols)
-    {}
-
-    const value_type& operator[](size_t col) const noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_t size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    const T* m_vector;
-    size_t m_cols;
-};
-
-template <typename T>
-struct Matrix {
-
-    using value_type = T;
-
-    Matrix(size_t rows, size_t cols, T val)
-        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
-    {
-        std::fill_n(m_matrix, m_rows * m_cols, val);
-    }
-
-    Matrix(const Matrix& other)
-        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
-    {
-        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
-    }
-
-    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {
-        other.swap(*this);
-    }
-
-    Matrix& operator=(Matrix&& other) noexcept
-    {
-        Matrix temp = other;
-        temp.swap(*this);
-        return *this;
-    }
-
-    Matrix& operator=(const Matrix& other)
-    {
-        other.swap(*this);
-        return *this;
-    }
-
-    void swap(Matrix& rhs) noexcept
-    {
-        using std::swap;
-        swap(m_rows, rhs.m_rows);
-        swap(m_cols, rhs.m_cols);
-        swap(m_matrix, rhs.m_matrix);
-    }
-
-    ~Matrix()
-    {
-        delete[] m_matrix;
-    }
-
-    MatrixVectorView<value_type> operator[](size_t row) noexcept
-    {
-        assert(row < m_rows);
-        return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
-    }
-
-    ConstMatrixVectorView<value_type> operator[](size_t row) const noexcept
-    {
-        assert(row < m_rows);
-        return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
-    }
-
-    size_t rows() const noexcept
-    {
-        return m_rows;
-    }
-
-    size_t cols() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    size_t m_rows;
-    size_t m_cols;
-    T* m_matrix;
 };
 
 template <typename CharT1, size_t size = sizeof(CharT1)>
@@ -2226,6 +2103,119 @@ CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<Input
 
 
 
+#include <stdio.h>
+#include <algorithm>
+#include <cassert>
+
+namespace rapidfuzz {
+namespace detail {
+
+
+template <typename T, bool IsConst>
+struct MatrixVectorView {
+
+    using value_type = T;
+    using size_type = size_t;
+    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
+    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+
+    MatrixVectorView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
+    {}
+
+    reference operator[](size_type col) noexcept
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+    size_type size() const noexcept
+    {
+        return m_cols;
+    }
+
+private:
+    pointer m_vector;
+    size_type m_cols;
+};
+
+template <typename T>
+struct Matrix {
+
+    using value_type = T;
+
+    Matrix(size_t rows, size_t cols, T val)
+        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
+    {
+        std::fill_n(m_matrix, m_rows * m_cols, val);
+    }
+
+    Matrix(const Matrix& other)
+        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
+    {
+        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
+    }
+
+    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
+    {
+        other.swap(*this);
+    }
+
+    Matrix& operator=(Matrix&& other) noexcept
+    {
+        Matrix temp = other;
+        temp.swap(*this);
+        return *this;
+    }
+
+    Matrix& operator=(const Matrix& other)
+    {
+        other.swap(*this);
+        return *this;
+    }
+
+    void swap(Matrix& rhs) noexcept
+    {
+        using std::swap;
+        swap(m_rows, rhs.m_rows);
+        swap(m_cols, rhs.m_cols);
+        swap(m_matrix, rhs.m_matrix);
+    }
+
+    ~Matrix()
+    {
+        delete[] m_matrix;
+    }
+
+    MatrixVectorView<value_type, false> operator[](size_t row) noexcept
+    {
+        assert(row < m_rows);
+        return {&m_matrix[row * m_cols], m_cols};
+    }
+
+    MatrixVectorView<value_type, true> operator[](size_t row) const noexcept
+    {
+        assert(row < m_rows);
+        return {&m_matrix[row * m_cols], m_cols};
+    }
+
+    size_t rows() const noexcept
+    {
+        return m_rows;
+    }
+
+    size_t cols() const noexcept
+    {
+        return m_cols;
+    }
+
+private:
+    size_t m_rows;
+    size_t m_cols;
+    T* m_matrix;
+};
+
+}
+}
 #include <algorithm>
 
 namespace rapidfuzz {
@@ -2557,7 +2547,7 @@ struct LLCSBitMatrix {
     LLCSBitMatrix(size_t rows, size_t cols) : S(rows, cols, ~UINT64_C(0)), dist(0)
     {}
 
-    common::Matrix<uint64_t> S;
+    detail::Matrix<uint64_t> S;
 
     ptrdiff_t dist;
 };
@@ -3898,8 +3888,8 @@ struct LevenshteinBitMatrix {
         : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
     {}
 
-    common::Matrix<uint64_t> VP;
-    common::Matrix<uint64_t> VN;
+    detail::Matrix<uint64_t> VP;
+    detail::Matrix<uint64_t> VN;
 
     size_t dist;
 };

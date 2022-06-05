@@ -300,6 +300,11 @@ struct BlockPatternMatchVector {
         insert(first, last);
     }
 
+    size_t size() const noexcept
+    {
+        return m_val.size();
+    }
+
     template <typename CharT>
     void insert(size_t block, CharT ch, int pos)
     {
@@ -337,134 +342,6 @@ struct BlockPatternMatchVector {
         auto* be = &m_val[block];
         return be->get(ch);
     }
-};
-
-template <typename T>
-struct MatrixVectorView {
-
-    using value_type = T;
-
-    MatrixVectorView(T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
-    {}
-
-    value_type& operator[](size_t col) noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_t size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    T* m_vector;
-    size_t m_cols;
-};
-
-template <typename T>
-struct ConstMatrixVectorView {
-
-    using value_type = T;
-
-    ConstMatrixVectorView(const T* vector, size_t cols) noexcept : m_vector(vector), m_cols(cols)
-    {}
-
-    ConstMatrixVectorView(const MatrixVectorView<T>& other) noexcept
-        : m_vector(other.m_vector), m_cols(other.cols)
-    {}
-
-    const value_type& operator[](size_t col) const noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_t size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    const T* m_vector;
-    size_t m_cols;
-};
-
-template <typename T>
-struct Matrix {
-
-    using value_type = T;
-
-    Matrix(size_t rows, size_t cols, T val)
-        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
-    {
-        std::fill_n(m_matrix, m_rows * m_cols, val);
-    }
-
-    Matrix(const Matrix& other)
-        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
-    {
-        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
-    }
-
-    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {
-        other.swap(*this);
-    }
-
-    Matrix& operator=(Matrix&& other) noexcept
-    {
-        Matrix temp = other;
-        temp.swap(*this);
-        return *this;
-    }
-
-    Matrix& operator=(const Matrix& other)
-    {
-        other.swap(*this);
-        return *this;
-    }
-
-    void swap(Matrix& rhs) noexcept
-    {
-        using std::swap;
-        swap(m_rows, rhs.m_rows);
-        swap(m_cols, rhs.m_cols);
-        swap(m_matrix, rhs.m_matrix);
-    }
-
-    ~Matrix()
-    {
-        delete[] m_matrix;
-    }
-
-    MatrixVectorView<value_type> operator[](size_t row) noexcept
-    {
-        assert(row < m_rows);
-        return MatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
-    }
-
-    ConstMatrixVectorView<value_type> operator[](size_t row) const noexcept
-    {
-        assert(row < m_rows);
-        return ConstMatrixVectorView<value_type>(&m_matrix[row * m_cols], m_cols);
-    }
-
-    size_t rows() const noexcept
-    {
-        return m_rows;
-    }
-
-    size_t cols() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    size_t m_rows;
-    size_t m_cols;
-    T* m_matrix;
 };
 
 template <typename CharT1, size_t size = sizeof(CharT1)>

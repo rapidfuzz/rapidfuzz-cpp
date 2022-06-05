@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <rapidfuzz/distance/Indel.hpp>
+#include <rapidfuzz/details/Matrix.hpp>
 
 namespace rapidfuzz {
 namespace detail {
@@ -471,8 +472,8 @@ struct LevenshteinBitMatrix {
         : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
     {}
 
-    common::Matrix<uint64_t> VP;
-    common::Matrix<uint64_t> VN;
+    detail::Matrix<uint64_t> VP;
+    detail::Matrix<uint64_t> VN;
 
     size_t dist;
 };
