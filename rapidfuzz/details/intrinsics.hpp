@@ -29,7 +29,8 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 template <typename T, typename U>
 constexpr T ceil_div(T a, U divisor)
 {
-    return a / divisor + static_cast<T>(a % divisor != 0);
+    T _div = static_cast<T>(divisor);
+    return a / _div + static_cast<T>(a % _div != 0);
 }
 
 template <typename T>

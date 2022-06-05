@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-05-21 00:34:58.177872
+//  Generated: 2022-06-05 17:07:43.345078
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -908,7 +908,8 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 template <typename T, typename U>
 constexpr T ceil_div(T a, U divisor)
 {
-    return a / divisor + static_cast<T>(a % divisor != 0);
+    T _div = static_cast<T>(divisor);
+    return a / _div + static_cast<T>(a % _div != 0);
 }
 
 template <typename T>
@@ -3718,14 +3719,12 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 template <int MaxLen>
 template <typename InputIt2>
 void MultiLCSseq<MaxLen>::distance(int64_t* scores, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff) const noexcept
+                                   int64_t score_cutoff) const noexcept
 {
-    int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
-    int64_t cutoff_distance = maximum - score_cutoff;
-
-    similarity(scores, first2, last2, cutoff_distance);
+    similarity(scores, first2, last2);
 
     for (size_t i = 0; i < input_count; ++i) {
+        int64_t maximum = std::max<int64_t>(str_lens[i], std::distance(first2, last2));
         int64_t sim = maximum - scores[i];
         scores[i] = (sim >= score_cutoff) ? sim : 0;
     }
@@ -3734,7 +3733,7 @@ void MultiLCSseq<MaxLen>::distance(int64_t* scores, InputIt2 first2, InputIt2 la
 template <int MaxLen>
 template <typename Sentence2>
 void MultiLCSseq<MaxLen>::distance(int64_t* scores, const Sentence2& s2,
-                                   double score_cutoff) const noexcept
+                                   int64_t score_cutoff) const noexcept
 {
     return distance(scores, common::to_begin(s2), common::to_end(s2), score_cutoff);
 }
