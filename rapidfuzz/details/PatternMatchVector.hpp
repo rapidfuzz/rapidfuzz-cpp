@@ -49,16 +49,12 @@ private:
     {
         uint32_t i = key % 128;
 
-        if (!m_map[i].value || m_map[i].key == key) {
-            return i;
-        }
+        if (!m_map[i].value || m_map[i].key == key) return i;
 
         uint64_t perturb = key;
         while (true) {
             i = (static_cast<uint64_t>(i) * 5 + perturb + 1) % 128;
-            if (!m_map[i].value || m_map[i].key == key) {
-                return i;
-            }
+            if (!m_map[i].value || m_map[i].key == key) return i;
 
             perturb >>= 5;
         }

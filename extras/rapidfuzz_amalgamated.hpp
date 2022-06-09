@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-09 22:39:06.302362
+//  Generated: 2022-06-09 23:04:10.629372
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -951,13 +951,13 @@ constexpr T rotl(T x, unsigned int n)
     unsigned int count_mask = num_bits - 1;
 
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(push)
+#    pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#  pragma warning(disable: 4146)
+#    pragma warning(disable : 4146)
 #endif
     return (x << n) | (x >> (-n & count_mask));
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(pop)
+#    pragma warning(pop)
 #endif
 }
 
@@ -968,13 +968,13 @@ template <typename T>
 constexpr T blsi(T a)
 {
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(push)
+#    pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#  pragma warning(disable: 4146)
+#    pragma warning(disable : 4146)
 #endif
     return a & -a;
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(pop)
+#    pragma warning(pop)
 #endif
 }
 
@@ -1017,9 +1017,7 @@ static inline int countr_zero(uint64_t x)
 {
     uint32_t msh = (uint32_t)(x >> 32);
     uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
-    if (lsh != 0) {
-        return countr_zero(lsh);
-    }
+    if (lsh != 0) return countr_zero(lsh);
     return 32 + countr_zero(msh);
 }
 #    endif
@@ -1099,9 +1097,7 @@ static inline void assume(bool b)
 #if defined(__clang__)
     __builtin_assume(b);
 #elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b) {
-        __builtin_unreachable();
-    }
+    if (!b) __builtin_unreachable();
 #elif defined(_MSC_VER)
     __assume(b);
 #endif
@@ -1530,14 +1526,12 @@ template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff)
 {
-    if (std::distance(first1, last1) != std::distance(first2, last2)) {
+    if (std::distance(first1, last1) != std::distance(first2, last2))
         throw std::invalid_argument("Sequences are not the same length.");
-    }
 
     int64_t dist = 0;
-    for (; first1 != last1; first1++, first2++) {
+    for (; first1 != last1; first1++, first2++)
         dist += bool(*first1 != *first2);
-    }
 
     return (dist <= score_cutoff) ? dist : score_cutoff + 1;
 }
@@ -1828,16 +1822,12 @@ private:
     {
         uint32_t i = key % 128;
 
-        if (!m_map[i].value || m_map[i].key == key) {
-            return i;
-        }
+        if (!m_map[i].value || m_map[i].key == key) return i;
 
         uint64_t perturb = key;
         while (true) {
             i = (static_cast<uint64_t>(i) * 5 + perturb + 1) % 128;
-            if (!m_map[i].value || m_map[i].key == key) {
-                return i;
-            }
+            if (!m_map[i].value || m_map[i].key == key) return i;
 
             perturb >>= 5;
         }
@@ -2251,9 +2241,7 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
 
-    if (len1 < len2) {
-        return lcs_seq_mbleven2018(first2, last2, first1, last1, score_cutoff);
-    }
+    if (len1 < len2) return lcs_seq_mbleven2018(first2, last2, first1, last1, score_cutoff);
 
     auto len_diff = len1 - len2;
     int64_t max_misses = static_cast<ptrdiff_t>(len1) - score_cutoff;
@@ -2343,9 +2331,8 @@ longest_common_subsequence_blockwise(const detail::BlockPatternMatchVector& bloc
     }
 
     int64_t res = 0;
-    for (uint64_t Stemp : S) {
+    for (uint64_t Stemp : S)
         res += popcount(~Stemp);
-    }
 
     return (res >= score_cutoff) ? res : 0;
 }
@@ -2464,25 +2451,20 @@ int64_t lcs_seq_similarity(const detail::BlockPatternMatchVector& block, InputIt
     int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) {
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
         return std::equal(first1, last1, first2, last2) ? len1 : 0;
-    }
 
-    if (max_misses < std::abs(len1 - len2)) {
-        return 0;
-    }
+    if (max_misses < std::abs(len1 - len2)) return 0;
 
     // do this first, since we can not remove any affix in encoded form
-    if (max_misses >= 5) {
+    if (max_misses >= 5)
         return longest_common_subsequence(block, first1, last1, first2, last2, score_cutoff);
-    }
 
     /* common affix does not effect Levenshtein distance */
     auto affix = common::remove_common_affix(first1, last1, first2, last2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
-    if (std::distance(first1, last1) && std::distance(first2, last2)) {
+    if (std::distance(first1, last1) && std::distance(first2, last2))
         lcs_sim += lcs_seq_mbleven2018(first1, last1, first2, last2, score_cutoff - lcs_sim);
-    }
 
     return lcs_sim;
 }
@@ -2495,31 +2477,25 @@ int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
     auto len2 = std::distance(first2, last2);
 
     // Swapping the strings so the second string is shorter
-    if (len1 < len2) {
-        return lcs_seq_similarity(first2, last2, first1, last1, score_cutoff);
-    }
+    if (len1 < len2) return lcs_seq_similarity(first2, last2, first1, last1, score_cutoff);
+
     int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) {
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
         return std::equal(first1, last1, first2, last2) ? len1 : 0;
-    }
 
-    if (max_misses < std::abs(len1 - len2)) {
-        return 0;
-    }
+    if (max_misses < std::abs(len1 - len2)) return 0;
 
     /* common affix does not effect Levenshtein distance */
     auto affix = common::remove_common_affix(first1, last1, first2, last2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (std::distance(first1, last1) && std::distance(first2, last2)) {
-        if (max_misses < 5) {
+        if (max_misses < 5)
             lcs_sim += lcs_seq_mbleven2018(first1, last1, first2, last2, score_cutoff - lcs_sim);
-        }
-        else {
+        else
             lcs_sim +=
                 longest_common_subsequence(first1, last1, first2, last2, score_cutoff - lcs_sim);
-        }
     }
 
     return lcs_sim;
@@ -2548,9 +2524,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
     editops.set_dest_len(len2 + affix.prefix_len + affix.suffix_len);
 
-    if (dist == 0) {
-        return editops;
-    }
+    if (dist == 0) return editops;
 
     auto col = len1;
     auto row = len2;
@@ -2663,9 +2637,8 @@ LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block
     }
 
     int64_t res = 0;
-    for (uint64_t Stemp : S) {
+    for (uint64_t Stemp : S)
         res += popcount(~Stemp);
-    }
 
     matrix.dist = static_cast<ptrdiff_t>(static_cast<std::int64_t>(len1) + len2 - 2 * res);
 
@@ -2736,9 +2709,8 @@ double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
                                    double score_cutoff)
 {
     int64_t maximum = std::max(std::distance(first1, last1), std::distance(first2, last2));
-    if (maximum == 0) {
-        return 0.0;
-    }
+    if (maximum == 0) return 0.0;
+
     int64_t cutoff_distance =
         static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     double norm_sim =
@@ -2824,9 +2796,8 @@ double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2
                                                  double score_cutoff) const
 {
     int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
-    if (maximum == 0) {
-        return 0;
-    }
+    if (maximum == 0) return 0;
+
     int64_t cutoff_distance =
         static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     double norm_dist = static_cast<double>(distance(first2, last2, cutoff_distance)) /
@@ -5415,18 +5386,14 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
     for (size_t i = 1; i < len1; ++i) {
         auto substr_last = first2 + static_cast<ptrdiff_t>(i);
 
-        if (!s1_char_set.find(*(substr_last - 1))) {
-            continue;
-        }
+        if (!s1_char_set.find(*(substr_last - 1))) continue;
 
         double ls_ratio = cached_ratio.similarity(first2, substr_last, score_cutoff);
         if (ls_ratio > res.score) {
             score_cutoff = res.score = ls_ratio;
             res.dest_start = 0;
             res.dest_end = i;
-            if (res.score == 100.0) {
-                return res;
-            }
+            if (res.score == 100.0) return res;
         }
     }
 
@@ -5434,36 +5401,28 @@ partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inp
         auto substr_first = first2 + static_cast<ptrdiff_t>(i);
         auto substr_last = substr_first + static_cast<ptrdiff_t>(len1);
 
-        if (!s1_char_set.find(*(substr_last - 1))) {
-            continue;
-        }
+        if (!s1_char_set.find(*(substr_last - 1))) continue;
 
         double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
         if (ls_ratio > res.score) {
             score_cutoff = res.score = ls_ratio;
             res.dest_start = i;
             res.dest_end = i + len1;
-            if (res.score == 100.0) {
-                return res;
-            }
+            if (res.score == 100.0) return res;
         }
     }
 
     for (size_t i = len2 - len1; i < len2; ++i) {
         auto substr_first = first2 + static_cast<ptrdiff_t>(i);
 
-        if (!s1_char_set.find(*substr_first)) {
-            continue;
-        }
+        if (!s1_char_set.find(*substr_first)) continue;
 
         double ls_ratio = cached_ratio.similarity(substr_first, last2, score_cutoff);
         if (ls_ratio > res.score) {
             score_cutoff = res.score = ls_ratio;
             res.dest_start = i;
             res.dest_end = len2;
-            if (res.score == 100.0) {
-                return res;
-            }
+            if (res.score == 100.0) return res;
         }
     }
 
@@ -5478,9 +5437,8 @@ ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last
 
     rapidfuzz::detail::CharSet<CharT1> s1_char_set;
     auto len1 = std::distance(first1, last1);
-    for (ptrdiff_t i = 0; i < len1; ++i) {
+    for (ptrdiff_t i = 0; i < len1; ++i)
         s1_char_set.insert(first1[i]);
-    }
 
     return partial_ratio_short_needle(first1, last1, first2, last2, cached_ratio, s1_char_set,
                                       score_cutoff);
@@ -5555,20 +5513,15 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
         return result;
     }
 
-    if (score_cutoff > 100) {
-        return ScoreAlignment<double>(0, 0, len1, 0, len1);
-    }
+    if (score_cutoff > 100) return ScoreAlignment<double>(0, 0, len1, 0, len1);
 
-    if (!len1 || !len2) {
+    if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
-    }
 
-    if (len1 <= 64) {
+    if (len1 <= 64)
         return detail::partial_ratio_short_needle(first1, last1, first2, last2, score_cutoff);
-    }
-    else {
+    else
         return detail::partial_ratio_long_needle(first1, last1, first2, last2, score_cutoff);
-    }
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -5597,9 +5550,8 @@ template <typename InputIt1>
 CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
     : s1(first1, last1), cached_ratio(first1, last1)
 {
-    for (const auto& ch : s1) {
+    for (const auto& ch : s1)
         s1_char_set.insert(ch);
-    }
 }
 
 template <typename CharT1>
@@ -5610,28 +5562,21 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
     size_t len1 = s1.size();
     size_t len2 = static_cast<size_t>(std::distance(first2, last2));
 
-    if (len1 > len2) {
+    if (len1 > len2)
         return partial_ratio(common::to_begin(s1), common::to_end(s1), first2, last2, score_cutoff);
-    }
 
-    if (score_cutoff > 100) {
-        return 0;
-    }
+    if (score_cutoff > 100) return 0;
 
-    if (!len1 || !len2) {
-        return static_cast<double>(len1 == len2) * 100.0;
-    }
+    if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    if (len1 <= 64) {
+    if (len1 <= 64)
         return detail::partial_ratio_short_needle(common::to_begin(s1), common::to_end(s1), first2,
                                                   last2, cached_ratio, s1_char_set, score_cutoff)
             .score;
-    }
-    else {
+    else
         return detail::partial_ratio_long_needle(common::to_begin(s1), common::to_end(s1), first2,
                                                  last2, cached_ratio, score_cutoff)
             .score;
-    }
 }
 
 template <typename CharT1>
@@ -5729,9 +5674,7 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (tokens_a.empty() || tokens_b.empty()) {
-        return 0;
-    }
+    if (tokens_a.empty() || tokens_b.empty()) return 0;
 
     auto decomposition = common::set_decomposition(tokens_a, tokens_b);
     auto intersect = decomposition.intersection;
@@ -5739,9 +5682,7 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
     auto diff_ba = decomposition.difference_ba;
 
     // one sentence is part of the other one
-    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-        return 100;
-    }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) return 100;
 
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
@@ -5759,14 +5700,11 @@ double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
         common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
 
-    if (dist <= cutoff_distance) {
+    if (dist <= cutoff_distance)
         result = common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff);
-    }
 
     // exit early since the other ratios are 0
-    if (!sect_len) {
-        return result;
-    }
+    if (!sect_len) return result;
 
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
@@ -5829,9 +5767,7 @@ double partial_token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (tokens_a.empty() || tokens_b.empty()) {
-        return 0;
-    }
+    if (tokens_a.empty() || tokens_b.empty()) return 0;
 
     auto decomposition = common::set_decomposition(tokens_a, tokens_b);
 
@@ -5897,9 +5833,7 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
 
-    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-        return 100;
-    }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) return 100;
 
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
@@ -5917,15 +5851,12 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     auto cutoff_distance =
         common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
-    if (dist <= cutoff_distance) {
+    if (dist <= cutoff_distance)
         result = std::max(
             result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
-    }
 
     // exit early since the other ratios are 0
-    if (!sect_len) {
-        return result;
-    }
+    if (!sect_len) return result;
 
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
@@ -5963,9 +5894,7 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
 
-    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-        return 100;
-    }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) return 100;
 
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
@@ -5983,15 +5912,12 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
     auto cutoff_distance =
         common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
-    if (dist <= cutoff_distance) {
+    if (dist <= cutoff_distance)
         result = std::max(
             result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
-    }
 
     // exit early since the other ratios are 0
-    if (!sect_len) {
-        return result;
-    }
+    if (!sect_len) return result;
 
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
@@ -6023,9 +5949,7 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
 
-    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) {
-        return 100;
-    }
+    if (!intersect.empty() && (diff_ab.empty() || diff_ba.empty())) return 100;
 
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
@@ -6053,15 +5977,12 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto cutoff_distance =
         common::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
     int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
-    if (dist <= cutoff_distance) {
+    if (dist <= cutoff_distance)
         result = std::max(
             result, common::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
-    }
 
     // exit early since the other ratios are 0
-    if (!sect_len) {
-        return result;
-    }
+    if (!sect_len) return result;
 
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
@@ -6196,9 +6117,7 @@ double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (!len1 || !len2) {
-        return 0;
-    }
+    if (!len1 || !len2) return 0;
 
     double len_ratio = (len1 > len2) ? static_cast<double>(len1) / static_cast<double>(len2)
                                      : static_cast<double>(len2) / static_cast<double>(len1);
@@ -6252,9 +6171,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (!len1 || !len2) {
-        return 0;
-    }
+    if (!len1 || !len2) return 0;
 
     double len_ratio = (len1 > len2) ? static_cast<double>(len1) / static_cast<double>(len2)
                                      : static_cast<double>(len2) / static_cast<double>(len1);
@@ -6299,9 +6216,7 @@ double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (!len1 || !len2) {
-        return 0;
-    }
+    if (!len1 || !len2) return 0;
 
     return ratio(first1, last1, first2, last2, score_cutoff);
 }
@@ -6321,9 +6236,7 @@ double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
-    if (s1.empty() || !len2) {
-        return 0;
-    }
+    if (s1.empty() || !len2) return 0;
 
     return cached_ratio.similarity(first2, last2, score_cutoff);
 }

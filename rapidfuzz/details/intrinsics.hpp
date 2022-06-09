@@ -72,13 +72,13 @@ constexpr T rotl(T x, unsigned int n)
     unsigned int count_mask = num_bits - 1;
 
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(push)
+#    pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#  pragma warning(disable: 4146)
+#    pragma warning(disable : 4146)
 #endif
     return (x << n) | (x >> (-n & count_mask));
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(pop)
+#    pragma warning(pop)
 #endif
 }
 
@@ -89,13 +89,13 @@ template <typename T>
 constexpr T blsi(T a)
 {
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(push)
+#    pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#  pragma warning(disable: 4146)
+#    pragma warning(disable : 4146)
 #endif
     return a & -a;
 #if _MSC_VER && !defined(__clang__)
-#  pragma warning(pop)
+#    pragma warning(pop)
 #endif
 }
 
@@ -138,9 +138,7 @@ static inline int countr_zero(uint64_t x)
 {
     uint32_t msh = (uint32_t)(x >> 32);
     uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
-    if (lsh != 0) {
-        return countr_zero(lsh);
-    }
+    if (lsh != 0) return countr_zero(lsh);
     return 32 + countr_zero(msh);
 }
 #    endif

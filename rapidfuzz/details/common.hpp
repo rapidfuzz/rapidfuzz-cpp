@@ -45,9 +45,7 @@ static inline void assume(bool b)
 #if defined(__clang__)
     __builtin_assume(b);
 #elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b) {
-        __builtin_unreachable();
-    }
+    if (!b) __builtin_unreachable();
 #elif defined(_MSC_VER)
     __assume(b);
 #endif
