@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <rapidfuzz/details/Matrix.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 
 namespace rapidfuzz {
@@ -122,8 +123,7 @@ struct PatternMatchVector {
 
     void insert_mask(char key, uint64_t mask) noexcept
     {
-        /** treat char as value between 0 and 127 for performance reasons */
-        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+        insert_mask(static_cast<uint8_t>(key), mask);
     }
 
     template <typename CharT>
@@ -141,24 +141,36 @@ private:
 };
 
 struct BlockPatternMatchVector {
-    BlockPatternMatchVector() = default;
+    BlockPatternMatchVector() = delete;
+
+    BlockPatternMatchVector(size_t str_len)
+        : m_block_count(ceil_div(str_len, 64)), m_extendedAscii(256, m_block_count, 0)
+    {
+        m_map = new BitvectorHashmap[m_block_count];
+    }
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
+        : BlockPatternMatchVector(static_cast<size_t>(std::distance(first, last)))
     {
         insert(first, last);
     }
 
+    ~BlockPatternMatchVector()
+    {
+        delete[] m_map;
+    }
+
     size_t size() const noexcept
     {
-        return m_val.size();
+        return m_block_count;
     }
 
     template <typename CharT>
-    void insert(size_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos) noexcept
     {
-        auto* be = &m_val[block];
-        be->insert(ch, pos);
+        uint64_t mask = UINT64_C(1) << pos;
+        insert_mask(block, ch, mask);
     }
 
     /**
@@ -168,32 +180,50 @@ struct BlockPatternMatchVector {
      * @param last
      */
     template <typename InputIt>
-    void insert(InputIt first, InputIt last)
+    void insert(InputIt first, InputIt last) noexcept
     {
         auto len = std::distance(first, last);
-        auto block_count = ceil_div(len, 64);
-        m_val.resize(static_cast<size_t>(block_count));
-
-        for (ptrdiff_t block = 0; block < block_count; ++block) {
-            if (std::distance(first + block * 64, last) > 64) {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64,
-                                                         first + (block + 1) * 64);
-            }
-            else {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
-            }
+        uint64_t mask = 1;
+        for (ptrdiff_t i = 0; i < len; ++i) {
+            size_t block = static_cast<size_t>(i) / 64;
+            insert_mask(block, first[i], mask);
+            mask = rotl(mask, 1);
         }
     }
 
     template <typename CharT>
-    uint64_t get(size_t block, CharT ch) const
+    void insert_mask(size_t block, CharT key, uint64_t mask) noexcept
     {
-        auto* be = &m_val[block];
-        return be->get(ch);
+        assert(block < size());
+        if (key >= 0 && key <= 255)
+            m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
+        else
+            m_map[block].insert_mask(key, mask);
+    }
+
+    void insert_mask(size_t block, char key, uint64_t mask) noexcept
+    {
+        insert_mask(block, static_cast<uint8_t>(key), mask);
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT key) const noexcept
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)][block];
+        else
+            return m_map[block].get(key);
+    }
+
+    uint64_t get(size_t block, char ch) const noexcept
+    {
+        return get(block, static_cast<uint8_t>(ch));
     }
 
 private:
-    std::vector<PatternMatchVector> m_val;
+    size_t m_block_count;
+    BitvectorHashmap* m_map;
+    Matrix<uint64_t> m_extendedAscii;
 };
 
 } // namespace detail

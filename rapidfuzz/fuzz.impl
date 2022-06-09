@@ -890,10 +890,9 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
     : s1(first1, last1),
       cached_partial_ratio(first1, last1),
       tokens_s1(common::sorted_split(std::begin(s1), std::end(s1))),
-      s1_sorted(tokens_s1.join())
-{
-    blockmap_s1_sorted.insert(std::begin(s1_sorted), std::end(s1_sorted));
-}
+      s1_sorted(tokens_s1.join()),
+      blockmap_s1_sorted(std::begin(s1_sorted), std::end(s1_sorted))
+{}
 
 template <typename CharT1>
 template <typename InputIt2>

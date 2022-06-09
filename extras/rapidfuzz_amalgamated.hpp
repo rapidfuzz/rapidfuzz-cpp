@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-09 21:19:45.269528
+//  Generated: 2022-06-09 22:39:06.302362
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -950,7 +950,15 @@ constexpr T rotl(T x, unsigned int n)
     assert(n < num_bits);
     unsigned int count_mask = num_bits - 1;
 
+#if _MSC_VER && !defined(__clang__)
+#  pragma warning(push)
+/* unary minus operator applied to unsigned type, result still unsigned */
+#  pragma warning(disable: 4146)
+#endif
     return (x << n) | (x >> (-n & count_mask));
+#if _MSC_VER && !defined(__clang__)
+#  pragma warning(pop)
+#endif
 }
 
 /**
@@ -959,7 +967,15 @@ constexpr T rotl(T x, unsigned int n)
 template <typename T>
 constexpr T blsi(T a)
 {
+#if _MSC_VER && !defined(__clang__)
+#  pragma warning(push)
+/* unary minus operator applied to unsigned type, result still unsigned */
+#  pragma warning(disable: 4146)
+#endif
     return a & -a;
+#if _MSC_VER && !defined(__clang__)
+#  pragma warning(pop)
+#endif
 }
 
 /**
@@ -1664,6 +1680,118 @@ double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double 
 #include <vector>
 
 
+#include <algorithm>
+#include <cassert>
+#include <stdio.h>
+
+namespace rapidfuzz {
+namespace detail {
+
+template <typename T, bool IsConst>
+struct MatrixVectorView {
+
+    using value_type = T;
+    using size_type = size_t;
+    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
+    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+
+    MatrixVectorView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
+    {}
+
+    reference operator[](size_type col) noexcept
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+    size_type size() const noexcept
+    {
+        return m_cols;
+    }
+
+private:
+    pointer m_vector;
+    size_type m_cols;
+};
+
+template <typename T>
+struct Matrix {
+
+    using value_type = T;
+
+    Matrix(size_t rows, size_t cols, T val)
+        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
+    {
+        std::fill_n(m_matrix, m_rows * m_cols, val);
+    }
+
+    Matrix(const Matrix& other)
+        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
+    {
+        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
+    }
+
+    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
+    {
+        other.swap(*this);
+    }
+
+    Matrix& operator=(Matrix&& other) noexcept
+    {
+        Matrix temp = other;
+        temp.swap(*this);
+        return *this;
+    }
+
+    Matrix& operator=(const Matrix& other)
+    {
+        other.swap(*this);
+        return *this;
+    }
+
+    void swap(Matrix& rhs) noexcept
+    {
+        using std::swap;
+        swap(m_rows, rhs.m_rows);
+        swap(m_cols, rhs.m_cols);
+        swap(m_matrix, rhs.m_matrix);
+    }
+
+    ~Matrix()
+    {
+        delete[] m_matrix;
+    }
+
+    MatrixVectorView<value_type, false> operator[](size_t row) noexcept
+    {
+        assert(row < m_rows);
+        return {&m_matrix[row * m_cols], m_cols};
+    }
+
+    MatrixVectorView<value_type, true> operator[](size_t row) const noexcept
+    {
+        assert(row < m_rows);
+        return {&m_matrix[row * m_cols], m_cols};
+    }
+
+    size_t rows() const noexcept
+    {
+        return m_rows;
+    }
+
+    size_t cols() const noexcept
+    {
+        return m_cols;
+    }
+
+private:
+    size_t m_rows;
+    size_t m_cols;
+    T* m_matrix;
+};
+
+} // namespace detail
+} // namespace rapidfuzz
 namespace rapidfuzz {
 namespace detail {
 
@@ -1774,8 +1902,7 @@ struct PatternMatchVector {
 
     void insert_mask(char key, uint64_t mask) noexcept
     {
-        /** treat char as value between 0 and 127 for performance reasons */
-        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+        insert_mask(static_cast<uint8_t>(key), mask);
     }
 
     template <typename CharT>
@@ -1793,24 +1920,36 @@ private:
 };
 
 struct BlockPatternMatchVector {
-    BlockPatternMatchVector() = default;
+    BlockPatternMatchVector() = delete;
+
+    BlockPatternMatchVector(size_t str_len)
+        : m_block_count(ceil_div(str_len, 64)), m_extendedAscii(256, m_block_count, 0)
+    {
+        m_map = new BitvectorHashmap[m_block_count];
+    }
 
     template <typename InputIt>
     BlockPatternMatchVector(InputIt first, InputIt last)
+        : BlockPatternMatchVector(static_cast<size_t>(std::distance(first, last)))
     {
         insert(first, last);
     }
 
+    ~BlockPatternMatchVector()
+    {
+        delete[] m_map;
+    }
+
     size_t size() const noexcept
     {
-        return m_val.size();
+        return m_block_count;
     }
 
     template <typename CharT>
-    void insert(size_t block, CharT ch, int pos)
+    void insert(size_t block, CharT ch, int pos) noexcept
     {
-        auto* be = &m_val[block];
-        be->insert(ch, pos);
+        uint64_t mask = UINT64_C(1) << pos;
+        insert_mask(block, ch, mask);
     }
 
     /**
@@ -1820,32 +1959,50 @@ struct BlockPatternMatchVector {
      * @param last
      */
     template <typename InputIt>
-    void insert(InputIt first, InputIt last)
+    void insert(InputIt first, InputIt last) noexcept
     {
         auto len = std::distance(first, last);
-        auto block_count = ceil_div(len, 64);
-        m_val.resize(static_cast<size_t>(block_count));
-
-        for (ptrdiff_t block = 0; block < block_count; ++block) {
-            if (std::distance(first + block * 64, last) > 64) {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64,
-                                                         first + (block + 1) * 64);
-            }
-            else {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
-            }
+        uint64_t mask = 1;
+        for (ptrdiff_t i = 0; i < len; ++i) {
+            size_t block = static_cast<size_t>(i) / 64;
+            insert_mask(block, first[i], mask);
+            mask = rotl(mask, 1);
         }
     }
 
     template <typename CharT>
-    uint64_t get(size_t block, CharT ch) const
+    void insert_mask(size_t block, CharT key, uint64_t mask) noexcept
     {
-        auto* be = &m_val[block];
-        return be->get(ch);
+        assert(block < size());
+        if (key >= 0 && key <= 255)
+            m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
+        else
+            m_map[block].insert_mask(key, mask);
+    }
+
+    void insert_mask(size_t block, char key, uint64_t mask) noexcept
+    {
+        insert_mask(block, static_cast<uint8_t>(key), mask);
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT key) const noexcept
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)][block];
+        else
+            return m_map[block].get(key);
+    }
+
+    uint64_t get(size_t block, char ch) const noexcept
+    {
+        return get(block, static_cast<uint8_t>(ch));
     }
 
 private:
-    std::vector<PatternMatchVector> m_val;
+    size_t m_block_count;
+    BitvectorHashmap* m_map;
+    Matrix<uint64_t> m_extendedAscii;
 };
 
 } // namespace detail
@@ -2041,118 +2198,6 @@ CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<Input
 
 
 
-#include <algorithm>
-#include <cassert>
-#include <stdio.h>
-
-namespace rapidfuzz {
-namespace detail {
-
-template <typename T, bool IsConst>
-struct MatrixVectorView {
-
-    using value_type = T;
-    using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
-
-    MatrixVectorView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
-    {}
-
-    reference operator[](size_type col) noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_type size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    pointer m_vector;
-    size_type m_cols;
-};
-
-template <typename T>
-struct Matrix {
-
-    using value_type = T;
-
-    Matrix(size_t rows, size_t cols, T val)
-        : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
-    {
-        std::fill_n(m_matrix, m_rows * m_cols, val);
-    }
-
-    Matrix(const Matrix& other)
-        : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
-    {
-        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
-    }
-
-    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {
-        other.swap(*this);
-    }
-
-    Matrix& operator=(Matrix&& other) noexcept
-    {
-        Matrix temp = other;
-        temp.swap(*this);
-        return *this;
-    }
-
-    Matrix& operator=(const Matrix& other)
-    {
-        other.swap(*this);
-        return *this;
-    }
-
-    void swap(Matrix& rhs) noexcept
-    {
-        using std::swap;
-        swap(m_rows, rhs.m_rows);
-        swap(m_cols, rhs.m_cols);
-        swap(m_matrix, rhs.m_matrix);
-    }
-
-    ~Matrix()
-    {
-        delete[] m_matrix;
-    }
-
-    MatrixVectorView<value_type, false> operator[](size_t row) noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols};
-    }
-
-    MatrixVectorView<value_type, true> operator[](size_t row) const noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols};
-    }
-
-    size_t rows() const noexcept
-    {
-        return m_rows;
-    }
-
-    size_t cols() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    size_t m_rows;
-    size_t m_cols;
-    T* m_matrix;
-};
-
-} // namespace detail
-} // namespace rapidfuzz
 #include <algorithm>
 
 namespace rapidfuzz {
@@ -3439,8 +3484,7 @@ int64_t generalized_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputI
                                          int64_t max)
 {
     int64_t min_edits = levenshtein_min_distance(first1, last1, first2, last2, weights);
-    if (min_edits > max)
-        return max + 1;
+    if (min_edits > max) return max + 1;
 
     /* common affix does not effect Levenshtein distance */
     common::remove_common_affix(first1, last1, first2, last2);
@@ -3544,8 +3588,8 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const PM_Vec& PM, InputIt1 first1,
-                               InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
+int64_t levenshtein_hyrroe2003(const PM_Vec& PM, InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                               InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
 
@@ -3734,11 +3778,9 @@ int64_t uniform_levenshtein_distance(const detail::BlockPatternMatchVector& bloc
     auto len2 = std::distance(first2, last2);
 
     // when no differences are allowed a direct comparision is sufficient
-    if (max == 0)
-        return !std::equal(first1, last1, first2, last2);
+    if (max == 0) return !std::equal(first1, last1, first2, last2);
 
-    if (max < std::abs(len1 - len2))
-        return max + 1;
+    if (max < std::abs(len1 - len2)) return max + 1;
 
     // important to catch, since this causes block to be empty -> raises exception on access
     if (!len1) {
@@ -3759,8 +3801,7 @@ int64_t uniform_levenshtein_distance(const detail::BlockPatternMatchVector& bloc
     common::remove_common_affix(first1, last1, first2, last2);
     len1 = std::distance(first1, last1);
     len2 = std::distance(first2, last2);
-    if (!len1 || !len2)
-        return len1 + len2;
+    if (!len1 || !len2) return len1 + len2;
 
     return levenshtein_mbleven2018(first1, last1, first2, last2, max);
 }
@@ -3773,26 +3814,21 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
     auto len2 = std::distance(first2, last2);
 
     /* Swapping the strings so the second string is shorter */
-    if (len1 < len2)
-        return uniform_levenshtein_distance(first2, last2, first1, last1, max);
+    if (len1 < len2) return uniform_levenshtein_distance(first2, last2, first1, last1, max);
 
     // when no differences are allowed a direct comparision is sufficient
-    if (max == 0)
-        return !std::equal(first1, last1, first2, last2);
+    if (max == 0) return !std::equal(first1, last1, first2, last2);
 
     // at least length difference insertions/deletions required
-    if (max < (len1 - len2))
-        return max + 1;
+    if (max < (len1 - len2)) return max + 1;
 
     /* common affix does not effect Levenshtein distance */
     common::remove_common_affix(first1, last1, first2, last2);
     len1 = std::distance(first1, last1);
     len2 = std::distance(first2, last2);
-    if (!len1 || !len2)
-        return static_cast<int64_t>(len1) + len2;
+    if (!len1 || !len2) return static_cast<int64_t>(len1) + len2;
 
-    if (max < 4)
-        return levenshtein_mbleven2018(first1, last1, first2, last2, max);
+    if (max < 4) return levenshtein_mbleven2018(first1, last1, first2, last2, max);
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (len1 < 65)
@@ -3828,8 +3864,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
     editops.set_dest_len(len2 + affix.prefix_len + affix.suffix_len);
 
-    if (dist == 0)
-        return editops;
+    if (dist == 0) return editops;
 
     auto col = len1;
     auto row = len2;
@@ -4052,8 +4087,7 @@ int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, I
 {
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
-        if (weights.insert_cost == 0)
-            return 0;
+        if (weights.insert_cost == 0) return 0;
 
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
@@ -4179,8 +4213,7 @@ int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2,
 
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
-        if (weights.insert_cost == 0)
-            return 0;
+        if (weights.insert_cost == 0) return 0;
 
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
@@ -6202,10 +6235,9 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
     : s1(first1, last1),
       cached_partial_ratio(first1, last1),
       tokens_s1(common::sorted_split(std::begin(s1), std::end(s1))),
-      s1_sorted(tokens_s1.join())
-{
-    blockmap_s1_sorted.insert(std::begin(s1_sorted), std::end(s1_sorted));
-}
+      s1_sorted(tokens_s1.join()),
+      blockmap_s1_sorted(std::begin(s1_sorted), std::end(s1_sorted))
+{}
 
 template <typename CharT1>
 template <typename InputIt2>
