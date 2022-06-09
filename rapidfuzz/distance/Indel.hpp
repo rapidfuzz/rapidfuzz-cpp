@@ -2,6 +2,7 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
+#include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
 
 #include <cmath>
@@ -84,7 +85,7 @@ struct CachedIndel {
 
 private:
     std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)

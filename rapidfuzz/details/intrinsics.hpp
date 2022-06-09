@@ -4,6 +4,7 @@
 #pragma once
 
 #include <bitset>
+#include <cassert>
 #include <cstddef>
 #include <limits>
 #include <stdint.h>

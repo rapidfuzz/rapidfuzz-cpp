@@ -195,7 +195,7 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 first1,
+int64_t levenshtein_hyrroe2003(const detail::PatternMatchVector& PM, InputIt1 first1,
                                InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
@@ -235,7 +235,7 @@ int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 fi
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector& PM,
+int64_t levenshtein_hyrroe2003_small_band(const detail::BlockPatternMatchVector& PM,
                                           InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                           InputIt2 last2, int64_t max)
 {
@@ -286,7 +286,7 @@ int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector&
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, InputIt1 first1,
+int64_t levenshtein_myers1999_block(const detail::BlockPatternMatchVector& PM, InputIt1 first1,
                                     InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     struct Vectors {
@@ -379,7 +379,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t uniform_levenshtein_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t uniform_levenshtein_distance(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                      InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
@@ -458,11 +458,11 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (len1 < 65) {
-        return levenshtein_hyrroe2003(common::PatternMatchVector(first1, last1), first1, last1,
+        return levenshtein_hyrroe2003(detail::PatternMatchVector(first1, last1), first1, last1,
                                       first2, last2, max);
     }
     else {
-        return levenshtein_myers1999_block(common::BlockPatternMatchVector(first1, last1), first1,
+        return levenshtein_myers1999_block(detail::BlockPatternMatchVector(first1, last1), first1,
                                            last1, first2, last2, max);
     }
 }
@@ -561,7 +561,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVector& PM,
+LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const detail::PatternMatchVector& PM,
                                                    InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                    InputIt2 last2)
 {
@@ -603,7 +603,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatternMatchVector& PM,
+LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const detail::BlockPatternMatchVector& PM,
                                                          InputIt1 first1, InputIt1 last1,
                                                          InputIt2 first2, InputIt2 last2)
 {
@@ -702,11 +702,11 @@ LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt
         return matrix;
     }
     else if (len1 <= 64) {
-        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first1, last1), first1,
+        return levenshtein_matrix_hyrroe2003(detail::PatternMatchVector(first1, last1), first1,
                                              last1, first2, last2);
     }
     else {
-        return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first1, last1),
+        return levenshtein_matrix_hyrroe2003_block(detail::BlockPatternMatchVector(first1, last1),
                                                    first1, last1, first2, last2);
     }
 }

@@ -129,7 +129,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
 
 template <typename InputIt1, typename InputIt2>
 static inline int64_t
-longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& block, InputIt1,
+longest_common_subsequence_blockwise(const detail::BlockPatternMatchVector& block, InputIt1,
                                      InputIt1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff)
 {
@@ -158,7 +158,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t longest_common_subsequence(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                    InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    int64_t score_cutoff)
 {
@@ -207,55 +207,55 @@ int64_t longest_common_subsequence(InputIt1 first1, InputIt1 last1, InputIt2 fir
         return 0;
     case 1:
     {
-        auto block = common::PatternMatchVector(first1, last1);
+        auto block = detail::PatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<1>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 2:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<2>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 3:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<3>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 4:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<4>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 5:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<5>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 6:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<6>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 7:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<7>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 8:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<8>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     default:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_blockwise(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
@@ -263,7 +263,7 @@ int64_t longest_common_subsequence(InputIt1 first1, InputIt1 last1, InputIt2 fir
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t lcs_seq_similarity(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                            InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
 {
     auto len1 = std::distance(first1, last1);
@@ -445,7 +445,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
 }
 
 template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block, InputIt1 first1,
+LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                     InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
     auto len1 = std::distance(first1, last1);
@@ -490,11 +490,11 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         return matrix;
     }
     else if (len1 <= 64) {
-        common::PatternMatchVector block(first1, last1);
+        detail::PatternMatchVector block(first1, last1);
         return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
     }
     else {
-        common::BlockPatternMatchVector block(first1, last1);
+        detail::BlockPatternMatchVector block(first1, last1);
         switch (block.m_val.size()) {
         case 1:
             return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);

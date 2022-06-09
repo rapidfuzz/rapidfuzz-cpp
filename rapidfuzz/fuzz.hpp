@@ -4,6 +4,7 @@
 
 #pragma once
 #include <rapidfuzz/details/CharSet.hpp>
+#include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 
@@ -584,7 +585,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
-    common::BlockPatternMatchVector blockmap_s1_sorted;
+    detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)

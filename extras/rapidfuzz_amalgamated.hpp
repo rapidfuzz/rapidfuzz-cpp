@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-05 22:57:02.873498
+//  Generated: 2022-06-09 21:00:44.182203
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -883,6 +883,7 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 } // namespace rapidfuzz
 
 #include <bitset>
+#include <cassert>
 #include <cstddef>
 #include <limits>
 #include <stdint.h>
@@ -1173,198 +1174,6 @@ size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, I
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
-
-template <typename T>
-constexpr auto to_unsigned(T value) -> typename std::make_unsigned<T>::type
-{
-    return typename std::make_unsigned<T>::type(value);
-}
-
-template <typename T>
-constexpr auto to_signed(T value) -> typename std::make_unsigned<T>::type
-{
-    return typename std::make_signed<T>::type(value);
-}
-
-struct BitvectorHashmap {
-    BitvectorHashmap() : m_map()
-    {}
-
-    template <typename CharT>
-    void insert(CharT key, int64_t pos) noexcept
-    {
-        insert_mask(key, UINT64_C(1) << pos);
-    }
-
-    template <typename CharT>
-    void insert_mask(CharT key, uint64_t mask) noexcept
-    {
-        uint32_t i = lookup(static_cast<uint64_t>(key));
-        m_map[i].key = static_cast<uint64_t>(key);
-        m_map[i].value |= mask;
-    }
-
-    template <typename CharT>
-    uint64_t get(CharT key) const noexcept
-    {
-        return m_map[lookup(static_cast<uint64_t>(key))].value;
-    }
-
-private:
-    /**
-     * lookup key inside the hashmap using a similar collision resolution
-     * strategy to CPython and Ruby
-     */
-    uint32_t lookup(uint64_t key) const noexcept
-    {
-        uint32_t i = key % 128;
-
-        if (!m_map[i].value || m_map[i].key == key) {
-            return i;
-        }
-
-        uint64_t perturb = key;
-        while (true) {
-            i = (static_cast<uint64_t>(i) * 5 + perturb + 1) % 128;
-            if (!m_map[i].value || m_map[i].key == key) {
-                return i;
-            }
-
-            perturb >>= 5;
-        }
-    }
-
-    struct MapElem {
-        uint64_t key = 0;
-        uint64_t value = 0;
-    };
-    std::array<MapElem, 128> m_map;
-};
-
-struct PatternMatchVector {
-    PatternMatchVector() : m_extendedAscii()
-    {}
-
-    template <typename InputIt>
-    PatternMatchVector(InputIt first, InputIt last) : m_extendedAscii()
-    {
-        insert(first, last);
-    }
-
-    template <typename InputIt>
-    void insert(InputIt first, InputIt last) noexcept
-    {
-        uint64_t mask = 1;
-        for (; first != last; ++first) {
-            insert_mask(*first, mask);
-            mask <<= 1;
-        }
-    }
-
-    template <typename CharT>
-    void insert(CharT key, int64_t pos) noexcept
-    {
-        insert_mask(key, UINT64_C(1) << pos);
-    }
-
-    uint64_t get(char key) const noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        return m_extendedAscii[static_cast<uint8_t>(key)];
-    }
-
-    template <typename CharT>
-    uint64_t get(CharT key) const noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        if (key >= 0 && key <= 255)
-            return m_extendedAscii[static_cast<uint8_t>(key)];
-        else
-            return m_map.get(key);
-    }
-
-    template <typename CharT>
-    uint64_t get(size_t block, CharT key) const noexcept
-    {
-        assert(block == 0);
-        (void)block;
-        return get(key);
-    }
-
-    void insert_mask(char key, uint64_t mask) noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
-    }
-
-    template <typename CharT>
-    void insert_mask(CharT key, uint64_t mask) noexcept
-    {
-        if (key >= 0 && key <= 255)
-            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
-        else
-            m_map.insert_mask(key, mask);
-    }
-
-private:
-    BitvectorHashmap m_map;
-    std::array<uint64_t, 256> m_extendedAscii;
-};
-
-struct BlockPatternMatchVector {
-    std::vector<PatternMatchVector> m_val;
-
-    BlockPatternMatchVector() = default;
-
-    template <typename InputIt>
-    BlockPatternMatchVector(InputIt first, InputIt last)
-    {
-        insert(first, last);
-    }
-
-    size_t size() const noexcept
-    {
-        return m_val.size();
-    }
-
-    template <typename CharT>
-    void insert(size_t block, CharT ch, int pos)
-    {
-        auto* be = &m_val[block];
-        be->insert(ch, pos);
-    }
-
-    /**
-     * @warning undefined behavior if iterator \p first is greater than \p last
-     * @tparam InputIt
-     * @param first
-     * @param last
-     */
-    template <typename InputIt>
-    void insert(InputIt first, InputIt last)
-    {
-        auto len = std::distance(first, last);
-        auto block_count = detail::ceil_div(len, 64);
-        m_val.resize(static_cast<size_t>(block_count));
-
-        for (ptrdiff_t block = 0; block < block_count; ++block) {
-            if (std::distance(first + block * 64, last) > 64) {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64,
-                                                         first + (block + 1) * 64);
-            }
-            else {
-                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
-            }
-        }
-    }
-
-    template <typename CharT>
-    uint64_t get(size_t block, CharT ch) const
-    {
-        auto* be = &m_val[block];
-        return be->get(ch);
-    }
-};
 
 /**@}*/
 
@@ -1846,6 +1655,200 @@ double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double 
 } // namespace rapidfuzz
 
 
+#include <array>
+#include <limits>
+#include <stdint.h>
+#include <stdio.h>
+#include <type_traits>
+#include <unordered_set>
+#include <vector>
+
+
+namespace rapidfuzz {
+namespace detail {
+
+struct BitvectorHashmap {
+    BitvectorHashmap() : m_map()
+    {}
+
+    template <typename CharT>
+    void insert(CharT key, int64_t pos) noexcept
+    {
+        insert_mask(key, UINT64_C(1) << pos);
+    }
+
+    template <typename CharT>
+    void insert_mask(CharT key, uint64_t mask) noexcept
+    {
+        uint32_t i = lookup(static_cast<uint64_t>(key));
+        m_map[i].key = static_cast<uint64_t>(key);
+        m_map[i].value |= mask;
+    }
+
+    template <typename CharT>
+    uint64_t get(CharT key) const noexcept
+    {
+        return m_map[lookup(static_cast<uint64_t>(key))].value;
+    }
+
+private:
+    /**
+     * lookup key inside the hashmap using a similar collision resolution
+     * strategy to CPython and Ruby
+     */
+    uint32_t lookup(uint64_t key) const noexcept
+    {
+        uint32_t i = key % 128;
+
+        if (!m_map[i].value || m_map[i].key == key) {
+            return i;
+        }
+
+        uint64_t perturb = key;
+        while (true) {
+            i = (static_cast<uint64_t>(i) * 5 + perturb + 1) % 128;
+            if (!m_map[i].value || m_map[i].key == key) {
+                return i;
+            }
+
+            perturb >>= 5;
+        }
+    }
+
+    struct MapElem {
+        uint64_t key = 0;
+        uint64_t value = 0;
+    };
+    std::array<MapElem, 128> m_map;
+};
+
+struct PatternMatchVector {
+    PatternMatchVector() : m_extendedAscii()
+    {}
+
+    template <typename InputIt>
+    PatternMatchVector(InputIt first, InputIt last) : m_extendedAscii()
+    {
+        insert(first, last);
+    }
+
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last) noexcept
+    {
+        uint64_t mask = 1;
+        for (; first != last; ++first) {
+            insert_mask(*first, mask);
+            mask <<= 1;
+        }
+    }
+
+    template <typename CharT>
+    void insert(CharT key, int64_t pos) noexcept
+    {
+        insert_mask(key, UINT64_C(1) << pos);
+    }
+
+    uint64_t get(char key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    uint64_t get(CharT key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map.get(key);
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT key) const noexcept
+    {
+        assert(block == 0);
+        (void)block;
+        return get(key);
+    }
+
+    void insert_mask(char key, uint64_t mask) noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+    }
+
+    template <typename CharT>
+    void insert_mask(CharT key, uint64_t mask) noexcept
+    {
+        if (key >= 0 && key <= 255)
+            m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
+        else
+            m_map.insert_mask(key, mask);
+    }
+
+private:
+    BitvectorHashmap m_map;
+    std::array<uint64_t, 256> m_extendedAscii;
+};
+
+struct BlockPatternMatchVector {
+    std::vector<PatternMatchVector> m_val;
+
+    BlockPatternMatchVector() = default;
+
+    template <typename InputIt>
+    BlockPatternMatchVector(InputIt first, InputIt last)
+    {
+        insert(first, last);
+    }
+
+    size_t size() const noexcept
+    {
+        return m_val.size();
+    }
+
+    template <typename CharT>
+    void insert(size_t block, CharT ch, int pos)
+    {
+        auto* be = &m_val[block];
+        be->insert(ch, pos);
+    }
+
+    /**
+     * @warning undefined behavior if iterator \p first is greater than \p last
+     * @tparam InputIt
+     * @param first
+     * @param last
+     */
+    template <typename InputIt>
+    void insert(InputIt first, InputIt last)
+    {
+        auto len = std::distance(first, last);
+        auto block_count = ceil_div(len, 64);
+        m_val.resize(static_cast<size_t>(block_count));
+
+        for (ptrdiff_t block = 0; block < block_count; ++block) {
+            if (std::distance(first + block * 64, last) > 64) {
+                m_val[static_cast<size_t>(block)].insert(first + block * 64,
+                                                         first + (block + 1) * 64);
+            }
+            else {
+                m_val[static_cast<size_t>(block)].insert(first + block * 64, last);
+            }
+        }
+    }
+
+    template <typename CharT>
+    uint64_t get(size_t block, CharT ch) const
+    {
+        auto* be = &m_val[block];
+        return be->get(ch);
+    }
+};
+
+} // namespace detail
+} // namespace rapidfuzz
 #include <cmath>
 #include <limits>
 
@@ -1926,7 +1929,7 @@ struct CachedIndel {
 
 private:
     std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
@@ -2022,7 +2025,7 @@ struct CachedLCSseq {
 
 private:
     std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
 };
 
 #if __cplusplus >= 201703L
@@ -2273,7 +2276,7 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
 
 template <typename InputIt1, typename InputIt2>
 static inline int64_t
-longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& block, InputIt1,
+longest_common_subsequence_blockwise(const detail::BlockPatternMatchVector& block, InputIt1,
                                      InputIt1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff)
 {
@@ -2302,7 +2305,7 @@ longest_common_subsequence_blockwise(const common::BlockPatternMatchVector& bloc
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t longest_common_subsequence(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                    InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    int64_t score_cutoff)
 {
@@ -2351,55 +2354,55 @@ int64_t longest_common_subsequence(InputIt1 first1, InputIt1 last1, InputIt2 fir
         return 0;
     case 1:
     {
-        auto block = common::PatternMatchVector(first1, last1);
+        auto block = detail::PatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<1>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 2:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<2>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 3:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<3>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 4:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<4>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 5:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<5>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 6:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<6>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 7:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<7>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     case 8:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_unroll<8>(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
     default:
     {
-        auto block = common::BlockPatternMatchVector(first1, last1);
+        auto block = detail::BlockPatternMatchVector(first1, last1);
         return longest_common_subsequence_blockwise(block, first1, last1, first2, last2,
                                                     score_cutoff);
     }
@@ -2407,7 +2410,7 @@ int64_t longest_common_subsequence(InputIt1 first1, InputIt1 last1, InputIt2 fir
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t lcs_seq_similarity(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                            InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
 {
     auto len1 = std::distance(first1, last1);
@@ -2589,7 +2592,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
 }
 
 template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_blockwise(const common::BlockPatternMatchVector& block, InputIt1 first1,
+LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                     InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
     auto len1 = std::distance(first1, last1);
@@ -2634,11 +2637,11 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
         return matrix;
     }
     else if (len1 <= 64) {
-        common::PatternMatchVector block(first1, last1);
+        detail::PatternMatchVector block(first1, last1);
         return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
     }
     else {
-        common::BlockPatternMatchVector block(first1, last1);
+        detail::BlockPatternMatchVector block(first1, last1);
         switch (block.m_val.size()) {
         case 1:
             return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
@@ -2831,7 +2834,7 @@ namespace rapidfuzz {
 namespace detail {
 
 template <typename InputIt1, typename InputIt2>
-int64_t indel_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t indel_distance(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                        InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
@@ -2853,7 +2856,7 @@ int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+double indel_normalized_distance(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                  InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                  double score_cutoff)
 {
@@ -2866,7 +2869,7 @@ double indel_normalized_distance(const common::BlockPatternMatchVector& block, I
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t indel_similarity(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t indel_similarity(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                          InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
 {
     int64_t maximum = std::distance(first1, last1) + std::distance(first2, last2);
@@ -2877,7 +2880,7 @@ int64_t indel_similarity(const common::BlockPatternMatchVector& block, InputIt1 
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_similarity(const common::BlockPatternMatchVector& block, InputIt1 first1,
+double indel_normalized_similarity(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                    InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
@@ -3335,7 +3338,7 @@ struct CachedLevenshtein {
 
 private:
     std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };
 
@@ -3544,7 +3547,7 @@ int64_t levenshtein_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2
  * @return returns the levenshtein distance between s1 and s2
  */
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 first1,
+int64_t levenshtein_hyrroe2003(const detail::PatternMatchVector& PM, InputIt1 first1,
                                InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
@@ -3584,7 +3587,7 @@ int64_t levenshtein_hyrroe2003(const common::PatternMatchVector& PM, InputIt1 fi
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector& PM,
+int64_t levenshtein_hyrroe2003_small_band(const detail::BlockPatternMatchVector& PM,
                                           InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                           InputIt2 last2, int64_t max)
 {
@@ -3635,7 +3638,7 @@ int64_t levenshtein_hyrroe2003_small_band(const common::BlockPatternMatchVector&
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, InputIt1 first1,
+int64_t levenshtein_myers1999_block(const detail::BlockPatternMatchVector& PM, InputIt1 first1,
                                     InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     struct Vectors {
@@ -3728,7 +3731,7 @@ int64_t levenshtein_myers1999_block(const common::BlockPatternMatchVector& PM, I
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t uniform_levenshtein_distance(const common::BlockPatternMatchVector& block, InputIt1 first1,
+int64_t uniform_levenshtein_distance(const detail::BlockPatternMatchVector& block, InputIt1 first1,
                                      InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t max)
 {
     auto len1 = std::distance(first1, last1);
@@ -3807,11 +3810,11 @@ int64_t uniform_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 f
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (len1 < 65) {
-        return levenshtein_hyrroe2003(common::PatternMatchVector(first1, last1), first1, last1,
+        return levenshtein_hyrroe2003(detail::PatternMatchVector(first1, last1), first1, last1,
                                       first2, last2, max);
     }
     else {
-        return levenshtein_myers1999_block(common::BlockPatternMatchVector(first1, last1), first1,
+        return levenshtein_myers1999_block(detail::BlockPatternMatchVector(first1, last1), first1,
                                            last1, first2, last2, max);
     }
 }
@@ -3910,7 +3913,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVector& PM,
+LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const detail::PatternMatchVector& PM,
                                                    InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                    InputIt2 last2)
 {
@@ -3952,7 +3955,7 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const common::PatternMatchVec
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const common::BlockPatternMatchVector& PM,
+LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const detail::BlockPatternMatchVector& PM,
                                                          InputIt1 first1, InputIt1 last1,
                                                          InputIt2 first2, InputIt2 last2)
 {
@@ -4051,11 +4054,11 @@ LevenshteinBitMatrix levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt
         return matrix;
     }
     else if (len1 <= 64) {
-        return levenshtein_matrix_hyrroe2003(common::PatternMatchVector(first1, last1), first1,
+        return levenshtein_matrix_hyrroe2003(detail::PatternMatchVector(first1, last1), first1,
                                              last1, first2, last2);
     }
     else {
-        return levenshtein_matrix_hyrroe2003_block(common::BlockPatternMatchVector(first1, last1),
+        return levenshtein_matrix_hyrroe2003_block(detail::BlockPatternMatchVector(first1, last1),
                                                    first1, last1, first2, last2);
     }
 }
@@ -5047,7 +5050,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
-    common::BlockPatternMatchVector blockmap_s1_sorted;
+    detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
@@ -5385,7 +5388,7 @@ template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 ScoreAlignment<double>
 partial_ratio_short_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            const CachedRatio<CachedCharT1>& cached_ratio,
-                           const detail::CharSet<iter_value_t<InputIt1>>& s1_char_set,
+                           const rapidfuzz::detail::CharSet<iter_value_t<InputIt1>>& s1_char_set,
                            double score_cutoff)
 {
     ScoreAlignment<double> res;
@@ -5461,7 +5464,7 @@ ScoreAlignment<double> partial_ratio_short_needle(InputIt1 first1, InputIt1 last
 {
     CachedRatio<CharT1> cached_ratio(first1, last1);
 
-    detail::CharSet<CharT1> s1_char_set;
+    rapidfuzz::detail::CharSet<CharT1> s1_char_set;
     auto len1 = std::distance(first1, last1);
     for (ptrdiff_t i = 0; i < len1; ++i) {
         s1_char_set.insert(first1[i]);
@@ -5996,8 +5999,8 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double token_ratio(const std::basic_string<CharT1>& s1_sorted,
                    const SplittedSentenceView<InputIt1>& tokens_s1,
-                   const common::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2,
-                   InputIt2 last2, double score_cutoff)
+                   const rapidfuzz::detail::BlockPatternMatchVector& blockmap_s1_sorted,
+                   InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
