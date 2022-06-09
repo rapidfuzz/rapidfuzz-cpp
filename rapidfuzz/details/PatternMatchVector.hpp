@@ -141,8 +141,6 @@ private:
 };
 
 struct BlockPatternMatchVector {
-    std::vector<PatternMatchVector> m_val;
-
     BlockPatternMatchVector() = default;
 
     template <typename InputIt>
@@ -193,6 +191,9 @@ struct BlockPatternMatchVector {
         auto* be = &m_val[block];
         return be->get(ch);
     }
+
+private:
+    std::vector<PatternMatchVector> m_val;
 };
 
 } // namespace detail

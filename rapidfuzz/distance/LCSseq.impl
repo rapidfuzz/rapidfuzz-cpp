@@ -133,7 +133,7 @@ longest_common_subsequence_blockwise(const detail::BlockPatternMatchVector& bloc
                                      InputIt1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff)
 {
-    auto words = block.m_val.size();
+    auto words = block.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     for (; first2 != last2; ++first2) {
@@ -450,7 +450,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block
 {
     auto len1 = std::distance(first1, last1);
     auto len2 = std::distance(first2, last2);
-    auto words = block.m_val.size();
+    auto words = block.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
     std::vector<uint64_t> S(words, ~UINT64_C(0));
@@ -495,7 +495,7 @@ LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     }
     else {
         detail::BlockPatternMatchVector block(first1, last1);
-        switch (block.m_val.size()) {
+        switch (block.size()) {
         case 1:
             return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
         case 2:
