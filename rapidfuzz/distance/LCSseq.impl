@@ -104,7 +104,7 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 #if defined(__SSE2__) || defined(__AVX2__)
 template <typename VecType, typename InputIt>
 static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
-                                                   const common::BlockPatternMatchVector& block,
+                                                   const detail::BlockPatternMatchVector& block,
                                                    InputIt first2, InputIt last2,
                                                    int64_t score_cutoff) noexcept
 {

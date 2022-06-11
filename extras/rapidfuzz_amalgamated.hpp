@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-11 15:55:41.939040
+//  Generated: 2022-06-11 15:57:16.892650
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3616,7 +3616,7 @@ public:
 private:
     size_t input_count;
     ptrdiff_t pos;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
 };
 #endif
@@ -3773,7 +3773,7 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 #if defined(__SSE2__) || defined(__AVX2__)
 template <typename VecType, typename InputIt>
 static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
-                                                   const common::BlockPatternMatchVector& block,
+                                                   const detail::BlockPatternMatchVector& block,
                                                    InputIt first2, InputIt last2,
                                                    int64_t score_cutoff) noexcept
 {

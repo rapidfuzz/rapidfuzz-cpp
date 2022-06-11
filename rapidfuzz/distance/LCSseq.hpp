@@ -154,7 +154,7 @@ public:
 private:
     size_t input_count;
     ptrdiff_t pos;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
 };
 #endif
