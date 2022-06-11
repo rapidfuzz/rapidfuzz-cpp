@@ -1,6 +1,11 @@
 ## Changelog
 
-### [1.0.1] - 2022-04-
+### [1.0.2] - 2022-06-11
+#### Fixed
+- fix unlimited recursion in CachedLCSseq::similarity
+- reduce compiler warnings
+
+### [1.0.1] - 2022-04-16
 #### Fixed
 - fix undefined behavior in sorted_split incrementing iterator past the end
 - fix use after free in editops calculation

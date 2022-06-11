@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
-//  RapidFuzz v1.0.1
-//  Generated: 2022-06-09 23:04:10.629372
+//  RapidFuzz v1.0.2
+//  Generated: 2022-06-11 16:04:44.231692
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2779,7 +2779,7 @@ int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t 
 {
     int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
     int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t sim = maximum - distance(first2, last2, cutoff_distance);
+    int64_t sim = maximum - similarity(first2, last2, cutoff_distance);
     return (sim >= score_cutoff) ? sim : 0;
 }
 
