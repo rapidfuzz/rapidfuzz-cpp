@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-11 16:12:08.391880
+//  Generated: 2022-06-11 16:23:24.122989
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2124,7 +2124,7 @@ public:
 
     native_simd(uint64_t a) noexcept
     {
-        xmm = _mm256_set1_epi64x(static_cast<long long int>(a));
+        xmm = _mm256_set1_epi64x(static_cast<int64_t>(a));
     }
 
     native_simd(const uint64_t* p) noexcept
@@ -2144,8 +2144,8 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm256_set_epi64x(static_cast<long long int>(p[3]), static_cast<long long int>(p[2]),
-                                static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2213,8 +2213,8 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm256_set_epi64x(static_cast<long long int>(p[3]), static_cast<long long int>(p[2]),
-                                static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2282,8 +2282,8 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm256_set_epi64x(static_cast<long long int>(p[3]), static_cast<long long int>(p[2]),
-                                static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2351,8 +2351,8 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm256_set_epi64x(static_cast<long long int>(p[3]), static_cast<long long int>(p[2]),
-                                static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2507,7 +2507,7 @@ public:
 
     native_simd(uint64_t a) noexcept
     {
-        xmm = _mm_set1_epi64(reinterpret_cast<__m64>(a));
+        xmm = _mm_set1_epi64x(static_cast<int64_t>(a));
     }
 
     native_simd(const uint64_t* p) noexcept
@@ -2527,7 +2527,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2593,7 +2593,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2659,7 +2659,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -2725,7 +2725,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 

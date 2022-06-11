@@ -26,7 +26,7 @@ public:
 
     native_simd(uint64_t a) noexcept
     {
-        xmm = _mm_set1_epi64(reinterpret_cast<__m64>(a));
+        xmm = _mm_set1_epi64x(static_cast<int64_t>(a));
     }
 
     native_simd(const uint64_t* p) noexcept
@@ -46,7 +46,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -112,7 +112,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -178,7 +178,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
@@ -244,7 +244,7 @@ public:
 
     native_simd load(const uint64_t* p) noexcept
     {
-        xmm = _mm_set_epi64x(static_cast<long long int>(p[1]), static_cast<long long int>(p[0]));
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
         return *this;
     }
 
