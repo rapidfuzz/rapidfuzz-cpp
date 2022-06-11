@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
-//  RapidFuzz v1.0.1
-//  Generated: 2022-06-11 15:59:26.419304
+//  RapidFuzz v1.0.2
+//  Generated: 2022-06-11 16:05:21.161275
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
