@@ -2,6 +2,7 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
+#include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/simd.hpp>
 #include <rapidfuzz/details/span.hpp>
@@ -196,7 +197,7 @@ struct CachedLCSseq {
 
 private:
     std::basic_string<CharT1> s1;
-    common::BlockPatternMatchVector PM;
+    detail::BlockPatternMatchVector PM;
 };
 
 #if __cplusplus >= 201703L
