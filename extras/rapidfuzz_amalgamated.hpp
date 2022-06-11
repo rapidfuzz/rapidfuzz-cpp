@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-11 16:05:21.161275
+//  Generated: 2022-06-11 16:12:08.391880
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2092,12 +2092,11 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 
 
-#if defined(_M_X64) && !defined(__SSE2__)
+#if (defined(_M_AMD64) || defined(_M_X64)) && !defined(__SSE2__)
 #    define __SSE2__
 #endif
 
-#ifdef __x86_64__
-#    ifdef __AVX2__
+#ifdef __AVX2__
 
 #include <array>
 #include <immintrin.h>
@@ -2481,7 +2480,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
 
 } // namespace detail
 } // namespace rapidfuzz
-#    elif defined(__SSE2__)
+#elif defined(__SSE2__)
 
 #include <array>
 #include <emmintrin.h>
@@ -2881,7 +2880,6 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
 
 } // namespace detail
 } // namespace rapidfuzz
-#    endif
 #endif
 /*
 This is an implementation of C++20's std::span
