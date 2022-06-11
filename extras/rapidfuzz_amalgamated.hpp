@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.1
-//  Generated: 2022-06-11 15:57:16.892650
+//  Generated: 2022-06-11 15:59:26.419304
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1186,6 +1186,7 @@ size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, I
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
+
 /**@}*/
 
 } // namespace common

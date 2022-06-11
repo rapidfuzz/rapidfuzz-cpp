@@ -134,6 +134,7 @@ size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, I
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
+
 /**@}*/
 
 } // namespace common
