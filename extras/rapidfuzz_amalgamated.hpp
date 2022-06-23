@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-11 16:04:44.231692
+//  Generated: 2022-06-23 12:51:41.710592
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4589,7 +4589,7 @@ struct CachedPartialRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    detail::CharSet<CharT1> s1_char_set;
+    rapidfuzz::detail::CharSet<CharT1> s1_char_set;
     CachedRatio<CharT1> cached_ratio;
 };
 
@@ -5033,7 +5033,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
-    detail::BlockPatternMatchVector blockmap_s1_sorted;
+    rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)

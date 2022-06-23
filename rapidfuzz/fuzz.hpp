@@ -141,7 +141,7 @@ struct CachedPartialRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    detail::CharSet<CharT1> s1_char_set;
+    rapidfuzz::detail::CharSet<CharT1> s1_char_set;
     CachedRatio<CharT1> cached_ratio;
 };
 
@@ -585,7 +585,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
-    detail::BlockPatternMatchVector blockmap_s1_sorted;
+    rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
