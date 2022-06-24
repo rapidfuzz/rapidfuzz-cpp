@@ -53,8 +53,7 @@ double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 fir
                                    double score_cutoff = 1.0);
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                   double score_cutoff = 1.0);
+double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0);
 
 /**
  * @brief Calculates a normalized hamming similarity
@@ -81,17 +80,16 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2,
  *   as a float between 0 and 1.0
  */
 template <typename InputIt1, typename InputIt2>
-double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                     InputIt2 last2, double score_cutoff = 0.0);
+double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                     double score_cutoff = 0.0);
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                     double score_cutoff = 0.0);
+double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
 
 template <typename CharT1>
 struct CachedHamming {
     template <typename Sentence1>
-    CachedHamming(const Sentence1& s1_) : CachedHamming(common::to_begin(s1_), common::to_end(s1_))
+    CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -103,8 +101,7 @@ struct CachedHamming {
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename Sentence2>
-    int64_t distance(const Sentence2& s2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;

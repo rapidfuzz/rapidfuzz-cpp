@@ -44,8 +44,7 @@ namespace fuzz {
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-             double score_cutoff = 0);
+double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -129,8 +128,7 @@ struct CachedPartialRatio {
     CachedPartialRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedPartialRatio(const Sentence1& s1_)
-        : CachedPartialRatio(common::to_begin(s1_), common::to_end(s1_))
+    CachedPartialRatio(const Sentence1& s1_) : CachedPartialRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -193,12 +191,11 @@ template <typename CharT1>
 struct CachedTokenSortRatio {
     template <typename InputIt1>
     CachedTokenSortRatio(InputIt1 first1, InputIt1 last1)
-        : s1_sorted(common::sorted_split(first1, last1).join()), cached_ratio(s1_sorted)
+        : s1_sorted(detail::sorted_split(first1, last1).join()), cached_ratio(s1_sorted)
     {}
 
     template <typename Sentence1>
-    CachedTokenSortRatio(const Sentence1& s1)
-        : CachedTokenSortRatio(common::to_begin(s1), common::to_end(s1))
+    CachedTokenSortRatio(const Sentence1& s1) : CachedTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
     {}
 
     template <typename InputIt2>
@@ -217,8 +214,7 @@ template <typename Sentence1>
 CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedTokenSortRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
+CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -253,12 +249,12 @@ template <typename CharT1>
 struct CachedPartialTokenSortRatio {
     template <typename InputIt1>
     CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
-        : s1_sorted(common::sorted_split(first1, last1).join()), cached_partial_ratio(s1_sorted)
+        : s1_sorted(detail::sorted_split(first1, last1).join()), cached_partial_ratio(s1_sorted)
     {}
 
     template <typename Sentence1>
     CachedPartialTokenSortRatio(const Sentence1& s1)
-        : CachedPartialTokenSortRatio(common::to_begin(s1), common::to_end(s1))
+        : CachedPartialTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
     {}
 
     template <typename InputIt2>
@@ -274,8 +270,7 @@ private:
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
-CachedPartialTokenSortRatio(const Sentence1& s1)
-    -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
+CachedPartialTokenSortRatio(const Sentence1& s1) -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
@@ -322,12 +317,12 @@ template <typename CharT1>
 struct CachedTokenSetRatio {
     template <typename InputIt1>
     CachedTokenSetRatio(InputIt1 first1, InputIt1 last1)
-        : s1(first1, last1), tokens_s1(common::sorted_split(std::begin(s1), std::end(s1)))
+        : s1(first1, last1), tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1)))
     {}
 
     template <typename Sentence1>
     CachedTokenSetRatio(const Sentence1& s1_)
-        : CachedTokenSetRatio(common::to_begin(s1_), common::to_end(s1_))
+        : CachedTokenSetRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -380,12 +375,12 @@ template <typename CharT1>
 struct CachedPartialTokenSetRatio {
     template <typename InputIt1>
     CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
-        : s1(first1, last1), tokens_s1(common::sorted_split(std::begin(s1), std::end(s1)))
+        : s1(first1, last1), tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1)))
     {}
 
     template <typename Sentence1>
     CachedPartialTokenSetRatio(const Sentence1& s1_)
-        : CachedPartialTokenSetRatio(common::to_begin(s1_), common::to_end(s1_))
+        : CachedPartialTokenSetRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -428,8 +423,7 @@ CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                   double score_cutoff = 0);
+double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -440,14 +434,13 @@ struct CachedTokenRatio {
     template <typename InputIt1>
     CachedTokenRatio(InputIt1 first1, InputIt1 last1)
         : s1(first1, last1),
-          s1_tokens(common::sorted_split(std::begin(s1), std::end(s1))),
+          s1_tokens(detail::sorted_split(std::begin(s1), std::end(s1))),
           s1_sorted(s1_tokens.join()),
           cached_ratio_s1_sorted(s1_sorted)
     {}
 
     template <typename Sentence1>
-    CachedTokenRatio(const Sentence1& s1_)
-        : CachedTokenRatio(common::to_begin(s1_), common::to_end(s1_))
+    CachedTokenRatio(const Sentence1& s1_) : CachedTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -504,13 +497,13 @@ struct CachedPartialTokenRatio {
     template <typename InputIt1>
     CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1)
         : s1(first1, last1),
-          tokens_s1(common::sorted_split(std::begin(s1), std::end(s1))),
+          tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
           s1_sorted(tokens_s1.join())
     {}
 
     template <typename Sentence1>
     CachedPartialTokenRatio(const Sentence1& s1_)
-        : CachedPartialTokenRatio(common::to_begin(s1_), common::to_end(s1_))
+        : CachedPartialTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -530,8 +523,7 @@ template <typename Sentence1>
 CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
+CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -556,8 +548,7 @@ CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1)
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-              double score_cutoff = 0);
+double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double WRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -569,7 +560,7 @@ struct CachedWRatio {
     CachedWRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedWRatio(const Sentence1& s1_) : CachedWRatio(common::to_begin(s1_), common::to_end(s1_))
+    CachedWRatio(const Sentence1& s1_) : CachedWRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -618,8 +609,7 @@ CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<Input
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
 template <typename InputIt1, typename InputIt2>
-double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-              double score_cutoff = 0);
+double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 template <typename Sentence1, typename Sentence2>
 double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
@@ -631,7 +621,7 @@ struct CachedQRatio {
     {}
 
     template <typename Sentence1>
-    CachedQRatio(const Sentence1& s1_) : CachedQRatio(common::to_begin(s1_), common::to_end(s1_))
+    CachedQRatio(const Sentence1& s1_) : CachedQRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>

@@ -1,6 +1,7 @@
 .vscode/
 .idea/
 build/
+.cache/
 *.data
 *.so
 *.o
