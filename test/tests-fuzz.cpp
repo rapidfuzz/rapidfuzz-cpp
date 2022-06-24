@@ -176,6 +176,17 @@ TEST_CASE("RatioTest")
         }
     }
 
+    SECTION("testIssue231") /* test for https://github.com/maxbachmann/RapidFuzz/issues/231 */
+    {
+        const wchar_t* str1 = L"er merkantilismus förderte handel und verkehr mit teils marktkonformen, teils dirigistischen maßnahmen.";
+        const wchar_t* str2 = L"ils marktkonformen, teils dirigistischen maßnahmen. an der schwelle zum 19. jahrhundert entstand ein neu";
+
+        auto alignment = fuzz::partial_ratio_alignment(str1, str2);
+        REQUIRE(alignment.src_start == 0);
+        REQUIRE(alignment.src_end == 103);
+        REQUIRE(alignment.dest_start == 0);
+        REQUIRE(alignment.dest_end == 103);
+    }
 }
 
 

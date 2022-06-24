@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-23 12:51:41.710592
+//  Generated: 2022-06-24 14:07:49.225209
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5464,14 +5464,14 @@ partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
     for (const auto& block : blocks) {
         if (block.length == len1) {
             res.score = 100;
-            res.dest_start = std::max<size_t>(0, block.dpos - block.spos);
+            res.dest_start = block.dpos > block.spos ? block.dpos - block.spos : 0;
             res.dest_end = std::min(len2, res.dest_start + len1);
             return res;
         }
     }
 
     for (const auto& block : blocks) {
-        auto long_start = std::max<size_t>(0, block.dpos - block.spos);
+        auto long_start = block.dpos > block.spos ? block.dpos - block.spos : 0;
         auto long_end = std::min(len2, long_start + len1);
         auto substr_first = first2 + static_cast<ptrdiff_t>(long_start);
         auto substr_last = first2 + static_cast<ptrdiff_t>(long_end);
