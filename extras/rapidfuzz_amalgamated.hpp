@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-25 10:00:48.972603
+//  Generated: 2022-06-25 18:36:33.032361
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2359,8 +2359,8 @@ static inline int64_t longest_common_subsequence_blockwise(const BlockPatternMat
     return (res >= score_cutoff) ? res : 0;
 }
 
-template <typename PMV, typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const PMV& block, Range<InputIt1> s1,
+template <typename InputIt1, typename InputIt2>
+int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<InputIt1> s1,
                                    Range<InputIt2> s2, int64_t score_cutoff)
 {
     auto nr = ceil_div(s1.size(), 64);
@@ -2381,12 +2381,19 @@ int64_t longest_common_subsequence(const PMV& block, Range<InputIt1> s1,
 template <typename InputIt1, typename InputIt2>
 int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
 {
-    if (s1.empty())
-        return 0;
-    else if (s1.size() < 64)
-        return longest_common_subsequence(PatternMatchVector(s1), s1, s2, score_cutoff);
-    else
-        return longest_common_subsequence(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    auto nr = ceil_div(s1.size(), 64);
+    switch (nr) {
+    case 0: return 0;
+    case 1: return longest_common_subsequence_unroll<1>(PatternMatchVector(s1), s1, s2, score_cutoff);
+    case 2: return longest_common_subsequence_unroll<2>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 3: return longest_common_subsequence_unroll<3>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 4: return longest_common_subsequence_unroll<4>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 5: return longest_common_subsequence_unroll<5>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 6: return longest_common_subsequence_unroll<6>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 7: return longest_common_subsequence_unroll<7>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 8: return longest_common_subsequence_unroll<8>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    default: return longest_common_subsequence_blockwise(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    }
 }
 
 template <typename InputIt1, typename InputIt2>
