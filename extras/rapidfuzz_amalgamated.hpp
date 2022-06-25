@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-25 00:45:46.527845
+//  Generated: 2022-06-25 10:00:48.972603
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2359,8 +2359,8 @@ static inline int64_t longest_common_subsequence_blockwise(const BlockPatternMat
     return (res >= score_cutoff) ? res : 0;
 }
 
-template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<InputIt1> s1,
+template <typename PMV, typename InputIt1, typename InputIt2>
+int64_t longest_common_subsequence(const PMV& block, Range<InputIt1> s1,
                                    Range<InputIt2> s2, int64_t score_cutoff)
 {
     auto nr = ceil_div(s1.size(), 64);
@@ -2381,25 +2381,12 @@ int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<I
 template <typename InputIt1, typename InputIt2>
 int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
 {
-    if (s1.empty()) return 0;
-
-    auto nr = ceil_div(s1.size(), 64);
-    if (nr == 1) {
-        auto block = PatternMatchVector(s1);
-        return longest_common_subsequence_unroll<1>(block, s1, s2, score_cutoff);
-    }
-
-    auto block = BlockPatternMatchVector(s1);
-    switch (nr) {
-    case 2: return longest_common_subsequence_unroll<2>(block, s1, s2, score_cutoff);
-    case 3: return longest_common_subsequence_unroll<3>(block, s1, s2, score_cutoff);
-    case 4: return longest_common_subsequence_unroll<4>(block, s1, s2, score_cutoff);
-    case 5: return longest_common_subsequence_unroll<5>(block, s1, s2, score_cutoff);
-    case 6: return longest_common_subsequence_unroll<6>(block, s1, s2, score_cutoff);
-    case 7: return longest_common_subsequence_unroll<7>(block, s1, s2, score_cutoff);
-    case 8: return longest_common_subsequence_unroll<8>(block, s1, s2, score_cutoff);
-    default: return longest_common_subsequence_blockwise(block, s1, s2, score_cutoff);
-    }
+    if (s1.empty())
+        return 0;
+    else if (s1.size() < 64)
+        return longest_common_subsequence(PatternMatchVector(s1), s1, s2, score_cutoff);
+    else
+        return longest_common_subsequence(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -2458,7 +2445,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
 }
 
 struct LLCSBitMatrix {
-    LLCSBitMatrix(size_t rows, size_t cols) : S(rows, cols, ~UINT64_C(0)), dist(0)
+    LLCSBitMatrix(size_t rows, size_t cols, ptrdiff_t _dist = 0) : S(rows, cols, ~UINT64_C(0)), dist(_dist)
     {}
 
     Matrix<uint64_t> S;
@@ -2603,27 +2590,18 @@ LLCSBitMatrix llcs_matrix_blockwise(const BlockPatternMatchVector& block, Range<
 template <typename InputIt1, typename InputIt2>
 LLCSBitMatrix llcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    if (s1.empty() || s2.empty()) {
-        LLCSBitMatrix matrix(0, 0);
-        matrix.dist = s1.size() + s2.size();
-        return matrix;
-    }
-    if (s1.size() <= 64) {
-        PatternMatchVector block(s1);
-        return llcs_matrix_unroll<1>(block, s1, s2);
-    }
-
-    BlockPatternMatchVector block(s1);
-    switch (block.size()) {
-    case 1: return llcs_matrix_unroll<1>(block, s1, s2);
-    case 2: return llcs_matrix_unroll<2>(block, s1, s2);
-    case 3: return llcs_matrix_unroll<3>(block, s1, s2);
-    case 4: return llcs_matrix_unroll<4>(block, s1, s2);
-    case 5: return llcs_matrix_unroll<5>(block, s1, s2);
-    case 6: return llcs_matrix_unroll<6>(block, s1, s2);
-    case 7: return llcs_matrix_unroll<7>(block, s1, s2);
-    case 8: return llcs_matrix_unroll<8>(block, s1, s2);
-    default: return llcs_matrix_blockwise(block, s1, s2);
+    auto nr = ceil_div(s1.size(), 64);
+    switch (nr) {
+    case 0: return LLCSBitMatrix(0, 0, s1.size() + s2.size());
+    case 1: return llcs_matrix_unroll<1>(PatternMatchVector(s1), s1, s2);
+    case 2: return llcs_matrix_unroll<2>(BlockPatternMatchVector(s1), s1, s2);
+    case 3: return llcs_matrix_unroll<3>(BlockPatternMatchVector(s1), s1, s2);
+    case 4: return llcs_matrix_unroll<4>(BlockPatternMatchVector(s1), s1, s2);
+    case 5: return llcs_matrix_unroll<5>(BlockPatternMatchVector(s1), s1, s2);
+    case 6: return llcs_matrix_unroll<6>(BlockPatternMatchVector(s1), s1, s2);
+    case 7: return llcs_matrix_unroll<7>(BlockPatternMatchVector(s1), s1, s2);
+    case 8: return llcs_matrix_unroll<8>(BlockPatternMatchVector(s1), s1, s2);
+    default: return llcs_matrix_blockwise(BlockPatternMatchVector(s1), s1, s2);
     }
 }
 
