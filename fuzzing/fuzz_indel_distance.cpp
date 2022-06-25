@@ -13,7 +13,7 @@ void validate_distance(const std::basic_string<uint8_t>& s1, const std::basic_st
 {
     auto dist = rapidfuzz::indel_distance(s1, s2, score_cutoff);
     auto reference_dist = rapidfuzz::detail::generalized_levenshtein_distance(
-        std::begin(s1), std::end(s1), std::begin(s2), std::end(s2), {1, 1, 2}, score_cutoff);
+        rapidfuzz::detail::make_range(s1), rapidfuzz::detail::make_range(s2), {1, 1, 2}, score_cutoff);
     if (dist != reference_dist) {
         throw std::logic_error("indel distance failed");
     }

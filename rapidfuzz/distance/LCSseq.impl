@@ -6,6 +6,7 @@
 #include <rapidfuzz/details/intrinsics.hpp>
 
 #include <algorithm>
+#include <array>
 
 namespace rapidfuzz {
 namespace detail {
@@ -29,7 +30,7 @@ namespace detail {
  * 0x9 -> INS + DEL
  * 0xA -> INS + INS
  */
-static constexpr uint8_t lcs_seq_mbleven2018_matrix[14][7] = {
+static constexpr std::array<std::array<uint8_t, 7>, 14> lcs_seq_mbleven2018_matrix = {{
     /* max edit distance 1 */
     {0},
     /* case does not occur */ /* len_diff 0 */
@@ -49,31 +50,29 @@ static constexpr uint8_t lcs_seq_mbleven2018_matrix[14][7] = {
     {0x65, 0x56, 0x95, 0x59},             /* len_diff 2 */
     {0x15},                               /* len_diff 3 */
     {0x55},                               /* len_diff 4 */
-};
+}};
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                            int64_t score_cutoff)
+int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = s1.size();
+    auto len2 = s2.size();
 
-    if (len1 < len2) return lcs_seq_mbleven2018(first2, last2, first1, last1, score_cutoff);
+    if (len1 < len2) return lcs_seq_mbleven2018(s2, s1, score_cutoff);
 
     auto len_diff = len1 - len2;
     int64_t max_misses = static_cast<ptrdiff_t>(len1) - score_cutoff;
-    auto possible_ops =
-        lcs_seq_mbleven2018_matrix[(max_misses + max_misses * max_misses) / 2 + len_diff - 1];
+    auto ops_index = (max_misses + max_misses * max_misses) / 2 + len_diff - 1;
+    auto& possible_ops = lcs_seq_mbleven2018_matrix[static_cast<size_t>(ops_index)];
     int64_t max_len = 0;
 
-    for (int pos = 0; possible_ops[pos] != 0; ++pos) {
-        uint8_t ops = possible_ops[pos];
+    for (uint8_t ops : possible_ops) {
         ptrdiff_t s1_pos = 0;
         ptrdiff_t s2_pos = 0;
         int64_t cur_len = 0;
 
         while (s1_pos < len1 && s2_pos < len2) {
-            if (first1[s1_pos] != first2[s2_pos]) {
+            if (s1[s1_pos] != s2[s2_pos]) {
                 if (!ops) break;
                 if (ops & 1)
                     s1_pos++;
@@ -102,17 +101,16 @@ int64_t lcs_seq_mbleven2018(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 }
 
 template <size_t N, typename PMV, typename InputIt1, typename InputIt2>
-static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputIt1, InputIt1,
-                                                        InputIt2 first2, InputIt2 last2,
+static inline int64_t longest_common_subsequence_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2,
                                                         int64_t score_cutoff)
 {
     uint64_t S[N];
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
-    for (; first2 != last2; ++first2) {
+    for (const auto& ch : s2) {
         uint64_t carry = 0;
         unroll<size_t, N>([&](size_t i) {
-            uint64_t Matches = block.get(i, *first2);
+            uint64_t Matches = block.get(i, ch);
             uint64_t u = S[i] & Matches;
             uint64_t x = addc64(S[i], u, carry, &carry);
             S[i] = x | (S[i] - u);
@@ -126,18 +124,17 @@ static inline int64_t longest_common_subsequence_unroll(const PMV& block, InputI
 }
 
 template <typename InputIt1, typename InputIt2>
-static inline int64_t
-longest_common_subsequence_blockwise(const detail::BlockPatternMatchVector& block, InputIt1,
-                                     InputIt1, InputIt2 first2, InputIt2 last2,
-                                     int64_t score_cutoff)
+static inline int64_t longest_common_subsequence_blockwise(const BlockPatternMatchVector& block,
+                                                           Range<InputIt1>, Range<InputIt2> s2,
+                                                           int64_t score_cutoff)
 {
     auto words = block.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
-    for (; first2 != last2; ++first2) {
+    for (const auto& ch : s2) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, *first2);
+            const uint64_t Matches = block.get(word, ch);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
@@ -155,174 +152,102 @@ longest_common_subsequence_blockwise(const detail::BlockPatternMatchVector& bloc
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const detail::BlockPatternMatchVector& block, InputIt1 first1,
-                                   InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   int64_t score_cutoff)
+int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<InputIt1> s1,
+                                   Range<InputIt2> s2, int64_t score_cutoff)
 {
-    auto nr = ceil_div(std::distance(first1, last1), 64);
+    auto nr = ceil_div(s1.size(), 64);
     switch (nr) {
-    case 0:
-        return 0;
-    case 1:
-        return longest_common_subsequence_unroll<1>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 2:
-        return longest_common_subsequence_unroll<2>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 3:
-        return longest_common_subsequence_unroll<3>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 4:
-        return longest_common_subsequence_unroll<4>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 5:
-        return longest_common_subsequence_unroll<5>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 6:
-        return longest_common_subsequence_unroll<6>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 7:
-        return longest_common_subsequence_unroll<7>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    case 8:
-        return longest_common_subsequence_unroll<8>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    default:
-        return longest_common_subsequence_blockwise(block, first1, last1, first2, last2,
-                                                    score_cutoff);
+    case 0: return 0;
+    case 1: return longest_common_subsequence_unroll<1>(block, s1, s2, score_cutoff);
+    case 2: return longest_common_subsequence_unroll<2>(block, s1, s2, score_cutoff);
+    case 3: return longest_common_subsequence_unroll<3>(block, s1, s2, score_cutoff);
+    case 4: return longest_common_subsequence_unroll<4>(block, s1, s2, score_cutoff);
+    case 5: return longest_common_subsequence_unroll<5>(block, s1, s2, score_cutoff);
+    case 6: return longest_common_subsequence_unroll<6>(block, s1, s2, score_cutoff);
+    case 7: return longest_common_subsequence_unroll<7>(block, s1, s2, score_cutoff);
+    case 8: return longest_common_subsequence_unroll<8>(block, s1, s2, score_cutoff);
+    default: return longest_common_subsequence_blockwise(block, s1, s2, score_cutoff);
     }
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   int64_t score_cutoff)
+int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto nr = ceil_div(len1, 64);
+    auto nr = ceil_div(s1.size(), 64);
     switch (nr) {
-    case 0:
-        return 0;
-    case 1:
-    {
-        auto block = detail::PatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<1>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 2:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<2>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 3:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<3>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 4:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<4>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 5:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<5>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 6:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<6>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 7:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<7>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    case 8:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_unroll<8>(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
-    default:
-    {
-        auto block = detail::BlockPatternMatchVector(first1, last1);
-        return longest_common_subsequence_blockwise(block, first1, last1, first2, last2,
-                                                    score_cutoff);
-    }
+    case 0: return 0;
+    case 1: return longest_common_subsequence_unroll<1>(PatternMatchVector(s1), s1, s2, score_cutoff);
+    case 2: return longest_common_subsequence_unroll<2>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 3: return longest_common_subsequence_unroll<3>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 4: return longest_common_subsequence_unroll<4>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 5: return longest_common_subsequence_unroll<5>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 6: return longest_common_subsequence_unroll<6>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 7: return longest_common_subsequence_unroll<7>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 8: return longest_common_subsequence_unroll<8>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    default: return longest_common_subsequence_blockwise(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
     }
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(const detail::BlockPatternMatchVector& block, InputIt1 first1,
-                           InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
+int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
+                           int64_t score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = s1.size();
+    auto len2 = s2.size();
     int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(first1, last1, first2, last2) ? len1 : 0;
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
 
     if (max_misses < std::abs(len1 - len2)) return 0;
 
     // do this first, since we can not remove any affix in encoded form
-    if (max_misses >= 5)
-        return longest_common_subsequence(block, first1, last1, first2, last2, score_cutoff);
+    if (max_misses >= 5) return longest_common_subsequence(block, s1, s2, score_cutoff);
 
     /* common affix does not effect Levenshtein distance */
-    auto affix = common::remove_common_affix(first1, last1, first2, last2);
+    auto affix = remove_common_affix(s1, s2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
-    if (std::distance(first1, last1) && std::distance(first2, last2))
-        lcs_sim += lcs_seq_mbleven2018(first1, last1, first2, last2, score_cutoff - lcs_sim);
+    if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
 
     return lcs_sim;
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff)
+int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = s1.size();
+    auto len2 = s2.size();
 
     // Swapping the strings so the second string is shorter
-    if (len1 < len2) return lcs_seq_similarity(first2, last2, first1, last1, score_cutoff);
+    if (len1 < len2) return lcs_seq_similarity(s2, s1, score_cutoff);
 
     int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(first1, last1, first2, last2) ? len1 : 0;
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
 
     if (max_misses < std::abs(len1 - len2)) return 0;
 
     /* common affix does not effect Levenshtein distance */
-    auto affix = common::remove_common_affix(first1, last1, first2, last2);
+    auto affix = remove_common_affix(s1, s2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
-    if (std::distance(first1, last1) && std::distance(first2, last2)) {
+    if (s1.size() && s2.size()) {
         if (max_misses < 5)
-            lcs_sim += lcs_seq_mbleven2018(first1, last1, first2, last2, score_cutoff - lcs_sim);
+            lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
         else
-            lcs_sim +=
-                longest_common_subsequence(first1, last1, first2, last2, score_cutoff - lcs_sim);
+            lcs_sim += longest_common_subsequence(s1, s2, score_cutoff - lcs_sim);
     }
 
     return lcs_sim;
 }
 
 struct LLCSBitMatrix {
-    LLCSBitMatrix(size_t rows, size_t cols) : S(rows, cols, ~UINT64_C(0)), dist(0)
+    LLCSBitMatrix(size_t rows, size_t cols, ptrdiff_t _dist = 0) : S(rows, cols, ~UINT64_C(0)), dist(_dist)
     {}
 
-    detail::Matrix<uint64_t> S;
+    Matrix<uint64_t> S;
 
     ptrdiff_t dist;
 };
@@ -331,11 +256,11 @@ struct LLCSBitMatrix {
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename InputIt1, typename InputIt2>
-Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                          const LLCSBitMatrix& matrix, StringAffix affix)
+Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LLCSBitMatrix& matrix,
+                          StringAffix affix)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = s1.size();
+    auto len2 = s2.size();
     auto dist = static_cast<size_t>(matrix.dist);
     Editops editops(dist);
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
@@ -375,7 +300,7 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
             /* Match */
             else {
                 col--;
-                assert(first1[col] == first2[row]);
+                assert(s1[col] == s2[row]);
             }
         }
     }
@@ -400,11 +325,10 @@ Editops recover_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2, Inpu
 }
 
 template <size_t N, typename PMV, typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                 InputIt2 last2)
+LLCSBitMatrix llcs_matrix_unroll(const PMV& block, Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = s1.size();
+    auto len2 = s2.size();
     uint64_t S[N];
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
@@ -413,7 +337,7 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
     for (ptrdiff_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
         unroll<size_t, N>([&](size_t word) {
-            uint64_t Matches = block.get(word, first2[i]);
+            uint64_t Matches = block.get(word, s2[i]);
             uint64_t u = S[word] & Matches;
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = matrix.S[i][word] = x | (S[word] - u);
@@ -429,11 +353,11 @@ LLCSBitMatrix llcs_matrix_unroll(const PMV& block, InputIt1 first1, InputIt1 las
 }
 
 template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block, InputIt1 first1,
-                                    InputIt1 last1, InputIt2 first2, InputIt2 last2)
+LLCSBitMatrix llcs_matrix_blockwise(const BlockPatternMatchVector& block, Range<InputIt1> s1,
+                                    Range<InputIt2> s2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    auto len1 = s1.size();
+    auto len2 = s2.size();
     auto words = block.size();
     /* todo could be replaced with access to matrix which would slightly
      * reduce memory usage */
@@ -443,7 +367,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block
     for (size_t i = 0; i < len2; ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, first2[i]);
+            const uint64_t Matches = block.get(word, s2[i]);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
@@ -463,42 +387,59 @@ LLCSBitMatrix llcs_matrix_blockwise(const detail::BlockPatternMatchVector& block
 }
 
 template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+LLCSBitMatrix llcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
-    if (!len1 || !len2) {
-        LLCSBitMatrix matrix(0, 0);
-        matrix.dist = len1 + len2;
-        return matrix;
+    auto nr = ceil_div(s1.size(), 64);
+    switch (nr) {
+    case 0: return LLCSBitMatrix(0, 0, s1.size() + s2.size());
+    case 1: return llcs_matrix_unroll<1>(PatternMatchVector(s1), s1, s2);
+    case 2: return llcs_matrix_unroll<2>(BlockPatternMatchVector(s1), s1, s2);
+    case 3: return llcs_matrix_unroll<3>(BlockPatternMatchVector(s1), s1, s2);
+    case 4: return llcs_matrix_unroll<4>(BlockPatternMatchVector(s1), s1, s2);
+    case 5: return llcs_matrix_unroll<5>(BlockPatternMatchVector(s1), s1, s2);
+    case 6: return llcs_matrix_unroll<6>(BlockPatternMatchVector(s1), s1, s2);
+    case 7: return llcs_matrix_unroll<7>(BlockPatternMatchVector(s1), s1, s2);
+    case 8: return llcs_matrix_unroll<8>(BlockPatternMatchVector(s1), s1, s2);
+    default: return llcs_matrix_blockwise(BlockPatternMatchVector(s1), s1, s2);
     }
-    else if (len1 <= 64) {
-        detail::PatternMatchVector block(first1, last1);
-        return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
-    }
-    else {
-        detail::BlockPatternMatchVector block(first1, last1);
-        switch (block.size()) {
-        case 1:
-            return llcs_matrix_unroll<1>(block, first1, last1, first2, last2);
-        case 2:
-            return llcs_matrix_unroll<2>(block, first1, last1, first2, last2);
-        case 3:
-            return llcs_matrix_unroll<3>(block, first1, last1, first2, last2);
-        case 4:
-            return llcs_matrix_unroll<4>(block, first1, last1, first2, last2);
-        case 5:
-            return llcs_matrix_unroll<5>(block, first1, last1, first2, last2);
-        case 6:
-            return llcs_matrix_unroll<6>(block, first1, last1, first2, last2);
-        case 7:
-            return llcs_matrix_unroll<7>(block, first1, last1, first2, last2);
-        case 8:
-            return llcs_matrix_unroll<8>(block, first1, last1, first2, last2);
-        default:
-            return llcs_matrix_blockwise(block, first1, last1, first2, last2);
-        }
-    }
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t lcs_seq_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+{
+    int64_t maximum = std::max(s1.size(), s2.size());
+    int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
+    int64_t sim = lcs_seq_similarity(s1, s2, cutoff_similarity);
+    int64_t dist = maximum - sim;
+    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+}
+
+template <typename InputIt1, typename InputIt2>
+double lcs_seq_normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+{
+    if (s1.empty() || s2.empty()) return 0.0;
+
+    double maximum = static_cast<double>(std::max(s1.size(), s2.size()));
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
+    double norm_sim = static_cast<double>(lcs_seq_distance(s1, s2, cutoff_distance)) / maximum;
+    return (norm_sim <= score_cutoff) ? norm_sim : 1.0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double lcs_seq_normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+{
+    double cutoff_score = NormSim_to_NormDist(score_cutoff);
+    double norm_sim = 1.0 - lcs_seq_normalized_distance(s1, s2, cutoff_score);
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+}
+
+template <typename InputIt1, typename InputIt2>
+Editops lcs_seq_editops(Range<InputIt1> s1, Range<InputIt2> s2)
+{
+    /* prefix and suffix are no-ops, which do not need to be added to the editops */
+    StringAffix affix = remove_common_affix(s1, s2);
+
+    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
 }
 
 } // namespace detail
@@ -507,87 +448,69 @@ template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff)
 {
-    int64_t maximum = std::max(std::distance(first1, last1), std::distance(first2, last2));
-    int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
-    int64_t sim = lcs_seq_similarity(first1, last1, first2, last2, cutoff_similarity);
-    int64_t dist = maximum - sim;
-    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    return detail::lcs_seq_distance(detail::make_range(first1, last1), detail::make_range(first2, last2),
+                                    score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return lcs_seq_distance(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                            common::to_end(s2), score_cutoff);
+    return detail::lcs_seq_distance(detail::make_range(s1), detail::make_range(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
-    int64_t maximum = std::max(std::distance(first1, last1), std::distance(first2, last2));
-    if (maximum == 0) return 0.0;
-
-    int64_t cutoff_distance =
-        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    double norm_sim =
-        static_cast<double>(lcs_seq_distance(first1, last1, first2, last2, cutoff_distance)) /
-        static_cast<double>(maximum);
-    return (norm_sim <= score_cutoff) ? norm_sim : 1.0;
+    return detail::lcs_seq_normalized_distance(detail::make_range(first1, last1),
+                                               detail::make_range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double lcs_seq_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return lcs_seq_normalized_distance(common::to_begin(s1), common::to_end(s1),
-                                       common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return detail::lcs_seq_normalized_distance(detail::make_range(s1), detail::make_range(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            int64_t score_cutoff)
 {
-    return detail::lcs_seq_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::lcs_seq_similarity(detail::make_range(first1, last1), detail::make_range(first2, last2),
+                                      score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return lcs_seq_similarity(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                              common::to_end(s2), score_cutoff);
+    return detail::lcs_seq_similarity(detail::make_range(s1), detail::make_range(s2), score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                     InputIt2 last2, double score_cutoff)
+double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                     double score_cutoff)
 {
-    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
-    double norm_sim = 1.0 - lcs_seq_normalized_distance(first1, last1, first2, last2, cutoff_score);
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+    return detail::lcs_seq_normalized_similarity(detail::make_range(first1, last1),
+                                                 detail::make_range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return lcs_seq_normalized_similarity(common::to_begin(s1), common::to_end(s1),
-                                         common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return detail::lcs_seq_normalized_similarity(detail::make_range(s1), detail::make_range(s2),
+                                                 score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
-    /* prefix and suffix are no-ops, which do not need to be added to the editops */
-    StringAffix affix = common::remove_common_affix(first1, last1, first2, last2);
-
-    return detail::recover_alignment(first1, last1, first2, last2,
-                                     detail::llcs_matrix(first1, last1, first2, last2), affix);
+    return detail::lcs_seq_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return lcs_seq_editops(common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                           common::to_end(s2));
+    return detail::lcs_seq_editops(detail::make_range(s1), detail::make_range(s2));
 }
 
 template <typename CharT1>
@@ -604,21 +527,19 @@ template <typename CharT1>
 template <typename Sentence2>
 int64_t CachedLCSseq<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
 {
-    return distance(common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
-                                                 double score_cutoff) const
+double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
     int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
     if (maximum == 0) return 0;
 
-    int64_t cutoff_distance =
-        static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    double norm_dist = static_cast<double>(distance(first2, last2, cutoff_distance)) /
-                       static_cast<double>(maximum);
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    double norm_dist =
+        static_cast<double>(distance(first2, last2, cutoff_distance)) / static_cast<double>(maximum);
     return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
 }
 
@@ -626,15 +547,14 @@ template <typename CharT1>
 template <typename Sentence2>
 double CachedLCSseq<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
 {
-    return normalized_distance(common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return normalized_distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-int64_t CachedLCSseq<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
-                                         int64_t score_cutoff) const
+int64_t CachedLCSseq<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    return detail::lcs_seq_similarity(PM, common::to_begin(s1), common::to_end(s1), first2, last2,
+    return detail::lcs_seq_similarity(PM, detail::make_range(s1), detail::make_range(first2, last2),
                                       score_cutoff);
 }
 
@@ -642,15 +562,14 @@ template <typename CharT1>
 template <typename Sentence2>
 int64_t CachedLCSseq<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
 {
-    return similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedLCSseq<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
-                                                   double score_cutoff) const
+double CachedLCSseq<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    double cutoff_score = common::NormSim_to_NormDist(score_cutoff);
+    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
     double norm_dist = normalized_distance(first2, last2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
@@ -660,7 +579,7 @@ template <typename CharT1>
 template <typename Sentence2>
 double CachedLCSseq<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
 {
-    return normalized_similarity(common::to_begin(s2), common::to_end(s2), score_cutoff);
+    return normalized_similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
 } // namespace rapidfuzz

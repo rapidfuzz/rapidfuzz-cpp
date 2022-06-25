@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <rapidfuzz/details/Matrix.hpp>
+#include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 
 namespace rapidfuzz {
@@ -72,17 +73,17 @@ struct PatternMatchVector {
     {}
 
     template <typename InputIt>
-    PatternMatchVector(InputIt first, InputIt last) : m_extendedAscii()
+    PatternMatchVector(Range<InputIt> s) : m_extendedAscii()
     {
-        insert(first, last);
+        insert(s);
     }
 
     template <typename InputIt>
-    void insert(InputIt first, InputIt last) noexcept
+    void insert(Range<InputIt> s) noexcept
     {
         uint64_t mask = 1;
-        for (; first != last; ++first) {
-            insert_mask(*first, mask);
+        for (const auto& ch : s) {
+            insert_mask(ch, mask);
             mask <<= 1;
         }
     }
@@ -146,10 +147,9 @@ struct BlockPatternMatchVector {
     }
 
     template <typename InputIt>
-    BlockPatternMatchVector(InputIt first, InputIt last)
-        : BlockPatternMatchVector(static_cast<size_t>(std::distance(first, last)))
+    BlockPatternMatchVector(Range<InputIt> s) : BlockPatternMatchVector(static_cast<size_t>(s.size()))
     {
-        insert(first, last);
+        insert(s);
     }
 
     ~BlockPatternMatchVector()
@@ -176,13 +176,13 @@ struct BlockPatternMatchVector {
      * @param last
      */
     template <typename InputIt>
-    void insert(InputIt first, InputIt last) noexcept
+    void insert(Range<InputIt> s) noexcept
     {
-        auto len = std::distance(first, last);
+        auto len = s.size();
         uint64_t mask = 1;
         for (ptrdiff_t i = 0; i < len; ++i) {
             size_t block = static_cast<size_t>(i) / 64;
-            insert_mask(block, first[i], mask);
+            insert_mask(block, s[i], mask);
             mask = rotl(mask, 1);
         }
     }

@@ -51,8 +51,7 @@ struct is_explicitly_convertible {
     static void f(T);
 
     template <typename F, typename T>
-    static constexpr auto test(int /*unused*/)
-        -> decltype(f(static_cast<T>(std::declval<F>())), true)
+    static constexpr auto test(int /*unused*/) -> decltype(f(static_cast<T>(std::declval<F>())), true)
     {
         return true;
     }
@@ -66,38 +65,38 @@ struct is_explicitly_convertible {
     static bool const value = test<From, To>(0);
 };
 
-#define GENERATE_HAS_MEMBER(member)                                                                \
-                                                                                                   \
-    template <typename T>                                                                          \
-    struct has_member_##member {                                                                   \
-    private:                                                                                       \
-        using yes = std::true_type;                                                                \
-        using no = std::false_type;                                                                \
-                                                                                                   \
-        struct Fallback {                                                                          \
-            int member;                                                                            \
-        };                                                                                         \
-        struct Derived : T, Fallback {};                                                           \
-                                                                                                   \
-        template <class U>                                                                         \
-        static no test(decltype(U::member)*);                                                      \
-        template <typename U>                                                                      \
-        static yes test(U*);                                                                       \
-                                                                                                   \
-        template <typename U, typename = std::enable_if_t<std::is_class<U>::value>>                \
-        static constexpr bool class_test(U*)                                                       \
-        {                                                                                          \
-            return std::is_same<decltype(test<Derived>(nullptr)), yes>::value;                     \
-        }                                                                                          \
-                                                                                                   \
-        template <typename U, typename = std::enable_if_t<!std::is_class<U>::value>>               \
-        static constexpr bool class_test(const U&)                                                 \
-        {                                                                                          \
-            return false;                                                                          \
-        }                                                                                          \
-                                                                                                   \
-    public:                                                                                        \
-        static constexpr bool value = class_test(static_cast<T*>(nullptr));                        \
+#define GENERATE_HAS_MEMBER(member)                                                                          \
+                                                                                                             \
+    template <typename T>                                                                                    \
+    struct has_member_##member {                                                                             \
+    private:                                                                                                 \
+        using yes = std::true_type;                                                                          \
+        using no = std::false_type;                                                                          \
+                                                                                                             \
+        struct Fallback {                                                                                    \
+            int member;                                                                                      \
+        };                                                                                                   \
+        struct Derived : T, Fallback {};                                                                     \
+                                                                                                             \
+        template <class U>                                                                                   \
+        static no test(decltype(U::member)*);                                                                \
+        template <typename U>                                                                                \
+        static yes test(U*);                                                                                 \
+                                                                                                             \
+        template <typename U, typename = std::enable_if_t<std::is_class<U>::value>>                          \
+        static constexpr bool class_test(U*)                                                                 \
+        {                                                                                                    \
+            return std::is_same<decltype(test<Derived>(nullptr)), yes>::value;                               \
+        }                                                                                                    \
+                                                                                                             \
+        template <typename U, typename = std::enable_if_t<!std::is_class<U>::value>>                         \
+        static constexpr bool class_test(const U&)                                                           \
+        {                                                                                                    \
+            return false;                                                                                    \
+        }                                                                                                    \
+                                                                                                             \
+    public:                                                                                                  \
+        static constexpr bool value = class_test(static_cast<T*>(nullptr));                                  \
     };
 
 GENERATE_HAS_MEMBER(data) // Creates 'has_member_data'

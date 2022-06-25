@@ -7,17 +7,18 @@
 #include <cwctype>
 
 namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
-DecomposedSet<InputIt1, InputIt2, InputIt1>
-common::set_decomposition(SplittedSentenceView<InputIt1> a, SplittedSentenceView<InputIt2> b)
+DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
+                                                              SplittedSentenceView<InputIt2> b)
 {
     a.dedupe();
     b.dedupe();
 
-    IteratorViewVec<InputIt1> intersection;
-    IteratorViewVec<InputIt1> difference_ab;
-    IteratorViewVec<InputIt2> difference_ba = b.words();
+    RangeVec<InputIt1> intersection;
+    RangeVec<InputIt1> difference_ab;
+    RangeVec<InputIt2> difference_ba = b.words();
 
     for (const auto& current_a : a.words()) {
         auto element_b = std::find(difference_ba.begin(), difference_ba.end(), current_a);
@@ -35,13 +36,13 @@ common::set_decomposition(SplittedSentenceView<InputIt1> a, SplittedSentenceView
 }
 
 template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> common::to_string(Sentence&& str)
+std::basic_string<CharT> to_string(Sentence&& str)
 {
     return std::basic_string<CharT>(std::forward<Sentence>(str));
 }
 
 template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> common::to_string(const Sentence& str)
+std::basic_string<CharT> to_string(const Sentence& str)
 {
     return std::basic_string<CharT>(str.data(), str.size());
 }
@@ -50,8 +51,7 @@ std::basic_string<CharT> common::to_string(const Sentence& str)
  * Removes common prefix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-size_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2,
-                                    InputIt2 last2)
+size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
 {
     auto prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
     first1 += prefix;
@@ -63,8 +63,7 @@ size_t common::remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& 
  * Removes common suffix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-size_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2,
-                                    InputIt2& last2)
+size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2)
 {
     auto rfirst1 = std::make_reverse_iterator(last1);
     auto rlast1 = std::make_reverse_iterator(first1);
@@ -81,11 +80,23 @@ size_t common::remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 f
  * Removes common affix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-StringAffix common::remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2,
-                                        InputIt2& last2)
+StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2)
 {
     return StringAffix{remove_common_prefix(first1, last1, first2, last2),
                        remove_common_suffix(first1, last1, first2, last2)};
+}
+
+template <typename InputIt1, typename InputIt2>
+StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2)
+{
+    InputIt1 first1 = s1.begin();
+    InputIt1 last1 = s1.end();
+    InputIt2 first2 = s2.begin();
+    InputIt2 last2 = s2.end();
+    StringAffix affix = remove_common_affix(first1, last1, first2, last2);
+    s1 = make_range(first1, last1);
+    s2 = make_range(first2, last2);
+    return affix;
 }
 
 template <typename, typename = void>
@@ -130,8 +141,7 @@ bool is_space_impl(const CharT ch, std::integral_constant<int, 0>)
     case 0x2029:
     case 0x202F:
     case 0x205F:
-    case 0x3000:
-        return true;
+    case 0x3000: return true;
     }
     return false;
 }
@@ -152,8 +162,7 @@ bool is_space_impl(const CharT ch, std::integral_constant<int, 1>)
     case 0x001D:
     case 0x001E:
     case 0x001F:
-    case 0x0020:
-        return true;
+    case 0x0020: return true;
     }
     return false;
 }
@@ -169,9 +178,9 @@ bool is_space(const CharT ch)
 }
 
 template <typename InputIt, typename CharT>
-SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
+SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
 {
-    IteratorViewVec<InputIt> splitted;
+    RangeVec<InputIt> splitted;
     auto second = first;
 
     for (; first != last; first = second + 1) {
@@ -189,4 +198,5 @@ SplittedSentenceView<InputIt> common::sorted_split(InputIt first, InputIt last)
     return SplittedSentenceView<InputIt>(splitted);
 }
 
+} // namespace detail
 } // namespace rapidfuzz
