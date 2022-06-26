@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-26 15:58:01.205564
+//  Generated: 2022-06-26 22:57:03.403828
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4250,7 +4250,7 @@ void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, I
     for (size_t i = 0; i < input_count; ++i) {
         int64_t maximum = std::max<int64_t>(str_lens[i], std::distance(first2, last2));
         int64_t sim = maximum - scores[i];
-        scores[i] = (sim >= score_cutoff) ? sim : 0;
+        scores[i] = (sim <= score_cutoff) ? sim : 0;
     }
 }
 
@@ -4347,7 +4347,7 @@ int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t 
     int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t sim = maximum - similarity(first2, last2, cutoff_distance);
-    return (sim >= score_cutoff) ? sim : 0;
+    return (sim <= score_cutoff) ? sim : 0;
 }
 
 template <typename CharT1>
