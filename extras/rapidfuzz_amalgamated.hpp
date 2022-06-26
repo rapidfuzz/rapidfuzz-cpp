@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-26 10:43:19.964986
+//  Generated: 2022-06-26 11:08:10.676452
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -7367,9 +7367,9 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 {
     if (score_cutoff > 100) return 0;
 
-    auto s2_tokens = sorted_split(first2, last2);
+    auto s2_tokens = detail::sorted_split(first2, last2);
 
-    auto decomposition = set_decomposition(s1_tokens, s2_tokens);
+    auto decomposition = detail::set_decomposition(s1_tokens, s2_tokens);
     auto intersect = decomposition.intersection;
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;

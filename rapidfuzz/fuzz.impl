@@ -551,9 +551,9 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 {
     if (score_cutoff > 100) return 0;
 
-    auto s2_tokens = sorted_split(first2, last2);
+    auto s2_tokens = detail::sorted_split(first2, last2);
 
-    auto decomposition = set_decomposition(s1_tokens, s2_tokens);
+    auto decomposition = detail::set_decomposition(s1_tokens, s2_tokens);
     auto intersect = decomposition.intersection;
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
