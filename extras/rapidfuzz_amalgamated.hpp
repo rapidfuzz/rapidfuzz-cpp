@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-26 11:14:47.977490
+//  Generated: 2022-06-26 11:16:44.909570
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3568,7 +3568,7 @@ private:
     }
 
 public:
-    MultiLCSseq(size_t count) : pos(0), input_count(count), PM(find_block_count(count) * 64)
+    MultiLCSseq(size_t count) : input_count(count), pos(0), PM(find_block_count(count) * 64)
     {}
 
     template <typename Sentence1>

@@ -80,7 +80,7 @@ private:
     }
 
 public:
-    MultiLCSseq(size_t count) : pos(0), input_count(count), PM(find_block_count(count) * 64)
+    MultiLCSseq(size_t count) : input_count(count), pos(0), PM(find_block_count(count) * 64)
     {}
 
     template <typename Sentence1>
