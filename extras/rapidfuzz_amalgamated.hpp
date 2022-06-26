@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-26 11:08:10.676452
+//  Generated: 2022-06-26 11:12:43.811521
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4076,7 +4076,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const BlockPatternMatchVector& block, Range<
     std::vector<uint64_t> S(words, ~UINT64_C(0));
     LLCSBitMatrix matrix(len2, words);
 
-    for (size_t i = 0; i < len2; ++i) {
+    for (size_t i = 0; i < static_cast<size_t>(len2); ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, s2[i]);
@@ -7438,8 +7438,8 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
         double norm_sim =
-            detail::indel_normalized_similarity(blockmap_s1_sorted, to_begin(s1_sorted), to_end(s1_sorted),
-                                                to_begin(s2_sorted), to_end(s2_sorted), score_cutoff / 100);
+            detail::indel_normalized_similarity(blockmap_s1_sorted, detail::to_begin(s1_sorted), detail::to_end(s1_sorted),
+                                                detail::to_begin(s2_sorted), detail::to_end(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -7622,7 +7622,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
       cached_partial_ratio(first1, last1),
       tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join()),
-      blockmap_s1_sorted(std::begin(s1_sorted), std::end(s1_sorted))
+      blockmap_s1_sorted(detail::make_range(s1_sorted))
 {}
 
 template <typename CharT1>
