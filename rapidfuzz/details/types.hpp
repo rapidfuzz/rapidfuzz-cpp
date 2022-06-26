@@ -13,55 +13,6 @@
 
 namespace rapidfuzz {
 
-template <typename InputIt>
-class IteratorView {
-public:
-    IteratorView(InputIt first_, InputIt last_) : first(first_), last(last_)
-    {}
-
-    InputIt first;
-    InputIt last;
-};
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator==(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{
-    return std::equal(a.first, a.last, b.first, b.last);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator!=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{
-    return !(a == b);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator<(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{
-    return (std::lexicographical_compare(a.first, a.last, b.first, b.last));
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator>(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{
-    return b < a;
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator<=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{
-    return !(b < a);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator>=(const IteratorView<InputIt1>& a, const IteratorView<InputIt2>& b)
-{
-    return !(a < b);
-}
-
-template <typename InputIt>
-using IteratorViewVec = std::vector<IteratorView<InputIt>>;
-
 struct StringAffix {
     size_t prefix_len;
     size_t suffix_len;
@@ -135,11 +86,7 @@ struct Opcode {
     {}
 
     Opcode(EditType type_, size_t src_begin_, size_t src_end_, size_t dest_begin_, size_t dest_end_)
-        : type(type_),
-          src_begin(src_begin_),
-          src_end(src_end_),
-          dest_begin(dest_begin_),
-          dest_end(dest_end_)
+        : type(type_), src_begin(src_begin_), src_end(src_end_), dest_begin(dest_begin_), dest_end(dest_end_)
     {}
 };
 
@@ -220,8 +167,7 @@ public:
     Editops() noexcept : src_len(0), dest_len(0)
     {}
 
-    Editops(size_type count, const EditOp& value)
-        : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
+    Editops(size_type count, const EditOp& value) : std::vector<EditOp>(count, value), src_len(0), dest_len(0)
     {}
 
     explicit Editops(size_type count) : std::vector<EditOp>(count), src_len(0), dest_len(0)
@@ -369,8 +315,7 @@ public:
     Opcodes() noexcept : src_len(0), dest_len(0)
     {}
 
-    Opcodes(size_type count, const Opcode& value)
-        : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
+    Opcodes(size_type count, const Opcode& value) : std::vector<Opcode>(count, value), src_len(0), dest_len(0)
     {}
 
     explicit Opcodes(size_type count) : std::vector<Opcode>(count), src_len(0), dest_len(0)
@@ -518,8 +463,7 @@ inline Editops::Editops(const Opcodes& other)
     dest_len = other.get_dest_len();
     for (const auto& op : other) {
         switch (op.type) {
-        case EditType::None:
-            break;
+        case EditType::None: break;
 
         case EditType::Replace:
             for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
@@ -560,21 +504,16 @@ inline Opcodes::Opcodes(const Editops& other)
         EditType type = other[i].type;
         do {
             switch (type) {
-            case EditType::None:
-                break;
+            case EditType::None: break;
 
             case EditType::Replace:
                 src_pos++;
                 dest_pos++;
                 break;
 
-            case EditType::Insert:
-                dest_pos++;
-                break;
+            case EditType::Insert: dest_pos++; break;
 
-            case EditType::Delete:
-                src_pos++;
-                break;
+            case EditType::Delete: src_pos++; break;
             }
             i++;
         } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos &&
@@ -599,8 +538,7 @@ struct ScoreAlignment {
     ScoreAlignment() : score(T()), src_start(0), src_end(0), dest_start(0), dest_end(0)
     {}
 
-    ScoreAlignment(T score_, size_t src_start_, size_t src_end_, size_t dest_start_,
-                   size_t dest_end_)
+    ScoreAlignment(T score_, size_t src_start_, size_t src_end_, size_t dest_start_, size_t dest_end_)
         : score(score_),
           src_start(src_start_),
           src_end(src_end_),

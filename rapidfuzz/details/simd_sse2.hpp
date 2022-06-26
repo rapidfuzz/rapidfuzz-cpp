@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright © 2022 Max Bachmann */
 #pragma once
 
 #include <array>
@@ -288,10 +290,9 @@ inline __m128i hadd_impl<uint8_t>(const __m128i& v) noexcept
 template <>
 inline __m128i hadd_impl<uint16_t>(const __m128i& v) noexcept
 {
-    __m128i mask =
-        _mm_set_epi16(static_cast<short>(-1), static_cast<short>(0), static_cast<short>(-1),
-                      static_cast<short>(0), static_cast<short>(-1), static_cast<short>(0),
-                      static_cast<short>(-1), static_cast<short>(0));
+    __m128i mask = _mm_set_epi16(static_cast<short>(-1), static_cast<short>(0), static_cast<short>(-1),
+                                 static_cast<short>(0), static_cast<short>(-1), static_cast<short>(0),
+                                 static_cast<short>(-1), static_cast<short>(0));
     __m128i lo = _mm_and_si128(v, mask);
     __m128i hi = _mm_srli_epi16(v, 8);
     return _mm_add_epi16(lo, hi);

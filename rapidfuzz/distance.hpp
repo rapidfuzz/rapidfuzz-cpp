@@ -10,8 +10,8 @@
 namespace rapidfuzz {
 
 template <typename CharT, typename InputIt1, typename InputIt2>
-std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, InputIt1 last1,
-                                       InputIt2 first2, InputIt2 last2)
+std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                       InputIt2 last2)
 {
     auto len1 = static_cast<size_t>(std::distance(first1, last1));
     auto len2 = static_cast<size_t>(std::distance(first2, last2));
@@ -40,9 +40,7 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
             res_str[dest_pos] = static_cast<CharT>(first2[static_cast<ptrdiff_t>(op.dest_pos)]);
             dest_pos++;
             break;
-        case EditType::Delete:
-            src_pos++;
-            break;
+        case EditType::Delete: src_pos++; break;
         }
     }
 
@@ -60,13 +58,13 @@ std::basic_string<CharT> editops_apply(const Editops& ops, InputIt1 first1, Inpu
 template <typename CharT, typename Sentence1, typename Sentence2>
 std::basic_string<CharT> editops_apply(const Editops& ops, const Sentence1& s1, const Sentence2& s2)
 {
-    return editops_apply<CharT>(ops, common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                                common::to_end(s2));
+    return editops_apply<CharT>(ops, detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),
+                                detail::to_end(s2));
 }
 
 template <typename CharT, typename InputIt1, typename InputIt2>
-std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, InputIt1 last1,
-                                       InputIt2 first2, InputIt2 last2)
+std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                       InputIt2 last2)
 {
     auto len1 = static_cast<size_t>(std::distance(first1, last1));
     auto len2 = static_cast<size_t>(std::distance(first2, last2));
@@ -88,8 +86,7 @@ std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, Inpu
                 res_str[dest_pos++] = static_cast<CharT>(first2[static_cast<ptrdiff_t>(i)]);
             }
             break;
-        case EditType::Delete:
-            break;
+        case EditType::Delete: break;
         }
     }
 
@@ -100,8 +97,8 @@ std::basic_string<CharT> opcodes_apply(const Opcodes& ops, InputIt1 first1, Inpu
 template <typename CharT, typename Sentence1, typename Sentence2>
 std::basic_string<CharT> opcodes_apply(const Opcodes& ops, const Sentence1& s1, const Sentence2& s2)
 {
-    return opcodes_apply<CharT>(ops, common::to_begin(s1), common::to_end(s1), common::to_begin(s2),
-                                common::to_end(s2));
+    return opcodes_apply<CharT>(ops, detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),
+                                detail::to_end(s2));
 }
 
 } // namespace rapidfuzz

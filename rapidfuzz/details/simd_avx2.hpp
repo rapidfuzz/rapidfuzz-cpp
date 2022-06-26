@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright © 2022 Max Bachmann */
 #pragma once
 
 #include <array>
@@ -317,8 +319,8 @@ inline __m256i hadd_impl<uint64_t>(const __m256i& v) noexcept
 template <typename T>
 native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 {
-    __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1,
-                                      2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+    __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1, 2, 2, 3,
+                                      1, 2, 2, 3, 2, 3, 3, 4);
     const __m256i low_mask = _mm256_set1_epi8(0x0F);
     __m256i lo = _mm256_and_si256(v, low_mask);
     __m256i hi = _mm256_and_si256(_mm256_srli_epi32(v, 4), low_mask);

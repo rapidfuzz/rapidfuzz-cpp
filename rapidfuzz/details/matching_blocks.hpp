@@ -36,8 +36,7 @@ struct MatchingBlock {
     size_t spos;
     size_t dpos;
     size_t length;
-    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength)
-        : spos(aSPos), dpos(aDPos), length(aLength)
+    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength) : spos(aSPos), dpos(aDPos), length(aLength)
     {}
 };
 
@@ -117,8 +116,7 @@ public:
         }
 
         while (best_i > a_low && best_j > b_low &&
-               a_first[static_cast<ptrdiff_t>(best_i) - 1] ==
-                   b_first[static_cast<ptrdiff_t>(best_j) - 1])
+               a_first[static_cast<ptrdiff_t>(best_i) - 1] == b_first[static_cast<ptrdiff_t>(best_j) - 1])
         {
             --best_i;
             --best_j;
@@ -162,7 +160,7 @@ public:
                 matching_blocks_pass1.emplace_back(spos, dpos, length);
             }
         }
-        std::sort(common::to_begin(matching_blocks_pass1), common::to_end(matching_blocks_pass1));
+        std::sort(detail::to_begin(matching_blocks_pass1), detail::to_end(matching_blocks_pass1));
 
         std::vector<MatchingBlock> matching_blocks;
 
@@ -207,8 +205,7 @@ template <typename InputIt1, typename InputIt2>
 std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                InputIt2 last2)
 {
-    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2)
-        .get_matching_blocks();
+    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2).get_matching_blocks();
 }
 
 } /* namespace detail */
