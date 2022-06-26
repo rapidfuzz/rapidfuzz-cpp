@@ -9,6 +9,7 @@
 
 namespace rapidfuzz {
 namespace detail {
+namespace simd_avx2 {
 
 template <typename T>
 class native_simd;
@@ -383,5 +384,6 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
 }
 
+} // simd_avx2
 } // namespace detail
 } // namespace rapidfuzz

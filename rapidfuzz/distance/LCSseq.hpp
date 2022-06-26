@@ -56,11 +56,16 @@ struct MultiLCSseq {
 private:
     constexpr static size_t get_vec_size()
     {
+#ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#else
+        using namespace detail::simd_sse2;
+#endif
         switch (MaxLen) {
-        case 8: return detail::native_simd<uint8_t>::size();
-        case 16: return detail::native_simd<uint16_t>::size();
-        case 32: return detail::native_simd<uint32_t>::size();
-        case 64: return detail::native_simd<uint64_t>::size();
+        case 8: return native_simd<uint8_t>::size();
+        case 16: return native_simd<uint16_t>::size();
+        case 32: return native_simd<uint32_t>::size();
+        case 64: return native_simd<uint64_t>::size();
         }
         assert(false);
     }

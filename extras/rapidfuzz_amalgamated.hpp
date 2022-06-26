@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-26 11:16:44.909570
+//  Generated: 2022-06-26 15:58:01.205564
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2133,6 +2133,7 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 namespace rapidfuzz {
 namespace detail {
+namespace simd_avx2 {
 
 template <typename T>
 class native_simd;
@@ -2507,6 +2508,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
 }
 
+} // simd_avx2
 } // namespace detail
 } // namespace rapidfuzz
 
@@ -2521,6 +2523,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
 
 namespace rapidfuzz {
 namespace detail {
+namespace simd_sse2 {
 
 template <typename T>
 class native_simd;
@@ -2909,6 +2912,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm_xor_si128(a, _mm_set1_epi32(-1));
 }
 
+} // simd_sse2
 } // namespace detail
 } // namespace rapidfuzz
 #    endif
@@ -3544,11 +3548,16 @@ struct MultiLCSseq {
 private:
     constexpr static size_t get_vec_size()
     {
+#ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#else
+        using namespace detail::simd_sse2;
+#endif
         switch (MaxLen) {
-        case 8: return detail::native_simd<uint8_t>::size();
-        case 16: return detail::native_simd<uint16_t>::size();
-        case 32: return detail::native_simd<uint32_t>::size();
-        case 64: return detail::native_simd<uint64_t>::size();
+        case 8: return native_simd<uint8_t>::size();
+        case 16: return native_simd<uint16_t>::size();
+        case 32: return native_simd<uint32_t>::size();
+        case 64: return native_simd<uint64_t>::size();
         }
         assert(false);
     }
@@ -3785,19 +3794,24 @@ static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
                                                    const detail::BlockPatternMatchVector& block,
                                                    Range<InputIt> s2, int64_t score_cutoff) noexcept
 {
+#ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#else
+        using namespace detail::simd_sse2;
+#endif
     auto score_iter = scores.begin();
-    static constexpr size_t vecs = static_cast<size_t>(detail::native_simd<uint64_t>::size());
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
     assert(block.size() % vecs == 0);
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
-        detail::native_simd<VecType> S(static_cast<VecType>(-1));
+        native_simd<VecType> S(static_cast<VecType>(-1));
 
         for (const auto& ch : s2) {
             alignas(32) std::array<uint64_t, vecs> stored;
             unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
-            detail::native_simd<VecType> Matches(stored.data());
-            detail::native_simd<VecType> u = S & Matches;
+            native_simd<VecType> Matches(stored.data());
+            native_simd<VecType> u = S & Matches;
             S = (S + u) | (S - u);
         }
 
@@ -4278,10 +4292,11 @@ void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, InputIt2
                                               double score_cutoff) const
     noexcept(sizeof(double) == sizeof(int64_t))
 {
+    size_t result_count = find_result_count(input_count);
     // reinterpretation only works when the types have the same size
     int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t)) ? reinterpret_cast<int64_t*>(scores.data())
-                                                              : new int64_t[find_result_count(input_count)];
-    distance(scores_i64, first2, last2);
+                                                              : new int64_t[result_count];
+    distance(tcb::span<int64_t>(scores_i64, result_count), first2, last2);
 
     for (size_t i = 0; i < input_count; ++i) {
         int64_t maximum = std::max<int64_t>(str_lens[i], std::distance(first2, last2));
