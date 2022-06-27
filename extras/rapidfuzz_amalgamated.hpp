@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-26 22:57:03.403828
+//  Generated: 2022-06-27 10:15:56.916896
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1623,11 +1623,10 @@ template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      double score_cutoff)
 {
-    auto maximum = std::distance(first1, last1);
-    int64_t cutoff_distance = maximum - static_cast<ptrdiff_t>(score_cutoff);
-    int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
-    double sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
+    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, cutoff_score);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
 template <typename Sentence1, typename Sentence2>

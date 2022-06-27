@@ -3,6 +3,7 @@
 ### [1.0.3] - 2022-06-24
 #### Fixed
 - fix integer wraparound in partial_ratio/partial_ratio_alignment
+- fix implementation of hamming_normalized_similarity
 
 ### [1.0.2] - 2022-06-11
 #### Fixed
