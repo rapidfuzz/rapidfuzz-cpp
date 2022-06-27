@@ -364,7 +364,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const BlockPatternMatchVector& block, Range<
     std::vector<uint64_t> S(words, ~UINT64_C(0));
     LLCSBitMatrix matrix(len2, words);
 
-    for (size_t i = 0; i < len2; ++i) {
+    for (size_t i = 0; i < static_cast<size_t>(len2); ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, s2[i]);

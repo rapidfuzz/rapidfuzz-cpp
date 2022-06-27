@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-25 18:36:33.032361
+//  Generated: 2022-06-27 14:38:30.639009
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1622,11 +1622,10 @@ template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      double score_cutoff)
 {
-    auto maximum = std::distance(first1, last1);
-    int64_t cutoff_distance = maximum - static_cast<ptrdiff_t>(score_cutoff);
-    int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
-    double sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
+    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, cutoff_score);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -2572,7 +2571,7 @@ LLCSBitMatrix llcs_matrix_blockwise(const BlockPatternMatchVector& block, Range<
     std::vector<uint64_t> S(words, ~UINT64_C(0));
     LLCSBitMatrix matrix(len2, words);
 
-    for (size_t i = 0; i < len2; ++i) {
+    for (size_t i = 0; i < static_cast<size_t>(len2); ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
             const uint64_t Matches = block.get(word, s2[i]);
@@ -5763,9 +5762,9 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 {
     if (score_cutoff > 100) return 0;
 
-    auto s2_tokens = sorted_split(first2, last2);
+    auto s2_tokens = detail::sorted_split(first2, last2);
 
-    auto decomposition = set_decomposition(s1_tokens, s2_tokens);
+    auto decomposition = detail::set_decomposition(s1_tokens, s2_tokens);
     auto intersect = decomposition.intersection;
     auto diff_ab = decomposition.difference_ab;
     auto diff_ba = decomposition.difference_ba;
@@ -5834,8 +5833,8 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
         double norm_sim =
-            detail::indel_normalized_similarity(blockmap_s1_sorted, to_begin(s1_sorted), to_end(s1_sorted),
-                                                to_begin(s2_sorted), to_end(s2_sorted), score_cutoff / 100);
+            detail::indel_normalized_similarity(blockmap_s1_sorted, detail::make_range(s1_sorted),
+                                                detail::make_range(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -6018,7 +6017,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
       cached_partial_ratio(first1, last1),
       tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join()),
-      blockmap_s1_sorted(std::begin(s1_sorted), std::end(s1_sorted))
+      blockmap_s1_sorted(detail::make_range(s1_sorted))
 {}
 
 template <typename CharT1>
