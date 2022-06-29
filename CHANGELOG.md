@@ -1,6 +1,6 @@
 ## Changelog
 
-### [1.0.4] - 2022-
+### [1.0.4] - 2022-06-29
 #### Fixed
 - fix implementation of hamming_normalized_similarity
 - fix implementation of CachedLCSseq::distance
