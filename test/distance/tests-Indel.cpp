@@ -5,6 +5,47 @@
 #include <rapidfuzz/distance/Indel.hpp>
 using Catch::Approx;
 
+template <typename Sentence1, typename Sentence2>
+int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
+                       int64_t max = std::numeric_limits<int64_t>::max())
+{
+    int64_t res1 = rapidfuzz::indel_distance(s1, s2, max);
+    rapidfuzz::CachedIndel<typename Sentence1::value_type> scorer(s1);
+    int64_t res2 = scorer.distance(s2, max);
+    REQUIRE(res1 == res2);
+    return res1;
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t max = 0)
+{
+    int64_t res1 = rapidfuzz::indel_similarity(s1, s2, max);
+    rapidfuzz::CachedIndel<typename Sentence1::value_type> scorer(s1);
+    int64_t res2 = scorer.similarity(s2, max);
+    REQUIRE(res1 == res2);
+    return res1;
+}
+
+template <typename Sentence1, typename Sentence2>
+double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    double res1 = rapidfuzz::indel_normalized_distance(s1, s2, score_cutoff);
+    rapidfuzz::CachedIndel<typename Sentence1::value_type> scorer(s1);
+    double res2 = scorer.normalized_distance(s2, score_cutoff);
+    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
+    return res1;
+}
+
+template <typename Sentence1, typename Sentence2>
+double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    double res1 = rapidfuzz::indel_normalized_similarity(s1, s2, score_cutoff);
+    rapidfuzz::CachedIndel<typename Sentence1::value_type> scorer(s1);
+    double res2 = scorer.normalized_similarity(s2, score_cutoff);
+    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
+    return res1;
+}
+
 TEST_CASE("Indel")
 {
     std::string test = "aaaa";
@@ -12,49 +53,42 @@ TEST_CASE("Indel")
 
     SECTION("similar strings")
     {
-        REQUIRE(rapidfuzz::indel_distance(test, test) == 0);
-        REQUIRE(rapidfuzz::indel_similarity(test, test) == 8);
-        REQUIRE(rapidfuzz::indel_normalized_distance(test, test) == 0.0);
-        REQUIRE(rapidfuzz::indel_normalized_similarity(test, test) == 1.0);
-
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).distance(test) == 0);
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).similarity(test) == 8);
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).normalized_distance(test) == 0.0);
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).normalized_similarity(test) == 1.0);
+        REQUIRE(indel_distance(test, test) == 0);
+        REQUIRE(indel_similarity(test, test) == 8);
+        REQUIRE(indel_normalized_distance(test, test) == 0.0);
+        REQUIRE(indel_normalized_similarity(test, test) == 1.0);
     }
 
     SECTION("completly different strings")
     {
-        REQUIRE(rapidfuzz::indel_distance(test, replace_all) == 8);
-        REQUIRE(rapidfuzz::indel_similarity(test, replace_all) == 0);
-        REQUIRE(rapidfuzz::indel_normalized_distance(test, replace_all) == 1.0);
-        REQUIRE(rapidfuzz::indel_normalized_similarity(test, replace_all) == 0.0);
-
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).distance(replace_all) == 8);
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).similarity(replace_all) == 0);
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).normalized_distance(replace_all) == 1.0);
-        REQUIRE(rapidfuzz::CachedIndel<char>(test).normalized_similarity(replace_all) == 0.0);
+        REQUIRE(indel_distance(test, replace_all) == 8);
+        REQUIRE(indel_similarity(test, replace_all) == 0);
+        REQUIRE(indel_normalized_distance(test, replace_all) == 1.0);
+        REQUIRE(indel_normalized_similarity(test, replace_all) == 0.0);
     }
 
     SECTION("some tests for mbleven")
     {
         std::string a = "South Korea";
         std::string b = "North Korea";
-        REQUIRE(rapidfuzz::indel_distance(a, b) == 4);
-        REQUIRE(rapidfuzz::indel_distance(a, b, 5) == 4);
-        REQUIRE(rapidfuzz::indel_distance(a, b, 4) == 4);
-        REQUIRE(rapidfuzz::indel_distance(a, b, 3) == 4);
-        REQUIRE(rapidfuzz::indel_distance(a, b, 2) == 3);
-        REQUIRE(rapidfuzz::indel_distance(a, b, 1) == 2);
-        REQUIRE(rapidfuzz::indel_distance(a, b, 0) == 1);
+        REQUIRE(indel_distance(a, b) == 4);
+        REQUIRE(indel_distance(a, b, 5) == 4);
+        REQUIRE(indel_distance(a, b, 4) == 4);
+        REQUIRE(indel_distance(a, b, 3) == 4);
+        REQUIRE(indel_distance(a, b, 2) == 3);
+        REQUIRE(indel_distance(a, b, 1) == 2);
+        REQUIRE(indel_distance(a, b, 0) == 1);
 
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b) == 4);
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b, 5) == 4);
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b, 4) == 4);
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b, 3) == 4);
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b, 2) == 3);
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b, 1) == 2);
-        REQUIRE(rapidfuzz::CachedIndel<char>(a).distance(b, 0) == 1);
+        a = "aabc";
+        b = "cccd";
+        REQUIRE(indel_distance(a, b) == 6);
+        REQUIRE(indel_distance(a, b, 6) == 6);
+        REQUIRE(indel_distance(a, b, 5) == 6);
+        REQUIRE(indel_distance(a, b, 4) == 5);
+        REQUIRE(indel_distance(a, b, 3) == 4);
+        REQUIRE(indel_distance(a, b, 2) == 3);
+        REQUIRE(indel_distance(a, b, 1) == 2);
+        REQUIRE(indel_distance(a, b, 0) == 1);
     }
 
     SECTION("testCachedImplementation")

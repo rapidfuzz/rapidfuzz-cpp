@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-27 14:38:30.639009
+//  Generated: 2022-06-29 14:26:01.696763
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2724,10 +2724,11 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
-    int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t sim = maximum - similarity(first2, last2, cutoff_distance);
-    return (sim >= score_cutoff) ? sim : 0;
+    int64_t maximum = std::max<int64_t>(static_cast<int64_t>(s1.size()), std::distance(first2, last2));
+    int64_t cutoff_distance = std::max<int64_t>(0, maximum - score_cutoff);
+    int64_t sim = similarity(first2, last2, cutoff_distance);
+    int64_t dist = maximum - sim;
+    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
 }
 
 template <typename CharT1>
@@ -2741,7 +2742,7 @@ template <typename CharT1>
 template <typename InputIt2>
 double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    int64_t maximum = std::max<int64_t>(s1.size(), std::distance(first2, last2));
+    int64_t maximum = std::max<int64_t>(static_cast<int64_t>(s1.size()), std::distance(first2, last2));
     if (maximum == 0) return 0;
 
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
@@ -3434,7 +3435,7 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
     auto len2 = s2.size();
 
     if (len1 < len2) {
-        return levenshtein_mbleven2018(s2, s2, max);
+        return levenshtein_mbleven2018(s2, s1, max);
     }
 
     auto len_diff = len1 - len2;
