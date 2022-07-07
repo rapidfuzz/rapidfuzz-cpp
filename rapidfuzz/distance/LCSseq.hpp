@@ -56,11 +56,11 @@ struct MultiLCSseq {
 private:
     constexpr static size_t get_vec_size()
     {
-#ifdef RAPIDFUZZ_AVX2
+#    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
-#else
+#    else
         using namespace detail::simd_sse2;
-#endif
+#    endif
         switch (MaxLen) {
         case 8: return native_simd<uint8_t>::size();
         case 16: return native_simd<uint16_t>::size();
@@ -85,7 +85,8 @@ private:
     }
 
 public:
-    MultiLCSseq(size_t count) : input_count(count), pos(0), PM(find_block_count(count) * 64)
+    MultiLCSseq(size_t count)
+        : input_count(count), pos(0), PM(find_block_count(count) * 64), str_lens(find_result_count(count))
     {}
 
     template <typename Sentence1>
@@ -98,16 +99,17 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         auto len = std::distance(first1, last1);
-        auto block_pos = pos % 64;
-        auto block = pos / 64;
+        auto block_pos = (pos * MaxLen) % 64;
+        auto block = (pos * MaxLen) / 64;
         assert(len <= MaxLen);
-        str_lens.push_back(static_cast<size_t>(len));
+        assert(pos < str_lens.size());
+        str_lens[pos] = static_cast<size_t>(len);
 
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
         }
-        pos += MaxLen;
+        pos++;
     }
 
     template <typename InputIt2>

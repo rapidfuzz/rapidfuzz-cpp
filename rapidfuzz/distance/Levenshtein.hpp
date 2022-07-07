@@ -4,6 +4,8 @@
 #pragma once
 #include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/simd.hpp>
+#include <rapidfuzz/details/span.hpp>
 
 #include <limits>
 
@@ -253,6 +255,117 @@ Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 
 template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2);
+
+#ifdef RAPIDFUZZ_SIMD
+/**
+ * @note scores always need to be big enough to store find_result_count(count)
+ */
+template <int MaxLen>
+struct MultiLevenshtein {
+private:
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        switch (MaxLen) {
+        case 8: return native_simd<uint8_t>::size();
+        case 16: return native_simd<uint16_t>::size();
+        case 32: return native_simd<uint32_t>::size();
+        case 64: return native_simd<uint64_t>::size();
+        }
+        assert(false);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+    constexpr static size_t find_result_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+public:
+    MultiLevenshtein(size_t count, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : input_count(count),
+          pos(0),
+          PM(find_block_count(count) * 64),
+          str_lens(find_result_count(count)),
+          weights(aWeights)
+    {
+        if (weights.delete_cost != 1 || weights.insert_cost != 1 || weights.replace_cost > 2)
+            throw std::invalid_argument("unsupported weights");
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        auto block_pos = (pos * MaxLen) % 64;
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+        str_lens[pos] = static_cast<size_t>(len);
+
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+    template <typename InputIt2>
+    void distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+
+    template <typename Sentence2>
+    void distance(tcb::span<int64_t> scores, const Sentence2& s2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+
+    template <typename InputIt2>
+    void similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                    int64_t score_cutoff = 0) const noexcept;
+
+    template <typename Sentence2>
+    void similarity(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff = 0) const noexcept;
+
+    template <typename InputIt2>
+    void normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                             double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename Sentence2>
+    void normalized_distance(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 1.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename InputIt2>
+    void normalized_similarity(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename Sentence2>
+    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 0.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
+
+private:
+    size_t input_count;
+    ptrdiff_t pos;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+    LevenshteinWeightTable weights;
+};
+#endif
 
 template <typename CharT1>
 struct CachedLevenshtein {

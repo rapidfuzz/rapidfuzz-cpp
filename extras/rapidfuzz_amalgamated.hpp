@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-27 10:15:56.916896
+//  Generated: 2022-07-07 23:54:01.475953
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2462,6 +2462,58 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     return res;
 }
 
+// function andnot: a & ~ b
+template <typename T>
+native_simd<T> andnot(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm256_andnot_si256(b, a);
+}
+
+static inline native_simd<uint8_t> operator==(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi8(a, b);
+}
+
+static inline native_simd<uint16_t> operator==(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator==(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
+{
+    return _mm256_and_si256(_mm256_slli_epi16(a, b),
+                            _mm256_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+}
+
+static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi64(a, b);
+}
+
 template <typename T>
 native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
@@ -2507,7 +2559,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
 }
 
-} // simd_avx2
+} // namespace simd_avx2
 } // namespace detail
 } // namespace rapidfuzz
 
@@ -2866,6 +2918,63 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     return res;
 }
 
+// function andnot: a & ~ b
+template <typename T>
+native_simd<T> andnot(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm_andnot_si128(b, a);
+}
+
+static inline native_simd<uint8_t> operator==(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm_cmpeq_epi8(a, b);
+}
+
+static inline native_simd<uint16_t> operator==(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm_cmpeq_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator==(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm_cmpeq_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    // no 64 compare instruction. Do two 32 bit compares
+    __m128i com32 = _mm_cmpeq_epi32(a, b);           // 32 bit compares
+    __m128i com32s = _mm_shuffle_epi32(com32, 0xB1); // swap low and high dwords
+    __m128i test = _mm_and_si128(com32, com32s);     // low & high
+    __m128i teste = _mm_srai_epi32(test, 31);        // extend sign bit to 32 bits
+    __m128i testee = _mm_shuffle_epi32(teste, 0xF5); // extend sign bit to 64 bits
+    return testee;
+}
+
+static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
+{
+    return _mm_and_si128(_mm_slli_epi16(a, b), _mm_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+}
+
+static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm_slli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm_slli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm_slli_epi64(a, b);
+}
+
 template <typename T>
 native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
@@ -2911,7 +3020,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm_xor_si128(a, _mm_set1_epi32(-1));
 }
 
-} // simd_sse2
+} // namespace simd_sse2
 } // namespace detail
 } // namespace rapidfuzz
 #    endif
@@ -3547,11 +3656,11 @@ struct MultiLCSseq {
 private:
     constexpr static size_t get_vec_size()
     {
-#ifdef RAPIDFUZZ_AVX2
+#    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
-#else
+#    else
         using namespace detail::simd_sse2;
-#endif
+#    endif
         switch (MaxLen) {
         case 8: return native_simd<uint8_t>::size();
         case 16: return native_simd<uint16_t>::size();
@@ -3576,7 +3685,8 @@ private:
     }
 
 public:
-    MultiLCSseq(size_t count) : input_count(count), pos(0), PM(find_block_count(count) * 64)
+    MultiLCSseq(size_t count)
+        : input_count(count), pos(0), PM(find_block_count(count) * 64), str_lens(find_result_count(count))
     {}
 
     template <typename Sentence1>
@@ -3589,16 +3699,17 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         auto len = std::distance(first1, last1);
-        auto block_pos = pos % 64;
-        auto block = pos / 64;
+        auto block_pos = (pos * MaxLen) % 64;
+        auto block = (pos * MaxLen) / 64;
         assert(len <= MaxLen);
-        str_lens.push_back(static_cast<size_t>(len));
+        assert(pos < str_lens.size());
+        str_lens[pos] = static_cast<size_t>(len);
 
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
         }
-        pos += MaxLen;
+        pos++;
     }
 
     template <typename InputIt2>
@@ -3793,11 +3904,11 @@ static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
                                                    const detail::BlockPatternMatchVector& block,
                                                    Range<InputIt> s2, int64_t score_cutoff) noexcept
 {
-#ifdef RAPIDFUZZ_AVX2
-        using namespace detail::simd_avx2;
-#else
-        using namespace detail::simd_sse2;
-#endif
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace detail::simd_avx2;
+#    else
+    using namespace detail::simd_sse2;
+#    endif
     auto score_iter = scores.begin();
     static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
     assert(block.size() % vecs == 0);
@@ -4882,6 +4993,117 @@ Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, In
 template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2);
 
+#ifdef RAPIDFUZZ_SIMD
+/**
+ * @note scores always need to be big enough to store find_result_count(count)
+ */
+template <int MaxLen>
+struct MultiLevenshtein {
+private:
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        switch (MaxLen) {
+        case 8: return native_simd<uint8_t>::size();
+        case 16: return native_simd<uint16_t>::size();
+        case 32: return native_simd<uint32_t>::size();
+        case 64: return native_simd<uint64_t>::size();
+        }
+        assert(false);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+    constexpr static size_t find_result_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+public:
+    MultiLevenshtein(size_t count, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : input_count(count),
+          pos(0),
+          PM(find_block_count(count) * 64),
+          str_lens(find_result_count(count)),
+          weights(aWeights)
+    {
+        if (weights.delete_cost != 1 || weights.insert_cost != 1 || weights.replace_cost > 2)
+            throw std::invalid_argument("unsupported weights");
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        auto block_pos = (pos * MaxLen) % 64;
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+        str_lens[pos] = static_cast<size_t>(len);
+
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+    template <typename InputIt2>
+    void distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+
+    template <typename Sentence2>
+    void distance(tcb::span<int64_t> scores, const Sentence2& s2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+
+    template <typename InputIt2>
+    void similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                    int64_t score_cutoff = 0) const noexcept;
+
+    template <typename Sentence2>
+    void similarity(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff = 0) const noexcept;
+
+    template <typename InputIt2>
+    void normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                             double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename Sentence2>
+    void normalized_distance(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 1.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename InputIt2>
+    void normalized_similarity(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+
+    template <typename Sentence2>
+    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 0.0) const
+        noexcept(sizeof(double) == sizeof(int64_t));
+
+private:
+    size_t input_count;
+    ptrdiff_t pos;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+    LevenshteinWeightTable weights;
+};
+#endif
+
 template <typename CharT1>
 struct CachedLevenshtein {
     template <typename Sentence1>
@@ -4976,12 +5198,8 @@ int64_t generalized_levenshtein_wagner_fischer(Range<InputIt1> s1, Range<InputIt
  * @brief calculates the maximum possible Levenshtein distance based on
  * string lengths and weights
  */
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_maximum(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights)
+static inline int64_t levenshtein_maximum(ptrdiff_t len1, ptrdiff_t len2, LevenshteinWeightTable weights)
 {
-    auto len1 = s1.size();
-    auto len2 = s2.size();
-
     int64_t max_dist = len1 * weights.delete_cost + len2 * weights.insert_cost;
 
     if (len1 >= len2)
@@ -5092,6 +5310,75 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
     return (dist <= max) ? dist : max + 1;
 }
 
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt>
+static inline void levenshtein_hyrroe2003_simd(tcb::span<int64_t> scores,
+                                               const detail::BlockPatternMatchVector& block,
+                                               const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                                               int64_t score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace detail::simd_avx2;
+#    else
+    using namespace detail::simd_sse2;
+#    endif
+    auto score_iter = scores.begin();
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        /* VP is set to 1^m */
+        native_simd<VecType> VP(static_cast<VecType>(-1));
+        native_simd<VecType> VN(VecType(0));
+
+        alignas(32) std::array<VecType, vec_width> currDist_;
+        unroll<int, vec_width>([&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[cur_vec + i]); });
+        native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
+        /* mask used when computing D[m,j] in the paper 10^(m-1) */
+        alignas(32) std::array<VecType, vec_width> mask_;
+        unroll<int, vec_width>(
+            [&](auto i) { mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1)); });
+        native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
+
+        for (const auto& ch : s2) {
+            /* Step 1: Computing D0 */
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+
+            native_simd<VecType> X(stored.data());
+            auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+            /* Step 2: Computing HP and HN */
+            auto HP = VN | ~(D0 | VP);
+            auto HN = D0 & VP;
+
+            /* Step 3: Computing the value D[m,j] */
+            currDist += andnot(one, (HP & mask) == zero);
+            currDist -= andnot(one, (HN & mask) == zero);
+
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | one;
+            HN = (HN << 1);
+
+            VP = HN | ~(D0 | HP);
+            VN = HP & D0;
+        }
+
+        alignas(32) std::array<VecType, vec_width> distances;
+        currDist.store(distances.data());
+        unroll<int, vec_width>([&](auto i) {
+            *score_iter =
+                (static_cast<int64_t>(distances[i]) <= score_cutoff) ? distances[i] : score_cutoff + 1;
+            score_iter++;
+        });
+    }
+}
+#endif
+
 /**
  * @brief Bitparallel implementation of the Levenshtein distance.
  *
@@ -5113,7 +5400,7 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
 int64_t levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
 {
-    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    /* VP is set to 1^m */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
     int64_t currDist = s1.size();
@@ -5600,7 +5887,7 @@ template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
                                        double score_cutoff)
 {
-    int64_t maximum = detail::levenshtein_maximum(s1, s2, weights);
+    int64_t maximum = detail::levenshtein_maximum(s1.size(), s2.size(), weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = levenshtein_distance(s1, s2, weights, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -5611,7 +5898,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_similarity(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
                                int64_t score_cutoff)
 {
-    int64_t maximum = levenshtein_maximum(s1, s2, weights);
+    int64_t maximum = levenshtein_maximum(s1.size(), s2.size(), weights);
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t dist = levenshtein_distance(s1, s2, weights, cutoff_distance);
     int64_t sim = maximum - dist;
@@ -5714,6 +6001,107 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
     return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2));
 }
 
+#ifdef RAPIDFUZZ_SIMD
+template <int MaxLen>
+template <typename InputIt2>
+void MultiLevenshtein<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                                        int64_t score_cutoff) const noexcept
+{
+    auto s2 = detail::make_range(first2, last2);
+    if (MaxLen == 8)
+        detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+    else if (MaxLen == 16)
+        detail::levenshtein_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+    else if (MaxLen == 32)
+        detail::levenshtein_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+    else if (MaxLen == 64)
+        detail::levenshtein_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+}
+
+template <int MaxLen>
+template <typename Sentence2>
+void MultiLevenshtein<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s2,
+                                        int64_t score_cutoff) const noexcept
+{
+    return distance(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
+}
+
+template <int MaxLen>
+template <typename InputIt2>
+void MultiLevenshtein<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
+                                          int64_t score_cutoff) const noexcept
+{
+    distance(scores, first2, last2);
+
+    for (size_t i = 0; i < input_count; ++i) {
+        int64_t maximum = detail::levenshtein_maximum(str_lens[i], std::distance(first2, last2), weights);
+        int64_t sim = maximum - scores[i];
+        scores[i] = (sim >= score_cutoff) ? sim : 0;
+    }
+}
+
+template <int MaxLen>
+template <typename Sentence2>
+void MultiLevenshtein<MaxLen>::similarity(tcb::span<int64_t> scores, const Sentence2& s2,
+                                          int64_t score_cutoff) const noexcept
+{
+    return similarity(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
+}
+
+template <int MaxLen>
+template <typename InputIt2>
+void MultiLevenshtein<MaxLen>::normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
+                                                   double score_cutoff) const
+    noexcept(sizeof(double) == sizeof(int64_t))
+{
+    size_t result_count = find_result_count(input_count);
+    // reinterpretation only works when the types have the same size
+    int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t)) ? reinterpret_cast<int64_t*>(scores.data())
+                                                              : new int64_t[result_count];
+    distance(tcb::span<int64_t>(scores_i64, result_count), first2, last2);
+
+    for (size_t i = 0; i < input_count; ++i) {
+        int64_t maximum = detail::levenshtein_maximum(str_lens[i], std::distance(first2, last2), weights);
+        double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
+        scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
+    }
+
+    if (sizeof(double) != sizeof(int64_t)) delete[] scores_i64;
+}
+
+template <int MaxLen>
+template <typename Sentence2>
+void MultiLevenshtein<MaxLen>::normalized_distance(tcb::span<double> scores, const Sentence2& s2,
+                                                   double score_cutoff) const
+    noexcept(sizeof(double) == sizeof(int64_t))
+{
+    return normalized_distance(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
+}
+
+template <int MaxLen>
+template <typename InputIt2>
+void MultiLevenshtein<MaxLen>::normalized_similarity(tcb::span<double> scores, InputIt2 first2,
+                                                     InputIt2 last2, double score_cutoff) const
+    noexcept(sizeof(double) == sizeof(int64_t))
+{
+    normalized_distance(scores, first2, last2);
+
+    for (size_t i = 0; i < input_count; ++i) {
+        double norm_sim = 1.0 - scores[i];
+        scores[i] = (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+    }
+}
+
+template <int MaxLen>
+template <typename Sentence2>
+void MultiLevenshtein<MaxLen>::normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
+                                                     double score_cutoff) const
+    noexcept(sizeof(double) == sizeof(int64_t))
+{
+    return normalized_similarity(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
+}
+#endif
+
 template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
@@ -5762,8 +6150,7 @@ template <typename InputIt2>
 double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                       double score_cutoff) const
 {
-    int64_t maximum =
-        detail::levenshtein_maximum(detail::make_range(s1), detail::make_range(first2, last2), weights);
+    int64_t maximum = detail::levenshtein_maximum(s1.size(), std::distance(first2, last2), weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -5781,8 +6168,7 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum =
-        detail::levenshtein_maximum(detail::make_range(s1), detail::make_range(first2, last2), weights);
+    int64_t maximum = detail::levenshtein_maximum(s1.size(), std::distance(first2, last2), weights);
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t dist = distance(first2, last2, cutoff_distance);
     int64_t sim = maximum - dist;

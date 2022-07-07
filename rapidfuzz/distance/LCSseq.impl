@@ -106,11 +106,11 @@ static inline void longest_common_subsequence_simd(tcb::span<int64_t> scores,
                                                    const detail::BlockPatternMatchVector& block,
                                                    Range<InputIt> s2, int64_t score_cutoff) noexcept
 {
-#ifdef RAPIDFUZZ_AVX2
-        using namespace detail::simd_avx2;
-#else
-        using namespace detail::simd_sse2;
-#endif
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace detail::simd_avx2;
+#    else
+    using namespace detail::simd_sse2;
+#    endif
     auto score_iter = scores.begin();
     static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
     assert(block.size() % vecs == 0);

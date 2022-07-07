@@ -339,6 +339,58 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     return res;
 }
 
+// function andnot: a & ~ b
+template <typename T>
+native_simd<T> andnot(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm256_andnot_si256(b, a);
+}
+
+static inline native_simd<uint8_t> operator==(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi8(a, b);
+}
+
+static inline native_simd<uint16_t> operator==(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator==(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
+{
+    return _mm256_and_si256(_mm256_slli_epi16(a, b),
+                            _mm256_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+}
+
+static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi64(a, b);
+}
+
 template <typename T>
 native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
@@ -384,6 +436,6 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
 }
 
-} // simd_avx2
+} // namespace simd_avx2
 } // namespace detail
 } // namespace rapidfuzz

@@ -354,6 +354,63 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     return res;
 }
 
+// function andnot: a & ~ b
+template <typename T>
+native_simd<T> andnot(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm_andnot_si128(b, a);
+}
+
+static inline native_simd<uint8_t> operator==(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm_cmpeq_epi8(a, b);
+}
+
+static inline native_simd<uint16_t> operator==(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm_cmpeq_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator==(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm_cmpeq_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    // no 64 compare instruction. Do two 32 bit compares
+    __m128i com32 = _mm_cmpeq_epi32(a, b);           // 32 bit compares
+    __m128i com32s = _mm_shuffle_epi32(com32, 0xB1); // swap low and high dwords
+    __m128i test = _mm_and_si128(com32, com32s);     // low & high
+    __m128i teste = _mm_srai_epi32(test, 31);        // extend sign bit to 32 bits
+    __m128i testee = _mm_shuffle_epi32(teste, 0xF5); // extend sign bit to 64 bits
+    return testee;
+}
+
+static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
+{
+    return _mm_and_si128(_mm_slli_epi16(a, b), _mm_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+}
+
+static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm_slli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm_slli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm_slli_epi64(a, b);
+}
+
 template <typename T>
 native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
@@ -399,6 +456,6 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
     return _mm_xor_si128(a, _mm_set1_epi32(-1));
 }
 
-} // simd_sse2
+} // namespace simd_sse2
 } // namespace detail
 } // namespace rapidfuzz
