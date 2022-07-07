@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-07-08 00:18:46.469952
+//  Generated: 2022-07-08 00:40:13.917399
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5902,7 +5902,7 @@ template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
                                        double score_cutoff)
 {
-    int64_t maximum = detail::levenshtein_maximum(s1.size(), s2.size(), weights);
+    int64_t maximum = detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), s2.size(), weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = levenshtein_distance(s1, s2, weights, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -6166,7 +6166,8 @@ template <typename InputIt2>
 double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
                                                       double score_cutoff) const
 {
-    int64_t maximum = detail::levenshtein_maximum(s1.size(), std::distance(first2, last2), weights);
+    int64_t maximum =
+        detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), std::distance(first2, last2), weights);
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = distance(first2, last2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -6184,7 +6185,8 @@ template <typename CharT1>
 template <typename InputIt2>
 int64_t CachedLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
 {
-    int64_t maximum = detail::levenshtein_maximum(s1.size(), std::distance(first2, last2), weights);
+    int64_t maximum =
+        detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), std::distance(first2, last2), weights);
     int64_t cutoff_distance = maximum - score_cutoff;
     int64_t dist = distance(first2, last2, cutoff_distance);
     int64_t sim = maximum - dist;
