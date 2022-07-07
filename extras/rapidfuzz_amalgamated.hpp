@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-07-07 23:54:01.475953
+//  Generated: 2022-07-08 00:18:46.469952
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3649,7 +3649,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
 
 #ifdef RAPIDFUZZ_SIMD
 /**
- * @note scores always need to be big enough to store find_result_count(count)
+ * @note scores always need to be big enough to store result_count
  */
 template <int MaxLen>
 struct MultiLCSseq {
@@ -3677,17 +3677,27 @@ private:
         return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
     }
 
-    constexpr static size_t find_result_count(size_t count)
+public:
+    MultiLCSseq(size_t count) : input_count(count), pos(0), PM(find_block_count(count) * 64)
     {
-        size_t vec_size = get_vec_size();
-        size_t simd_vec_count = detail::ceil_div(count, vec_size);
-        return simd_vec_count * vec_size;
+        str_lens.resize(result_count());
     }
 
-public:
-    MultiLCSseq(size_t count)
-        : input_count(count), pos(0), PM(find_block_count(count) * 64), str_lens(find_result_count(count))
-    {}
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
+    }
 
     template <typename Sentence1>
     void insert(const Sentence1& s1_)
@@ -3714,34 +3724,33 @@ public:
 
     template <typename InputIt2>
     void distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename Sentence2>
     void distance(tcb::span<int64_t> scores, const Sentence2& s2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename InputIt2>
     void similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                    int64_t score_cutoff = 0) const noexcept;
+                    int64_t score_cutoff = 0) const;
 
     template <typename Sentence2>
-    void similarity(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff = 0) const noexcept;
+    void similarity(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff = 0) const;
 
     template <typename InputIt2>
     void normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
-                             double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+                             double score_cutoff = 1.0) const;
 
     template <typename Sentence2>
-    void normalized_distance(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 1.0) const
-        noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_distance(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 1.0) const;
 
     template <typename InputIt2>
     void normalized_similarity(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
-                               double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+                               double score_cutoff = 0.0) const;
 
     template <typename Sentence2>
-    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 0.0) const
-        noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
+                               double score_cutoff = 0.0) const;
 
 private:
     size_t input_count;
@@ -4353,7 +4362,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 template <int MaxLen>
 template <typename InputIt2>
 void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                                   int64_t score_cutoff) const noexcept
+                                   int64_t score_cutoff) const
 {
     similarity(scores, first2, last2);
 
@@ -4366,8 +4375,7 @@ void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, I
 
 template <int MaxLen>
 template <typename Sentence2>
-void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s2,
-                                   int64_t score_cutoff) const noexcept
+void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff) const
 {
     return distance(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -4375,8 +4383,11 @@ void MultiLCSseq<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s
 template <int MaxLen>
 template <typename InputIt2>
 void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                                     int64_t score_cutoff) const noexcept
+                                     int64_t score_cutoff) const
 {
+    if (scores.size() < result_count())
+        throw std::invalid_argument("scores has to have >= result_count() elements");
+
     auto s2 = detail::make_range(first2, last2);
     if (MaxLen == 8)
         detail::longest_common_subsequence_simd<uint8_t>(scores, PM, s2, score_cutoff);
@@ -4391,7 +4402,7 @@ void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 first2,
 template <int MaxLen>
 template <typename Sentence2>
 void MultiLCSseq<MaxLen>::similarity(tcb::span<int64_t> scores, const Sentence2& s2,
-                                     int64_t score_cutoff) const noexcept
+                                     int64_t score_cutoff) const
 {
     return similarity(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -4400,13 +4411,14 @@ template <int MaxLen>
 template <typename InputIt2>
 void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
                                               double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
-    size_t result_count = find_result_count(input_count);
+    if (scores.size() < result_count())
+        throw std::invalid_argument("scores has to have >= result_count() elements");
+
     // reinterpretation only works when the types have the same size
     int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t)) ? reinterpret_cast<int64_t*>(scores.data())
-                                                              : new int64_t[result_count];
-    distance(tcb::span<int64_t>(scores_i64, result_count), first2, last2);
+                                                              : new int64_t[result_count()];
+    distance(tcb::span<int64_t>(scores_i64, result_count()), first2, last2);
 
     for (size_t i = 0; i < input_count; ++i) {
         int64_t maximum = std::max<int64_t>(str_lens[i], std::distance(first2, last2));
@@ -4421,7 +4433,6 @@ template <int MaxLen>
 template <typename Sentence2>
 void MultiLCSseq<MaxLen>::normalized_distance(tcb::span<double> scores, const Sentence2& s2,
                                               double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
     return normalized_distance(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -4430,7 +4441,6 @@ template <int MaxLen>
 template <typename InputIt2>
 void MultiLCSseq<MaxLen>::normalized_similarity(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
                                                 double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
     normalized_distance(scores, first2, last2);
 
@@ -4444,7 +4454,6 @@ template <int MaxLen>
 template <typename Sentence2>
 void MultiLCSseq<MaxLen>::normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
                                                 double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
     return normalized_similarity(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -5023,23 +5032,29 @@ private:
         return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
     }
 
-    constexpr static size_t find_result_count(size_t count)
-    {
-        size_t vec_size = get_vec_size();
-        size_t simd_vec_count = detail::ceil_div(count, vec_size);
-        return simd_vec_count * vec_size;
-    }
-
 public:
     MultiLevenshtein(size_t count, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : input_count(count),
-          pos(0),
-          PM(find_block_count(count) * 64),
-          str_lens(find_result_count(count)),
-          weights(aWeights)
+        : input_count(count), pos(0), PM(find_block_count(count) * 64), weights(aWeights)
     {
+        str_lens.resize(result_count());
         if (weights.delete_cost != 1 || weights.insert_cost != 1 || weights.replace_cost > 2)
             throw std::invalid_argument("unsupported weights");
+    }
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
     }
 
     template <typename Sentence1>
@@ -5066,34 +5081,33 @@ public:
 
     template <typename InputIt2>
     void distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename Sentence2>
     void distance(tcb::span<int64_t> scores, const Sentence2& s2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const noexcept;
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
 
     template <typename InputIt2>
     void similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                    int64_t score_cutoff = 0) const noexcept;
+                    int64_t score_cutoff = 0) const;
 
     template <typename Sentence2>
-    void similarity(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff = 0) const noexcept;
+    void similarity(tcb::span<int64_t> scores, const Sentence2& s2, int64_t score_cutoff = 0) const;
 
     template <typename InputIt2>
     void normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
-                             double score_cutoff = 1.0) const noexcept(sizeof(double) == sizeof(int64_t));
+                             double score_cutoff = 1.0) const;
 
     template <typename Sentence2>
-    void normalized_distance(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 1.0) const
-        noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_distance(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 1.0) const;
 
     template <typename InputIt2>
     void normalized_similarity(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
-                               double score_cutoff = 0.0) const noexcept(sizeof(double) == sizeof(int64_t));
+                               double score_cutoff = 0.0) const;
 
     template <typename Sentence2>
-    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2, double score_cutoff = 0.0) const
-        noexcept(sizeof(double) == sizeof(int64_t));
+    void normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
+                               double score_cutoff = 0.0) const;
 
 private:
     size_t input_count;
@@ -6005,8 +6019,11 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 template <int MaxLen>
 template <typename InputIt2>
 void MultiLevenshtein<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                                        int64_t score_cutoff) const noexcept
+                                        int64_t score_cutoff) const
 {
+    if (scores.size() < result_count())
+        throw std::invalid_argument("scores has to have >= result_count() elements");
+
     auto s2 = detail::make_range(first2, last2);
     if (MaxLen == 8)
         detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
@@ -6021,7 +6038,7 @@ void MultiLevenshtein<MaxLen>::distance(tcb::span<int64_t> scores, InputIt2 firs
 template <int MaxLen>
 template <typename Sentence2>
 void MultiLevenshtein<MaxLen>::distance(tcb::span<int64_t> scores, const Sentence2& s2,
-                                        int64_t score_cutoff) const noexcept
+                                        int64_t score_cutoff) const
 {
     return distance(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -6029,7 +6046,7 @@ void MultiLevenshtein<MaxLen>::distance(tcb::span<int64_t> scores, const Sentenc
 template <int MaxLen>
 template <typename InputIt2>
 void MultiLevenshtein<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 first2, InputIt2 last2,
-                                          int64_t score_cutoff) const noexcept
+                                          int64_t score_cutoff) const
 {
     distance(scores, first2, last2);
 
@@ -6043,7 +6060,7 @@ void MultiLevenshtein<MaxLen>::similarity(tcb::span<int64_t> scores, InputIt2 fi
 template <int MaxLen>
 template <typename Sentence2>
 void MultiLevenshtein<MaxLen>::similarity(tcb::span<int64_t> scores, const Sentence2& s2,
-                                          int64_t score_cutoff) const noexcept
+                                          int64_t score_cutoff) const
 {
     return similarity(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -6052,13 +6069,14 @@ template <int MaxLen>
 template <typename InputIt2>
 void MultiLevenshtein<MaxLen>::normalized_distance(tcb::span<double> scores, InputIt2 first2, InputIt2 last2,
                                                    double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
-    size_t result_count = find_result_count(input_count);
+    if (scores.size() < result_count())
+        throw std::invalid_argument("scores has to have >= result_count() elements");
+
     // reinterpretation only works when the types have the same size
     int64_t* scores_i64 = (sizeof(double) == sizeof(int64_t)) ? reinterpret_cast<int64_t*>(scores.data())
-                                                              : new int64_t[result_count];
-    distance(tcb::span<int64_t>(scores_i64, result_count), first2, last2);
+                                                              : new int64_t[result_count()];
+    distance(tcb::span<int64_t>(scores_i64, result_count()), first2, last2);
 
     for (size_t i = 0; i < input_count; ++i) {
         int64_t maximum = detail::levenshtein_maximum(str_lens[i], std::distance(first2, last2), weights);
@@ -6073,7 +6091,6 @@ template <int MaxLen>
 template <typename Sentence2>
 void MultiLevenshtein<MaxLen>::normalized_distance(tcb::span<double> scores, const Sentence2& s2,
                                                    double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
     return normalized_distance(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -6082,7 +6099,6 @@ template <int MaxLen>
 template <typename InputIt2>
 void MultiLevenshtein<MaxLen>::normalized_similarity(tcb::span<double> scores, InputIt2 first2,
                                                      InputIt2 last2, double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
     normalized_distance(scores, first2, last2);
 
@@ -6096,7 +6112,6 @@ template <int MaxLen>
 template <typename Sentence2>
 void MultiLevenshtein<MaxLen>::normalized_similarity(tcb::span<double> scores, const Sentence2& s2,
                                                      double score_cutoff) const
-    noexcept(sizeof(double) == sizeof(int64_t))
 {
     return normalized_similarity(scores, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
