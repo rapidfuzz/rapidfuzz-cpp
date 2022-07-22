@@ -516,7 +516,7 @@ inline Opcodes::Opcodes(const Editops& other)
             case EditType::Delete: src_pos++; break;
             }
             i++;
-        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos &&
+        } while (i < other.size() && other[i].type == type && src_pos == other[i].src_pos &&
                  dest_pos == other[i].dest_pos);
 
         push_back({type, src_begin, src_pos, dest_begin, dest_pos});

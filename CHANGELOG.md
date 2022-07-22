@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.0.5] - 2022-
+#### Fixed
+- fix opcode conversion for empty source sequence
+
 ### [1.0.4] - 2022-06-29
 #### Fixed
 - fix implementation of hamming_normalized_similarity
