@@ -309,7 +309,8 @@ public:
         for (const auto& sop : subsequence) {
             for (; op_iter != op_end && sop != *op_iter; op_iter++) {
                 result[result_pos] = *op_iter;
-                result[result_pos].src_pos += offset;
+                result[result_pos].src_pos =
+                    static_cast<size_t>(static_cast<ptrdiff_t>(result[result_pos].src_pos) + offset);
                 result_pos++;
             }
             /* element of subsequence not part of the sequence */
@@ -325,7 +326,8 @@ public:
         /* add remaining elements */
         for (; op_iter != op_end; op_iter++) {
             result[result_pos] = *op_iter;
-            result[result_pos].src_pos += offset;
+            result[result_pos].src_pos =
+                static_cast<size_t>(static_cast<ptrdiff_t>(result[result_pos].src_pos) + offset);
             result_pos++;
         }
 

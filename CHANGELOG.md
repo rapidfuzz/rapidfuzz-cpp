@@ -1,6 +1,6 @@
 ## Changelog
 
-### [1.0.5] - 2022-
+### [1.0.5] - 2022-07-23
 #### Fixed
 - fix opcode conversion for empty source sequence
 

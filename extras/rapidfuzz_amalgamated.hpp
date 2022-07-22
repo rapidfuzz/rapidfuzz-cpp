@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-07-22 23:36:42.783380
+//  Generated: 2022-07-23 00:29:32.270116
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -454,7 +454,8 @@ public:
         for (const auto& sop : subsequence) {
             for (; op_iter != op_end && sop != *op_iter; op_iter++) {
                 result[result_pos] = *op_iter;
-                result[result_pos].src_pos += offset;
+                result[result_pos].src_pos =
+                    static_cast<size_t>(static_cast<ptrdiff_t>(result[result_pos].src_pos) + offset);
                 result_pos++;
             }
             /* element of subsequence not part of the sequence */
@@ -470,7 +471,8 @@ public:
         /* add remaining elements */
         for (; op_iter != op_end; op_iter++) {
             result[result_pos] = *op_iter;
-            result[result_pos].src_pos += offset;
+            result[result_pos].src_pos =
+                static_cast<size_t>(static_cast<ptrdiff_t>(result[result_pos].src_pos) + offset);
             result_pos++;
         }
 
