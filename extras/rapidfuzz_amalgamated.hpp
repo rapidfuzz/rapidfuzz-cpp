@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-06-29 14:26:01.696763
+//  Generated: 2022-07-22 23:36:42.783380
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -207,6 +207,11 @@ inline bool operator==(EditOp a, EditOp b)
     return (a.type == b.type) && (a.src_pos == b.src_pos) && (a.dest_pos == b.dest_pos);
 }
 
+inline bool operator!=(EditOp a, EditOp b)
+{
+    return !(a == b);
+}
+
 /**
  * @brief Edit operations used by the Levenshtein distance
  *
@@ -239,6 +244,11 @@ inline bool operator==(Opcode a, Opcode b)
 {
     return (a.type == b.type) && (a.src_begin == b.src_begin) && (a.src_end == b.src_end) &&
            (a.dest_begin == b.dest_begin) && (a.dest_end == b.dest_end);
+}
+
+inline bool operator!=(Opcode a, Opcode b)
+{
+    return !(a == b);
 }
 
 namespace detail {
@@ -424,6 +434,47 @@ public:
             }
         }
         return inv_ops;
+    }
+
+    Editops remove_subsequence(const Editops& subsequence) const
+    {
+        Editops result;
+        result.set_src_len(src_len);
+        result.set_dest_len(dest_len);
+
+        if (subsequence.size() > size()) throw std::invalid_argument("subsequence is not a subsequence");
+
+        result.resize(size() - subsequence.size());
+
+        /* offset to correct removed edit operations */
+        int offset = 0;
+        auto op_iter = begin();
+        auto op_end = end();
+        size_t result_pos = 0;
+        for (const auto& sop : subsequence) {
+            for (; op_iter != op_end && sop != *op_iter; op_iter++) {
+                result[result_pos] = *op_iter;
+                result[result_pos].src_pos += offset;
+                result_pos++;
+            }
+            /* element of subsequence not part of the sequence */
+            if (op_iter == op_end) throw std::invalid_argument("subsequence is not a subsequence");
+
+            if (sop.type == EditType::Insert)
+                offset++;
+            else if (sop.type == EditType::Delete)
+                offset--;
+            op_iter++;
+        }
+
+        /* add remaining elements */
+        for (; op_iter != op_end; op_iter++) {
+            result[result_pos] = *op_iter;
+            result[result_pos].src_pos += offset;
+            result_pos++;
+        }
+
+        return result;
     }
 
 private:
@@ -661,7 +712,7 @@ inline Opcodes::Opcodes(const Editops& other)
             case EditType::Delete: src_pos++; break;
             }
             i++;
-        } while (i < other.size() && other[i].type == type && src_pos && other[i].src_pos &&
+        } while (i < other.size() && other[i].type == type && src_pos == other[i].src_pos &&
                  dest_pos == other[i].dest_pos);
 
         push_back({type, src_begin, src_pos, dest_begin, dest_pos});
