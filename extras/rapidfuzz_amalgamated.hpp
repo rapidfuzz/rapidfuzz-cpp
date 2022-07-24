@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-07-23 00:29:32.270116
+//  Generated: 2022-07-24 20:59:31.207358
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -21,6 +21,8 @@
 
 
 #include <iterator>
+#include <limits>
+#include <stdexcept>
 #include <vector>
 
 namespace rapidfuzz {
@@ -28,18 +30,34 @@ namespace detail {
 
 template <typename Iter>
 class Range {
+    Iter _first;
+    Iter _last;
+
 public:
+    using iterator = Iter;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+
     constexpr Range(Iter first, Iter last) : _first(first), _last(last)
     {}
 
-    constexpr Iter begin() const
+    constexpr iterator begin() const noexcept
     {
         return _first;
     }
-    constexpr Iter end() const
+    constexpr iterator end() const noexcept
     {
         return _last;
     }
+
+    constexpr reverse_iterator rbegin() const noexcept
+    {
+        return reverse_iterator(end());
+    }
+    constexpr reverse_iterator rend() const noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
     constexpr ptrdiff_t size() const
     {
         return std::distance(_first, _last);
@@ -57,9 +75,27 @@ public:
         return _first[n];
     }
 
-private:
-    Iter _first;
-    Iter _last;
+    constexpr void remove_prefix(ptrdiff_t n)
+    {
+        _first += n;
+    }
+    constexpr void remove_suffix(ptrdiff_t n)
+    {
+        _last -= n;
+    }
+
+    constexpr Range subseq(ptrdiff_t pos = 0, ptrdiff_t count = std::numeric_limits<ptrdiff_t>::max())
+    {
+        if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
+
+        /* count + pos can overflow */
+        return {_first + pos, _first + pos + std::min(count - pos, size() - pos)};
+    }
+
+    constexpr Range<reverse_iterator> reversed() const
+    {
+        return {rbegin(), rend()};
+    }
 };
 
 template <typename CharT>
@@ -3374,6 +3410,7 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
 
 
 #include <cmath>
+#include <cstddef>
 
 namespace rapidfuzz {
 namespace detail {
@@ -3784,20 +3821,31 @@ struct LevenshteinBitMatrix {
     size_t dist;
 };
 
+struct LevenshteinBitRow {
+    LevenshteinBitRow(size_t cols) : vecs(cols), dist(0)
+    {}
+
+    struct Vectors {
+        uint64_t VP;
+        uint64_t VN;
+
+        Vectors() : VP(~UINT64_C(0)), VN(0)
+        {}
+    };
+
+    std::vector<Vectors> vecs;
+
+    size_t dist;
+};
+
 /**
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename InputIt1, typename InputIt2>
-Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LevenshteinBitMatrix& matrix,
-                          StringAffix affix)
+void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+                       const LevenshteinBitMatrix& matrix, size_t src_pos, size_t dest_pos, size_t editop_pos)
 {
     auto dist = matrix.dist;
-    Editops editops(dist);
-    editops.set_src_len(static_cast<size_t>(s1.size()) + affix.prefix_len + affix.suffix_len);
-    editops.set_dest_len(static_cast<size_t>(s2.size()) + affix.prefix_len + affix.suffix_len);
-
-    if (dist == 0) return editops;
-
     size_t col = static_cast<size_t>(s1.size());
     size_t row = static_cast<size_t>(s2.size());
 
@@ -3812,9 +3860,9 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const Levensht
             assert(dist > 0);
             dist--;
             col--;
-            editops[dist].type = EditType::Delete;
-            editops[dist].src_pos = col + affix.prefix_len;
-            editops[dist].dest_pos = row + affix.prefix_len;
+            editops[editop_pos + dist].type = EditType::Delete;
+            editops[editop_pos + dist].src_pos = col + src_pos;
+            editops[editop_pos + dist].dest_pos = row + dest_pos;
         }
         else {
             row--;
@@ -3823,9 +3871,9 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const Levensht
             if (row && matrix.VN[row - 1][col_word] & mask) {
                 assert(dist > 0);
                 dist--;
-                editops[dist].type = EditType::Insert;
-                editops[dist].src_pos = col + affix.prefix_len;
-                editops[dist].dest_pos = row + affix.prefix_len;
+                editops[editop_pos + dist].type = EditType::Insert;
+                editops[editop_pos + dist].src_pos = col + src_pos;
+                editops[editop_pos + dist].dest_pos = row + dest_pos;
             }
             /* Match/Mismatch */
             else {
@@ -3835,9 +3883,9 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const Levensht
                 if (s1[static_cast<ptrdiff_t>(col)] != s2[static_cast<ptrdiff_t>(row)]) {
                     assert(dist > 0);
                     dist--;
-                    editops[dist].type = EditType::Replace;
-                    editops[dist].src_pos = col + affix.prefix_len;
-                    editops[dist].dest_pos = row + affix.prefix_len;
+                    editops[editop_pos + dist].type = EditType::Replace;
+                    editops[editop_pos + dist].src_pos = col + src_pos;
+                    editops[editop_pos + dist].dest_pos = row + dest_pos;
                 }
             }
         }
@@ -3846,20 +3894,18 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const Levensht
     while (col) {
         dist--;
         col--;
-        editops[dist].type = EditType::Delete;
-        editops[dist].src_pos = col + affix.prefix_len;
-        editops[dist].dest_pos = row + affix.prefix_len;
+        editops[editop_pos + dist].type = EditType::Delete;
+        editops[editop_pos + dist].src_pos = col + src_pos;
+        editops[editop_pos + dist].dest_pos = row + dest_pos;
     }
 
     while (row) {
         dist--;
         row--;
-        editops[dist].type = EditType::Insert;
-        editops[dist].src_pos = col + affix.prefix_len;
-        editops[dist].dest_pos = row + affix.prefix_len;
+        editops[editop_pos + dist].type = EditType::Insert;
+        editops[editop_pos + dist].src_pos = col + src_pos;
+        editops[editop_pos + dist].dest_pos = row + dest_pos;
     }
-
-    return editops;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3986,6 +4032,79 @@ LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const BlockPatternMatch
 }
 
 template <typename InputIt1, typename InputIt2>
+LevenshteinBitRow levenshtein_row_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1,
+                                                   Range<InputIt2> s2)
+{
+    auto words = PM.size();
+    LevenshteinBitRow bit_row(words);
+
+    bit_row.dist = static_cast<size_t>(s1.size());
+    uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
+
+    /* Searching */
+    for (ptrdiff_t i = 0; i < s2.size(); i++) {
+        uint64_t HP_carry = 1;
+        uint64_t HN_carry = 0;
+
+        for (size_t word = 0; word < words - 1; word++) {
+            /* Step 1: Computing D0 */
+            uint64_t PM_j = PM.get(word, s2[i]);
+            uint64_t VN = bit_row.vecs[word].VN;
+            uint64_t VP = bit_row.vecs[word].VP;
+
+            uint64_t X = PM_j | HN_carry;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+            /* Step 2: Computing HP and HN */
+            uint64_t HP = VN | ~(D0 | VP);
+            uint64_t HN = D0 & VP;
+
+            /* Step 3: Computing the value D[m,j] */
+            // only required for last vector
+
+            /* Step 4: Computing Vp and VN */
+            uint64_t HP_carry_temp = HP_carry;
+            HP_carry = HP >> 63;
+            HP = (HP << 1) | HP_carry_temp;
+
+            uint64_t HN_carry_temp = HN_carry;
+            HN_carry = HN >> 63;
+            HN = (HN << 1) | HN_carry_temp;
+
+            bit_row.vecs[word].VP = HN | ~(D0 | HP);
+            bit_row.vecs[word].VN = HP & D0;
+        }
+
+        {
+            /* Step 1: Computing D0 */
+            uint64_t PM_j = PM.get(words - 1, s2[i]);
+            uint64_t VN = bit_row.vecs[words - 1].VN;
+            uint64_t VP = bit_row.vecs[words - 1].VP;
+
+            uint64_t X = PM_j | HN_carry;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+            /* Step 2: Computing HP and HN */
+            uint64_t HP = VN | ~(D0 | VP);
+            uint64_t HN = D0 & VP;
+
+            /* Step 3: Computing the value D[m,j] */
+            bit_row.dist += bool(HP & Last);
+            bit_row.dist -= bool(HN & Last);
+
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | HP_carry;
+            HN = (HN << 1) | HN_carry;
+
+            bit_row.vecs[words - 1].VP = HN | ~(D0 | HP);
+            bit_row.vecs[words - 1].VN = HP & D0;
+        }
+    }
+
+    return bit_row;
+}
+
+template <typename InputIt1, typename InputIt2>
 LevenshteinBitMatrix levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
     if (s1.empty() || s2.empty()) {
@@ -4000,8 +4119,15 @@ LevenshteinBitMatrix levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
-                             int64_t max)
+LevenshteinBitRow levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2)
+{
+    return levenshtein_row_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
+                             LevenshteinWeightTable weights = {1, 1, 1},
+                             int64_t max = std::numeric_limits<int64_t>::max())
 {
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -4063,13 +4189,105 @@ double levenshtein_normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2,
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
+struct HirschbergPos {
+    int64_t left_score;
+    int64_t right_score;
+    ptrdiff_t s1_mid;
+    ptrdiff_t s2_mid;
+};
+
+template <typename InputIt1, typename InputIt2>
+HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2)
+{
+    HirschbergPos hpos = {};
+    hpos.s2_mid = s2.size() / 2;
+    size_t s1_len = static_cast<size_t>(s1.size());
+    int64_t best_score = std::numeric_limits<int64_t>::max();
+    int64_t left_score = hpos.s2_mid;
+    std::vector<int64_t> right_scores(s1_len + 1, 0);
+    assume(right_scores.size() != 0);
+    right_scores[0] = s2.size() - hpos.s2_mid;
+
+    {
+        auto right_row = levenshtein_row(s1.reversed(), s2.subseq(hpos.s2_mid).reversed());
+        for (size_t i = 0; i < s1_len; ++i) {
+            size_t col_pos = i % 64;
+            size_t col_word = i / 64;
+            uint64_t col_mask = UINT64_C(1) << col_pos;
+
+            right_scores[i + 1] = right_scores[i];
+            right_scores[i + 1] -= bool(right_row.vecs[col_word].VN & col_mask);
+            right_scores[i + 1] += bool(right_row.vecs[col_word].VP & col_mask);
+        }
+    }
+
+    auto left_row = levenshtein_row(s1, s2.subseq(0, hpos.s2_mid));
+    for (size_t i = 0; i < s1_len; ++i) {
+        size_t col_pos = i % 64;
+        size_t col_word = i / 64;
+        uint64_t col_mask = UINT64_C(1) << col_pos;
+        left_score -= bool(left_row.vecs[col_word].VN & col_mask);
+        left_score += bool(left_row.vecs[col_word].VP & col_mask);
+
+        if (right_scores[s1_len - i - 1] + left_score < best_score) {
+            best_score = right_scores[s1_len - i - 1] + left_score;
+            hpos.left_score = left_score;
+            hpos.right_score = right_scores[s1_len - i - 1];
+            hpos.s1_mid = static_cast<ptrdiff_t>(i + 1);
+        }
+    }
+
+    assert(hpos.left_score >= 0);
+    assert(hpos.right_score >= 0);
+    assert(levenshtein_distance(s1, s2) == hpos.left_score + hpos.right_score);
+
+    return hpos;
+}
+
+template <typename InputIt1, typename InputIt2>
+void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2, size_t src_pos = 0,
+                       size_t dest_pos = 0, size_t editop_pos = 0)
+{
+    // todo add blockwise implementation of levenshtein matrix / row
+
+    /* prefix and suffix are no-ops, which do not need to be added to the editops */
+    StringAffix affix = remove_common_affix(s1, s2);
+    src_pos += affix.prefix_len;
+    dest_pos += affix.prefix_len;
+
+    ptrdiff_t matrix_size = 2 * s1.size() * s2.size() / 8;
+    if (matrix_size < 1024 * 1024 || s1.size() < 65 || s2.size() < 10) {
+        auto matrix = levenshtein_matrix(s1, s2);
+
+        if (matrix.dist != 0) {
+            if (editops.size() == 0) editops.resize(matrix.dist);
+
+            recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
+        }
+    }
+    /* Hirschbergs algorithm */
+    else {
+        auto hpos = find_hirschberg_pos(s1, s2);
+
+        if (editops.size() == 0) editops.resize(static_cast<size_t>(hpos.left_score + hpos.right_score));
+
+        levenshtein_align(editops, s1.subseq(0, hpos.s1_mid), s2.subseq(0, hpos.s2_mid), src_pos, dest_pos,
+                          editop_pos);
+        levenshtein_align(editops, s1.subseq(hpos.s1_mid), s2.subseq(hpos.s2_mid),
+                          src_pos + static_cast<size_t>(hpos.s1_mid),
+                          dest_pos + static_cast<size_t>(hpos.s2_mid),
+                          editop_pos + static_cast<size_t>(hpos.left_score));
+    }
+}
+
 template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    /* prefix and suffix are no-ops, which do not need to be added to the editops */
-    StringAffix affix = remove_common_affix(s1, s2);
-
-    return recover_alignment(s1, s2, levenshtein_matrix(s1, s2), affix);
+    Editops editops;
+    levenshtein_align(editops, s1, s2);
+    editops.set_src_len(static_cast<size_t>(s1.size()));
+    editops.set_dest_len(static_cast<size_t>(s2.size()));
+    return editops;
 }
 
 } // namespace detail

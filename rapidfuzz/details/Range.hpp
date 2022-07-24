@@ -4,6 +4,8 @@
 #pragma once
 
 #include <iterator>
+#include <limits>
+#include <stdexcept>
 #include <vector>
 
 namespace rapidfuzz {
@@ -11,18 +13,34 @@ namespace detail {
 
 template <typename Iter>
 class Range {
+    Iter _first;
+    Iter _last;
+
 public:
+    using iterator = Iter;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+
     constexpr Range(Iter first, Iter last) : _first(first), _last(last)
     {}
 
-    constexpr Iter begin() const
+    constexpr iterator begin() const noexcept
     {
         return _first;
     }
-    constexpr Iter end() const
+    constexpr iterator end() const noexcept
     {
         return _last;
     }
+
+    constexpr reverse_iterator rbegin() const noexcept
+    {
+        return reverse_iterator(end());
+    }
+    constexpr reverse_iterator rend() const noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
     constexpr ptrdiff_t size() const
     {
         return std::distance(_first, _last);
@@ -40,9 +58,27 @@ public:
         return _first[n];
     }
 
-private:
-    Iter _first;
-    Iter _last;
+    constexpr void remove_prefix(ptrdiff_t n)
+    {
+        _first += n;
+    }
+    constexpr void remove_suffix(ptrdiff_t n)
+    {
+        _last -= n;
+    }
+
+    constexpr Range subseq(ptrdiff_t pos = 0, ptrdiff_t count = std::numeric_limits<ptrdiff_t>::max())
+    {
+        if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
+
+        /* count + pos can overflow */
+        return {_first + pos, _first + pos + std::min(count - pos, size() - pos)};
+    }
+
+    constexpr Range<reverse_iterator> reversed() const
+    {
+        return {rbegin(), rend()};
+    }
 };
 
 template <typename CharT>

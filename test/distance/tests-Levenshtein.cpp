@@ -1,9 +1,20 @@
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/types.hpp"
 #include "rapidfuzz/distance/Levenshtein.hpp"
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 
 #include <rapidfuzz/distance.hpp>
+
+template <typename T>
+std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b) {
+    std::basic_string<T> output;
+    while (b--)
+        output += a;
+
+    return output;
+}
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
@@ -108,21 +119,57 @@ TEST_CASE("Levenshtein_editops")
     REQUIRE(ops.get_dest_len() == d.size());
 }
 
+TEST_CASE("Levenshtein_find_hirschberg_pos")
+{
+    {
+        std::string s1 = str_multiply(std::string("abb"), 2);
+        std::string s2 = str_multiply(std::string("ccccca"), 2);
+
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(
+            rapidfuzz::detail::make_range(s1), rapidfuzz::detail::make_range(s2)
+        );
+        REQUIRE(hpos.left_score == 5);
+        REQUIRE(hpos.right_score == 6);
+        REQUIRE(hpos.s2_mid == 6);
+        REQUIRE(hpos.s1_mid == 1);
+    }
+
+    {
+        std::string s1 = str_multiply(std::string("abb"), 8*64);
+        std::string s2 = str_multiply(std::string("ccccca"), 8*64);
+
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(
+            rapidfuzz::detail::make_range(s1), rapidfuzz::detail::make_range(s2)
+        );
+        REQUIRE(hpos.left_score == 1280);
+        REQUIRE(hpos.right_score == 1281);
+        REQUIRE(hpos.s2_mid == 1536);
+        REQUIRE(hpos.s1_mid == 766);
+    }
+}
+
 TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
 {
     /* Test regressions of bugs found through fuzzing */
-    uint8_t string1[] = {0x95};
-    uint32_t len1 = 1;
-    std::basic_string<uint8_t> s1(string1, len1);
+    {
+        std::string s1 = "b";
+        std::string s2 = "aaaaaaaaaaaaaaaabbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
+        REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
+    }
 
-    uint8_t string2[] = {0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                         0x00, 0x00, 0x00, 0x95, 0x95, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
-                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
-                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00};
-    uint32_t len2 = 65;
-    std::basic_string<uint8_t> s2(string2, len2);
+    {
+        std::string s1 = "aa";
+        std::string s2 = "abb";
+        rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
+        REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
+    }
 
-    rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
-    REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops, s1, s2));
+    {
+        std::string s1 = str_multiply(std::string("abb"), 8*64);
+        std::string s2 = str_multiply(std::string("ccccca"), 8*64);
+        rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
+        REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
+    }
+
 }
