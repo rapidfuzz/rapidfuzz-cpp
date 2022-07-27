@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-07-24 20:59:31.207358
+//  Generated: 2022-07-27 13:30:03.661403
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3627,11 +3627,9 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
-    int64_t currDist = s1.size();
-
-    /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = UINT64_C(1) << 63;
-
+    int64_t l_v = std::min(s1.size(), max + 1);
+    uint64_t l_v_mask = UINT64_C(1) << (l_v - 1);
+    int64_t currDist = l_v;
     const auto words = PM.size();
 
     /* Searching */
@@ -3642,9 +3640,8 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
 
         uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
 
-        if (word + 1 < words && word_pos != 0) {
+        if (word + 1 < words && word_pos != 0)
             PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
-        }
 
         /* Step 1: Computing D0 */
         uint64_t X = PM_j;
@@ -3655,8 +3652,16 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        currDist += bool(HP & mask);
-        currDist -= bool(HN & mask);
+        if (i + l_v < s1.size())
+        {
+            currDist += !bool(D0 & l_v_mask);
+        }
+        else
+        {
+            currDist += bool(HP & l_v_mask);
+            currDist -= bool(HN & l_v_mask);
+            l_v_mask >>= 1;
+        }
 
         /* Step 4: Computing Vp and VN */
         VP = HN | ~((D0 >> 1) | HP);
@@ -3681,13 +3686,17 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
     auto words = PM.size();
     int64_t currDist = s1.size();
 
+    // todo for some reason this implementation is broken
+    // disable it until it is fixed
+#if 0
     /* upper bound */
     max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
 
     // todo could safe up to 25% even without max when ignoring irrelevant paths
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
-    if (full_band <= 64) return levenshtein_hyrroe2003_small_band(PM, s1, s2, max);
+    if (full_band <= 62) return levenshtein_hyrroe2003_small_band(PM, s1, s2, max);
+#endif
 
     std::vector<Vectors> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
@@ -3807,6 +3816,8 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (s1.size() < 65)
         return levenshtein_hyrroe2003(PatternMatchVector(s1), s1, s2, max);
+    else if (s2.size() < 65)
+        return levenshtein_hyrroe2003(PatternMatchVector(s2), s2, s1, max);
     else
         return levenshtein_myers1999_block(BlockPatternMatchVector(s1), s1, s2, max);
 }

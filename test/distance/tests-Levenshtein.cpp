@@ -3,6 +3,7 @@
 #include "rapidfuzz/distance/Levenshtein.hpp"
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <rapidfuzz/details/types.hpp>
 #include <string>
 
 #include <rapidfuzz/distance.hpp>
@@ -105,6 +106,53 @@ TEST_CASE("Levenshtein")
         REQUIRE(levenshtein_distance(a, b, {1, 1, 2}, 2) == 3);
         REQUIRE(levenshtein_distance(a, b, {1, 1, 2}, 1) == 2);
         REQUIRE(levenshtein_distance(a, b, {1, 1, 2}, 0) == 1);
+    }
+
+    SECTION("test banded implementation")
+    {
+        {
+            std::string s1 = "kkkkbbbbfkkkkkkibfkkkafakkfekgkkkkkkkkkkbdbbddddddddddafkkkekkkhkk";
+            std::string s2 = "khddddddddkkkkdgkdikkccccckcckkkekkkkdddddddddddafkkhckkkkkdckkkcc";
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 36);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 31) == 32);
+        }
+
+        {
+            std::string s1 = "ccddcddddddddddddddddddddddddddddddddddddddddddddddddddddaaaaaaaaaaa";
+            std::string s2 = "aaaaaaaaaaaaaadddddddddbddddddddddddddddddddddddddddddddddbddddddddd";
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 26);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 31) == 26);
+        }
+
+        {
+            std::string s1 = "accccccccccaaaaaaaccccccccccccccccccccccccccccccaccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaacccccccccccccccccccccc";
+            std::string s2 = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbcccb";
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 24);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 25) == 24);
+        }
+
+        {
+            std::string s1 = "miiiiiiiiiiliiiiiiibghiiaaaaaaaaaaaaaaacccfccccedddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+            std::string s2 = "aaaaaaajaaaaaaaabghiiaaaaaaaaaaaaaaacccfccccedddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjdim";
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 27);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 27) == 27);
+        }
+
+        {
+            std::string s1 = "lllllfllllllllllllllllllllllllllllllllllllllllllllllllglllllilldcaaaaaaaaaaaaaaaaaaadbbllllllllllhllllllllllllllllllllllllllgl";
+            std::string s2 = "aaaaaaaaaaaaaadbbllllllllllllllelllllllllllllllllllllllllllllllglllllilldcaaaaaaaaaaaaaaaaaaadbbllllllllllllllellllllllllllllhlllllllllill";
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 23);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 27) == 23);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 28) == 23);
+        }
+
+        {
+            std::string s1 = "llccacaaaaaaaaaccccccccccccccccddffaccccaccecccggggclallhcccccljif";
+            std::string s2 = "bddcbllllllbcccccccccccccccccddffccccccccebcccggggclbllhcccccljifbddcccccc";
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 27);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 27) == 27);
+            REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 28) == 27);
+        }
     }
 }
 
