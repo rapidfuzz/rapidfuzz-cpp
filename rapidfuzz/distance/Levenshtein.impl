@@ -218,26 +218,33 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
                                           Range<InputIt2> s2, int64_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
-    uint64_t VP = ~UINT64_C(0);
+    uint64_t VP = ~UINT64_C(0) << (64 - max - 1);
     uint64_t VN = 0;
 
-    int64_t l_v = std::min(s1.size(), max + 1);
-    uint64_t l_v_mask = UINT64_C(1) << (l_v - 1);
-    int64_t currDist = l_v;
     const auto words = PM.size();
+    int64_t currDist = max;
+    uint64_t diagonal_mask = UINT64_C(1) << 63;
+    uint64_t horizontal_mask = UINT64_C(1) << 62;
+    ptrdiff_t start_pos = max + 1 - 64;
 
     /* Searching */
-    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+    for (ptrdiff_t i = 0; i < s2.size(); ++i,++start_pos) {
         /* Step 1: Computing D0 */
-        size_t word = static_cast<size_t>(i) / 64;
-        size_t word_pos = static_cast<size_t>(i) % 64;
+        uint64_t PM_j = 0;
+        if (start_pos < 0)
+        {
+            PM_j = PM.get(0, s2[i]) << (-start_pos);
+        }
+        else
+        {
+            size_t word = static_cast<size_t>(start_pos) / 64;
+            size_t word_pos = static_cast<size_t>(start_pos) % 64;
 
-        uint64_t PM_j = PM.get(word, s2[i]) >> word_pos;
+            PM_j = PM.get(word, s2[i]) >> word_pos;
 
-        if (word + 1 < words && word_pos != 0)
-            PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
-
-        /* Step 1: Computing D0 */
+            if (word + 1 < words && word_pos != 0)
+                PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
+        }
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -246,15 +253,15 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        if (i + l_v < s1.size())
+        if (i < s1.size() - max)
         {
-            currDist += !bool(D0 & l_v_mask);
+            currDist += !bool(D0 & diagonal_mask);
         }
         else
         {
-            currDist += bool(HP & l_v_mask);
-            currDist -= bool(HN & l_v_mask);
-            l_v_mask >>= 1;
+            currDist += bool(HP & horizontal_mask);
+            currDist -= bool(HN & horizontal_mask);
+            horizontal_mask >>= 1;
         }
 
         /* Step 4: Computing Vp and VN */
@@ -280,17 +287,13 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
     auto words = PM.size();
     int64_t currDist = s1.size();
 
-    // todo for some reason this implementation is broken
-    // disable it until it is fixed
-#if 0
     /* upper bound */
     max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
 
     // todo could safe up to 25% even without max when ignoring irrelevant paths
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
-    if (full_band <= 62) return levenshtein_hyrroe2003_small_band(PM, s1, s2, max);
-#endif
+    if (full_band <= 64) return levenshtein_hyrroe2003_small_band(PM, s1, s2, max);
 
     std::vector<Vectors> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
