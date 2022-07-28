@@ -1,5 +1,13 @@
 ## Changelog
 
+### [1.1.0] - 2022-07-29
+#### Fixed
+- fix banded Levenshtein implementation
+
+#### Changed
+- implement Hirschbergs algorithms to reduce memory usage of
+  levenshtein_editops
+
 ### [1.0.5] - 2022-07-23
 #### Fixed
 - fix opcode conversion for empty source sequence
