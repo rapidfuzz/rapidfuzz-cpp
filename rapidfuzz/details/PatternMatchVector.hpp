@@ -141,9 +141,8 @@ struct BlockPatternMatchVector {
     BlockPatternMatchVector() = delete;
 
     BlockPatternMatchVector(size_t str_len)
-        : m_block_count(ceil_div(str_len, 64)), m_extendedAscii(256, m_block_count, 0)
+        : m_block_count(ceil_div(str_len, 64)), m_map(nullptr), m_extendedAscii(256, m_block_count, 0)
     {
-        m_map = new BitvectorHashmap[m_block_count];
     }
 
     template <typename InputIt>
@@ -194,7 +193,11 @@ struct BlockPatternMatchVector {
         if (key >= 0 && key <= 255)
             m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
         else
+        {
+            if (!m_map)
+                m_map = new BitvectorHashmap[m_block_count];
             m_map[block].insert_mask(key, mask);
+        }
     }
 
     void insert_mask(size_t block, char key, uint64_t mask) noexcept
@@ -207,8 +210,10 @@ struct BlockPatternMatchVector {
     {
         if (key >= 0 && key <= 255)
             return m_extendedAscii[static_cast<uint8_t>(key)][block];
-        else
+        else if(m_map)
             return m_map[block].get(key);
+        else
+            return 0;
     }
 
     uint64_t get(size_t block, char ch) const noexcept
