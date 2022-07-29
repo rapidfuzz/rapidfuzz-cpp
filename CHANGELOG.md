@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.1.1] - 2022-07-29
+#### Performance
+- improve performance for banded Levenshtein implementation
+
 ### [1.1.0] - 2022-07-29
 #### Fixed
 - fix banded Levenshtein implementation
