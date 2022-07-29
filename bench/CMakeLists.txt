@@ -19,5 +19,10 @@ endfunction()
 
 rapidfuzz_add_benchmark(fuzz bench-fuzz.cpp)
 rapidfuzz_add_benchmark(levenshtein bench-levenshtein.cpp)
-rapidfuzz_add_benchmark(lcs bench-lcs.cpp)
-rapidfuzz_add_benchmark(levenshtein2 bench-levenshtein2.cpp)
+#rapidfuzz_add_benchmark(lcs bench-lcs.cpp)
+
+add_executable(bench_levenshtein2 bench-levenshtein2.cpp levbv.cpp)
+target_link_libraries(bench_levenshtein2 PRIVATE ${PROJECT_NAME})
+target_link_libraries(bench_levenshtein2 PRIVATE benchmark::benchmark)
+
+#rapidfuzz_add_benchmark(levenshtein2 bench-levenshtein2.cpp levbv.c)
