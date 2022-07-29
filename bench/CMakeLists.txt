@@ -19,3 +19,5 @@ endfunction()
 
 rapidfuzz_add_benchmark(fuzz bench-fuzz.cpp)
 rapidfuzz_add_benchmark(levenshtein bench-levenshtein.cpp)
+rapidfuzz_add_benchmark(lcs bench-lcs.cpp)
+rapidfuzz_add_benchmark(levenshtein2 bench-levenshtein2.cpp)
