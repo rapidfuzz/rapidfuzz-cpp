@@ -107,64 +107,56 @@ inline bool operator!=(Opcode a, Opcode b)
 }
 
 namespace detail {
-template <typename T>
-void vector_slice(std::vector<T>& new_vec, const std::vector<T>& vec, int start, int stop, int step)
+template <typename Vec>
+auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
 {
+    Vec new_vec;
+
     if (step > 0) {
-        if (start < 0) {
+        if (start < 0)
             start = std::max<int>(start + static_cast<int>(vec.size()), 0);
-        }
-        else if (start > static_cast<int>(vec.size())) {
+        else if (start > static_cast<int>(vec.size()))
             start = static_cast<int>(vec.size());
-        }
 
-        if (stop < 0) {
+        if (stop < 0)
             stop = std::max<int>(stop + static_cast<int>(vec.size()), 0);
-        }
-        else if (stop > static_cast<int>(vec.size())) {
+        else if (stop > static_cast<int>(vec.size()))
             stop = static_cast<int>(vec.size());
-        }
 
-        if (start >= stop) {
-            return;
-        }
+        if (start >= stop)
+            return new_vec;
 
         int count = (stop - 1 - start) / step + 1;
         new_vec.reserve(static_cast<size_t>(count));
 
-        for (int i = start; i < stop; i += step) {
+        for (int i = start; i < stop; i += step)
             new_vec.push_back(vec[static_cast<size_t>(i)]);
-        }
     }
     else if (step < 0) {
-        if (start < 0) {
+        if (start < 0)
             start = std::max<int>(start + static_cast<int>(vec.size()), -1);
-        }
-        else if (start >= static_cast<int>(vec.size())) {
+        else if (start >= static_cast<int>(vec.size()))
             start = static_cast<int>(vec.size()) - 1;
-        }
 
-        if (stop < 0) {
+        if (stop < 0)
             stop = std::max<int>(stop + static_cast<int>(vec.size()), -1);
-        }
-        else if (stop >= static_cast<int>(vec.size())) {
+        else if (stop >= static_cast<int>(vec.size()))
             stop = static_cast<int>(vec.size()) - 1;
-        }
 
-        if (start <= stop) {
-            return;
-        }
+        if (start <= stop)
+            return new_vec;
 
         int count = (stop + 1 - start) / step + 1;
         new_vec.reserve(static_cast<size_t>(count));
 
-        for (int i = start; i > stop; i += step) {
+        for (int i = start; i > stop; i += step)
             new_vec.push_back(vec[static_cast<size_t>(i)]);
-        }
     }
     else {
         throw std::invalid_argument("slice step cannot be zero");
     }
+
+    return new_vec;
 }
 } // namespace detail
 
@@ -244,8 +236,7 @@ public:
 
     Editops slice(int start, int stop, int step = 1) const
     {
-        Editops ed_slice;
-        detail::vector_slice(ed_slice, *this, start, stop, step);
+        Editops ed_slice = detail::vector_slice(*this, start, stop, step);
         ed_slice.src_len = src_len;
         ed_slice.dest_len = dest_len;
         return ed_slice;
@@ -281,12 +272,10 @@ public:
         std::swap(inv_ops.src_len, inv_ops.dest_len);
         for (auto& op : inv_ops) {
             std::swap(op.src_pos, op.dest_pos);
-            if (op.type == EditType::Delete) {
+            if (op.type == EditType::Delete)
                 op.type = EditType::Insert;
-            }
-            else if (op.type == EditType::Insert) {
+            else if (op.type == EditType::Insert)
                 op.type = EditType::Delete;
-            }
         }
         return inv_ops;
     }
@@ -435,8 +424,7 @@ public:
 
     Opcodes slice(int start, int stop, int step = 1) const
     {
-        Opcodes ed_slice;
-        detail::vector_slice(ed_slice, *this, start, stop, step);
+        Opcodes ed_slice = detail::vector_slice(*this, start, stop, step);
         ed_slice.src_len = src_len;
         ed_slice.dest_len = dest_len;
         return ed_slice;
@@ -473,12 +461,10 @@ public:
         for (auto& op : inv_ops) {
             std::swap(op.src_begin, op.dest_begin);
             std::swap(op.src_end, op.dest_end);
-            if (op.type == EditType::Delete) {
+            if (op.type == EditType::Delete)
                 op.type = EditType::Insert;
-            }
-            else if (op.type == EditType::Insert) {
+            else if (op.type == EditType::Insert)
                 op.type = EditType::Delete;
-            }
         }
         return inv_ops;
     }
@@ -490,13 +476,12 @@ private:
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
         return false;
-    }
 
-    if (lhs.size() != rhs.size()) {
+    if (lhs.size() != rhs.size())
         return false;
-    }
+
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
@@ -519,21 +504,18 @@ inline Editops::Editops(const Opcodes& other)
         case EditType::None: break;
 
         case EditType::Replace:
-            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++)
                 push_back({EditType::Replace, op.src_begin + j, op.dest_begin + j});
-            }
             break;
 
         case EditType::Insert:
-            for (size_t j = 0; j < op.dest_end - op.dest_begin; j++) {
+            for (size_t j = 0; j < op.dest_end - op.dest_begin; j++)
                 push_back({EditType::Insert, op.src_begin, op.dest_begin + j});
-            }
             break;
 
         case EditType::Delete:
-            for (size_t j = 0; j < op.src_end - op.src_begin; j++) {
+            for (size_t j = 0; j < op.src_end - op.src_begin; j++)
                 push_back({EditType::Delete, op.src_begin + j, op.dest_begin});
-            }
             break;
         }
     }

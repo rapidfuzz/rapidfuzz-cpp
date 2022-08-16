@@ -181,8 +181,7 @@ template <typename InputIt1, typename InputIt2>
 double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                         double score_cutoff = 0);
 
-template <typename Sentence1, typename Sentence2, typename CharT1 = char_type<Sentence1>,
-          typename CharT2 = char_type<Sentence2>>
+template <typename Sentence1, typename Sentence2>
 double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // todo CachedRatio speed for equal strings vs original implementation
