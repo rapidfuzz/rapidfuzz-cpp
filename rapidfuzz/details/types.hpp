@@ -112,52 +112,63 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
 {
     Vec new_vec;
 
-    if (step > 0) {
-        if (start < 0)
-            start = std::max<int>(start + static_cast<int>(vec.size()), 0);
-        else if (start > static_cast<int>(vec.size()))
-            start = static_cast<int>(vec.size());
-
-        if (stop < 0)
-            stop = std::max<int>(stop + static_cast<int>(vec.size()), 0);
-        else if (stop > static_cast<int>(vec.size()))
-            stop = static_cast<int>(vec.size());
-
-        if (start >= stop)
-            return new_vec;
-
-        int count = (stop - 1 - start) / step + 1;
-        new_vec.reserve(static_cast<size_t>(count));
-
-        for (int i = start; i < stop; i += step)
-            new_vec.push_back(vec[static_cast<size_t>(i)]);
-    }
-    else if (step < 0) {
-        if (start < 0)
-            start = std::max<int>(start + static_cast<int>(vec.size()), -1);
-        else if (start >= static_cast<int>(vec.size()))
-            start = static_cast<int>(vec.size()) - 1;
-
-        if (stop < 0)
-            stop = std::max<int>(stop + static_cast<int>(vec.size()), -1);
-        else if (stop >= static_cast<int>(vec.size()))
-            stop = static_cast<int>(vec.size()) - 1;
-
-        if (start <= stop)
-            return new_vec;
-
-        int count = (stop + 1 - start) / step + 1;
-        new_vec.reserve(static_cast<size_t>(count));
-
-        for (int i = start; i > stop; i += step)
-            new_vec.push_back(vec[static_cast<size_t>(i)]);
-    }
-    else {
+    if (step == 0)
         throw std::invalid_argument("slice step cannot be zero");
-    }
+    if (step < 0)
+        throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
+
+    if (start < 0)
+        start = std::max<int>(start + static_cast<int>(vec.size()), 0);
+    else if (start > static_cast<int>(vec.size()))
+        start = static_cast<int>(vec.size());
+
+    if (stop < 0)
+        stop = std::max<int>(stop + static_cast<int>(vec.size()), 0);
+    else if (stop > static_cast<int>(vec.size()))
+        stop = static_cast<int>(vec.size());
+
+    if (start >= stop)
+        return new_vec;
+
+    int count = (stop - 1 - start) / step + 1;
+    new_vec.reserve(static_cast<size_t>(count));
+
+    for (int i = start; i < stop; i += step)
+        new_vec.push_back(vec[static_cast<size_t>(i)]);
 
     return new_vec;
 }
+
+template <typename Vec>
+void vector_remove_slice(Vec& vec, int start, int stop, int step)
+{
+    if (step == 0)
+        throw std::invalid_argument("slice step cannot be zero");
+    if (step < 0)
+        throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
+
+    if (start < 0)
+        start = std::max<int>(start + static_cast<int>(vec.size()), 0);
+    else if (start > static_cast<int>(vec.size()))
+        start = static_cast<int>(vec.size());
+
+    if (stop < 0)
+        stop = std::max<int>(stop + static_cast<int>(vec.size()), 0);
+    else if (stop > static_cast<int>(vec.size()))
+        stop = static_cast<int>(vec.size());
+
+    if (start >= stop)
+        return;
+
+    auto iter = vec.begin() + start;
+    for (int i = start; i < static_cast<int>(vec.size()); i++)
+        if (i >= stop || ((i - start) % step != 0))
+            *(iter++) = vec[static_cast<size_t>(i)];
+
+    vec.resize(static_cast<size_t>(std::distance(vec.begin(), iter)));
+    vec.shrink_to_fit();
+}
+
 } // namespace detail
 
 class Opcodes;
@@ -240,6 +251,11 @@ public:
         ed_slice.src_len = src_len;
         ed_slice.dest_len = dest_len;
         return ed_slice;
+    }
+
+    void remove_slice(int start, int stop, int step = 1)
+    {
+        detail::vector_remove_slice(*this, start, stop, step);
     }
 
     Editops reverse() const
