@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-18 23:05:26.329830
+//  Generated: 2022-08-19 20:17:15.773636
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -293,10 +293,8 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
 {
     Vec new_vec;
 
-    if (step == 0)
-        throw std::invalid_argument("slice step cannot be zero");
-    if (step < 0)
-        throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
+    if (step == 0) throw std::invalid_argument("slice step cannot be zero");
+    if (step < 0) throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
 
     if (start < 0)
         start = std::max<int>(start + static_cast<int>(vec.size()), 0);
@@ -308,8 +306,7 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
     else if (stop > static_cast<int>(vec.size()))
         stop = static_cast<int>(vec.size());
 
-    if (start >= stop)
-        return new_vec;
+    if (start >= stop) return new_vec;
 
     int count = (stop - 1 - start) / step + 1;
     new_vec.reserve(static_cast<size_t>(count));
@@ -323,10 +320,8 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
 template <typename Vec>
 void vector_remove_slice(Vec& vec, int start, int stop, int step)
 {
-    if (step == 0)
-        throw std::invalid_argument("slice step cannot be zero");
-    if (step < 0)
-        throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
+    if (step == 0) throw std::invalid_argument("slice step cannot be zero");
+    if (step < 0) throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
 
     if (start < 0)
         start = std::max<int>(start + static_cast<int>(vec.size()), 0);
@@ -338,8 +333,7 @@ void vector_remove_slice(Vec& vec, int start, int stop, int step)
     else if (stop > static_cast<int>(vec.size()))
         stop = static_cast<int>(vec.size());
 
-    if (start >= stop)
-        return;
+    if (start >= stop) return;
 
     auto iter = vec.begin() + start;
     for (int i = start; i < static_cast<int>(vec.size()); i++)
@@ -673,11 +667,9 @@ private:
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
-        return false;
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) return false;
 
-    if (lhs.size() != rhs.size())
-        return false;
+    if (lhs.size() != rhs.size()) return false;
 
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
@@ -1780,8 +1772,6 @@ double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double 
     return hamming_normalized_similarity(s1, s2, score_cutoff);
 }
 
-/**@}*/
-
 } // namespace rapidfuzz
 
 
@@ -1993,7 +1983,6 @@ struct PatternMatchVector {
     template <typename CharT>
     uint64_t get(CharT key) const noexcept
     {
-        /** treat char as value between 0 and 127 for performance reasons */
         if (key >= 0 && key <= 255)
             return m_extendedAscii[static_cast<uint8_t>(key)];
         else
@@ -2010,7 +1999,8 @@ struct PatternMatchVector {
 
     void insert_mask(char key, uint64_t mask) noexcept
     {
-        insert_mask(static_cast<uint8_t>(key), mask);
+        /** treat char as value between 0 and 127 for performance reasons */
+        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
     }
 
     template <typename CharT>
@@ -2032,8 +2022,7 @@ struct BlockPatternMatchVector {
 
     BlockPatternMatchVector(size_t str_len)
         : m_block_count(ceil_div(str_len, 64)), m_map(nullptr), m_extendedAscii(256, m_block_count, 0)
-    {
-    }
+    {}
 
     template <typename InputIt>
     BlockPatternMatchVector(Range<InputIt> s) : BlockPatternMatchVector(static_cast<size_t>(s.size()))
@@ -2082,10 +2071,8 @@ struct BlockPatternMatchVector {
         assert(block < size());
         if (key >= 0 && key <= 255)
             m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
-        else
-        {
-            if (!m_map)
-                m_map = new BitvectorHashmap[m_block_count];
+        else {
+            if (!m_map) m_map = new BitvectorHashmap[m_block_count];
             m_map[block].insert_mask(key, mask);
         }
     }
@@ -2100,7 +2087,7 @@ struct BlockPatternMatchVector {
     {
         if (key >= 0 && key <= 255)
             return m_extendedAscii[static_cast<uint8_t>(key)][block];
-        else if(m_map)
+        else if (m_map)
             return m_map[block].get(key);
         else
             return 0;
@@ -3638,22 +3625,19 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
 
     /* Searching */
     ptrdiff_t i = 0;
-    for (; i < s1.size() - max; ++i,++start_pos) {
+    for (; i < s1.size() - max; ++i, ++start_pos) {
         /* Step 1: Computing D0 */
         uint64_t PM_j = 0;
-        if (start_pos < 0)
-        {
+        if (start_pos < 0) {
             PM_j = PM.get(0, s2[i]) << (-start_pos);
         }
-        else
-        {
+        else {
             size_t word = static_cast<size_t>(start_pos) / 64;
             size_t word_pos = static_cast<size_t>(start_pos) % 64;
 
             PM_j = PM.get(word, s2[i]) >> word_pos;
 
-            if (word + 1 < words && word_pos != 0)
-                PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
+            if (word + 1 < words && word_pos != 0) PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
         }
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -3670,22 +3654,19 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
         VN = (D0 >> 1) & HP;
     }
 
-    for (; i < s2.size(); ++i,++start_pos) {
+    for (; i < s2.size(); ++i, ++start_pos) {
         /* Step 1: Computing D0 */
         uint64_t PM_j = 0;
-        if (start_pos < 0)
-        {
+        if (start_pos < 0) {
             PM_j = PM.get(0, s2[i]) << (-start_pos);
         }
-        else
-        {
+        else {
             size_t word = static_cast<size_t>(start_pos) / 64;
             size_t word_pos = static_cast<size_t>(start_pos) % 64;
 
             PM_j = PM.get(word, s2[i]) >> word_pos;
 
-            if (word + 1 < words && word_pos != 0)
-                PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
+            if (word + 1 < words && word_pos != 0) PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
         }
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -4511,6 +4492,585 @@ double CachedLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2, dou
 }
 
 } // namespace rapidfuzz
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <numeric>
+
+namespace rapidfuzz {
+namespace detail {
+
+/*
+ * based on the paper Linear space string correction algorithm using the Damerau-Levenshtein distance
+ * from Chunchun Zhao and Sartaj Sahni
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max);
+
+} // namespace detail
+
+/* the API will require a change when adding custom weights */
+namespace experimental {
+/**
+ * @brief Calculates the Damerau Levenshtein distance between two strings.
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param max
+ *   Maximum Damerau Levenshtein distance between s1 and s2, that is
+ *   considered as a result. If the distance is bigger than max,
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
+ *   which deactivates this behaviour.
+ *
+ * @return Damerau Levenshtein distance between s1 and s2
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max());
+
+template <typename Sentence1, typename Sentence2>
+int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max());
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                       int64_t score_cutoff = 0);
+
+template <typename Sentence1, typename Sentence2>
+int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0);
+
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff = 1.0);
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
+                                               double score_cutoff = 1.0);
+
+/**
+ * @brief Calculates a normalized Damerau Levenshtein similarity
+ *
+ * @details
+ * Both string require a similar length
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return Normalized Damerau Levenshtein distance between s1 and s2
+ *   as a float between 0 and 1.0
+ */
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff = 0.0);
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
+                                                 double score_cutoff = 0.0);
+
+template <typename CharT1>
+struct CachedDamerauLevenshtein {
+    template <typename Sentence1>
+    CachedDamerauLevenshtein(const Sentence1& s1_)
+        : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
+
+    template <typename InputIt1>
+    CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    {}
+
+    template <typename InputIt2>
+    int64_t distance(InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+
+    template <typename Sentence2>
+    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
+
+    template <typename InputIt2>
+    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
+
+    template <typename Sentence2>
+    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
+
+    template <typename InputIt2>
+    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
+
+    template <typename Sentence2>
+    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
+
+    template <typename InputIt2>
+    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
+
+    template <typename Sentence2>
+    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
+
+private:
+    std::basic_string<CharT1> s1;
+};
+
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+template <typename Sentence1>
+CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
+
+template <typename InputIt1>
+CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+#endif
+
+} // namespace experimental
+} // namespace rapidfuzz
+
+
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <numeric>
+
+
+#include <array>
+#include <iterator>
+#include <new>
+#include <stdint.h>
+
+namespace rapidfuzz {
+namespace detail {
+
+/* hashmap for integers which can only grow, but can't remove elements */
+template <typename T_Key, typename T_Entry, T_Entry _empty_val = T_Entry()>
+struct GrowingHashmap {
+    using key_type = T_Key;
+    using value_type = T_Entry;
+    using size_type = unsigned int;
+
+private:
+    static constexpr size_type min_size = 8;
+    struct MapElem {
+        key_type key;
+        value_type value = _empty_val;
+    };
+
+    int used;
+    int fill;
+    int mask;
+    MapElem* m_map;
+
+public:
+    GrowingHashmap() : used(0), fill(0), mask(-1), m_map(NULL)
+    {}
+    ~GrowingHashmap()
+    {
+        delete[] m_map;
+    }
+
+    GrowingHashmap(const GrowingHashmap& other) : used(other.used), fill(other.fill), mask(other.mask)
+    {
+        int size = mask + 1;
+        m_map = new MapElem[size];
+        std::copy(other.m_map, other.m_map + size, m_map);
+    }
+
+    GrowingHashmap(GrowingHashmap&& other) noexcept : GrowingHashmap()
+    {
+        swap(*this, other);
+    }
+
+    GrowingHashmap& operator=(GrowingHashmap other)
+    {
+        swap(*this, other);
+        return *this;
+    }
+
+    friend void swap(GrowingHashmap& first, GrowingHashmap& second) noexcept
+    {
+        std::swap(first.used, second.used);
+        std::swap(first.fill, second.fill);
+        std::swap(first.mask, second.mask);
+        std::swap(first.m_map, second.m_map);
+    }
+
+    size_type size() const
+    {
+        return used;
+    }
+    size_type capacity() const
+    {
+        return mask + 1;
+    }
+    bool empty() const
+    {
+        return used == 0;
+    }
+
+    value_type get(key_type key) const noexcept
+    {
+        if (m_map == NULL) return _empty_val;
+
+        return m_map[lookup(static_cast<size_t>(key))].value;
+    }
+
+    void insert(key_type key, value_type val)
+    {
+        if (m_map == NULL) allocate();
+
+        size_t i = lookup(static_cast<size_t>(key));
+
+        if (m_map[i].value == _empty_val) {
+            /* resize when 2/3 full */
+            if (++fill * 3 >= (mask + 1) * 2) {
+                grow((used + 1) * 2);
+                i = lookup(static_cast<size_t>(key));
+            }
+
+            used++;
+        }
+
+        m_map[i].key = key;
+        m_map[i].value = val;
+    }
+
+private:
+    void allocate()
+    {
+        mask = min_size - 1;
+        m_map = new MapElem[min_size];
+    }
+
+    /**
+     * lookup key inside the hashmap using a similar collision resolution
+     * strategy to CPython and Ruby
+     */
+    size_t lookup(size_t key) const
+    {
+        size_t i = key & mask;
+
+        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+
+        size_t perturb = key;
+        while (true) {
+            i = (i * 5 + perturb + 1) & mask;
+            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+
+            perturb >>= 5;
+        }
+    }
+
+    void grow(int minUsed)
+    {
+        int newSize = mask + 1;
+        while (newSize <= minUsed)
+            newSize <<= 1;
+
+        MapElem* oldMap = m_map;
+        m_map = new MapElem[newSize];
+
+        fill = used;
+        mask = newSize - 1;
+
+        for (int i = 0; used > 0; i++)
+            if (oldMap[i].value != _empty_val) {
+                size_t j = lookup(static_cast<size_t>(oldMap[i].key));
+
+                m_map[j].key = oldMap[i].key;
+                m_map[j].value = oldMap[i].value;
+                used--;
+            }
+
+        used = fill;
+        delete[] oldMap;
+    }
+};
+
+template <typename T_Key, typename T_Entry, T_Entry _empty_val = T_Entry()>
+struct HybridGrowingHashmap {
+    using key_type = T_Key;
+    using value_type = T_Entry;
+
+    HybridGrowingHashmap()
+    {
+        m_extendedAscii.fill(_empty_val);
+    }
+
+    value_type get(char key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    value_type get(CharT key) const noexcept
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map.get(static_cast<key_type>(key));
+    }
+
+    value_type insert(char key, value_type val) noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        m_extendedAscii[static_cast<uint8_t>(key)] = val;
+    }
+
+    template <typename CharT>
+    void insert(CharT key, value_type val)
+    {
+        if (key >= 0 && key <= 255)
+            m_extendedAscii[static_cast<uint8_t>(key)] = val;
+        else
+            m_map.insert(static_cast<key_type>(key), val);
+    }
+
+private:
+    GrowingHashmap<key_type, value_type, _empty_val> m_map;
+    std::array<value_type, 256> m_extendedAscii;
+};
+
+} // namespace detail
+} // namespace rapidfuzz
+namespace rapidfuzz {
+namespace detail {
+
+/*
+ * based on the paper Linear space string correction algorithm using the Damerau-Levenshtein distance
+ * from Chunchun Zhao and Sartaj Sahni
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+{
+    ptrdiff_t maxVal = std::max(s1.size(), s2.size()) + 1;
+    HybridGrowingHashmap<uint64_t, ptrdiff_t, -1> last_row_id;
+    std::vector<ptrdiff_t> FR_arr(s2.size() + 2, maxVal);
+    std::vector<ptrdiff_t> R1_arr(s2.size() + 2, maxVal);
+    std::vector<ptrdiff_t> R_arr(s2.size() + 2);
+    R_arr[0] = maxVal;
+    std::iota(R_arr.begin() + 1, R_arr.end(), 0);
+
+    ptrdiff_t* R = &R_arr[1];
+    ptrdiff_t* R1 = &R1_arr[1];
+    ptrdiff_t* FR = &FR_arr[1];
+
+    for (ptrdiff_t i = 1; i <= s1.size(); i++) {
+        std::swap(R, R1);
+        ptrdiff_t last_col_id = -1;
+        ptrdiff_t last_i2l1 = R[0];
+        R[0] = i;
+        ptrdiff_t T = maxVal;
+
+        for (ptrdiff_t j = 1; j <= s2.size(); j++) {
+            ptrdiff_t diag = R1[j - 1] + static_cast<ptrdiff_t>(s1[i - 1] != s2[j - 1]);
+            ptrdiff_t left = R[j - 1] + 1;
+            ptrdiff_t up = R1[j] + 1;
+            ptrdiff_t temp = std::min({diag, left, up});
+
+            if (s1[i - 1] == s2[j - 1]) {
+                last_col_id = j;   // last occurence of s1_i
+                FR[j] = R1[j - 2]; // save H_k-1,j-2
+                T = last_i2l1;     // save H_i-2,l-1
+            }
+            else {
+                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1]));
+                ptrdiff_t l = last_col_id;
+
+                if ((j - l) == 1) {
+                    ptrdiff_t transpose = FR[j] + (i - k);
+                    temp = std::min(temp, transpose);
+                }
+                else if ((i - k) == 1) {
+                    ptrdiff_t transpose = T + (j - l);
+                    temp = std::min(temp, transpose);
+                }
+            }
+
+            last_i2l1 = R[j];
+            R[j] = temp;
+        }
+        last_row_id.insert(static_cast<uint64_t>(s1[i - 1]), i);
+    }
+
+    int64_t dist = R[s2.size()];
+    return (dist <= max) ? dist : max + 1;
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+{
+    auto maximum = std::max(s1.size(), s2.size());
+    int64_t cutoff_distance = maximum - score_cutoff;
+    int64_t dist = damerau_levenshtein_distance(s1, s2, cutoff_distance);
+    int64_t sim = maximum - dist;
+    return (sim >= score_cutoff) ? sim : 0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+{
+    auto maximum = std::max(s1.size(), s2.size());
+    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+    int64_t dist = damerau_levenshtein_distance(s1, s2, cutoff_distance);
+    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
+    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+{
+    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
+    double norm_dist = indel_normalized_distance(s1, s2, cutoff_score);
+    double norm_sim = 1.0 - norm_dist;
+    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+}
+
+} // namespace detail
+
+namespace experimental {
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                     int64_t max)
+{
+    return detail::damerau_levenshtein_distance(detail::make_range(first1, last1),
+                                                detail::make_range(first2, last2), max);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2, int64_t max)
+{
+    return detail::damerau_levenshtein_distance(detail::make_range(s1), detail::make_range(s2), max);
+}
+
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff)
+{
+    return detail::damerau_levenshtein_normalized_distance(detail::make_range(first1, last1),
+                                                           detail::make_range(first2, last2), score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+{
+    return detail::damerau_levenshtein_normalized_distance(detail::make_range(s1), detail::make_range(s2),
+                                                           score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                       int64_t score_cutoff)
+{
+    return detail::damerau_levenshtein_similarity(detail::make_range(first1, last1),
+                                                  detail::make_range(first2, last2), score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+{
+    return detail::damerau_levenshtein_similarity(detail::make_range(s1), detail::make_range(s2),
+                                                  score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff)
+{
+    return detail::damerau_levenshtein_normalized_similarity(detail::make_range(first1, last1),
+                                                             detail::make_range(first2, last2), score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
+                                                 double score_cutoff)
+{
+    return detail::damerau_levenshtein_normalized_similarity(detail::make_range(s1), detail::make_range(s2),
+                                                             score_cutoff);
+}
+
+template <typename CharT1>
+template <typename InputIt2>
+int64_t CachedDamerauLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2,
+                                                   int64_t score_cutoff) const
+{
+    return damerau_levenshtein_distance(detail::to_begin(s1), detail::to_end(s1), first2, last2,
+                                        score_cutoff);
+}
+
+template <typename CharT1>
+template <typename Sentence2>
+int64_t CachedDamerauLevenshtein<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
+{
+    return damerau_levenshtein_distance(s1, s2, score_cutoff);
+}
+
+template <typename CharT1>
+template <typename InputIt2>
+int64_t CachedDamerauLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
+                                                     int64_t score_cutoff) const
+{
+    return damerau_levenshtein_similarity(detail::to_begin(s1), detail::to_end(s1), first2, last2,
+                                          score_cutoff);
+}
+
+template <typename CharT1>
+template <typename Sentence2>
+int64_t CachedDamerauLevenshtein<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
+{
+    return damerau_levenshtein_similarity(s1, s2, score_cutoff);
+}
+
+template <typename CharT1>
+template <typename InputIt2>
+double CachedDamerauLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
+                                                             double score_cutoff) const
+{
+    return damerau_levenshtein_normalized_distance(detail::to_begin(s1), detail::to_end(s1), first2, last2,
+                                                   score_cutoff);
+}
+
+template <typename CharT1>
+template <typename Sentence2>
+double CachedDamerauLevenshtein<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
+{
+    return damerau_levenshtein_normalized_distance(s1, s2, score_cutoff);
+}
+
+template <typename CharT1>
+template <typename InputIt2>
+double CachedDamerauLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
+                                                               double score_cutoff) const
+{
+    return damerau_levenshtein_normalized_similarity(detail::to_begin(s1), detail::to_end(s1), first2, last2,
+                                                     score_cutoff);
+}
+
+template <typename CharT1>
+template <typename Sentence2>
+double CachedDamerauLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
+{
+    return damerau_levenshtein_normalized_similarity(s1, s2, score_cutoff);
+}
+
+} // namespace experimental
+} // namespace rapidfuzz
+
 namespace rapidfuzz {
 
 template <typename CharT, typename InputIt1, typename InputIt2>

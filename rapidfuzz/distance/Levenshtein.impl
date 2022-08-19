@@ -229,22 +229,19 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
 
     /* Searching */
     ptrdiff_t i = 0;
-    for (; i < s1.size() - max; ++i,++start_pos) {
+    for (; i < s1.size() - max; ++i, ++start_pos) {
         /* Step 1: Computing D0 */
         uint64_t PM_j = 0;
-        if (start_pos < 0)
-        {
+        if (start_pos < 0) {
             PM_j = PM.get(0, s2[i]) << (-start_pos);
         }
-        else
-        {
+        else {
             size_t word = static_cast<size_t>(start_pos) / 64;
             size_t word_pos = static_cast<size_t>(start_pos) % 64;
 
             PM_j = PM.get(word, s2[i]) >> word_pos;
 
-            if (word + 1 < words && word_pos != 0)
-                PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
+            if (word + 1 < words && word_pos != 0) PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
         }
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -261,22 +258,19 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
         VN = (D0 >> 1) & HP;
     }
 
-    for (; i < s2.size(); ++i,++start_pos) {
+    for (; i < s2.size(); ++i, ++start_pos) {
         /* Step 1: Computing D0 */
         uint64_t PM_j = 0;
-        if (start_pos < 0)
-        {
+        if (start_pos < 0) {
             PM_j = PM.get(0, s2[i]) << (-start_pos);
         }
-        else
-        {
+        else {
             size_t word = static_cast<size_t>(start_pos) / 64;
             size_t word_pos = static_cast<size_t>(start_pos) % 64;
 
             PM_j = PM.get(word, s2[i]) >> word_pos;
 
-            if (word + 1 < words && word_pos != 0)
-                PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
+            if (word + 1 < words && word_pos != 0) PM_j |= PM.get(word + 1, s2[i]) << (64 - word_pos);
         }
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
