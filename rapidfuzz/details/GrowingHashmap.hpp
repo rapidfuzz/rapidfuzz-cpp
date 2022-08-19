@@ -117,13 +117,13 @@ private:
      */
     size_t lookup(size_t key) const
     {
-        size_t i = key & mask;
+        size_t i = key & static_cast<size_t>(mask);
 
         if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
 
         size_t perturb = key;
         while (true) {
-            i = (i * 5 + perturb + 1) & mask;
+            i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
             if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
 
             perturb >>= 5;
@@ -137,7 +137,7 @@ private:
             newSize <<= 1;
 
         MapElem* oldMap = m_map;
-        m_map = new MapElem[newSize];
+        m_map = new MapElem[static_cast<size_t>(newSize)];
 
         fill = used;
         mask = newSize - 1;

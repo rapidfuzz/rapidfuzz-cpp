@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-19 20:17:15.773636
+//  Generated: 2022-08-20 03:56:31.798204
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4639,7 +4639,7 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 } // namespace rapidfuzz
 
 
-#include <cmath>
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <limits>
@@ -4761,13 +4761,13 @@ private:
      */
     size_t lookup(size_t key) const
     {
-        size_t i = key & mask;
+        size_t i = key & static_cast<size_t>(mask);
 
         if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
 
         size_t perturb = key;
         while (true) {
-            i = (i * 5 + perturb + 1) & mask;
+            i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
             if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
 
             perturb >>= 5;
@@ -4781,7 +4781,7 @@ private:
             newSize <<= 1;
 
         MapElem* oldMap = m_map;
-        m_map = new MapElem[newSize];
+        m_map = new MapElem[static_cast<size_t>(newSize)];
 
         fill = used;
         mask = newSize - 1;
@@ -4851,33 +4851,40 @@ namespace rapidfuzz {
 namespace detail {
 
 /*
- * based on the paper Linear space string correction algorithm using the Damerau-Levenshtein distance
+ * based on the paper
+ * "Linear space string correction algorithm using the Damerau-Levenshtein distance"
  * from Chunchun Zhao and Sartaj Sahni
  */
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+template <typename IntType, typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
 {
-    ptrdiff_t maxVal = std::max(s1.size(), s2.size()) + 1;
-    HybridGrowingHashmap<uint64_t, ptrdiff_t, -1> last_row_id;
-    std::vector<ptrdiff_t> FR_arr(s2.size() + 2, maxVal);
-    std::vector<ptrdiff_t> R1_arr(s2.size() + 2, maxVal);
-    std::vector<ptrdiff_t> R_arr(s2.size() + 2);
+    IntType len1 = static_cast<IntType>(s1.size());
+    IntType len2 = static_cast<IntType>(s2.size());
+    IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
+    assert(std::numeric_limits<IntType>::max() > maxVal);
+
+    HybridGrowingHashmap<uint64_t, IntType, -1> last_row_id;
+    size_t size = static_cast<size_t>(s2.size() + 2);
+    assume(size != 0);
+    std::vector<IntType> FR_arr(size, maxVal);
+    std::vector<IntType> R1_arr(size, maxVal);
+    std::vector<IntType> R_arr(size);
     R_arr[0] = maxVal;
-    std::iota(R_arr.begin() + 1, R_arr.end(), 0);
+    std::iota(R_arr.begin() + 1, R_arr.end(), IntType(0));
 
-    ptrdiff_t* R = &R_arr[1];
-    ptrdiff_t* R1 = &R1_arr[1];
-    ptrdiff_t* FR = &FR_arr[1];
+    IntType* R = &R_arr[1];
+    IntType* R1 = &R1_arr[1];
+    IntType* FR = &FR_arr[1];
 
-    for (ptrdiff_t i = 1; i <= s1.size(); i++) {
+    for (IntType i = 1; i <= len1; i++) {
         std::swap(R, R1);
-        ptrdiff_t last_col_id = -1;
-        ptrdiff_t last_i2l1 = R[0];
+        IntType last_col_id = -1;
+        IntType last_i2l1 = R[0];
         R[0] = i;
-        ptrdiff_t T = maxVal;
+        IntType T = maxVal;
 
-        for (ptrdiff_t j = 1; j <= s2.size(); j++) {
-            ptrdiff_t diag = R1[j - 1] + static_cast<ptrdiff_t>(s1[i - 1] != s2[j - 1]);
+        for (IntType j = 1; j <= len2; j++) {
+            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(s1[i - 1] != s2[j - 1]);
             ptrdiff_t left = R[j - 1] + 1;
             ptrdiff_t up = R1[j] + 1;
             ptrdiff_t temp = std::min({diag, left, up});
@@ -4902,13 +4909,31 @@ int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
             }
 
             last_i2l1 = R[j];
-            R[j] = temp;
+            R[j] = static_cast<IntType>(temp);
         }
         last_row_id.insert(static_cast<uint64_t>(s1[i - 1]), i);
     }
 
     int64_t dist = R[s2.size()];
     return (dist <= max) ? dist : max + 1;
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+{
+    int64_t min_edits = std::abs(s1.size() - s2.size());
+    if (min_edits > max) return max + 1;
+
+    /* common affix does not effect Levenshtein distance */
+    remove_common_affix(s1, s2);
+
+    ptrdiff_t maxVal = std::max(s1.size(), s2.size()) + 1;
+    if (std::numeric_limits<int16_t>::max() > maxVal)
+        return damerau_levenshtein_distance_zhao<int16_t>(s1, s2, max);
+    else if (std::numeric_limits<int32_t>::max() > maxVal)
+        return damerau_levenshtein_distance_zhao<int32_t>(s1, s2, max);
+    else
+        return damerau_levenshtein_distance_zhao<int64_t>(s1, s2, max);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -4935,7 +4960,7 @@ template <typename InputIt1, typename InputIt2>
 double damerau_levenshtein_normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
 {
     double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = indel_normalized_distance(s1, s2, cutoff_score);
+    double norm_dist = damerau_levenshtein_normalized_distance(s1, s2, cutoff_score);
     double norm_sim = 1.0 - norm_dist;
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }

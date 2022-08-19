@@ -9,7 +9,8 @@
 #include <rapidfuzz/distance.hpp>
 
 template <typename T>
-std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b) {
+std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
+{
     std::basic_string<T> output;
     while (b--)
         output += a;
@@ -49,6 +50,15 @@ TEST_CASE("Levenshtein")
     std::string swapped1 = "abaa";
     std::string swapped2 = "baaa";
     std::string replace_all = "bbbb";
+
+    SECTION("levenshtein calculates correct distances")
+    {
+        REQUIRE(levenshtein_distance(test, test) == 0);
+        REQUIRE(levenshtein_distance(test, no_suffix) == 1);
+        REQUIRE(levenshtein_distance(swapped1, swapped2) == 2);
+        REQUIRE(levenshtein_distance(test, no_suffix2) == 1);
+        REQUIRE(levenshtein_distance(test, replace_all) == 4);
+    }
 
     SECTION("weighted levenshtein calculates correct distances")
     {
@@ -125,22 +135,28 @@ TEST_CASE("Levenshtein")
         }
 
         {
-            std::string s1 = "accccccccccaaaaaaaccccccccccccccccccccccccccccccaccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaaaaaaacccccccccccccccccccccc";
-            std::string s2 = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbcccb";
+            std::string s1 = "accccccccccaaaaaaaccccccccccccccccccccccccccccccacccccccccccccccccccccccccccccc"
+                             "ccccccccccccccccccccaaaaaaaaaaaaacccccccccccccccccccccc";
+            std::string s2 = "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+                             "ccccccccccccccccccccccccccccccccccccbcccb";
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 24);
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 25) == 24);
         }
 
         {
-            std::string s1 = "miiiiiiiiiiliiiiiiibghiiaaaaaaaaaaaaaaacccfccccedddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-            std::string s2 = "aaaaaaajaaaaaaaabghiiaaaaaaaaaaaaaaacccfccccedddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjdim";
+            std::string s1 = "miiiiiiiiiiliiiiiiibghiiaaaaaaaaaaaaaaacccfccccedddaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                             "aaaaaaaaaaaaa";
+            std::string s2 =
+                "aaaaaaajaaaaaaaabghiiaaaaaaaaaaaaaaacccfccccedddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajjdim";
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 27);
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 27) == 27);
         }
 
         {
-            std::string s1 = "lllllfllllllllllllllllllllllllllllllllllllllllllllllllglllllilldcaaaaaaaaaaaaaaaaaaadbbllllllllllhllllllllllllllllllllllllllgl";
-            std::string s2 = "aaaaaaaaaaaaaadbbllllllllllllllelllllllllllllllllllllllllllllllglllllilldcaaaaaaaaaaaaaaaaaaadbbllllllllllllllellllllllllllllhlllllllllill";
+            std::string s1 = "lllllfllllllllllllllllllllllllllllllllllllllllllllllllglllllilldcaaaaaaaaaaaaaa"
+                             "aaaaadbbllllllllllhllllllllllllllllllllllllllgl";
+            std::string s2 = "aaaaaaaaaaaaaadbbllllllllllllllelllllllllllllllllllllllllllllllglllllilldcaaaaa"
+                             "aaaaaaaaaaaaaadbbllllllllllllllellllllllllllllhlllllllllill";
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 23);
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 27) == 23);
             REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}, 28) == 23);
@@ -173,9 +189,8 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         std::string s1 = str_multiply(std::string("abb"), 2);
         std::string s2 = str_multiply(std::string("ccccca"), 2);
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(
-            rapidfuzz::detail::make_range(s1), rapidfuzz::detail::make_range(s2)
-        );
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
+                                                           rapidfuzz::detail::make_range(s2));
         REQUIRE(hpos.left_score == 5);
         REQUIRE(hpos.right_score == 6);
         REQUIRE(hpos.s2_mid == 6);
@@ -183,12 +198,11 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
     }
 
     {
-        std::string s1 = str_multiply(std::string("abb"), 8*64);
-        std::string s2 = str_multiply(std::string("ccccca"), 8*64);
+        std::string s1 = str_multiply(std::string("abb"), 8 * 64);
+        std::string s2 = str_multiply(std::string("ccccca"), 8 * 64);
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(
-            rapidfuzz::detail::make_range(s1), rapidfuzz::detail::make_range(s2)
-        );
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
+                                                           rapidfuzz::detail::make_range(s2));
         REQUIRE(hpos.left_score == 1280);
         REQUIRE(hpos.right_score == 1281);
         REQUIRE(hpos.s2_mid == 1536);
@@ -214,10 +228,9 @@ TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
     }
 
     {
-        std::string s1 = str_multiply(std::string("abb"), 8*64);
-        std::string s2 = str_multiply(std::string("ccccca"), 8*64);
+        std::string s1 = str_multiply(std::string("abb"), 8 * 64);
+        std::string s2 = str_multiply(std::string("ccccca"), 8 * 64);
         rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2);
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
     }
-
 }
