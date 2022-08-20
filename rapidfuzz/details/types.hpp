@@ -112,10 +112,8 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
 {
     Vec new_vec;
 
-    if (step == 0)
-        throw std::invalid_argument("slice step cannot be zero");
-    if (step < 0)
-        throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
+    if (step == 0) throw std::invalid_argument("slice step cannot be zero");
+    if (step < 0) throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
 
     if (start < 0)
         start = std::max<int>(start + static_cast<int>(vec.size()), 0);
@@ -127,8 +125,7 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
     else if (stop > static_cast<int>(vec.size()))
         stop = static_cast<int>(vec.size());
 
-    if (start >= stop)
-        return new_vec;
+    if (start >= stop) return new_vec;
 
     int count = (stop - 1 - start) / step + 1;
     new_vec.reserve(static_cast<size_t>(count));
@@ -142,10 +139,8 @@ auto vector_slice(const Vec& vec, int start, int stop, int step) -> Vec
 template <typename Vec>
 void vector_remove_slice(Vec& vec, int start, int stop, int step)
 {
-    if (step == 0)
-        throw std::invalid_argument("slice step cannot be zero");
-    if (step < 0)
-        throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
+    if (step == 0) throw std::invalid_argument("slice step cannot be zero");
+    if (step < 0) throw std::invalid_argument("step sizes below 0 lead to an invalid order of editops");
 
     if (start < 0)
         start = std::max<int>(start + static_cast<int>(vec.size()), 0);
@@ -157,8 +152,7 @@ void vector_remove_slice(Vec& vec, int start, int stop, int step)
     else if (stop > static_cast<int>(vec.size()))
         stop = static_cast<int>(vec.size());
 
-    if (start >= stop)
-        return;
+    if (start >= stop) return;
 
     auto iter = vec.begin() + start;
     for (int i = start; i < static_cast<int>(vec.size()); i++)
@@ -492,11 +486,9 @@ private:
 
 inline bool operator==(const Opcodes& lhs, const Opcodes& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len())
-        return false;
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) return false;
 
-    if (lhs.size() != rhs.size())
-        return false;
+    if (lhs.size() != rhs.size()) return false;
 
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }

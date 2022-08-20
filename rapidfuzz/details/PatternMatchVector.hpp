@@ -103,7 +103,6 @@ struct PatternMatchVector {
     template <typename CharT>
     uint64_t get(CharT key) const noexcept
     {
-        /** treat char as value between 0 and 127 for performance reasons */
         if (key >= 0 && key <= 255)
             return m_extendedAscii[static_cast<uint8_t>(key)];
         else
@@ -120,7 +119,8 @@ struct PatternMatchVector {
 
     void insert_mask(char key, uint64_t mask) noexcept
     {
-        insert_mask(static_cast<uint8_t>(key), mask);
+        /** treat char as value between 0 and 127 for performance reasons */
+        m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
     }
 
     template <typename CharT>
@@ -142,8 +142,7 @@ struct BlockPatternMatchVector {
 
     BlockPatternMatchVector(size_t str_len)
         : m_block_count(ceil_div(str_len, 64)), m_map(nullptr), m_extendedAscii(256, m_block_count, 0)
-    {
-    }
+    {}
 
     template <typename InputIt>
     BlockPatternMatchVector(Range<InputIt> s) : BlockPatternMatchVector(static_cast<size_t>(s.size()))
@@ -192,10 +191,8 @@ struct BlockPatternMatchVector {
         assert(block < size());
         if (key >= 0 && key <= 255)
             m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
-        else
-        {
-            if (!m_map)
-                m_map = new BitvectorHashmap[m_block_count];
+        else {
+            if (!m_map) m_map = new BitvectorHashmap[m_block_count];
             m_map[block].insert_mask(key, mask);
         }
     }
@@ -210,7 +207,7 @@ struct BlockPatternMatchVector {
     {
         if (key >= 0 && key <= 255)
             return m_extendedAscii[static_cast<uint8_t>(key)][block];
-        else if(m_map)
+        else if (m_map)
             return m_map[block].get(key);
         else
             return 0;

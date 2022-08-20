@@ -1,5 +1,10 @@
 ## Changelog
 
+### [1.2.0] - 2022-08-20
+#### Added
+- added damerau levenshtein implementation
+  - Not API stable yet, since it will be extended with weights in a future version
+
 ### [1.1.1] - 2022-07-29
 #### Performance
 - improve performance for banded Levenshtein implementation

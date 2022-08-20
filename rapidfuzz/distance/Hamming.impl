@@ -139,6 +139,4 @@ double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double 
     return hamming_normalized_similarity(s1, s2, score_cutoff);
 }
 
-/**@}*/
-
 } // namespace rapidfuzz
