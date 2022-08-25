@@ -2,83 +2,88 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
+#include "rapidfuzz/details/Range.hpp"
 #include <cmath>
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/distance.hpp>
 
 namespace rapidfuzz {
+
+namespace detail {
+class Hamming : public DistanceBase<Hamming> {
+    friend DistanceBase<Hamming>;
+    friend NormalizedMetricBase<Hamming>;
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2>)
+    {
+        return s1.size();
+    }
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    {
+        if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
+
+        int64_t dist = 0;
+        for (ptrdiff_t i = 0; i < s1.size(); ++i)
+            dist += bool(s1[i] != s2[i]);
+
+        return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    }
+};
+} // namespace detail
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff)
 {
-    if (std::distance(first1, last1) != std::distance(first2, last2))
-        throw std::invalid_argument("Sequences are not the same length.");
-
-    int64_t dist = 0;
-    for (; first1 != last1; first1++, first2++)
-        dist += bool(*first1 != *first2);
-
-    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    return detail::Hamming::distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return hamming_distance(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),
-                            detail::to_end(s2), score_cutoff);
+    return detail::Hamming::distance(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            int64_t score_cutoff)
 {
-    auto maximum = std::distance(first1, last1);
-    int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
-    int64_t sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
+    return detail::Hamming::similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
 {
-    return hamming_similarity(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),
-                              detail::to_end(s2), score_cutoff);
+    return detail::Hamming::similarity(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff)
 {
-    auto maximum = std::distance(first1, last1);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    int64_t dist = hamming_distance(first1, last1, first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
+    return detail::Hamming::normalized_distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return hamming_normalized_distance(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),
-                                       detail::to_end(s2), score_cutoff);
+    return detail::Hamming::normalized_distance(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      double score_cutoff)
 {
-    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = indel_normalized_distance(first1, last1, first2, last2, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+    return detail::Hamming::normalized_similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 {
-    return hamming_normalized_similarity(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),
-                                         detail::to_end(s2), score_cutoff);
+    return detail::Hamming::normalized_similarity(s1, s2, score_cutoff);
 }
 
 template <typename CharT1>
