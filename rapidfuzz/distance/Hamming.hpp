@@ -5,7 +5,7 @@
 #include <cmath>
 #include <numeric>
 #include <rapidfuzz/details/common.hpp>
-#include <stdexcept>
+#include <rapidfuzz/distance/Hamming_impl.hpp>
 
 namespace rapidfuzz {
 
@@ -35,25 +35,43 @@ namespace rapidfuzz {
  */
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max());
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+{
+    return detail::Hamming::distance(first1, last1, first2, last2, score_cutoff);
+}
 
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max());
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+{
+    return detail::Hamming::distance(s1, s2, score_cutoff);
+}
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0);
+                           int64_t score_cutoff = 0)
+{
+    return detail::Hamming::similarity(first1, last1, first2, last2, score_cutoff);
+}
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0);
+int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+{
+    return detail::Hamming::similarity(s1, s2, score_cutoff);
+}
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff = 1.0);
+                                   double score_cutoff = 1.0)
+{
+    return detail::Hamming::normalized_distance(first1, last1, first2, last2, score_cutoff);
+}
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0);
+double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    return detail::Hamming::normalized_distance(s1, s2, score_cutoff);
+}
 
 /**
  * @brief Calculates a normalized hamming similarity
@@ -81,13 +99,19 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, dou
  */
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff = 0.0);
+                                     double score_cutoff = 0.0)
+{
+    return detail::Hamming::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+}
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
+double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    return detail::Hamming::normalized_similarity(s1, s2, score_cutoff);
+}
 
 template <typename CharT1>
-struct CachedHamming {
+struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>> {
     template <typename Sentence1>
     CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
     {}
@@ -96,32 +120,22 @@ struct CachedHamming {
     CachedHamming(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
     {}
 
-    template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
-
-    template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
-
-    template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
-
-    template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
-
-    template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
-
-    template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
-
 private:
+    friend detail::CachedDistanceBase<CachedHamming<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedHamming<CharT1>>;
+
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return s2.size();
+    }
+
+    template <typename InputIt2>
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return detail::Hamming::distance(s1, s2, score_cutoff);
+    }
+
     std::basic_string<CharT1> s1;
 };
 
@@ -136,5 +150,3 @@ CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<Inp
 /**@}*/
 
 } // namespace rapidfuzz
-
-#include <rapidfuzz/distance/Hamming.impl>

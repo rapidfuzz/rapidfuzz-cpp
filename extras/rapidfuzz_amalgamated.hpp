@@ -1,15 +1,13 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-26 00:01:04.208182
+//  Generated: 2022-08-26 14:05:51.456945
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
 //  ----------------------------------------------------------
 #ifndef RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 #define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
-
-
 
 #include <cmath>
 #include <numeric>
@@ -18,7 +16,6 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
-
 
 #include <iterator>
 #include <limits>
@@ -180,9 +177,9 @@ template <typename InputIt>
 using RangeVec = std::vector<Range<InputIt>>;
 
 } // namespace detail
-} // namespace rapidfuzz#include <algorithm>
+} // namespace rapidfuzz
 
-
+#include <algorithm>
 
 #include <algorithm>
 #include <cassert>
@@ -938,6 +935,7 @@ public:
 };
 
 } // namespace rapidfuzz
+
 #include <string>
 
 namespace rapidfuzz {
@@ -1202,6 +1200,7 @@ constexpr void unroll(F&& f)
 
 } // namespace detail
 } // namespace rapidfuzz
+
 #include <vector>
 
 namespace rapidfuzz {
@@ -1301,7 +1300,6 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 } // namespace detail
 } // namespace rapidfuzz
-
 
 #include <algorithm>
 #include <array>
@@ -1502,142 +1500,6 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
 
 } // namespace detail
 } // namespace rapidfuzz
-#include <stdexcept>
-
-namespace rapidfuzz {
-
-/**
- * @brief Calculates the Hamming distance between two strings.
- *
- * @details
- * Both strings require a similar length
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param max
- *   Maximum Hamming distance between s1 and s2, that is
- *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
- *   which deactivates this behaviour.
- *
- * @return Hamming distance between s1 and s2
- */
-template <typename InputIt1, typename InputIt2>
-int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max());
-
-template <typename Sentence1, typename Sentence2>
-int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max());
-
-template <typename InputIt1, typename InputIt2>
-int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0);
-
-template <typename InputIt1, typename InputIt2>
-double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff = 1.0);
-
-template <typename Sentence1, typename Sentence2>
-double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0);
-
-/**
- * @brief Calculates a normalized hamming similarity
- *
- * @details
- * Both string require a similar length
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 1.0.
- *   For ratio < score_cutoff 0 is returned instead. Default is 0,
- *   which deactivates this behaviour.
- *
- * @return Normalized hamming distance between s1 and s2
- *   as a float between 0 and 1.0
- */
-template <typename InputIt1, typename InputIt2>
-double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
-
-template <typename CharT1>
-struct CachedHamming {
-    template <typename Sentence1>
-    CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
-    {}
-
-    template <typename InputIt1>
-    CachedHamming(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
-    {}
-
-    template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
-
-    template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
-
-    template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
-
-    template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
-
-    template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
-
-    template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
-
-private:
-    std::basic_string<CharT1> s1;
-};
-
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
-template <typename Sentence1>
-CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
-#endif
-
-/**@}*/
-
-} // namespace rapidfuzz
-
-
-#include "rapidfuzz/details/Range.hpp"
-#include <cmath>
-
 
 #include <cmath>
 
@@ -1799,11 +1661,160 @@ protected:
     friend T;
 };
 
+template <typename T>
+struct CachedNormalizedMetricBase {
+    template <typename InputIt2>
+    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._normalized_distance(detail::make_range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._normalized_distance(detail::make_range(s2), score_cutoff);
+    }
+
+    template <typename InputIt2>
+    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._normalized_similarity(detail::make_range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._normalized_similarity(detail::make_range(s2), score_cutoff);
+    }
+
+protected:
+    template <typename InputIt2>
+    double _normalized_distance(Range<InputIt2> s2, double score_cutoff) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        auto maximum = derived.maximum(s2);
+        int64_t cutoff_distance =
+            static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+        int64_t dist = derived._distance(s2, cutoff_distance);
+        double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
+        return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
+    }
+
+    template <typename InputIt2>
+    double _normalized_similarity(Range<InputIt2> s2, double score_cutoff) const
+    {
+        double cutoff_score = NormSim_to_NormDist(score_cutoff);
+        double norm_dist = _normalized_distance(s2, cutoff_score);
+        double norm_sim = 1.0 - norm_dist;
+        return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+    }
+
+    CachedNormalizedMetricBase(){};
+    friend T;
+};
+
+template <typename T>
+struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
+    template <typename InputIt2>
+    int64_t distance(InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._distance(detail::make_range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._distance(detail::make_range(s2), score_cutoff);
+    }
+
+    template <typename InputIt2>
+    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
+    {
+        return _similarity(detail::make_range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
+    {
+        return _similarity(detail::make_range(s2), score_cutoff);
+    }
+
+protected:
+    template <typename InputIt2>
+    int64_t _similarity(Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        auto maximum = derived.maximum(s2);
+        int64_t cutoff_distance = maximum - score_cutoff;
+        int64_t dist = derived._distance(s2, cutoff_distance);
+        int64_t sim = maximum - dist;
+        return (sim >= score_cutoff) ? sim : 0;
+    }
+
+    CachedDistanceBase(){};
+    friend T;
+};
+
+template <typename T>
+struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
+    template <typename InputIt2>
+    int64_t distance(InputIt2 first2, InputIt2 last2,
+                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        return _distance(detail::make_range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        return _distance(detail::make_range(s2), score_cutoff);
+    }
+
+    template <typename InputIt2>
+    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._similarity(detail::make_range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        return derived._similarity(detail::make_range(s2), score_cutoff);
+    }
+
+protected:
+    template <typename InputIt2>
+    int64_t _distance(Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        const T& derived = static_cast<const T&>(*this);
+        auto maximum = derived.maximum(s2);
+        int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
+        int64_t sim = derived._similarity(s2, cutoff_similarity);
+        int64_t dist = maximum - sim;
+        return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    }
+
+    CachedSimilarityBase(){};
+    friend T;
+};
+
 } // namespace detail
 } // namespace rapidfuzz
-namespace rapidfuzz {
 
+#include <stdexcept>
+
+namespace rapidfuzz {
 namespace detail {
+
 class Hamming : public DistanceBase<Hamming> {
     friend DistanceBase<Hamming>;
     friend NormalizedMetricBase<Hamming>;
@@ -1827,119 +1838,153 @@ class Hamming : public DistanceBase<Hamming> {
     }
 };
 } // namespace detail
+} // namespace rapidfuzz
 
+namespace rapidfuzz {
+
+/**
+ * @brief Calculates the Hamming distance between two strings.
+ *
+ * @details
+ * Both strings require a similar length
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param max
+ *   Maximum Hamming distance between s1 and s2, that is
+ *   considered as a result. If the distance is bigger than max,
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
+ *   which deactivates this behaviour.
+ *
+ * @return Hamming distance between s1 and s2
+ */
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff)
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
     return detail::Hamming::distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
     return detail::Hamming::distance(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff)
+                           int64_t score_cutoff = 0)
 {
     return detail::Hamming::similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
     return detail::Hamming::similarity(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff)
+                                   double score_cutoff = 1.0)
 {
     return detail::Hamming::normalized_distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
     return detail::Hamming::normalized_distance(s1, s2, score_cutoff);
 }
 
+/**
+ * @brief Calculates a normalized hamming similarity
+ *
+ * @details
+ * Both string require a similar length
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return Normalized hamming distance between s1 and s2
+ *   as a float between 0 and 1.0
+ */
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff)
+                                     double score_cutoff = 0.0)
 {
     return detail::Hamming::normalized_similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
     return detail::Hamming::normalized_similarity(s1, s2, score_cutoff);
 }
 
 template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedHamming<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    return hamming_distance(detail::to_begin(s1), detail::to_end(s1), first2, last2, score_cutoff);
-}
+struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>> {
+    template <typename Sentence1>
+    CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedHamming<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return hamming_distance(s1, s2, score_cutoff);
-}
+    template <typename InputIt1>
+    CachedHamming(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    {}
 
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedHamming<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    return hamming_similarity(detail::to_begin(s1), detail::to_end(s1), first2, last2, score_cutoff);
-}
+private:
+    friend detail::CachedDistanceBase<CachedHamming<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedHamming<CharT1>>;
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedHamming<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return hamming_similarity(s1, s2, score_cutoff);
-}
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return s2.size();
+    }
 
-template <typename CharT1>
-template <typename InputIt2>
-double CachedHamming<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    return hamming_normalized_distance(detail::to_begin(s1), detail::to_end(s1), first2, last2, score_cutoff);
-}
+    template <typename InputIt2>
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return detail::Hamming::distance(s1, s2, score_cutoff);
+    }
 
-template <typename CharT1>
-template <typename Sentence2>
-double CachedHamming<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return hamming_normalized_distance(s1, s2, score_cutoff);
-}
+    std::basic_string<CharT1> s1;
+};
 
-template <typename CharT1>
-template <typename InputIt2>
-double CachedHamming<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
-                                                    double score_cutoff) const
-{
-    return hamming_normalized_similarity(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                         score_cutoff);
-}
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+template <typename Sentence1>
+CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
-template <typename CharT1>
-template <typename Sentence2>
-double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return hamming_normalized_similarity(s1, s2, score_cutoff);
-}
+template <typename InputIt1>
+CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
+#endif
+
+/**@}*/
 
 } // namespace rapidfuzz
 
+#include <limits>
 
 #include <array>
 #include <limits>
@@ -1948,7 +1993,6 @@ double CachedHamming<CharT1>::normalized_similarity(const Sentence2& s2, double 
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
-
 
 #include <algorithm>
 #include <cassert>
@@ -2060,6 +2104,7 @@ private:
 
 } // namespace detail
 } // namespace rapidfuzz
+
 namespace rapidfuzz {
 namespace detail {
 
@@ -2272,190 +2317,6 @@ private:
 
 } // namespace detail
 } // namespace rapidfuzz
-#include <cmath>
-#include <limits>
-
-namespace rapidfuzz {
-
-template <typename InputIt1, typename InputIt2>
-int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                       int64_t max = std::numeric_limits<int64_t>::max());
-
-template <typename Sentence1, typename Sentence2>
-int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
-                       int64_t max = std::numeric_limits<int64_t>::max());
-
-template <typename InputIt1, typename InputIt2>
-int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0.0);
-
-template <typename InputIt1, typename InputIt2>
-double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 double score_cutoff = 1.0);
-
-template <typename Sentence1, typename Sentence2>
-double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0);
-
-template <typename InputIt1, typename InputIt2>
-double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
-
-template <typename InputIt1, typename InputIt2>
-Editops indel_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2);
-
-template <typename Sentence1, typename Sentence2>
-Editops indel_editops(const Sentence1& s1, const Sentence2& s2);
-
-template <typename CharT1>
-struct CachedIndel {
-    template <typename Sentence1>
-    CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
-    {}
-
-    template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
-    {}
-
-    template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
-
-    template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
-
-    template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
-
-    template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
-
-    template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
-
-    template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
-
-private:
-    std::basic_string<CharT1> s1;
-    detail::BlockPatternMatchVector PM;
-};
-
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
-template <typename Sentence1>
-CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
-#endif
-
-} // namespace rapidfuzz
-
-
-
-
-#include <cmath>
-#include <limits>
-
-namespace rapidfuzz {
-
-template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t max = std::numeric_limits<int64_t>::max());
-
-template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t max = std::numeric_limits<int64_t>::max());
-
-template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0);
-
-template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff = 1.0);
-
-template <typename Sentence1, typename Sentence2>
-double lcs_seq_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0);
-
-template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0);
-
-template <typename InputIt1, typename InputIt2>
-Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2);
-
-template <typename Sentence1, typename Sentence2>
-Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2);
-
-template <typename CharT1>
-struct CachedLCSseq {
-    template <typename Sentence1>
-    CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
-    {}
-
-    template <typename InputIt1>
-    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
-    {}
-
-    template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
-
-    template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
-
-    template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
-
-    template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
-
-    template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
-
-    template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
-
-private:
-    std::basic_string<CharT1> s1;
-    detail::BlockPatternMatchVector PM;
-};
-
-#if __cplusplus >= 201703L
-template <typename Sentence1>
-CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
-#endif
-
-} // namespace rapidfuzz
-
-
 
 #include <algorithm>
 #include <array>
@@ -2883,55 +2744,62 @@ class LCSseq : public SimilarityBase<LCSseq> {
 };
 
 } // namespace detail
+} // namespace rapidfuzz
+
+#include <cmath>
+#include <limits>
+
+namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff)
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
     return detail::LCSseq::distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
+                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
     return detail::LCSseq::distance(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff)
-{
-    return detail::LCSseq::normalized_distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double lcs_seq_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
-{
-    return detail::LCSseq::normalized_distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff)
+                           int64_t score_cutoff = 0)
 {
     return detail::LCSseq::similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
     return detail::LCSseq::similarity(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
+double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                   double score_cutoff = 1.0)
+{
+    return detail::LCSseq::normalized_distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double lcs_seq_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    return detail::LCSseq::normalized_distance(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
 double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff)
+                                     double score_cutoff = 0.0)
 {
     return detail::LCSseq::normalized_similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
     return detail::LCSseq::normalized_similarity(s1, s2, score_cutoff);
 }
@@ -2949,76 +2817,45 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 }
 
 template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    int64_t maximum = std::max<int64_t>(static_cast<int64_t>(s1.size()), std::distance(first2, last2));
-    int64_t cutoff_distance = std::max<int64_t>(0, maximum - score_cutoff);
-    int64_t sim = similarity(first2, last2, cutoff_distance);
-    int64_t dist = maximum - sim;
-    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-}
+struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
+    template <typename Sentence1>
+    CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLCSseq<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
+    template <typename InputIt1>
+    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
+    {}
 
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    int64_t maximum = std::max<int64_t>(static_cast<int64_t>(s1.size()), std::distance(first2, last2));
-    if (maximum == 0) return 0;
+private:
+    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedLCSseq<CharT1>>;
 
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    double norm_dist =
-        static_cast<double>(distance(first2, last2, cutoff_distance)) / static_cast<double>(maximum);
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+    }
 
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLCSseq<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
+    template <typename InputIt2>
+    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return detail::lcs_seq_similarity(PM, detail::make_range(s1), s2, score_cutoff);
+    }
 
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLCSseq<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    return detail::lcs_seq_similarity(PM, detail::make_range(s1), detail::make_range(first2, last2),
-                                      score_cutoff);
-}
+    std::basic_string<CharT1> s1;
+    detail::BlockPatternMatchVector PM;
+};
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLCSseq<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
+#if __cplusplus >= 201703L
+template <typename Sentence1>
+CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLCSseq<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = normalized_distance(first2, last2, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLCSseq<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
+template <typename InputIt1>
+CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
+
 namespace rapidfuzz {
 namespace detail {
 
@@ -3031,38 +2868,6 @@ int64_t indel_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1,
     int64_t lcs_sim = lcs_seq_similarity(block, s1, s2, lcs_cutoff);
     int64_t dist = maximum - 2 * lcs_sim;
     return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t indel_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
-{
-    int64_t maximum = s1.size() + s2.size();
-    int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
-    int64_t lcs_sim = lcs_seq_similarity(s1, s2, lcs_cutoff);
-    int64_t dist = maximum - 2 * lcs_sim;
-    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-}
-
-template <typename InputIt1, typename InputIt2>
-double indel_normalized_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                                 double score_cutoff)
-{
-    int64_t maximum = s1.size() + s2.size();
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    int64_t dist = indel_distance(block, s1, s2, cutoff_distance);
-    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t indel_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                         int64_t score_cutoff)
-{
-    int64_t maximum = s1.size() + s2.size();
-    int64_t cutoff_distance = std::max<int64_t>(0, maximum - score_cutoff);
-    int64_t dist = indel_distance(block, s1, s2, cutoff_distance);
-    int64_t sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3097,54 +2902,59 @@ class Indel : public DistanceBase<Indel> {
 };
 
 } // namespace detail
+} // namespace rapidfuzz
+
+namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, int64_t score_cutoff)
+int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                       int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
     return detail::Indel::distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t indel_distance(const Sentence1& s1, const Sentence2& s2, int64_t max)
+int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
+                       int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Indel::distance(s1, s2, max);
+    return detail::Indel::distance(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                 double score_cutoff)
+int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                         int64_t score_cutoff = 0.0)
 {
     return detail::Indel::normalized_distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
-{
-    return detail::Indel::normalized_distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff)
-{
-    return detail::Indel::similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0.0)
 {
     return detail::Indel::similarity(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
+double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                 double score_cutoff = 1.0)
+{
+    return detail::Indel::normalized_distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    return detail::Indel::normalized_distance(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
 double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff)
+                                   double score_cutoff = 0.0)
 {
     return detail::Indel::normalized_similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
+double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
     return detail::Indel::normalized_similarity(s1, s2, score_cutoff);
 }
@@ -3162,379 +2972,47 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2)
 }
 
 template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedIndel<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    return detail::indel_distance(PM, detail::make_range(s1), detail::make_range(first2, last2),
-                                  score_cutoff);
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedIndel<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedIndel<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    int64_t dist = distance(first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedIndel<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedIndel<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    int64_t maximum = static_cast<int64_t>(s1.size()) + std::distance(first2, last2);
-    int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t dist = distance(first2, last2, cutoff_distance);
-    int64_t sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedIndel<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedIndel<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = normalized_distance(first2, last2, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedIndel<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-} // namespace rapidfuzz
-
-#include <limits>
-
-namespace rapidfuzz {
-
-/**
- * @brief Calculates the minimum number of insertions, deletions, and substitutions
- * required to change one sequence into the other according to Levenshtein with custom
- * costs for insertion, deletion and substitution
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param weights
- *   The weights for the three operations in the form
- *   (insertion, deletion, substitution). Default is {1, 1, 1},
- *   which gives all three operations a weight of 1.
- * @param max
- *   Maximum Levenshtein distance between s1 and s2, that is
- *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<int64_t>::max(),
- *   which deactivates this behaviour.
- *
- * @return returns the levenshtein distance between s1 and s2
- *
- * @remarks
- * @parblock
- * Depending on the input parameters different optimized implementation are used
- * to improve the performance. Worst-case performance is ``O(m * n)``.
- *
- * <b>Insertion = Deletion = Substitution:</b>
- *
- *    This is known as uniform Levenshtein distance and is the distance most commonly
- *    referred to as Levenshtein distance. The following implementation is used
- *    with a worst-case performance of ``O([N/64]M)``.
- *
- *    - if max is 0 the similarity can be calculated using a direct comparision,
- *      since no difference between the strings is allowed.  The time complexity of
- *      this algorithm is ``O(N)``.
- *
- *    - A common prefix/suffix of the two compared strings does not affect
- *      the Levenshtein distance, so the affix is removed before calculating the
- *      similarity.
- *
- *    - If max is <= 3 the mbleven algorithm is used. This algorithm
- *      checks all possible edit operations that are possible under
- *      the threshold `max`. The time complexity of this algorithm is ``O(N)``.
- *
- *    - If the length of the shorter string is <= 64 after removing the common affix
- *      Hyyrös' algorithm is used, which calculates the Levenshtein distance in
- *      parallel. The algorithm is described by @cite hyrro_2002. The time complexity of this
- *      algorithm is ``O(N)``.
- *
- *    - If the length of the shorter string is >= 64 after removing the common affix
- *      a blockwise implementation of Myers' algorithm is used, which calculates
- *      the Levenshtein distance in parallel (64 characters at a time).
- *      The algorithm is described by @cite myers_1999. The time complexity of this
- *      algorithm is ``O([N/64]M)``.
- *
- *
- * <b>Insertion = Deletion, Substitution >= Insertion + Deletion:</b>
- *
- *    Since every Substitution can be performed as Insertion + Deletion, this variant
- *    of the Levenshtein distance only uses Insertions and Deletions. Therefore this
- *    variant is often referred to as InDel-Distance.  The following implementation
- *    is used with a worst-case performance of ``O([N/64]M)``.
- *
- *    - if max is 0 the similarity can be calculated using a direct comparision,
- *      since no difference between the strings is allowed.  The time complexity of
- *      this algorithm is ``O(N)``.
- *
- *    - if max is 1 and the two strings have a similar length, the similarity can be
- *      calculated using a direct comparision aswell, since a substitution would cause
- *      a edit distance higher than max. The time complexity of this algorithm
- *      is ``O(N)``.
- *
- *    - A common prefix/suffix of the two compared strings does not affect
- *      the Levenshtein distance, so the affix is removed before calculating the
- *      similarity.
- *
- *    - If max is <= 4 the mbleven algorithm is used. This algorithm
- *      checks all possible edit operations that are possible under
- *      the threshold `max`. As a difference to the normal Levenshtein distance this
- *      algorithm can even be used up to a threshold of 4 here, since the higher weight
- *      of substitutions decreases the amount of possible edit operations.
- *      The time complexity of this algorithm is ``O(N)``.
- *
- *    - If the length of the shorter string is <= 64 after removing the common affix
- *      Hyyrös' lcs algorithm is used, which calculates the InDel distance in
- *      parallel. The algorithm is described by @cite hyrro_lcs_2004 and is extended with support
- *      for UTF32 in this implementation. The time complexity of this
- *      algorithm is ``O(N)``.
- *
- *    - If the length of the shorter string is >= 64 after removing the common affix
- *      a blockwise implementation of Hyyrös' lcs algorithm is used, which calculates
- *      the Levenshtein distance in parallel (64 characters at a time).
- *      The algorithm is described by @cite hyrro_lcs_2004. The time complexity of this
- *      algorithm is ``O([N/64]M)``.
- *
- * <b>Other weights:</b>
- *
- *   The implementation for other weights is based on Wagner-Fischer.
- *   It has a performance of ``O(N * M)`` and has a memory usage of ``O(N)``.
- *   Further details can be found in @cite wagner_fischer_1974.
- * @endparblock
- *
- * @par Examples
- * @parblock
- * Find the Levenshtein distance between two strings:
- * @code{.cpp}
- * // dist is 2
- * int64_t dist = levenshtein_distance("lewenstein", "levenshtein");
- * @endcode
- *
- * Setting a maximum distance allows the implementation to select
- * a more efficient implementation:
- * @code{.cpp}
- * // dist is 2
- * int64_t dist = levenshtein_distance("lewenstein", "levenshtein", {1, 1, 1}, 1);
- * @endcode
- *
- * It is possible to select different weights by passing a `weight` struct.
- * @code{.cpp}
- * // dist is 3
- * int64_t dist = levenshtein_distance("lewenstein", "levenshtein", {1, 1, 2});
- * @endcode
- * @endparblock
- */
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                             LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t max = std::numeric_limits<int64_t>::max());
-
-template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                             LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t max = std::numeric_limits<int64_t>::max());
-
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0);
-
-template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0);
-
-template <typename Sentence1, typename Sentence2>
-double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0);
-
-/**
- * @brief Calculates a normalized levenshtein distance using custom
- * costs for insertion, deletion and substitution.
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param weights
- *   The weights for the three operations in the form
- *   (insertion, deletion, substitution). Default is {1, 1, 1},
- *   which gives all three operations a weight of 1.
- * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 1.0.
- *   For ratio < score_cutoff 0 is returned instead. Default is 0,
- *   which deactivates this behaviour.
- *
- * @return Normalized weighted levenshtein distance between s1 and s2
- *   as a double between 0 and 1.0
- *
- * @see levenshtein()
- *
- * @remarks
- * @parblock
- * The normalization of the Levenshtein distance is performed in the following way:
- *
- * \f{align*}{
- *   ratio &= \frac{distance(s1, s2)}{max_dist}
- * \f}
- * @endparblock
- *
- *
- * @par Examples
- * @parblock
- * Find the normalized Levenshtein distance between two strings:
- * @code{.cpp}
- * // ratio is 81.81818181818181
- * double ratio = normalized_levenshtein("lewenstein", "levenshtein");
- * @endcode
- *
- * Setting a score_cutoff allows the implementation to select
- * a more efficient implementation:
- * @code{.cpp}
- * // ratio is 0.0
- * double ratio = normalized_levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 85.0);
- * @endcode
- *
- * It is possible to select different weights by passing a `weight` struct
- * @code{.cpp}
- * // ratio is 85.71428571428571
- * double ratio = normalized_levenshtein("lewenstein", "levenshtein", {1, 1, 2});
- * @endcode
- * @endparblock
- */
-template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                         LevenshteinWeightTable weights = {1, 1, 1},
-                                         double score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                         LevenshteinWeightTable weights = {1, 1, 1},
-                                         double score_cutoff = 0.0);
-
-/**
- * @brief Return list of EditOp describing how to turn s1 into s2.
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- *
- * @return Edit operations required to turn s1 into s2
- */
-template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2);
-
-template <typename Sentence1, typename Sentence2>
-Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2);
-
-template <typename CharT1>
-struct CachedLevenshtein {
+struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     template <typename Sentence1>
-    CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : CachedLevenshtein(detail::to_begin(s1_), detail::to_end(s1_), aWeights)
+    CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
-    CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(first1, last1), PM(detail::make_range(first1, last1)), weights(aWeights)
+    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
-    template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
-
-    template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
-
-    template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
-
-    template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
-
-    template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
-
-    template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
-
 private:
+    friend detail::CachedDistanceBase<CachedIndel<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedIndel<CharT1>>;
+
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return static_cast<int64_t>(s1.size()) + s2.size();
+    }
+
+    template <typename InputIt2>
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return detail::indel_distance(PM, detail::make_range(s1), s2, score_cutoff);
+    }
+
     std::basic_string<CharT1> s1;
     detail::BlockPatternMatchVector PM;
-    LevenshteinWeightTable weights;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
-CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
-    -> CachedLevenshtein<char_type<Sentence1>>;
+CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
-    -> CachedLevenshtein<iter_value_t<InputIt1>>;
+CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
 
+#include "rapidfuzz/details/Range.hpp"
+#include <limits>
 
 #include <cmath>
 #include <cstddef>
@@ -3973,7 +3451,8 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
 }
 
 struct LevenshteinBitMatrix {
-    LevenshteinBitMatrix(size_t rows, size_t cols) : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
+    LevenshteinBitMatrix(size_t rows, size_t cols, size_t dist_ = 0)
+        : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(dist_)
     {}
 
     Matrix<uint64_t> VP;
@@ -4268,11 +3747,8 @@ LevenshteinBitRow levenshtein_row_hyrroe2003_block(const BlockPatternMatchVector
 template <typename InputIt1, typename InputIt2>
 LevenshteinBitMatrix levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    if (s1.empty() || s2.empty()) {
-        LevenshteinBitMatrix matrix(0, 0);
-        matrix.dist = static_cast<size_t>(s1.size() + s2.size());
-        return matrix;
-    }
+    if (s1.empty() || s2.empty())
+        return {0, 0, static_cast<size_t>(s1.size() + s2.size())};
     else if (s1.size() <= 64)
         return levenshtein_matrix_hyrroe2003(PatternMatchVector(s1), s1, s2);
     else
@@ -4309,7 +3785,7 @@ int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
             int64_t new_max = ceil_div(max, weights.insert_cost);
-            int64_t distance = indel_distance(s1, s2, new_max);
+            int64_t distance = rapidfuzz::indel_distance(s1, s2, new_max);
             distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -4437,63 +3913,273 @@ class Levenshtein : public DistanceBase<Levenshtein, LevenshteinWeightTable> {
 };
 
 } // namespace detail
+} // namespace rapidfuzz
 
+namespace rapidfuzz {
+
+/**
+ * @brief Calculates the minimum number of insertions, deletions, and substitutions
+ * required to change one sequence into the other according to Levenshtein with custom
+ * costs for insertion, deletion and substitution
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param weights
+ *   The weights for the three operations in the form
+ *   (insertion, deletion, substitution). Default is {1, 1, 1},
+ *   which gives all three operations a weight of 1.
+ * @param max
+ *   Maximum Levenshtein distance between s1 and s2, that is
+ *   considered as a result. If the distance is bigger than max,
+ *   max + 1 is returned instead. Default is std::numeric_limits<int64_t>::max(),
+ *   which deactivates this behaviour.
+ *
+ * @return returns the levenshtein distance between s1 and s2
+ *
+ * @remarks
+ * @parblock
+ * Depending on the input parameters different optimized implementation are used
+ * to improve the performance. Worst-case performance is ``O(m * n)``.
+ *
+ * <b>Insertion = Deletion = Substitution:</b>
+ *
+ *    This is known as uniform Levenshtein distance and is the distance most commonly
+ *    referred to as Levenshtein distance. The following implementation is used
+ *    with a worst-case performance of ``O([N/64]M)``.
+ *
+ *    - if max is 0 the similarity can be calculated using a direct comparision,
+ *      since no difference between the strings is allowed.  The time complexity of
+ *      this algorithm is ``O(N)``.
+ *
+ *    - A common prefix/suffix of the two compared strings does not affect
+ *      the Levenshtein distance, so the affix is removed before calculating the
+ *      similarity.
+ *
+ *    - If max is <= 3 the mbleven algorithm is used. This algorithm
+ *      checks all possible edit operations that are possible under
+ *      the threshold `max`. The time complexity of this algorithm is ``O(N)``.
+ *
+ *    - If the length of the shorter string is <= 64 after removing the common affix
+ *      Hyyrös' algorithm is used, which calculates the Levenshtein distance in
+ *      parallel. The algorithm is described by @cite hyrro_2002. The time complexity of this
+ *      algorithm is ``O(N)``.
+ *
+ *    - If the length of the shorter string is >= 64 after removing the common affix
+ *      a blockwise implementation of Myers' algorithm is used, which calculates
+ *      the Levenshtein distance in parallel (64 characters at a time).
+ *      The algorithm is described by @cite myers_1999. The time complexity of this
+ *      algorithm is ``O([N/64]M)``.
+ *
+ *
+ * <b>Insertion = Deletion, Substitution >= Insertion + Deletion:</b>
+ *
+ *    Since every Substitution can be performed as Insertion + Deletion, this variant
+ *    of the Levenshtein distance only uses Insertions and Deletions. Therefore this
+ *    variant is often referred to as InDel-Distance.  The following implementation
+ *    is used with a worst-case performance of ``O([N/64]M)``.
+ *
+ *    - if max is 0 the similarity can be calculated using a direct comparision,
+ *      since no difference between the strings is allowed.  The time complexity of
+ *      this algorithm is ``O(N)``.
+ *
+ *    - if max is 1 and the two strings have a similar length, the similarity can be
+ *      calculated using a direct comparision aswell, since a substitution would cause
+ *      a edit distance higher than max. The time complexity of this algorithm
+ *      is ``O(N)``.
+ *
+ *    - A common prefix/suffix of the two compared strings does not affect
+ *      the Levenshtein distance, so the affix is removed before calculating the
+ *      similarity.
+ *
+ *    - If max is <= 4 the mbleven algorithm is used. This algorithm
+ *      checks all possible edit operations that are possible under
+ *      the threshold `max`. As a difference to the normal Levenshtein distance this
+ *      algorithm can even be used up to a threshold of 4 here, since the higher weight
+ *      of substitutions decreases the amount of possible edit operations.
+ *      The time complexity of this algorithm is ``O(N)``.
+ *
+ *    - If the length of the shorter string is <= 64 after removing the common affix
+ *      Hyyrös' lcs algorithm is used, which calculates the InDel distance in
+ *      parallel. The algorithm is described by @cite hyrro_lcs_2004 and is extended with support
+ *      for UTF32 in this implementation. The time complexity of this
+ *      algorithm is ``O(N)``.
+ *
+ *    - If the length of the shorter string is >= 64 after removing the common affix
+ *      a blockwise implementation of Hyyrös' lcs algorithm is used, which calculates
+ *      the Levenshtein distance in parallel (64 characters at a time).
+ *      The algorithm is described by @cite hyrro_lcs_2004. The time complexity of this
+ *      algorithm is ``O([N/64]M)``.
+ *
+ * <b>Other weights:</b>
+ *
+ *   The implementation for other weights is based on Wagner-Fischer.
+ *   It has a performance of ``O(N * M)`` and has a memory usage of ``O(N)``.
+ *   Further details can be found in @cite wagner_fischer_1974.
+ * @endparblock
+ *
+ * @par Examples
+ * @parblock
+ * Find the Levenshtein distance between two strings:
+ * @code{.cpp}
+ * // dist is 2
+ * int64_t dist = levenshtein_distance("lewenstein", "levenshtein");
+ * @endcode
+ *
+ * Setting a maximum distance allows the implementation to select
+ * a more efficient implementation:
+ * @code{.cpp}
+ * // dist is 2
+ * int64_t dist = levenshtein_distance("lewenstein", "levenshtein", {1, 1, 1}, 1);
+ * @endcode
+ *
+ * It is possible to select different weights by passing a `weight` struct.
+ * @code{.cpp}
+ * // dist is 3
+ * int64_t dist = levenshtein_distance("lewenstein", "levenshtein", {1, 1, 2});
+ * @endcode
+ * @endparblock
+ */
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                             LevenshteinWeightTable weights, int64_t max)
+                             LevenshteinWeightTable weights = {1, 1, 1},
+                             int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Levenshtein::distance(first1, last1, first2, last2, weights, max);
+    return detail::Levenshtein::distance(first1, last1, first2, last2, weights, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2, LevenshteinWeightTable weights,
-                             int64_t max)
+int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+                             LevenshteinWeightTable weights = {1, 1, 1},
+                             int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Levenshtein::distance(s1, s2, weights, max);
+    return detail::Levenshtein::distance(s1, s2, weights, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0)
+{
+    return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
+                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0)
+{
+    return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       LevenshteinWeightTable weights, double score_cutoff)
+                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0)
 {
     return detail::Levenshtein::normalized_distance(first1, last1, first2, last2, weights, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                       LevenshteinWeightTable weights, double score_cutoff)
+                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0)
 {
     return detail::Levenshtein::normalized_distance(s1, s2, weights, score_cutoff);
 }
 
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               LevenshteinWeightTable weights, int64_t score_cutoff)
-{
-    return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, LevenshteinWeightTable weights,
-                               int64_t score_cutoff)
-{
-    return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff);
-}
-
+/**
+ * @brief Calculates a normalized levenshtein distance using custom
+ * costs for insertion, deletion and substitution.
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param weights
+ *   The weights for the three operations in the form
+ *   (insertion, deletion, substitution). Default is {1, 1, 1},
+ *   which gives all three operations a weight of 1.
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return Normalized weighted levenshtein distance between s1 and s2
+ *   as a double between 0 and 1.0
+ *
+ * @see levenshtein()
+ *
+ * @remarks
+ * @parblock
+ * The normalization of the Levenshtein distance is performed in the following way:
+ *
+ * \f{align*}{
+ *   ratio &= \frac{distance(s1, s2)}{max_dist}
+ * \f}
+ * @endparblock
+ *
+ *
+ * @par Examples
+ * @parblock
+ * Find the normalized Levenshtein distance between two strings:
+ * @code{.cpp}
+ * // ratio is 81.81818181818181
+ * double ratio = normalized_levenshtein("lewenstein", "levenshtein");
+ * @endcode
+ *
+ * Setting a score_cutoff allows the implementation to select
+ * a more efficient implementation:
+ * @code{.cpp}
+ * // ratio is 0.0
+ * double ratio = normalized_levenshtein("lewenstein", "levenshtein", {1, 1, 1}, 85.0);
+ * @endcode
+ *
+ * It is possible to select different weights by passing a `weight` struct
+ * @code{.cpp}
+ * // ratio is 85.71428571428571
+ * double ratio = normalized_levenshtein("lewenstein", "levenshtein", {1, 1, 2});
+ * @endcode
+ * @endparblock
+ */
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                         LevenshteinWeightTable weights, double score_cutoff)
+                                         LevenshteinWeightTable weights = {1, 1, 1},
+                                         double score_cutoff = 0.0)
 {
     return detail::Levenshtein::normalized_similarity(first1, last1, first2, last2, weights, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                         LevenshteinWeightTable weights, double score_cutoff)
+                                         LevenshteinWeightTable weights = {1, 1, 1},
+                                         double score_cutoff = 0.0)
 {
     return detail::Levenshtein::normalized_similarity(s1, s2, weights, score_cutoff);
 }
 
+/**
+ * @brief Return list of EditOp describing how to turn s1 into s2.
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ *
+ * @return Edit operations required to turn s1 into s2
+ */
 template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
@@ -4507,252 +4193,77 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
 }
 
 template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    if (weights.insert_cost == weights.delete_cost) {
-        /* when insertions + deletions operations are free there can not be any edit distance */
-        if (weights.insert_cost == 0) return 0;
-
-        /* uniform Levenshtein multiplied with the common factor */
-        if (weights.insert_cost == weights.replace_cost) {
-            // max can make use of the common divisor of the three weights
-            int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-            int64_t dist = detail::uniform_levenshtein_distance(PM, detail::make_range(s1),
-                                                                detail::make_range(first2, last2), new_max);
-            dist *= weights.insert_cost;
-
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-        }
-        /*
-         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-         * therefore this can be implemented as InDel distance multiplied with the common factor
-         */
-        else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-            // max can make use of the common divisor of the three weights
-            int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-            int64_t dist = detail::indel_distance(PM, detail::make_range(s1),
-                                                  detail::make_range(first2, last2), new_max);
-            dist *= weights.insert_cost;
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-        }
-    }
-
-    return detail::generalized_levenshtein_distance(detail::make_range(s1), detail::make_range(first2, last2),
-                                                    weights, score_cutoff);
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLevenshtein<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
-                                                      double score_cutoff) const
-{
-    int64_t maximum =
-        detail::levenshtein_maximum(detail::make_range(s1), detail::make_range(first2, last2), weights);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    int64_t dist = distance(first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLevenshtein<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    int64_t maximum =
-        detail::levenshtein_maximum(detail::make_range(s1), detail::make_range(first2, last2), weights);
-    int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t dist = distance(first2, last2, cutoff_distance);
-    int64_t sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLevenshtein<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
-                                                        double score_cutoff) const
-{
-    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = normalized_distance(first2, last2, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-} // namespace rapidfuzz
-#include <cmath>
-#include <cstddef>
-#include <limits>
-#include <numeric>
-
-namespace rapidfuzz {
-namespace detail {
-
-/*
- * based on the paper Linear space string correction algorithm using the Damerau-Levenshtein distance
- * from Chunchun Zhao and Sartaj Sahni
- */
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max);
-
-} // namespace detail
-
-/* the API will require a change when adding custom weights */
-namespace experimental {
-/**
- * @brief Calculates the Damerau Levenshtein distance between two strings.
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param max
- *   Maximum Damerau Levenshtein distance between s1 and s2, that is
- *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
- *   which deactivates this behaviour.
- *
- * @return Damerau Levenshtein distance between s1 and s2
- */
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max());
-
-template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max());
-
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       int64_t score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0);
-
-template <typename InputIt1, typename InputIt2>
-double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                               InputIt2 last2, double score_cutoff = 1.0);
-
-template <typename Sentence1, typename Sentence2>
-double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                               double score_cutoff = 1.0);
-
-/**
- * @brief Calculates a normalized Damerau Levenshtein similarity
- *
- * @details
- * Both string require a similar length
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 1.0.
- *   For ratio < score_cutoff 0 is returned instead. Default is 0,
- *   which deactivates this behaviour.
- *
- * @return Normalized Damerau Levenshtein distance between s1 and s2
- *   as a float between 0 and 1.0
- */
-template <typename InputIt1, typename InputIt2>
-double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, double score_cutoff = 0.0);
-
-template <typename Sentence1, typename Sentence2>
-double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                                 double score_cutoff = 0.0);
-
-template <typename CharT1>
-struct CachedDamerauLevenshtein {
+struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>> {
     template <typename Sentence1>
-    CachedDamerauLevenshtein(const Sentence1& s1_)
-        : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
+    CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : CachedLevenshtein(detail::to_begin(s1_), detail::to_end(s1_), aWeights)
     {}
 
     template <typename InputIt1>
-    CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : s1(first1, last1), PM(detail::make_range(first1, last1)), weights(aWeights)
     {}
 
-    template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const;
-
-    template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const;
-
-    template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const;
-
-    template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const;
-
-    template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const;
-
-    template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
-
-    template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
-
 private:
+    friend detail::CachedDistanceBase<CachedLevenshtein<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedLevenshtein<CharT1>>;
+
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return detail::levenshtein_maximum(detail::make_range(s1), s2, weights);
+    }
+
+    template <typename InputIt2>
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        if (weights.insert_cost == weights.delete_cost) {
+            /* when insertions + deletions operations are free there can not be any edit distance */
+            if (weights.insert_cost == 0) return 0;
+
+            /* uniform Levenshtein multiplied with the common factor */
+            if (weights.insert_cost == weights.replace_cost) {
+                // max can make use of the common divisor of the three weights
+                int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
+                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::make_range(s1), s2, new_max);
+                dist *= weights.insert_cost;
+
+                return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+            }
+            /*
+             * when replace_cost >= insert_cost + delete_cost no substitutions are performed
+             * therefore this can be implemented as InDel distance multiplied with the common factor
+             */
+            else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
+                // max can make use of the common divisor of the three weights
+                int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
+                int64_t dist = detail::indel_distance(PM, detail::make_range(s1), s2, new_max);
+                dist *= weights.insert_cost;
+                return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+            }
+        }
+
+        return detail::generalized_levenshtein_distance(detail::make_range(s1), s2, weights, score_cutoff);
+    }
+
     std::basic_string<CharT1> s1;
+    detail::BlockPatternMatchVector PM;
+    LevenshteinWeightTable weights;
 };
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
-CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
+CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
+    -> CachedLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
+    -> CachedLevenshtein<iter_value_t<InputIt1>>;
 #endif
 
-} // namespace experimental
 } // namespace rapidfuzz
 
+#include <cmath>
 
 #include <cassert>
 #include <cstddef>
@@ -4760,7 +4271,6 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 #include <limits>
 #include <memory>
 #include <numeric>
-
 
 #include <array>
 #include <iterator>
@@ -4962,6 +4472,7 @@ private:
 
 } // namespace detail
 } // namespace rapidfuzz
+
 namespace rapidfuzz {
 namespace detail {
 
@@ -5069,125 +4580,148 @@ class DamerauLevenshtein : public DistanceBase<DamerauLevenshtein> {
 };
 
 } // namespace detail
+} // namespace rapidfuzz
 
+namespace rapidfuzz {
+/* the API will require a change when adding custom weights */
 namespace experimental {
-
+/**
+ * @brief Calculates the Damerau Levenshtein distance between two strings.
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param max
+ *   Maximum Damerau Levenshtein distance between s1 and s2, that is
+ *   considered as a result. If the distance is bigger than max,
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
+ *   which deactivates this behaviour.
+ *
+ * @return Damerau Levenshtein distance between s1 and s2
+ */
 template <typename InputIt1, typename InputIt2>
 int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     int64_t max)
+                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, max);
+    return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2, int64_t max)
+int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::DamerauLevenshtein::distance(s1, s2, max);
-}
-
-template <typename InputIt1, typename InputIt2>
-double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                               InputIt2 last2, double score_cutoff)
-{
-    return detail::DamerauLevenshtein::normalized_distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
-{
-    return detail::DamerauLevenshtein::normalized_distance(s1, s2, score_cutoff);
+    return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       int64_t score_cutoff)
+                                       int64_t score_cutoff = 0)
 {
     return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
+int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
     return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff = 1.0)
+{
+    return detail::DamerauLevenshtein::normalized_distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
+                                               double score_cutoff = 1.0)
+{
+    return detail::DamerauLevenshtein::normalized_distance(s1, s2, score_cutoff);
+}
+
+/**
+ * @brief Calculates a normalized Damerau Levenshtein similarity
+ *
+ * @details
+ * Both string require a similar length
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return Normalized Damerau Levenshtein distance between s1 and s2
+ *   as a float between 0 and 1.0
+ */
+template <typename InputIt1, typename InputIt2>
 double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, double score_cutoff)
+                                                 InputIt2 last2, double score_cutoff = 0.0)
 {
     return detail::DamerauLevenshtein::normalized_similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                                 double score_cutoff)
+                                                 double score_cutoff = 0.0)
 {
     return detail::DamerauLevenshtein::normalized_similarity(s1, s2, score_cutoff);
 }
 
 template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedDamerauLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2,
-                                                   int64_t score_cutoff) const
-{
-    return damerau_levenshtein_distance(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                        score_cutoff);
-}
+struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>> {
+    template <typename Sentence1>
+    CachedDamerauLevenshtein(const Sentence1& s1_)
+        : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedDamerauLevenshtein<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return damerau_levenshtein_distance(s1, s2, score_cutoff);
-}
+    template <typename InputIt1>
+    CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    {}
 
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedDamerauLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
-                                                     int64_t score_cutoff) const
-{
-    return damerau_levenshtein_similarity(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                          score_cutoff);
-}
+private:
+    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedDamerauLevenshtein<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return damerau_levenshtein_similarity(s1, s2, score_cutoff);
-}
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+    }
 
-template <typename CharT1>
-template <typename InputIt2>
-double CachedDamerauLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
-                                                             double score_cutoff) const
-{
-    return damerau_levenshtein_normalized_distance(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                                   score_cutoff);
-}
+    template <typename InputIt2>
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return damerau_levenshtein_distance(s1, s2, score_cutoff);
+    }
 
-template <typename CharT1>
-template <typename Sentence2>
-double CachedDamerauLevenshtein<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return damerau_levenshtein_normalized_distance(s1, s2, score_cutoff);
-}
+    std::basic_string<CharT1> s1;
+};
 
-template <typename CharT1>
-template <typename InputIt2>
-double CachedDamerauLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
-                                                               double score_cutoff) const
-{
-    return damerau_levenshtein_normalized_similarity(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                                     score_cutoff);
-}
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+template <typename Sentence1>
+CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
 
-template <typename CharT1>
-template <typename Sentence2>
-double CachedDamerauLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return damerau_levenshtein_normalized_similarity(s1, s2, score_cutoff);
-}
+template <typename InputIt1>
+CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace experimental
 } // namespace rapidfuzz
@@ -5288,7 +4822,6 @@ std::basic_string<CharT> opcodes_apply(const Opcodes& ops, const Sentence1& s1, 
 
 } // namespace rapidfuzz
 
-
 #include <array>
 #include <limits>
 #include <stdio.h>
@@ -5360,6 +4893,7 @@ struct CharSet {
 
 } // namespace detail
 } // namespace rapidfuzz
+
 #include <type_traits>
 
 namespace rapidfuzz {
@@ -5999,7 +5533,6 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 } // namespace fuzz
 } // namespace rapidfuzz
 
-
 // The MIT License (MIT)
 //
 // Copyright (c) 2020 Max Bachmann
@@ -6022,8 +5555,6 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
-
 
 #include <algorithm>
 #include <tuple>
@@ -7107,4 +6638,5 @@ double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff
 
 } // namespace fuzz
 } // namespace rapidfuzz
+
 #endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
