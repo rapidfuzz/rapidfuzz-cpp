@@ -5,6 +5,7 @@ import os
 import re
 import datetime
 import sys
+import subprocess
 
 root_path = os.path.dirname(os.path.realpath( os.path.dirname(sys.argv[0])))
 version_string = "1.0.2"
@@ -50,7 +51,7 @@ concatenated_headers = set()
 
 internal_include_parser = re.compile(r'\s*#include <(rapidfuzz/.*)>.*')
 
-def concatenate_file(out, filename: str, expand_headers: bool) -> int:
+def concatenate_file(out, filename: str) -> int:
     # Gathers statistics on how many headers were expanded
     concatenated = 1
     with open(filename, mode='r', encoding='utf-8') as input:
@@ -62,15 +63,10 @@ def concatenate_file(out, filename: str, expand_headers: bool) -> int:
                 continue
 
             m = internal_include_parser.match(line)
-            # anything that isn't a Catch2 header can just be copied to
+            # anything that isn't a RapidFuzz header can just be copied to
             # the resulting file
             if not m:
                 out.write(line)
-                continue
-
-            # We do not want to expand headers for the cpp file
-            # amalgamation but neither do we want to copy them to output
-            if not expand_headers:
                 continue
 
             next_header = m.group(1)
@@ -79,7 +75,9 @@ def concatenate_file(out, filename: str, expand_headers: bool) -> int:
             if next_header in concatenated_headers:
                 continue
             concatenated_headers.add(next_header)
-            concatenated += concatenate_file(out, os.path.join(root_path, next_header), expand_headers)
+            out.write("\n")
+            concatenated += concatenate_file(out, os.path.join(root_path, next_header))
+            out.write("\n")
 
     return concatenated
 
@@ -89,22 +87,13 @@ def generate_header():
         header.write(formatted_file_header())
         header.write('#ifndef RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED\n')
         header.write('#define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED\n')
-        print('Concatenated {} headers'.format(concatenate_file(header, starting_header, True)))
+        print('Concatenated {} headers'.format(concatenate_file(header, starting_header)))
         header.write('#endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED\n')
 
-def generate_cpp():
-    from glob import glob
-    cpp_files = sorted(glob(os.path.join(root_path, 'rapidfuzz', '**/*.cpp'), recursive=True))
-    with open(output_cpp, mode='w', encoding='utf-8') as cpp:
-        cpp.write(formatted_file_header())
-        cpp.write('\n#include "rapidfuzz_amalgamated.hpp"\n')
-        for file in cpp_files:
-            concatenate_file(cpp, file, False)
-    print('Concatenated {} cpp files'.format(len(cpp_files)))
-
+    # format output properly
+    subprocess.run(["clang-format", "-i", output_header])
 
 generate_header()
-#generate_cpp()
 
 
 # Notes:

@@ -41,13 +41,15 @@ struct Matrix {
 
     using value_type = T;
 
-    Matrix(size_t rows, size_t cols, T val) : m_rows(rows), m_cols(cols), m_matrix(new T[m_rows * m_cols])
+    Matrix(size_t rows, size_t cols, T val) : m_rows(rows), m_cols(cols), m_matrix(nullptr)
     {
+        if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
         std::fill_n(m_matrix, m_rows * m_cols, val);
     }
 
-    Matrix(const Matrix& other) : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(new T[m_rows * m_cols])
+    Matrix(const Matrix& other) : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(nullptr)
     {
+        if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
         std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
     }
 

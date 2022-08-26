@@ -156,8 +156,7 @@ void vector_remove_slice(Vec& vec, int start, int stop, int step)
 
     auto iter = vec.begin() + start;
     for (int i = start; i < static_cast<int>(vec.size()); i++)
-        if (i >= stop || ((i - start) % step != 0))
-            *(iter++) = vec[static_cast<size_t>(i)];
+        if (i >= stop || ((i - start) % step != 0)) *(iter++) = vec[static_cast<size_t>(i)];
 
     vec.resize(static_cast<size_t>(std::distance(vec.begin(), iter)));
     vec.shrink_to_fit();

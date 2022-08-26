@@ -2,7 +2,9 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #include <rapidfuzz/details/Matrix.hpp>
+#include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/distance.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 
 #include <algorithm>
@@ -405,35 +407,6 @@ LLCSBitMatrix llcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
-{
-    int64_t maximum = std::max(s1.size(), s2.size());
-    int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
-    int64_t sim = lcs_seq_similarity(s1, s2, cutoff_similarity);
-    int64_t dist = maximum - sim;
-    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-}
-
-template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
-{
-    if (s1.empty() || s2.empty()) return 0.0;
-
-    double maximum = static_cast<double>(std::max(s1.size(), s2.size()));
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(maximum * score_cutoff));
-    double norm_sim = static_cast<double>(lcs_seq_distance(s1, s2, cutoff_distance)) / maximum;
-    return (norm_sim <= score_cutoff) ? norm_sim : 1.0;
-}
-
-template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
-{
-    double cutoff_score = NormSim_to_NormDist(score_cutoff);
-    double norm_sim = 1.0 - lcs_seq_normalized_distance(s1, s2, cutoff_score);
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
-template <typename InputIt1, typename InputIt2>
 Editops lcs_seq_editops(Range<InputIt1> s1, Range<InputIt2> s2)
 {
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
@@ -442,145 +415,22 @@ Editops lcs_seq_editops(Range<InputIt1> s1, Range<InputIt2> s2)
     return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
 }
 
+class LCSseq : public SimilarityBase<LCSseq> {
+    friend SimilarityBase<LCSseq>;
+    friend NormalizedMetricBase<LCSseq>;
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    {
+        return std::max(s1.size(), s2.size());
+    }
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    {
+        return lcs_seq_similarity(s1, s2, score_cutoff);
+    }
+};
+
 } // namespace detail
-
-template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff)
-{
-    return detail::lcs_seq_distance(detail::make_range(first1, last1), detail::make_range(first2, last2),
-                                    score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
-{
-    return detail::lcs_seq_distance(detail::make_range(s1), detail::make_range(s2), score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff)
-{
-    return detail::lcs_seq_normalized_distance(detail::make_range(first1, last1),
-                                               detail::make_range(first2, last2), score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double lcs_seq_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
-{
-    return detail::lcs_seq_normalized_distance(detail::make_range(s1), detail::make_range(s2), score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff)
-{
-    return detail::lcs_seq_similarity(detail::make_range(first1, last1), detail::make_range(first2, last2),
-                                      score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff)
-{
-    return detail::lcs_seq_similarity(detail::make_range(s1), detail::make_range(s2), score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff)
-{
-    return detail::lcs_seq_normalized_similarity(detail::make_range(first1, last1),
-                                                 detail::make_range(first2, last2), score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
-{
-    return detail::lcs_seq_normalized_similarity(detail::make_range(s1), detail::make_range(s2),
-                                                 score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
-{
-    return detail::lcs_seq_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
-}
-
-template <typename Sentence1, typename Sentence2>
-Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
-{
-    return detail::lcs_seq_editops(detail::make_range(s1), detail::make_range(s2));
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLCSseq<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    int64_t maximum = std::max<int64_t>(static_cast<int64_t>(s1.size()), std::distance(first2, last2));
-    int64_t cutoff_distance = std::max<int64_t>(0, maximum - score_cutoff);
-    int64_t sim = similarity(first2, last2, cutoff_distance);
-    int64_t dist = maximum - sim;
-    return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLCSseq<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLCSseq<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    int64_t maximum = std::max<int64_t>(static_cast<int64_t>(s1.size()), std::distance(first2, last2));
-    if (maximum == 0) return 0;
-
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    double norm_dist =
-        static_cast<double>(distance(first2, last2, cutoff_distance)) / static_cast<double>(maximum);
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLCSseq<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLCSseq<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    return detail::lcs_seq_similarity(PM, detail::make_range(s1), detail::make_range(first2, last2),
-                                      score_cutoff);
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLCSseq<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLCSseq<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
-{
-    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = normalized_distance(first2, last2, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLCSseq<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
 } // namespace rapidfuzz

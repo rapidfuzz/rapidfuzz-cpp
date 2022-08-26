@@ -4,6 +4,9 @@
 #include <cmath>
 #include <cstddef>
 #include <rapidfuzz/details/Matrix.hpp>
+#include <rapidfuzz/details/PatternMatchVector.hpp>
+#include <rapidfuzz/details/common.hpp>
+#include <rapidfuzz/details/distance.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 
 namespace rapidfuzz {
@@ -440,7 +443,8 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
 }
 
 struct LevenshteinBitMatrix {
-    LevenshteinBitMatrix(size_t rows, size_t cols) : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(0)
+    LevenshteinBitMatrix(size_t rows, size_t cols, size_t dist_ = 0)
+        : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(dist_)
     {}
 
     Matrix<uint64_t> VP;
@@ -735,11 +739,8 @@ LevenshteinBitRow levenshtein_row_hyrroe2003_block(const BlockPatternMatchVector
 template <typename InputIt1, typename InputIt2>
 LevenshteinBitMatrix levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    if (s1.empty() || s2.empty()) {
-        LevenshteinBitMatrix matrix(0, 0);
-        matrix.dist = static_cast<size_t>(s1.size() + s2.size());
-        return matrix;
-    }
+    if (s1.empty() || s2.empty())
+        return {0, 0, static_cast<size_t>(s1.size() + s2.size())};
     else if (s1.size() <= 64)
         return levenshtein_matrix_hyrroe2003(PatternMatchVector(s1), s1, s2);
     else
@@ -776,7 +777,7 @@ int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // max can make use of the common divisor of the three weights
             int64_t new_max = ceil_div(max, weights.insert_cost);
-            int64_t distance = indel_distance(s1, s2, new_max);
+            int64_t distance = rapidfuzz::indel_distance(s1, s2, new_max);
             distance *= weights.insert_cost;
             return (distance <= max) ? distance : max + 1;
         }
@@ -784,39 +785,6 @@ int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
 
     return generalized_levenshtein_wagner_fischer(s1, s2, weights, max);
 }
-
-template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
-                                       double score_cutoff)
-{
-    int64_t maximum = detail::levenshtein_maximum(s1, s2, weights);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    int64_t dist = levenshtein_distance(s1, s2, weights, cutoff_distance);
-    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_similarity(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
-                               int64_t score_cutoff)
-{
-    int64_t maximum = levenshtein_maximum(s1, s2, weights);
-    int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t dist = levenshtein_distance(s1, s2, weights, cutoff_distance);
-    int64_t sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
-}
-
-template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2,
-                                         LevenshteinWeightTable weights, double score_cutoff)
-{
-    double cutoff_score = NormSim_to_NormDist(score_cutoff);
-    double norm_dist = levenshtein_normalized_distance(s1, s2, weights, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
 struct HirschbergPos {
     int64_t left_score;
     int64_t right_score;
@@ -918,181 +886,23 @@ Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2)
     return editops;
 }
 
-} // namespace detail
+class Levenshtein : public DistanceBase<Levenshtein, LevenshteinWeightTable> {
+    friend DistanceBase<Levenshtein, LevenshteinWeightTable>;
+    friend NormalizedMetricBase<Levenshtein, LevenshteinWeightTable>;
 
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                             LevenshteinWeightTable weights, int64_t max)
-{
-    return detail::levenshtein_distance(detail::make_range(first1, last1), detail::make_range(first2, last2),
-                                        weights, max);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2, LevenshteinWeightTable weights,
-                             int64_t max)
-{
-    return detail::levenshtein_distance(detail::make_range(s1), detail::make_range(s2), weights, max);
-}
-
-template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       LevenshteinWeightTable weights, double score_cutoff)
-{
-    return detail::levenshtein_normalized_distance(detail::make_range(first1, last1),
-                                                   detail::make_range(first2, last2), weights, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                       LevenshteinWeightTable weights, double score_cutoff)
-{
-    return detail::levenshtein_normalized_distance(detail::make_range(s1), detail::make_range(s2), weights,
-                                                   score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               LevenshteinWeightTable weights, int64_t score_cutoff)
-{
-    return detail::levenshtein_similarity(detail::make_range(first1, last1),
-                                          detail::make_range(first2, last2), weights, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, LevenshteinWeightTable weights,
-                               int64_t score_cutoff)
-{
-    return detail::levenshtein_similarity(detail::make_range(s1), detail::make_range(s2), weights,
-                                          score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                         LevenshteinWeightTable weights, double score_cutoff)
-{
-    return detail::levenshtein_normalized_similarity(
-        detail::make_range(first1, last1), detail::make_range(first2, last2), weights, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                         LevenshteinWeightTable weights, double score_cutoff)
-{
-    return detail::levenshtein_normalized_similarity(detail::make_range(s1), detail::make_range(s2), weights,
-                                                     score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
-{
-    return detail::levenshtein_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
-}
-
-template <typename Sentence1, typename Sentence2>
-Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
-{
-    return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2));
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLevenshtein<CharT1>::distance(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    if (weights.insert_cost == weights.delete_cost) {
-        /* when insertions + deletions operations are free there can not be any edit distance */
-        if (weights.insert_cost == 0) return 0;
-
-        /* uniform Levenshtein multiplied with the common factor */
-        if (weights.insert_cost == weights.replace_cost) {
-            // max can make use of the common divisor of the three weights
-            int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-            int64_t dist = detail::uniform_levenshtein_distance(PM, detail::make_range(s1),
-                                                                detail::make_range(first2, last2), new_max);
-            dist *= weights.insert_cost;
-
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-        }
-        /*
-         * when replace_cost >= insert_cost + delete_cost no substitutions are performed
-         * therefore this can be implemented as InDel distance multiplied with the common factor
-         */
-        else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-            // max can make use of the common divisor of the three weights
-            int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-            int64_t dist = detail::indel_distance(PM, detail::make_range(s1),
-                                                  detail::make_range(first2, last2), new_max);
-            dist *= weights.insert_cost;
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
-        }
+    template <typename InputIt1, typename InputIt2>
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights)
+    {
+        return levenshtein_maximum(s1, s2, weights);
     }
 
-    return detail::generalized_levenshtein_distance(detail::make_range(s1), detail::make_range(first2, last2),
-                                                    weights, score_cutoff);
-}
+    template <typename InputIt1, typename InputIt2>
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
+                             int64_t score_cutoff)
+    {
+        return levenshtein_distance(s1, s2, weights, score_cutoff);
+    }
+};
 
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLevenshtein<CharT1>::distance(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLevenshtein<CharT1>::normalized_distance(InputIt2 first2, InputIt2 last2,
-                                                      double score_cutoff) const
-{
-    int64_t maximum =
-        detail::levenshtein_maximum(detail::make_range(s1), detail::make_range(first2, last2), weights);
-    int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-    int64_t dist = distance(first2, last2, cutoff_distance);
-    double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
-    return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLevenshtein<CharT1>::normalized_distance(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_distance(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-int64_t CachedLevenshtein<CharT1>::similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff) const
-{
-    int64_t maximum =
-        detail::levenshtein_maximum(detail::make_range(s1), detail::make_range(first2, last2), weights);
-    int64_t cutoff_distance = maximum - score_cutoff;
-    int64_t dist = distance(first2, last2, cutoff_distance);
-    int64_t sim = maximum - dist;
-    return (sim >= score_cutoff) ? sim : 0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-int64_t CachedLevenshtein<CharT1>::similarity(const Sentence2& s2, int64_t score_cutoff) const
-{
-    return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
-template <typename CharT1>
-template <typename InputIt2>
-double CachedLevenshtein<CharT1>::normalized_similarity(InputIt2 first2, InputIt2 last2,
-                                                        double score_cutoff) const
-{
-    double cutoff_score = detail::NormSim_to_NormDist(score_cutoff);
-    double norm_dist = normalized_distance(first2, last2, cutoff_score);
-    double norm_sim = 1.0 - norm_dist;
-    return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-}
-
-template <typename CharT1>
-template <typename Sentence2>
-double CachedLevenshtein<CharT1>::normalized_similarity(const Sentence2& s2, double score_cutoff) const
-{
-    return normalized_similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
-}
-
+} // namespace detail
 } // namespace rapidfuzz
