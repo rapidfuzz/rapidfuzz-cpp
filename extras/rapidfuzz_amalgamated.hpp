@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-27 21:41:52.211148
+//  Generated: 2022-08-27 22:26:04.029034
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2576,11 +2576,28 @@ private:
 } // namespace detail
 } // namespace rapidfuzz
 
+#include <limits>
+
 #include <algorithm>
 #include <array>
 
 namespace rapidfuzz {
 namespace detail {
+
+template <bool RecordMatrix>
+struct LCSseqResult;
+
+template <>
+struct LCSseqResult<true> {
+    Matrix<uint64_t> S;
+
+    int64_t sim;
+};
+
+template <>
+struct LCSseqResult<false> {
+    int64_t sim;
+};
 
 /*
  * An encoded mbleven model table.
@@ -2671,55 +2688,71 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
     return (max_len >= score_cutoff) ? max_len : 0;
 }
 
-template <size_t N, typename PMV, typename InputIt1, typename InputIt2>
-static inline int64_t longest_common_subsequence_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2,
-                                                        int64_t score_cutoff)
+template <bool RecordMatrix>
+struct LCSseqResult;
+
+template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
+auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t score_cutoff = 0)
+    -> LCSseqResult<RecordMatrix>
 {
     uint64_t S[N];
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
-    for (const auto& ch : s2) {
+    LCSseqResult<RecordMatrix> res;
+    static_if<RecordMatrix>([&](auto f) { f(res).S = Matrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
+
+    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
-        unroll<size_t, N>([&](size_t i) {
-            uint64_t Matches = block.get(i, ch);
-            uint64_t u = S[i] & Matches;
-            uint64_t x = addc64(S[i], u, carry, &carry);
-            S[i] = x | (S[i] - u);
+        unroll<size_t, N>([&](size_t word) {
+            uint64_t Matches = block.get(word, s2[i]);
+            uint64_t u = S[word] & Matches;
+            uint64_t x = addc64(S[word], u, carry, &carry);
+            S[word] = x | (S[word] - u);
+
+            static_if<RecordMatrix>([&](auto f) { f(res).S[i][word] = S[word]; });
         });
     }
 
-    int64_t res = 0;
-    unroll<size_t, N>([&](size_t i) { res += popcount(~S[i]); });
+    res.sim = 0;
+    unroll<size_t, N>([&](size_t i) { res.sim += popcount(~S[i]); });
 
-    return (res >= score_cutoff) ? res : 0;
+    if (res.sim < score_cutoff) res.sim = 0;
+
+    return res;
 }
 
-template <typename InputIt1, typename InputIt2>
-static inline int64_t longest_common_subsequence_blockwise(const BlockPatternMatchVector& block,
-                                                           Range<InputIt1>, Range<InputIt2> s2,
-                                                           int64_t score_cutoff)
+template <bool RecordMatrix, typename InputIt1, typename InputIt2>
+auto lcs_blockwise(const BlockPatternMatchVector& block, Range<InputIt1>, Range<InputIt2> s2,
+                   int64_t score_cutoff = 0) -> LCSseqResult<RecordMatrix>
 {
     auto words = block.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
-    for (const auto& ch : s2) {
+    LCSseqResult<RecordMatrix> res;
+    static_if<RecordMatrix>([&](auto f) { f(res).S = Matrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
+
+    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, ch);
+            const uint64_t Matches = block.get(word, s2[i]);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
 
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
+
+            static_if<RecordMatrix>([&](auto f) { f(res).S[i][word] = S[word]; });
         }
     }
 
-    int64_t res = 0;
+    res.sim = 0;
     for (uint64_t Stemp : S)
-        res += popcount(~Stemp);
+        res.sim += popcount(~Stemp);
 
-    return (res >= score_cutoff) ? res : 0;
+    if (res.sim < score_cutoff) res.sim = 0;
+
+    return res;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -2729,15 +2762,15 @@ int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<I
     auto nr = ceil_div(s1.size(), 64);
     switch (nr) {
     case 0: return 0;
-    case 1: return longest_common_subsequence_unroll<1>(block, s1, s2, score_cutoff);
-    case 2: return longest_common_subsequence_unroll<2>(block, s1, s2, score_cutoff);
-    case 3: return longest_common_subsequence_unroll<3>(block, s1, s2, score_cutoff);
-    case 4: return longest_common_subsequence_unroll<4>(block, s1, s2, score_cutoff);
-    case 5: return longest_common_subsequence_unroll<5>(block, s1, s2, score_cutoff);
-    case 6: return longest_common_subsequence_unroll<6>(block, s1, s2, score_cutoff);
-    case 7: return longest_common_subsequence_unroll<7>(block, s1, s2, score_cutoff);
-    case 8: return longest_common_subsequence_unroll<8>(block, s1, s2, score_cutoff);
-    default: return longest_common_subsequence_blockwise(block, s1, s2, score_cutoff);
+    case 1: return lcs_unroll<1, false>(block, s1, s2, score_cutoff).sim;
+    case 2: return lcs_unroll<2, false>(block, s1, s2, score_cutoff).sim;
+    case 3: return lcs_unroll<3, false>(block, s1, s2, score_cutoff).sim;
+    case 4: return lcs_unroll<4, false>(block, s1, s2, score_cutoff).sim;
+    case 5: return lcs_unroll<5, false>(block, s1, s2, score_cutoff).sim;
+    case 6: return lcs_unroll<6, false>(block, s1, s2, score_cutoff).sim;
+    case 7: return lcs_unroll<7, false>(block, s1, s2, score_cutoff).sim;
+    case 8: return lcs_unroll<8, false>(block, s1, s2, score_cutoff).sim;
+    default: return lcs_blockwise<false>(block, s1, s2, score_cutoff).sim;
     }
 }
 
@@ -2747,15 +2780,15 @@ int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64
     auto nr = ceil_div(s1.size(), 64);
     switch (nr) {
     case 0: return 0;
-    case 1: return longest_common_subsequence_unroll<1>(PatternMatchVector(s1), s1, s2, score_cutoff);
-    case 2: return longest_common_subsequence_unroll<2>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    case 3: return longest_common_subsequence_unroll<3>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    case 4: return longest_common_subsequence_unroll<4>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    case 5: return longest_common_subsequence_unroll<5>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    case 6: return longest_common_subsequence_unroll<6>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    case 7: return longest_common_subsequence_unroll<7>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    case 8: return longest_common_subsequence_unroll<8>(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
-    default: return longest_common_subsequence_blockwise(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
+    case 1: return lcs_unroll<1, false>(PatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 2: return lcs_unroll<2, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 3: return lcs_unroll<3, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 4: return lcs_unroll<4, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 5: return lcs_unroll<5, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 6: return lcs_unroll<6, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 7: return lcs_unroll<7, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    case 8: return lcs_unroll<8, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
+    default: return lcs_blockwise<false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
     }
 }
 
@@ -2814,25 +2847,16 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
     return lcs_sim;
 }
 
-struct LLCSBitMatrix {
-    LLCSBitMatrix(size_t rows, size_t cols, ptrdiff_t _dist = 0) : S(rows, cols, ~UINT64_C(0)), dist(_dist)
-    {}
-
-    Matrix<uint64_t> S;
-
-    ptrdiff_t dist;
-};
-
 /**
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename InputIt1, typename InputIt2>
-Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LLCSBitMatrix& matrix,
+Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqResult<true>& matrix,
                           StringAffix affix)
 {
     auto len1 = s1.size();
     auto len2 = s2.size();
-    auto dist = static_cast<size_t>(matrix.dist);
+    size_t dist = static_cast<size_t>(static_cast<int64_t>(len1) + len2 - 2 * matrix.sim);
     Editops editops(dist);
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
     editops.set_dest_len(len2 + affix.prefix_len + affix.suffix_len);
@@ -2895,83 +2919,26 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LLCSBitM
     return editops;
 }
 
-template <size_t N, typename PMV, typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_unroll(const PMV& block, Range<InputIt1> s1, Range<InputIt2> s2)
-{
-    auto len1 = s1.size();
-    auto len2 = s2.size();
-    uint64_t S[N];
-    unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
-
-    LLCSBitMatrix matrix(len2, N);
-
-    for (ptrdiff_t i = 0; i < len2; ++i) {
-        uint64_t carry = 0;
-        unroll<size_t, N>([&](size_t word) {
-            uint64_t Matches = block.get(word, s2[i]);
-            uint64_t u = S[word] & Matches;
-            uint64_t x = addc64(S[word], u, carry, &carry);
-            S[word] = matrix.S[i][word] = x | (S[word] - u);
-        });
-    }
-
-    int64_t res = 0;
-    unroll<size_t, N>([&](size_t i) { res += popcount(~S[i]); });
-
-    matrix.dist = static_cast<ptrdiff_t>(static_cast<int64_t>(len1) + len2 - 2 * res);
-
-    return matrix;
-}
-
 template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix_blockwise(const BlockPatternMatchVector& block, Range<InputIt1> s1,
-                                    Range<InputIt2> s2)
-{
-    auto len1 = s1.size();
-    auto len2 = s2.size();
-    auto words = block.size();
-    /* todo could be replaced with access to matrix which would slightly
-     * reduce memory usage */
-    std::vector<uint64_t> S(words, ~UINT64_C(0));
-    LLCSBitMatrix matrix(len2, words);
-
-    for (size_t i = 0; i < static_cast<size_t>(len2); ++i) {
-        uint64_t carry = 0;
-        for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, s2[i]);
-            uint64_t Stemp = S[word];
-
-            uint64_t u = Stemp & Matches;
-
-            uint64_t x = addc64(Stemp, u, carry, &carry);
-            S[word] = matrix.S[i][word] = x | (Stemp - u);
-        }
-    }
-
-    int64_t res = 0;
-    for (uint64_t Stemp : S)
-        res += popcount(~Stemp);
-
-    matrix.dist = static_cast<ptrdiff_t>(static_cast<std::int64_t>(len1) + len2 - 2 * res);
-
-    return matrix;
-}
-
-template <typename InputIt1, typename InputIt2>
-LLCSBitMatrix llcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
+LCSseqResult<true> lcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
     auto nr = ceil_div(s1.size(), 64);
     switch (nr) {
-    case 0: return LLCSBitMatrix(0, 0, s1.size() + s2.size());
-    case 1: return llcs_matrix_unroll<1>(PatternMatchVector(s1), s1, s2);
-    case 2: return llcs_matrix_unroll<2>(BlockPatternMatchVector(s1), s1, s2);
-    case 3: return llcs_matrix_unroll<3>(BlockPatternMatchVector(s1), s1, s2);
-    case 4: return llcs_matrix_unroll<4>(BlockPatternMatchVector(s1), s1, s2);
-    case 5: return llcs_matrix_unroll<5>(BlockPatternMatchVector(s1), s1, s2);
-    case 6: return llcs_matrix_unroll<6>(BlockPatternMatchVector(s1), s1, s2);
-    case 7: return llcs_matrix_unroll<7>(BlockPatternMatchVector(s1), s1, s2);
-    case 8: return llcs_matrix_unroll<8>(BlockPatternMatchVector(s1), s1, s2);
-    default: return llcs_matrix_blockwise(BlockPatternMatchVector(s1), s1, s2);
+    case 0:
+    {
+        LCSseqResult<true> res;
+        res.sim = 0;
+        return res;
+    }
+    case 1: return lcs_unroll<1, true>(PatternMatchVector(s1), s1, s2);
+    case 2: return lcs_unroll<2, true>(BlockPatternMatchVector(s1), s1, s2);
+    case 3: return lcs_unroll<3, true>(BlockPatternMatchVector(s1), s1, s2);
+    case 4: return lcs_unroll<4, true>(BlockPatternMatchVector(s1), s1, s2);
+    case 5: return lcs_unroll<5, true>(BlockPatternMatchVector(s1), s1, s2);
+    case 6: return lcs_unroll<6, true>(BlockPatternMatchVector(s1), s1, s2);
+    case 7: return lcs_unroll<7, true>(BlockPatternMatchVector(s1), s1, s2);
+    case 8: return lcs_unroll<8, true>(BlockPatternMatchVector(s1), s1, s2);
+    default: return lcs_blockwise<true>(BlockPatternMatchVector(s1), s1, s2);
     }
 }
 
@@ -2981,7 +2948,7 @@ Editops lcs_seq_editops(Range<InputIt1> s1, Range<InputIt2> s2)
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = remove_common_affix(s1, s2);
 
-    return recover_alignment(s1, s2, llcs_matrix(s1, s2), affix);
+    return recover_alignment(s1, s2, lcs_matrix(s1, s2), affix);
 }
 
 class LCSseq : public SimilarityBase<LCSseq> {
@@ -3304,7 +3271,7 @@ struct LevenshteinRow {
     {}
 };
 
-template <bool RecordLevMatrix, bool RecordBitRow>
+template <bool RecordMatrix, bool RecordBitRow>
 struct LevenshteinResult;
 
 template <>
@@ -3500,18 +3467,18 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
  *
  * @return returns the levenshtein distance between s1 and s2
  */
-template <bool RecordLevMatrix, bool RecordBitRow, typename PM_Vec, typename InputIt1, typename InputIt2>
+template <bool RecordMatrix, bool RecordBitRow, typename PM_Vec, typename InputIt1, typename InputIt2>
 auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
                             int64_t max = std::numeric_limits<int64_t>::max())
-    -> LevenshteinResult<RecordLevMatrix, RecordBitRow>
+    -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
 
-    LevenshteinResult<RecordLevMatrix, RecordBitRow> res;
+    LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    static_if<RecordLevMatrix>([&](auto f) {
+    static_if<RecordMatrix>([&](auto f) {
         f(res).VP = Matrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
         f(res).VN = Matrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
     });
@@ -3541,7 +3508,7 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
 
-        static_if<RecordLevMatrix>([&](auto f) {
+        static_if<RecordMatrix>([&](auto f) {
             f(res).VP[static_cast<size_t>(i)][0] = VP;
             f(res).VN[static_cast<size_t>(i)][0] = VN;
         });
@@ -3735,18 +3702,18 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     return (currDist <= max) ? currDist : max + 1;
 }
 
-template <bool RecordLevMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
-auto levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                                 int64_t max = std::numeric_limits<int64_t>::max())
-    -> LevenshteinResult<RecordLevMatrix, RecordBitRow>
+template <bool RecordMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
+auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+                                  int64_t max = std::numeric_limits<int64_t>::max())
+    -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
     auto words = PM.size();
     std::vector<LevenshteinRow> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
 
-    LevenshteinResult<RecordLevMatrix, RecordBitRow> res;
+    LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    static_if<RecordLevMatrix>([&](auto f) {
+    static_if<RecordMatrix>([&](auto f) {
         f(res).VP = Matrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
         f(res).VN = Matrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
     });
@@ -3784,7 +3751,7 @@ auto levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<InputI
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            static_if<RecordLevMatrix>([&](auto f) {
+            static_if<RecordMatrix>([&](auto f) {
                 f(res).VP[static_cast<size_t>(i)][word] = vecs[word].VP;
                 f(res).VN[static_cast<size_t>(i)][word] = vecs[word].VN;
             });
@@ -3814,7 +3781,7 @@ auto levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<InputI
             vecs[words - 1].VP = HN | ~(D0 | HP);
             vecs[words - 1].VN = HP & D0;
 
-            static_if<RecordLevMatrix>([&](auto f) {
+            static_if<RecordMatrix>([&](auto f) {
                 f(res).VP[static_cast<size_t>(i)][words - 1] = vecs[words - 1].VP;
                 f(res).VN[static_cast<size_t>(i)][words - 1] = vecs[words - 1].VN;
             });
@@ -3858,7 +3825,7 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
         else if (full_band <= 64)
             return levenshtein_hyrroe2003_small_band(block, s1, s2, max);
         else
-            return levenshtein_myers1999_block<false, false>(block, s1, s2, max).dist;
+            return levenshtein_hyrroe2003_block<false, false>(block, s1, s2, max).dist;
     }
 
     /* common affix does not effect Levenshtein distance */
@@ -3899,7 +3866,7 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     else if (full_band <= 64)
         return levenshtein_hyrroe2003_small_band(s1, s2, max);
     else
-        return levenshtein_myers1999_block<false, false>(BlockPatternMatchVector(s1), s1, s2, max).dist;
+        return levenshtein_hyrroe2003_block<false, false>(BlockPatternMatchVector(s1), s1, s2, max).dist;
 }
 
 /**
@@ -3984,13 +3951,13 @@ LevenshteinResult<true, false> levenshtein_matrix(Range<InputIt1> s1, Range<Inpu
     else if (s1.size() <= 64)
         return levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
     else
-        return levenshtein_myers1999_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
+        return levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
 }
 
 template <typename InputIt1, typename InputIt2>
 LevenshteinResult<false, true> levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    return levenshtein_myers1999_block<false, true>(BlockPatternMatchVector(s1), s1, s2);
+    return levenshtein_hyrroe2003_block<false, true>(BlockPatternMatchVector(s1), s1, s2);
 }
 
 template <typename InputIt1, typename InputIt2>
