@@ -640,13 +640,8 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
     size_t row = static_cast<size_t>(s2.size());
 
     while (row && col) {
-        size_t col_pos = col - 1;
-        size_t col_word = col_pos / 64;
-        col_pos = col_pos % 64;
-        uint64_t mask = UINT64_C(1) << col_pos;
-
         /* Deletion */
-        if (matrix.VP[row - 1][col_word] & mask) {
+        if (matrix.VP[row - 1].test_bit(col - 1)) {
             assert(dist > 0);
             dist--;
             col--;
@@ -658,7 +653,7 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
             row--;
 
             /* Insertion */
-            if (row && matrix.VN[row - 1][col_word] & mask) {
+            if (row && matrix.VN[row - 1].test_bit(col - 1)) {
                 assert(dist > 0);
                 dist--;
                 editops[editop_pos + dist].type = EditType::Insert;

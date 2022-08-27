@@ -20,6 +20,17 @@ struct MatrixVectorView {
     MatrixVectorView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
     {}
 
+    bool test_bit(size_type bit) const noexcept
+    {
+        size_t word_size = sizeof(value_type) * 8;
+        size_t word = bit / word_size;
+        bit = bit % word_size;
+        value_type mask = value_type(1) << bit;
+
+        assert(word < m_cols);
+        return bool(m_vector[word] & mask);
+    }
+
     reference operator[](size_type col) noexcept
     {
         assert(col < m_cols);

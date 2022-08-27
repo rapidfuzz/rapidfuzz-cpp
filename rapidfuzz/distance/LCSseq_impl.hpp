@@ -151,9 +151,9 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     return res;
 }
 
-template <bool RecordMatrix, typename InputIt1, typename InputIt2>
-auto lcs_blockwise(const BlockPatternMatchVector& block, Range<InputIt1>, Range<InputIt2> s2,
-                   int64_t score_cutoff = 0) -> LCSseqResult<RecordMatrix>
+template <bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
+auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t score_cutoff = 0)
+    -> LCSseqResult<RecordMatrix>
 {
     auto words = block.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
@@ -185,9 +185,9 @@ auto lcs_blockwise(const BlockPatternMatchVector& block, Range<InputIt1>, Range<
     return res;
 }
 
-template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<InputIt1> s1,
-                                   Range<InputIt2> s2, int64_t score_cutoff)
+template <typename PMV, typename InputIt1, typename InputIt2>
+int64_t longest_common_subsequence(const PMV& block, Range<InputIt1> s1, Range<InputIt2> s2,
+                                   int64_t score_cutoff)
 {
     auto nr = ceil_div(s1.size(), 64);
     switch (nr) {
@@ -207,19 +207,10 @@ int64_t longest_common_subsequence(const BlockPatternMatchVector& block, Range<I
 template <typename InputIt1, typename InputIt2>
 int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
 {
-    auto nr = ceil_div(s1.size(), 64);
-    switch (nr) {
-    case 0: return 0;
-    case 1: return lcs_unroll<1, false>(PatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 2: return lcs_unroll<2, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 3: return lcs_unroll<3, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 4: return lcs_unroll<4, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 5: return lcs_unroll<5, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 6: return lcs_unroll<6, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 7: return lcs_unroll<7, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    case 8: return lcs_unroll<8, false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    default: return lcs_blockwise<false>(BlockPatternMatchVector(s1), s1, s2, score_cutoff).sim;
-    }
+    if (s1.empty()) return 0;
+    if (s1.size() <= 64) return longest_common_subsequence(PatternMatchVector(s1), s1, s2, score_cutoff);
+
+    return longest_common_subsequence(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -297,13 +288,8 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
     auto row = len2;
 
     while (row && col) {
-        uint64_t col_pos = col - 1;
-        uint64_t col_word = col_pos / 64;
-        col_pos = col_pos % 64;
-        uint64_t mask = UINT64_C(1) << col_pos;
-
         /* Deletion */
-        if (matrix.S[row - 1][col_word] & mask) {
+        if (matrix.S[row - 1].test_bit(col - 1)) {
             assert(dist > 0);
             dist--;
             col--;
@@ -315,7 +301,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
             row--;
 
             /* Insertion */
-            if (row && (~matrix.S[row - 1][col_word]) & mask) {
+            if (row && !(matrix.S[row - 1].test_bit(col - 1))) {
                 assert(dist > 0);
                 dist--;
                 editops[dist].type = EditType::Insert;

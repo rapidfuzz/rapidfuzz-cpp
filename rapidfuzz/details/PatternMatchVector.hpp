@@ -73,6 +73,11 @@ struct PatternMatchVector {
         insert(s);
     }
 
+    size_t size() const noexcept
+    {
+        return 1;
+    }
+
     template <typename InputIt>
     void insert(Range<InputIt> s) noexcept
     {
