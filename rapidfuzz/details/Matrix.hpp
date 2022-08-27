@@ -41,6 +41,9 @@ struct Matrix {
 
     using value_type = T;
 
+    Matrix() : m_rows(0), m_cols(0), m_matrix(nullptr)
+    {}
+
     Matrix(size_t rows, size_t cols, T val) : m_rows(rows), m_cols(cols), m_matrix(nullptr)
     {
         if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];

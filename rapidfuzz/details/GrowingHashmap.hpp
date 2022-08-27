@@ -19,7 +19,6 @@ struct GrowingHashmap {
     using size_type = unsigned int;
 
 private:
-
     static constexpr value_type _empty_val = value_type();
     static constexpr size_type min_size = 8;
     struct MapElem {

@@ -1,9 +1,11 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
+#include "rapidfuzz/details/type_traits.hpp"
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <rapidfuzz/details/GrowingHashmap.hpp>
 #include <rapidfuzz/details/Matrix.hpp>
 #include <rapidfuzz/details/PatternMatchVector.hpp>
@@ -11,9 +13,45 @@
 #include <rapidfuzz/details/distance.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
+#include <sys/types.h>
 
 namespace rapidfuzz {
 namespace detail {
+
+struct LevenshteinRow {
+    uint64_t VP;
+    uint64_t VN;
+
+    LevenshteinRow() : VP(~UINT64_C(0)), VN(0)
+    {}
+
+    LevenshteinRow(uint64_t VP_, uint64_t VN_) : VP(VP_), VN(VN_)
+    {}
+};
+
+template <bool RecordLevMatrix, bool RecordBitRow>
+struct LevenshteinResult;
+
+template <>
+struct LevenshteinResult<true, false> {
+    Matrix<uint64_t> VP;
+    Matrix<uint64_t> VN;
+
+    int64_t dist;
+};
+
+template <>
+struct LevenshteinResult<false, true> {
+    std::vector<LevenshteinRow> vecs;
+
+    int64_t dist;
+};
+
+template <>
+struct LevenshteinResult<false, false> {
+    int64_t dist;
+};
+
 template <typename InputIt1, typename InputIt2>
 int64_t generalized_levenshtein_wagner_fischer(Range<InputIt1> s1, Range<InputIt2> s2,
                                                LevenshteinWeightTable weights, int64_t max)
@@ -187,21 +225,29 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
  *
  * @return returns the levenshtein distance between s1 and s2
  */
-template <typename PM_Vec, typename InputIt1, typename InputIt2>
-int64_t levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+template <bool RecordLevMatrix, bool RecordBitRow, typename PM_Vec, typename InputIt1, typename InputIt2>
+auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+                            int64_t max = std::numeric_limits<int64_t>::max())
+    -> LevenshteinResult<RecordLevMatrix, RecordBitRow>
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
-    int64_t currDist = s1.size();
+
+    LevenshteinResult<RecordLevMatrix, RecordBitRow> res;
+    res.dist = s1.size();
+    static_if<RecordLevMatrix>([&](auto f) {
+        f(res).VP = Matrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = Matrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+    });
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
 
     /* Searching */
-    for (const auto& ch : s2) {
+    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(0, ch);
+        uint64_t PM_j = PM.get(0, s2[i]);
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -210,8 +256,8 @@ int64_t levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<Input
         uint64_t HN = D0 & VP;
 
         /* Step 3: Computing the value D[m,j] */
-        currDist += bool(HP & mask);
-        currDist -= bool(HN & mask);
+        res.dist += bool(HP & mask);
+        res.dist -= bool(HN & mask);
 
         /* Step 4: Computing Vp and VN */
         HP = (HP << 1) | 1;
@@ -219,9 +265,18 @@ int64_t levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<Input
 
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
+
+        static_if<RecordLevMatrix>([&](auto f) {
+            f(res).VP[static_cast<size_t>(i)][0] = VP;
+            f(res).VN[static_cast<size_t>(i)][0] = VN;
+        });
     }
 
-    return (currDist <= max) ? currDist : max + 1;
+    if (res.dist > max) res.dist = max + 1;
+
+    static_if<RecordBitRow>([&](auto f) { f(res).vecs.emplace_back(VP, VN); });
+
+    return res;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -405,31 +460,30 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     return (currDist <= max) ? currDist : max + 1;
 }
 
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                                    int64_t max)
+template <bool RecordLevMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
+auto levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+                                 int64_t max = std::numeric_limits<int64_t>::max())
+    -> LevenshteinResult<RecordLevMatrix, RecordBitRow>
 {
-    struct Vectors {
-        uint64_t VP;
-        uint64_t VN;
-
-        Vectors() : VP(~UINT64_C(0)), VN(0)
-        {}
-    };
-
     auto words = PM.size();
-    int64_t currDist = s1.size();
-    std::vector<Vectors> vecs(words);
+    std::vector<LevenshteinRow> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
 
+    LevenshteinResult<RecordLevMatrix, RecordBitRow> res;
+    res.dist = s1.size();
+    static_if<RecordLevMatrix>([&](auto f) {
+        f(res).VP = Matrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
+        f(res).VN = Matrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
+    });
+
     /* Searching */
-    for (const auto& ch : s2) {
+    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
         for (size_t word = 0; word < words - 1; word++) {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, ch);
+            uint64_t PM_j = PM.get(word, s2[i]);
             uint64_t VN = vecs[word].VN;
             uint64_t VP = vecs[word].VP;
 
@@ -454,11 +508,16 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
 
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
+
+            static_if<RecordLevMatrix>([&](auto f) {
+                f(res).VP[static_cast<size_t>(i)][word] = vecs[word].VP;
+                f(res).VN[static_cast<size_t>(i)][word] = vecs[word].VN;
+            });
         }
 
         {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(words - 1, ch);
+            uint64_t PM_j = PM.get(words - 1, s2[i]);
             uint64_t VN = vecs[words - 1].VN;
             uint64_t VP = vecs[words - 1].VP;
 
@@ -470,8 +529,8 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
             uint64_t HN = D0 & VP;
 
             /* Step 3: Computing the value D[m,j] */
-            currDist += bool(HP & Last);
-            currDist -= bool(HN & Last);
+            res.dist += bool(HP & Last);
+            res.dist -= bool(HN & Last);
 
             /* Step 4: Computing Vp and VN */
             HP = (HP << 1) | HP_carry;
@@ -479,10 +538,19 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
 
             vecs[words - 1].VP = HN | ~(D0 | HP);
             vecs[words - 1].VN = HP & D0;
+
+            static_if<RecordLevMatrix>([&](auto f) {
+                f(res).VP[static_cast<size_t>(i)][words - 1] = vecs[words - 1].VP;
+                f(res).VN[static_cast<size_t>(i)][words - 1] = vecs[words - 1].VN;
+            });
         }
     }
 
-    return (currDist <= max) ? currDist : max + 1;
+    if (res.dist > max) res.dist = max + 1;
+
+    static_if<RecordBitRow>([&](auto f) { f(res).vecs = std::move(vecs); });
+
+    return res;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -511,11 +579,11 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
         int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
         if (s1.size() < 65)
-            return levenshtein_hyrroe2003(block, s1, s2, max);
+            return levenshtein_hyrroe2003<false, false>(block, s1, s2, max).dist;
         else if (full_band <= 64)
             return levenshtein_hyrroe2003_small_band(block, s1, s2, max);
         else
-            return levenshtein_myers1999_block(block, s1, s2, max);
+            return levenshtein_myers1999_block<false, false>(block, s1, s2, max).dist;
     }
 
     /* common affix does not effect Levenshtein distance */
@@ -551,52 +619,23 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
-    if (s1.size() < 65)
-        return levenshtein_hyrroe2003(PatternMatchVector(s1), s1, s2, max);
-    else if (s2.size() < 65)
-        return levenshtein_hyrroe2003(PatternMatchVector(s2), s2, s1, max);
+    if (s2.size() < 65)
+        return levenshtein_hyrroe2003<false, false>(PatternMatchVector(s2), s2, s1, max).dist;
     else if (full_band <= 64)
         return levenshtein_hyrroe2003_small_band(s1, s2, max);
     else
-        return levenshtein_myers1999_block(BlockPatternMatchVector(s1), s1, s2, max);
+        return levenshtein_myers1999_block<false, false>(BlockPatternMatchVector(s1), s1, s2, max).dist;
 }
-
-struct LevenshteinBitMatrix {
-    LevenshteinBitMatrix(size_t rows, size_t cols, size_t dist_ = 0)
-        : VP(rows, cols, ~UINT64_C(0)), VN(rows, cols, 0), dist(dist_)
-    {}
-
-    Matrix<uint64_t> VP;
-    Matrix<uint64_t> VN;
-
-    size_t dist;
-};
-
-struct LevenshteinBitRow {
-    LevenshteinBitRow(size_t cols) : vecs(cols), dist(0)
-    {}
-
-    struct Vectors {
-        uint64_t VP;
-        uint64_t VN;
-
-        Vectors() : VP(~UINT64_C(0)), VN(0)
-        {}
-    };
-
-    std::vector<Vectors> vecs;
-
-    size_t dist;
-};
 
 /**
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename InputIt1, typename InputIt2>
 void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
-                       const LevenshteinBitMatrix& matrix, size_t src_pos, size_t dest_pos, size_t editop_pos)
+                       const LevenshteinResult<true, false>& matrix, size_t src_pos, size_t dest_pos,
+                       size_t editop_pos)
 {
-    auto dist = matrix.dist;
+    size_t dist = static_cast<size_t>(matrix.dist);
     size_t col = static_cast<size_t>(s1.size());
     size_t row = static_cast<size_t>(s2.size());
 
@@ -660,216 +699,23 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix_hyrroe2003(const PatternMatchVector& PM, Range<InputIt1> s1,
-                                                   Range<InputIt2> s2)
+LevenshteinResult<true, false> levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    uint64_t VP = ~UINT64_C(0);
-    uint64_t VN = 0;
-
-    LevenshteinBitMatrix matrix(static_cast<size_t>(s2.size()), 1);
-    matrix.dist = static_cast<size_t>(s1.size());
-
-    /* mask used when computing D[m,j] in the paper 10^(m-1) */
-    uint64_t mask = UINT64_C(1) << (s1.size() - 1);
-
-    /* Searching */
-    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
-        /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(s2[i]);
-        uint64_t X = PM_j;
-        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
-
-        /* Step 2: Computing HP and HN */
-        uint64_t HP = VN | ~(D0 | VP);
-        uint64_t HN = D0 & VP;
-
-        /* Step 3: Computing the value D[m,j] */
-        matrix.dist += bool(HP & mask);
-        matrix.dist -= bool(HN & mask);
-
-        /* Step 4: Computing Vp and VN */
-        HP = (HP << 1) | 1;
-        HN = (HN << 1);
-
-        VP = matrix.VP[static_cast<size_t>(i)][0] = HN | ~(D0 | HP);
-        VN = matrix.VN[static_cast<size_t>(i)][0] = HP & D0;
+    if (s1.empty() || s2.empty()) {
+        LevenshteinResult<true, false> res;
+        res.dist = s1.size() + s2.size();
+        return res;
     }
-
-    return matrix;
-}
-
-template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix_hyrroe2003_block(const BlockPatternMatchVector& PM,
-                                                         Range<InputIt1> s1, Range<InputIt2> s2)
-{
-    /* todo could be replaced with access to matrix which would slightly
-     * reduce memory usage */
-    struct Vectors {
-        uint64_t VP;
-        uint64_t VN;
-
-        Vectors() : VP(~UINT64_C(0)), VN(0)
-        {}
-    };
-
-    auto words = PM.size();
-    LevenshteinBitMatrix matrix(static_cast<size_t>(s2.size()), words);
-    matrix.dist = static_cast<size_t>(s1.size());
-
-    std::vector<Vectors> vecs(words);
-    uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
-
-    /* Searching */
-    for (ptrdiff_t i = 0; i < s2.size(); i++) {
-        uint64_t HP_carry = 1;
-        uint64_t HN_carry = 0;
-
-        for (size_t word = 0; word < words - 1; word++) {
-            /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, s2[i]);
-            uint64_t VN = vecs[word].VN;
-            uint64_t VP = vecs[word].VP;
-
-            uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
-
-            /* Step 2: Computing HP and HN */
-            uint64_t HP = VN | ~(D0 | VP);
-            uint64_t HN = D0 & VP;
-
-            /* Step 3: Computing the value D[m,j] */
-            // only required for last vector
-
-            /* Step 4: Computing Vp and VN */
-            uint64_t HP_carry_temp = HP_carry;
-            HP_carry = HP >> 63;
-            HP = (HP << 1) | HP_carry_temp;
-
-            uint64_t HN_carry_temp = HN_carry;
-            HN_carry = HN >> 63;
-            HN = (HN << 1) | HN_carry_temp;
-
-            vecs[word].VP = matrix.VP[static_cast<size_t>(i)][word] = HN | ~(D0 | HP);
-            vecs[word].VN = matrix.VN[static_cast<size_t>(i)][word] = HP & D0;
-        }
-
-        {
-            /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(words - 1, s2[i]);
-            uint64_t VN = vecs[words - 1].VN;
-            uint64_t VP = vecs[words - 1].VP;
-
-            uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
-
-            /* Step 2: Computing HP and HN */
-            uint64_t HP = VN | ~(D0 | VP);
-            uint64_t HN = D0 & VP;
-
-            /* Step 3: Computing the value D[m,j] */
-            matrix.dist += bool(HP & Last);
-            matrix.dist -= bool(HN & Last);
-
-            /* Step 4: Computing Vp and VN */
-            HP = (HP << 1) | HP_carry;
-            HN = (HN << 1) | HN_carry;
-
-            vecs[words - 1].VP = matrix.VP[static_cast<size_t>(i)][words - 1] = HN | ~(D0 | HP);
-            vecs[words - 1].VN = matrix.VN[static_cast<size_t>(i)][words - 1] = HP & D0;
-        }
-    }
-
-    return matrix;
-}
-
-template <typename InputIt1, typename InputIt2>
-LevenshteinBitRow levenshtein_row_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1,
-                                                   Range<InputIt2> s2)
-{
-    auto words = PM.size();
-    LevenshteinBitRow bit_row(words);
-
-    bit_row.dist = static_cast<size_t>(s1.size());
-    uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
-
-    /* Searching */
-    for (ptrdiff_t i = 0; i < s2.size(); i++) {
-        uint64_t HP_carry = 1;
-        uint64_t HN_carry = 0;
-
-        for (size_t word = 0; word < words - 1; word++) {
-            /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, s2[i]);
-            uint64_t VN = bit_row.vecs[word].VN;
-            uint64_t VP = bit_row.vecs[word].VP;
-
-            uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
-
-            /* Step 2: Computing HP and HN */
-            uint64_t HP = VN | ~(D0 | VP);
-            uint64_t HN = D0 & VP;
-
-            /* Step 3: Computing the value D[m,j] */
-            // only required for last vector
-
-            /* Step 4: Computing Vp and VN */
-            uint64_t HP_carry_temp = HP_carry;
-            HP_carry = HP >> 63;
-            HP = (HP << 1) | HP_carry_temp;
-
-            uint64_t HN_carry_temp = HN_carry;
-            HN_carry = HN >> 63;
-            HN = (HN << 1) | HN_carry_temp;
-
-            bit_row.vecs[word].VP = HN | ~(D0 | HP);
-            bit_row.vecs[word].VN = HP & D0;
-        }
-
-        {
-            /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(words - 1, s2[i]);
-            uint64_t VN = bit_row.vecs[words - 1].VN;
-            uint64_t VP = bit_row.vecs[words - 1].VP;
-
-            uint64_t X = PM_j | HN_carry;
-            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
-
-            /* Step 2: Computing HP and HN */
-            uint64_t HP = VN | ~(D0 | VP);
-            uint64_t HN = D0 & VP;
-
-            /* Step 3: Computing the value D[m,j] */
-            bit_row.dist += bool(HP & Last);
-            bit_row.dist -= bool(HN & Last);
-
-            /* Step 4: Computing Vp and VN */
-            HP = (HP << 1) | HP_carry;
-            HN = (HN << 1) | HN_carry;
-
-            bit_row.vecs[words - 1].VP = HN | ~(D0 | HP);
-            bit_row.vecs[words - 1].VN = HP & D0;
-        }
-    }
-
-    return bit_row;
-}
-
-template <typename InputIt1, typename InputIt2>
-LevenshteinBitMatrix levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
-{
-    if (s1.empty() || s2.empty())
-        return {0, 0, static_cast<size_t>(s1.size() + s2.size())};
     else if (s1.size() <= 64)
-        return levenshtein_matrix_hyrroe2003(PatternMatchVector(s1), s1, s2);
+        return levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
     else
-        return levenshtein_matrix_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2);
+        return levenshtein_myers1999_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinBitRow levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2)
+LevenshteinResult<false, true> levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    return levenshtein_row_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2);
+    return levenshtein_myers1999_block<false, true>(BlockPatternMatchVector(s1), s1, s2);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -975,7 +821,7 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
         auto matrix = levenshtein_matrix(s1, s2);
 
         if (matrix.dist != 0) {
-            if (editops.size() == 0) editops.resize(matrix.dist);
+            if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
 
             recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
         }
