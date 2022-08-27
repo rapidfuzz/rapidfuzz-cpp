@@ -12,13 +12,15 @@ namespace rapidfuzz {
 namespace detail {
 
 /* hashmap for integers which can only grow, but can't remove elements */
-template <typename T_Key, typename T_Entry, T_Entry _empty_val = T_Entry()>
+template <typename T_Key, typename T_Entry>
 struct GrowingHashmap {
     using key_type = T_Key;
     using value_type = T_Entry;
     using size_type = unsigned int;
 
 private:
+
+    static constexpr value_type _empty_val = value_type();
     static constexpr size_type min_size = 8;
     struct MapElem {
         key_type key;
@@ -81,27 +83,27 @@ public:
     {
         if (m_map == NULL) return _empty_val;
 
-        return m_map[lookup(static_cast<size_t>(key))].value;
+        return m_map[lookup(key)].value;
     }
 
-    void insert(key_type key, value_type val)
+    value_type& operator[](key_type key) noexcept
     {
         if (m_map == NULL) allocate();
 
-        size_t i = lookup(static_cast<size_t>(key));
+        size_t i = lookup(key);
 
         if (m_map[i].value == _empty_val) {
             /* resize when 2/3 full */
             if (++fill * 3 >= (mask + 1) * 2) {
                 grow((used + 1) * 2);
-                i = lookup(static_cast<size_t>(key));
+                i = lookup(key);
             }
 
             used++;
         }
 
         m_map[i].key = key;
-        m_map[i].value = val;
+        return m_map[i].value;
     }
 
 private:
@@ -115,13 +117,14 @@ private:
      * lookup key inside the hashmap using a similar collision resolution
      * strategy to CPython and Ruby
      */
-    size_t lookup(size_t key) const
+    size_t lookup(key_type key) const
     {
-        size_t i = key & static_cast<size_t>(mask);
+        size_t hash = static_cast<size_t>(key);
+        size_t i = hash & static_cast<size_t>(mask);
 
         if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
 
-        size_t perturb = key;
+        size_t perturb = hash;
         while (true) {
             i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
             if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
@@ -144,7 +147,7 @@ private:
 
         for (int i = 0; used > 0; i++)
             if (oldMap[i].value != _empty_val) {
-                size_t j = lookup(static_cast<size_t>(oldMap[i].key));
+                size_t j = lookup(oldMap[i].key);
 
                 m_map[j].key = oldMap[i].key;
                 m_map[j].value = oldMap[i].value;
@@ -156,14 +159,14 @@ private:
     }
 };
 
-template <typename T_Key, typename T_Entry, T_Entry _empty_val = T_Entry()>
+template <typename T_Key, typename T_Entry>
 struct HybridGrowingHashmap {
     using key_type = T_Key;
     using value_type = T_Entry;
 
     HybridGrowingHashmap()
     {
-        m_extendedAscii.fill(_empty_val);
+        m_extendedAscii.fill(value_type());
     }
 
     value_type get(char key) const noexcept
@@ -181,23 +184,23 @@ struct HybridGrowingHashmap {
             return m_map.get(static_cast<key_type>(key));
     }
 
-    value_type insert(char key, value_type val) noexcept
+    value_type& operator[](char key) noexcept
     {
         /** treat char as value between 0 and 127 for performance reasons */
-        m_extendedAscii[static_cast<uint8_t>(key)] = val;
+        return m_extendedAscii[static_cast<uint8_t>(key)];
     }
 
     template <typename CharT>
-    void insert(CharT key, value_type val)
+    value_type& operator[](CharT key)
     {
         if (key >= 0 && key <= 255)
-            m_extendedAscii[static_cast<uint8_t>(key)] = val;
+            return m_extendedAscii[static_cast<uint8_t>(key)];
         else
-            m_map.insert(static_cast<key_type>(key), val);
+            return m_map[static_cast<key_type>(key)];
     }
 
 private:
-    GrowingHashmap<key_type, value_type, _empty_val> m_map;
+    GrowingHashmap<key_type, value_type> m_map;
     std::array<value_type, 256> m_extendedAscii;
 };
 

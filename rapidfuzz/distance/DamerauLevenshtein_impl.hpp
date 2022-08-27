@@ -29,7 +29,20 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
     IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
     assert(std::numeric_limits<IntType>::max() > maxVal);
 
-    HybridGrowingHashmap<uint64_t, IntType, -1> last_row_id;
+    struct RowId {
+        IntType val = -1;
+        bool operator==(const RowId& other)
+        {
+            return val == other.val;
+        }
+
+        bool operator!=(const RowId& other)
+        {
+            return !(*this == other);
+        }
+    };
+
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId> last_row_id;
     size_t size = static_cast<size_t>(s2.size() + 2);
     assume(size != 0);
     std::vector<IntType> FR_arr(size, maxVal);
@@ -61,7 +74,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
                 T = last_i2l1;     // save H_i-2,l-1
             }
             else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1]));
+                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1])).val;
                 ptrdiff_t l = last_col_id;
 
                 if ((j - l) == 1) {
@@ -77,7 +90,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
             last_i2l1 = R[j];
             R[j] = static_cast<IntType>(temp);
         }
-        last_row_id.insert(static_cast<uint64_t>(s1[i - 1]), i);
+        last_row_id[s1[i - 1]].val = i;
     }
 
     int64_t dist = R[s2.size()];

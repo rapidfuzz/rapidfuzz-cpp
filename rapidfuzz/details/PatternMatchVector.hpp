@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <rapidfuzz/details/GrowingHashmap.hpp>
 #include <rapidfuzz/details/Matrix.hpp>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
@@ -22,23 +23,17 @@ struct BitvectorHashmap {
     {}
 
     template <typename CharT>
-    void insert(CharT key, int64_t pos) noexcept
-    {
-        insert_mask(key, UINT64_C(1) << pos);
-    }
-
-    template <typename CharT>
-    void insert_mask(CharT key, uint64_t mask) noexcept
-    {
-        uint32_t i = lookup(static_cast<uint64_t>(key));
-        m_map[i].key = static_cast<uint64_t>(key);
-        m_map[i].value |= mask;
-    }
-
-    template <typename CharT>
     uint64_t get(CharT key) const noexcept
     {
         return m_map[lookup(static_cast<uint64_t>(key))].value;
+    }
+
+    template <typename CharT>
+    uint64_t& operator[](CharT key) noexcept
+    {
+        uint32_t i = lookup(static_cast<uint64_t>(key));
+        m_map[i].key = static_cast<uint64_t>(key);
+        return m_map[i].value;
     }
 
 private:
@@ -129,7 +124,7 @@ struct PatternMatchVector {
         if (key >= 0 && key <= 255)
             m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
         else
-            m_map.insert_mask(key, mask);
+            m_map[key] |= mask;
     }
 
 private:
@@ -193,7 +188,7 @@ struct BlockPatternMatchVector {
             m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
         else {
             if (!m_map) m_map = new BitvectorHashmap[m_block_count];
-            m_map[block].insert_mask(key, mask);
+            m_map[block][key] |= mask;
         }
     }
 

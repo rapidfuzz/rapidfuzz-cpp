@@ -3,6 +3,8 @@
 
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <rapidfuzz/details/GrowingHashmap.hpp>
 #include <rapidfuzz/details/Matrix.hpp>
 #include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
@@ -326,16 +328,12 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     /* score can decrease along the horizontal, but not along the diagonal */
     int64_t break_score = max + s2.size() - (s1.size() - max);
 
-    // ptrdiff_t start_pos = max + 1 - 64;
-    ptrdiff_t S[256] = {0};
-    uint64_t B[256] = {0};
-    std::fill(S, S + 256, -max);
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, std::pair<ptrdiff_t, uint64_t>> PM;
 
     for (ptrdiff_t j = -max; j < 0; ++j) {
-        ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[j + max])];
-        uint64_t& vec = B[static_cast<uint8_t>(s1[j + max])];
-        vec = shr64(vec, j - last_pos) | (UINT64_C(1) << 63);
-        last_pos = j;
+        auto& x = PM[s1[j + max]];
+        x.second = shr64(x.second, j - x.first) | (UINT64_C(1) << 63);
+        x.first = j;
     }
 
     /* Searching */
@@ -343,13 +341,16 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     for (; i < s1.size() - max; ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
+        uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[i + max])];
-            uint64_t& vec = B[static_cast<uint8_t>(s1[i + max])];
-            vec = shr64(vec, i - last_pos) | (UINT64_C(1) << 63);
-            last_pos = i;
+            auto& x = PM[s1[i + max]];
+            x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
+            x.first = i;
         }
-        uint64_t PM_j = shr64(B[static_cast<uint8_t>(s2[i])], i - S[static_cast<uint8_t>(s2[i])]);
+        {
+            auto x = PM.get(s2[i]);
+            PM_j = shr64(x.second, i - x.first);
+        }
 
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -371,13 +372,16 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     for (; i < s2.size(); ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
+        uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[i + max])];
-            uint64_t& vec = B[static_cast<uint8_t>(s1[i + max])];
-            vec = shr64(vec, i - last_pos) | (UINT64_C(1) << 63);
-            last_pos = i;
+            auto& x = PM[s1[i + max]];
+            x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
+            x.first = i;
         }
-        uint64_t PM_j = shr64(B[static_cast<uint8_t>(s2[i])], i - S[static_cast<uint8_t>(s2[i])]);
+        {
+            auto x = PM.get(s2[i]);
+            PM_j = shr64(x.second, i - x.first);
+        }
 
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -415,15 +419,6 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
 
     auto words = PM.size();
     int64_t currDist = s1.size();
-
-    /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
-
-    // todo could safe up to 25% even without max when ignoring irrelevant paths
-    int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
-
-    if (full_band <= 64) return levenshtein_hyrroe2003_small_band(PM, s1, s2, max);
-
     std::vector<Vectors> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
 
@@ -494,6 +489,9 @@ template <typename InputIt1, typename InputIt2>
 int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1,
                                      Range<InputIt2> s2, int64_t max)
 {
+    /* upper bound */
+    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
@@ -508,8 +506,14 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
      * todo actually we could at least remove the common prefix and just shift the band
      */
     if (max >= 4) {
+        // todo could safe up to 25% even without max when ignoring irrelevant paths
+        // in the upper and lower corner
+        int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
+
         if (s1.size() < 65)
             return levenshtein_hyrroe2003(block, s1, s2, max);
+        else if (full_band <= 64)
+            return levenshtein_hyrroe2003_small_band(block, s1, s2, max);
         else
             return levenshtein_myers1999_block(block, s1, s2, max);
     }
@@ -527,6 +531,9 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     /* Swapping the strings so the second string is shorter */
     if (s1.size() < s2.size()) return uniform_levenshtein_distance(s2, s1, max);
 
+    /* upper bound */
+    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
@@ -536,9 +543,6 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     /* common affix does not effect Levenshtein distance */
     remove_common_affix(s1, s2);
     if (s1.empty() || s2.empty()) return s1.size() + s2.size();
-
-    /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
 
     if (max < 4) return levenshtein_mbleven2018(s1, s2, max);
 

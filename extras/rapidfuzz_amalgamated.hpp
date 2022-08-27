@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-27 09:58:23.856453
+//  Generated: 2022-08-27 20:55:51.308187
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -31,6 +31,7 @@ class Range {
     Iter _last;
 
 public:
+    using value_type = typename std::iterator_traits<Iter>::value_type;
     using iterator = Iter;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
@@ -933,6 +934,52 @@ class has_bracket_operator {
 public:
     static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
 };
+
+namespace static_if_detail {
+
+struct identity {
+    template <typename T>
+    T operator()(T&& x) const
+    {
+        return std::forward<T>(x);
+    }
+};
+
+template <bool Cond>
+struct statement {
+    template <typename F>
+    void then(const F& f)
+    {
+        f(identity());
+    }
+
+    template <typename F>
+    void else_(const F&)
+    {}
+};
+
+template <>
+struct statement<false> {
+    template <typename F>
+    void then(const F&)
+    {}
+
+    template <typename F>
+    void else_(const F& f)
+    {
+        f(identity());
+    }
+};
+
+} // end of namespace static_if_detail
+
+template <bool Cond, typename F>
+static_if_detail::statement<Cond> static_if(F const& f)
+{
+    static_if_detail::statement<Cond> if_;
+    if_.then(f);
+    return if_;
+}
 
 } // namespace rapidfuzz
 
@@ -2003,6 +2050,209 @@ CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<Inp
 #include <unordered_set>
 #include <vector>
 
+#include <array>
+#include <iterator>
+#include <new>
+#include <stdint.h>
+
+namespace rapidfuzz {
+namespace detail {
+
+/* hashmap for integers which can only grow, but can't remove elements */
+template <typename T_Key, typename T_Entry>
+struct GrowingHashmap {
+    using key_type = T_Key;
+    using value_type = T_Entry;
+    using size_type = unsigned int;
+
+private:
+    static constexpr value_type _empty_val = value_type();
+    static constexpr size_type min_size = 8;
+    struct MapElem {
+        key_type key;
+        value_type value = _empty_val;
+    };
+
+    int used;
+    int fill;
+    int mask;
+    MapElem* m_map;
+
+public:
+    GrowingHashmap() : used(0), fill(0), mask(-1), m_map(NULL)
+    {}
+    ~GrowingHashmap()
+    {
+        delete[] m_map;
+    }
+
+    GrowingHashmap(const GrowingHashmap& other) : used(other.used), fill(other.fill), mask(other.mask)
+    {
+        int size = mask + 1;
+        m_map = new MapElem[size];
+        std::copy(other.m_map, other.m_map + size, m_map);
+    }
+
+    GrowingHashmap(GrowingHashmap&& other) noexcept : GrowingHashmap()
+    {
+        swap(*this, other);
+    }
+
+    GrowingHashmap& operator=(GrowingHashmap other)
+    {
+        swap(*this, other);
+        return *this;
+    }
+
+    friend void swap(GrowingHashmap& first, GrowingHashmap& second) noexcept
+    {
+        std::swap(first.used, second.used);
+        std::swap(first.fill, second.fill);
+        std::swap(first.mask, second.mask);
+        std::swap(first.m_map, second.m_map);
+    }
+
+    size_type size() const
+    {
+        return used;
+    }
+    size_type capacity() const
+    {
+        return mask + 1;
+    }
+    bool empty() const
+    {
+        return used == 0;
+    }
+
+    value_type get(key_type key) const noexcept
+    {
+        if (m_map == NULL) return _empty_val;
+
+        return m_map[lookup(key)].value;
+    }
+
+    value_type& operator[](key_type key) noexcept
+    {
+        if (m_map == NULL) allocate();
+
+        size_t i = lookup(key);
+
+        if (m_map[i].value == _empty_val) {
+            /* resize when 2/3 full */
+            if (++fill * 3 >= (mask + 1) * 2) {
+                grow((used + 1) * 2);
+                i = lookup(key);
+            }
+
+            used++;
+        }
+
+        m_map[i].key = key;
+        return m_map[i].value;
+    }
+
+private:
+    void allocate()
+    {
+        mask = min_size - 1;
+        m_map = new MapElem[min_size];
+    }
+
+    /**
+     * lookup key inside the hashmap using a similar collision resolution
+     * strategy to CPython and Ruby
+     */
+    size_t lookup(key_type key) const
+    {
+        size_t hash = static_cast<size_t>(key);
+        size_t i = hash & static_cast<size_t>(mask);
+
+        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+
+        size_t perturb = hash;
+        while (true) {
+            i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
+            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+
+            perturb >>= 5;
+        }
+    }
+
+    void grow(int minUsed)
+    {
+        int newSize = mask + 1;
+        while (newSize <= minUsed)
+            newSize <<= 1;
+
+        MapElem* oldMap = m_map;
+        m_map = new MapElem[static_cast<size_t>(newSize)];
+
+        fill = used;
+        mask = newSize - 1;
+
+        for (int i = 0; used > 0; i++)
+            if (oldMap[i].value != _empty_val) {
+                size_t j = lookup(oldMap[i].key);
+
+                m_map[j].key = oldMap[i].key;
+                m_map[j].value = oldMap[i].value;
+                used--;
+            }
+
+        used = fill;
+        delete[] oldMap;
+    }
+};
+
+template <typename T_Key, typename T_Entry>
+struct HybridGrowingHashmap {
+    using key_type = T_Key;
+    using value_type = T_Entry;
+
+    HybridGrowingHashmap()
+    {
+        m_extendedAscii.fill(value_type());
+    }
+
+    value_type get(char key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    value_type get(CharT key) const noexcept
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map.get(static_cast<key_type>(key));
+    }
+
+    value_type& operator[](char key) noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    value_type& operator[](CharT key)
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map[static_cast<key_type>(key)];
+    }
+
+private:
+    GrowingHashmap<key_type, value_type> m_map;
+    std::array<value_type, 256> m_extendedAscii;
+};
+
+} // namespace detail
+} // namespace rapidfuzz
+
 #include <algorithm>
 #include <cassert>
 #include <stdio.h>
@@ -2124,23 +2374,17 @@ struct BitvectorHashmap {
     {}
 
     template <typename CharT>
-    void insert(CharT key, int64_t pos) noexcept
-    {
-        insert_mask(key, UINT64_C(1) << pos);
-    }
-
-    template <typename CharT>
-    void insert_mask(CharT key, uint64_t mask) noexcept
-    {
-        uint32_t i = lookup(static_cast<uint64_t>(key));
-        m_map[i].key = static_cast<uint64_t>(key);
-        m_map[i].value |= mask;
-    }
-
-    template <typename CharT>
     uint64_t get(CharT key) const noexcept
     {
         return m_map[lookup(static_cast<uint64_t>(key))].value;
+    }
+
+    template <typename CharT>
+    uint64_t& operator[](CharT key) noexcept
+    {
+        uint32_t i = lookup(static_cast<uint64_t>(key));
+        m_map[i].key = static_cast<uint64_t>(key);
+        return m_map[i].value;
     }
 
 private:
@@ -2231,7 +2475,7 @@ struct PatternMatchVector {
         if (key >= 0 && key <= 255)
             m_extendedAscii[static_cast<uint8_t>(key)] |= mask;
         else
-            m_map.insert_mask(key, mask);
+            m_map[key] |= mask;
     }
 
 private:
@@ -2295,7 +2539,7 @@ struct BlockPatternMatchVector {
             m_extendedAscii[static_cast<uint8_t>(key)][block] |= mask;
         else {
             if (!m_map) m_map = new BitvectorHashmap[m_block_count];
-            m_map[block].insert_mask(key, mask);
+            m_map[block][key] |= mask;
         }
     }
 
@@ -3038,6 +3282,7 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 
 namespace rapidfuzz {
 namespace detail {
@@ -3355,16 +3600,12 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     /* score can decrease along the horizontal, but not along the diagonal */
     int64_t break_score = max + s2.size() - (s1.size() - max);
 
-    // ptrdiff_t start_pos = max + 1 - 64;
-    ptrdiff_t S[256] = {0};
-    uint64_t B[256] = {0};
-    std::fill(S, S + 256, -max);
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, std::pair<ptrdiff_t, uint64_t>> PM;
 
     for (ptrdiff_t j = -max; j < 0; ++j) {
-        ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[j + max])];
-        uint64_t& vec = B[static_cast<uint8_t>(s1[j + max])];
-        vec = shr64(vec, j - last_pos) | (UINT64_C(1) << 63);
-        last_pos = j;
+        auto& x = PM[s1[j + max]];
+        x.second = shr64(x.second, j - x.first) | (UINT64_C(1) << 63);
+        x.first = j;
     }
 
     /* Searching */
@@ -3372,13 +3613,16 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     for (; i < s1.size() - max; ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
+        uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[i + max])];
-            uint64_t& vec = B[static_cast<uint8_t>(s1[i + max])];
-            vec = shr64(vec, i - last_pos) | (UINT64_C(1) << 63);
-            last_pos = i;
+            auto& x = PM[s1[i + max]];
+            x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
+            x.first = i;
         }
-        uint64_t PM_j = shr64(B[static_cast<uint8_t>(s2[i])], i - S[static_cast<uint8_t>(s2[i])]);
+        {
+            auto x = PM.get(s2[i]);
+            PM_j = shr64(x.second, i - x.first);
+        }
 
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -3400,13 +3644,16 @@ int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2
     for (; i < s2.size(); ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
+        uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[i + max])];
-            uint64_t& vec = B[static_cast<uint8_t>(s1[i + max])];
-            vec = shr64(vec, i - last_pos) | (UINT64_C(1) << 63);
-            last_pos = i;
+            auto& x = PM[s1[i + max]];
+            x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
+            x.first = i;
         }
-        uint64_t PM_j = shr64(B[static_cast<uint8_t>(s2[i])], i - S[static_cast<uint8_t>(s2[i])]);
+        {
+            auto x = PM.get(s2[i]);
+            PM_j = shr64(x.second, i - x.first);
+        }
 
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -3444,15 +3691,6 @@ int64_t levenshtein_myers1999_block(const BlockPatternMatchVector& PM, Range<Inp
 
     auto words = PM.size();
     int64_t currDist = s1.size();
-
-    /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
-
-    // todo could safe up to 25% even without max when ignoring irrelevant paths
-    int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
-
-    if (full_band <= 64) return levenshtein_hyrroe2003_small_band(PM, s1, s2, max);
-
     std::vector<Vectors> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
 
@@ -3523,6 +3761,9 @@ template <typename InputIt1, typename InputIt2>
 int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1,
                                      Range<InputIt2> s2, int64_t max)
 {
+    /* upper bound */
+    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
@@ -3537,8 +3778,14 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
      * todo actually we could at least remove the common prefix and just shift the band
      */
     if (max >= 4) {
+        // todo could safe up to 25% even without max when ignoring irrelevant paths
+        // in the upper and lower corner
+        int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
+
         if (s1.size() < 65)
             return levenshtein_hyrroe2003(block, s1, s2, max);
+        else if (full_band <= 64)
+            return levenshtein_hyrroe2003_small_band(block, s1, s2, max);
         else
             return levenshtein_myers1999_block(block, s1, s2, max);
     }
@@ -3556,6 +3803,9 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     /* Swapping the strings so the second string is shorter */
     if (s1.size() < s2.size()) return uniform_levenshtein_distance(s2, s1, max);
 
+    /* upper bound */
+    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+
     // when no differences are allowed a direct comparision is sufficient
     if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
@@ -3565,9 +3815,6 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     /* common affix does not effect Levenshtein distance */
     remove_common_affix(s1, s2);
     if (s1.empty() || s2.empty()) return s1.size() + s2.size();
-
-    /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
 
     if (max < 4) return levenshtein_mbleven2018(s1, s2, max);
 
@@ -4408,207 +4655,6 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
 #include <memory>
 #include <numeric>
 
-#include <array>
-#include <iterator>
-#include <new>
-#include <stdint.h>
-
-namespace rapidfuzz {
-namespace detail {
-
-/* hashmap for integers which can only grow, but can't remove elements */
-template <typename T_Key, typename T_Entry, T_Entry _empty_val = T_Entry()>
-struct GrowingHashmap {
-    using key_type = T_Key;
-    using value_type = T_Entry;
-    using size_type = unsigned int;
-
-private:
-    static constexpr size_type min_size = 8;
-    struct MapElem {
-        key_type key;
-        value_type value = _empty_val;
-    };
-
-    int used;
-    int fill;
-    int mask;
-    MapElem* m_map;
-
-public:
-    GrowingHashmap() : used(0), fill(0), mask(-1), m_map(NULL)
-    {}
-    ~GrowingHashmap()
-    {
-        delete[] m_map;
-    }
-
-    GrowingHashmap(const GrowingHashmap& other) : used(other.used), fill(other.fill), mask(other.mask)
-    {
-        int size = mask + 1;
-        m_map = new MapElem[size];
-        std::copy(other.m_map, other.m_map + size, m_map);
-    }
-
-    GrowingHashmap(GrowingHashmap&& other) noexcept : GrowingHashmap()
-    {
-        swap(*this, other);
-    }
-
-    GrowingHashmap& operator=(GrowingHashmap other)
-    {
-        swap(*this, other);
-        return *this;
-    }
-
-    friend void swap(GrowingHashmap& first, GrowingHashmap& second) noexcept
-    {
-        std::swap(first.used, second.used);
-        std::swap(first.fill, second.fill);
-        std::swap(first.mask, second.mask);
-        std::swap(first.m_map, second.m_map);
-    }
-
-    size_type size() const
-    {
-        return used;
-    }
-    size_type capacity() const
-    {
-        return mask + 1;
-    }
-    bool empty() const
-    {
-        return used == 0;
-    }
-
-    value_type get(key_type key) const noexcept
-    {
-        if (m_map == NULL) return _empty_val;
-
-        return m_map[lookup(static_cast<size_t>(key))].value;
-    }
-
-    void insert(key_type key, value_type val)
-    {
-        if (m_map == NULL) allocate();
-
-        size_t i = lookup(static_cast<size_t>(key));
-
-        if (m_map[i].value == _empty_val) {
-            /* resize when 2/3 full */
-            if (++fill * 3 >= (mask + 1) * 2) {
-                grow((used + 1) * 2);
-                i = lookup(static_cast<size_t>(key));
-            }
-
-            used++;
-        }
-
-        m_map[i].key = key;
-        m_map[i].value = val;
-    }
-
-private:
-    void allocate()
-    {
-        mask = min_size - 1;
-        m_map = new MapElem[min_size];
-    }
-
-    /**
-     * lookup key inside the hashmap using a similar collision resolution
-     * strategy to CPython and Ruby
-     */
-    size_t lookup(size_t key) const
-    {
-        size_t i = key & static_cast<size_t>(mask);
-
-        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
-
-        size_t perturb = key;
-        while (true) {
-            i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
-            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
-
-            perturb >>= 5;
-        }
-    }
-
-    void grow(int minUsed)
-    {
-        int newSize = mask + 1;
-        while (newSize <= minUsed)
-            newSize <<= 1;
-
-        MapElem* oldMap = m_map;
-        m_map = new MapElem[static_cast<size_t>(newSize)];
-
-        fill = used;
-        mask = newSize - 1;
-
-        for (int i = 0; used > 0; i++)
-            if (oldMap[i].value != _empty_val) {
-                size_t j = lookup(static_cast<size_t>(oldMap[i].key));
-
-                m_map[j].key = oldMap[i].key;
-                m_map[j].value = oldMap[i].value;
-                used--;
-            }
-
-        used = fill;
-        delete[] oldMap;
-    }
-};
-
-template <typename T_Key, typename T_Entry, T_Entry _empty_val = T_Entry()>
-struct HybridGrowingHashmap {
-    using key_type = T_Key;
-    using value_type = T_Entry;
-
-    HybridGrowingHashmap()
-    {
-        m_extendedAscii.fill(_empty_val);
-    }
-
-    value_type get(char key) const noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        return m_extendedAscii[static_cast<uint8_t>(key)];
-    }
-
-    template <typename CharT>
-    value_type get(CharT key) const noexcept
-    {
-        if (key >= 0 && key <= 255)
-            return m_extendedAscii[static_cast<uint8_t>(key)];
-        else
-            return m_map.get(static_cast<key_type>(key));
-    }
-
-    value_type insert(char key, value_type val) noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        m_extendedAscii[static_cast<uint8_t>(key)] = val;
-    }
-
-    template <typename CharT>
-    void insert(CharT key, value_type val)
-    {
-        if (key >= 0 && key <= 255)
-            m_extendedAscii[static_cast<uint8_t>(key)] = val;
-        else
-            m_map.insert(static_cast<key_type>(key), val);
-    }
-
-private:
-    GrowingHashmap<key_type, value_type, _empty_val> m_map;
-    std::array<value_type, 256> m_extendedAscii;
-};
-
-} // namespace detail
-} // namespace rapidfuzz
-
 namespace rapidfuzz {
 namespace detail {
 
@@ -4625,7 +4671,20 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
     IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
     assert(std::numeric_limits<IntType>::max() > maxVal);
 
-    HybridGrowingHashmap<uint64_t, IntType, -1> last_row_id;
+    struct RowId {
+        IntType val = -1;
+        bool operator==(const RowId& other)
+        {
+            return val == other.val;
+        }
+
+        bool operator!=(const RowId& other)
+        {
+            return !(*this == other);
+        }
+    };
+
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId> last_row_id;
     size_t size = static_cast<size_t>(s2.size() + 2);
     assume(size != 0);
     std::vector<IntType> FR_arr(size, maxVal);
@@ -4657,7 +4716,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
                 T = last_i2l1;     // save H_i-2,l-1
             }
             else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1]));
+                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1])).val;
                 ptrdiff_t l = last_col_id;
 
                 if ((j - l) == 1) {
@@ -4673,7 +4732,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
             last_i2l1 = R[j];
             R[j] = static_cast<IntType>(temp);
         }
-        last_row_id.insert(static_cast<uint64_t>(s1[i - 1]), i);
+        last_row_id[s1[i - 1]].val = i;
     }
 
     int64_t dist = R[s2.size()];

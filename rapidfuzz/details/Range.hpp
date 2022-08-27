@@ -17,6 +17,7 @@ class Range {
     Iter _last;
 
 public:
+    using value_type = typename std::iterator_traits<Iter>::value_type;
     using iterator = Iter;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
