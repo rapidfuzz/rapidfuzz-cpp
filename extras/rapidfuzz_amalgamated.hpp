@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-26 22:20:22.328439
+//  Generated: 2022-08-27 09:58:23.856453
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1034,6 +1034,15 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 
 namespace rapidfuzz {
 namespace detail {
+
+/*
+ * shift right without undefined behavior for shifts > bit width
+ */
+template <typename U>
+constexpr uint64_t shr64(uint64_t a, U shift)
+{
+    return (shift < 64) ? a >> shift : 0;
+}
 
 constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
@@ -3141,12 +3150,17 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
 {
     auto len1 = s1.size();
     auto len2 = s2.size();
+    assert(len1 > 0);
+    assert(len2 > 0);
+    assert(*s1.begin() != *s2.begin());
+    assert(*(s1.end() - 1) != *(s2.end() - 1));
 
-    if (len1 < len2) {
-        return levenshtein_mbleven2018(s2, s1, max);
-    }
+    if (len1 < len2) return levenshtein_mbleven2018(s2, s1, max);
 
     auto len_diff = len1 - len2;
+
+    if (max == 1) return max + static_cast<int64_t>(len_diff == 1 || len1 != 1);
+
     auto ops_index = (max + max * max) / 2 + len_diff - 1;
     auto& possible_ops = levenshtein_mbleven2018_matrix[static_cast<size_t>(ops_index)];
     int64_t dist = max + 1;
@@ -3251,6 +3265,9 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
     uint64_t horizontal_mask = UINT64_C(1) << 62;
     ptrdiff_t start_pos = max + 1 - 64;
 
+    /* score can decrease along the horizontal, but not along the diagonal */
+    int64_t break_score = max + s2.size() - (s1.size() - max);
+
     /* Searching */
     ptrdiff_t i = 0;
     for (; i < s1.size() - max; ++i, ++start_pos) {
@@ -3276,6 +3293,8 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
 
         /* Step 3: Computing the value D[m,j] */
         currDist += !bool(D0 & diagonal_mask);
+
+        if (currDist > break_score) return max + 1;
 
         /* Step 4: Computing Vp and VN */
         VP = HN | ~((D0 >> 1) | HP);
@@ -3307,6 +3326,101 @@ int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Ran
         currDist += bool(HP & horizontal_mask);
         currDist -= bool(HN & horizontal_mask);
         horizontal_mask >>= 1;
+
+        if (currDist > break_score) return max + 1;
+
+        /* Step 4: Computing Vp and VN */
+        VP = HN | ~((D0 >> 1) | HP);
+        VN = (D0 >> 1) & HP;
+    }
+
+    return (currDist <= max) ? currDist : max + 1;
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+{
+    assert(max <= s1.size());
+    assert(max <= s2.size());
+
+    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    uint64_t VP = ~UINT64_C(0) << (64 - max - 1);
+    uint64_t VN = 0;
+
+    // const auto words = PM.size();
+    int64_t currDist = max;
+    uint64_t diagonal_mask = UINT64_C(1) << 63;
+    uint64_t horizontal_mask = UINT64_C(1) << 62;
+
+    /* score can decrease along the horizontal, but not along the diagonal */
+    int64_t break_score = max + s2.size() - (s1.size() - max);
+
+    // ptrdiff_t start_pos = max + 1 - 64;
+    ptrdiff_t S[256] = {0};
+    uint64_t B[256] = {0};
+    std::fill(S, S + 256, -max);
+
+    for (ptrdiff_t j = -max; j < 0; ++j) {
+        ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[j + max])];
+        uint64_t& vec = B[static_cast<uint8_t>(s1[j + max])];
+        vec = shr64(vec, j - last_pos) | (UINT64_C(1) << 63);
+        last_pos = j;
+    }
+
+    /* Searching */
+    ptrdiff_t i = 0;
+    for (; i < s1.size() - max; ++i) {
+        /* Step 1: Computing D0 */
+        /* update bitmasks online */
+        if (i + max < s1.size()) {
+            ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[i + max])];
+            uint64_t& vec = B[static_cast<uint8_t>(s1[i + max])];
+            vec = shr64(vec, i - last_pos) | (UINT64_C(1) << 63);
+            last_pos = i;
+        }
+        uint64_t PM_j = shr64(B[static_cast<uint8_t>(s2[i])], i - S[static_cast<uint8_t>(s2[i])]);
+
+        uint64_t X = PM_j;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        currDist += !bool(D0 & diagonal_mask);
+
+        if (currDist > break_score) return max + 1;
+
+        /* Step 4: Computing Vp and VN */
+        VP = HN | ~((D0 >> 1) | HP);
+        VN = (D0 >> 1) & HP;
+    }
+
+    for (; i < s2.size(); ++i) {
+        /* Step 1: Computing D0 */
+        /* update bitmasks online */
+        if (i + max < s1.size()) {
+            ptrdiff_t& last_pos = S[static_cast<uint8_t>(s1[i + max])];
+            uint64_t& vec = B[static_cast<uint8_t>(s1[i + max])];
+            vec = shr64(vec, i - last_pos) | (UINT64_C(1) << 63);
+            last_pos = i;
+        }
+        uint64_t PM_j = shr64(B[static_cast<uint8_t>(s2[i])], i - S[static_cast<uint8_t>(s2[i])]);
+
+        uint64_t X = PM_j;
+        uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+        /* Step 2: Computing HP and HN */
+        uint64_t HP = VN | ~(D0 | VP);
+        uint64_t HN = D0 & VP;
+
+        /* Step 3: Computing the value D[m,j] */
+        currDist += bool(HP & horizontal_mask);
+        currDist -= bool(HN & horizontal_mask);
+        horizontal_mask >>= 1;
+
+        if (currDist > break_score) return max + 1;
 
         /* Step 4: Computing Vp and VN */
         VP = HN | ~((D0 >> 1) | HP);
@@ -3452,13 +3566,22 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     remove_common_affix(s1, s2);
     if (s1.empty() || s2.empty()) return s1.size() + s2.size();
 
+    /* upper bound */
+    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+
     if (max < 4) return levenshtein_mbleven2018(s1, s2, max);
+
+    // todo could safe up to 25% even without max when ignoring irrelevant paths
+    // in the upper and lower corner
+    int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (s1.size() < 65)
         return levenshtein_hyrroe2003(PatternMatchVector(s1), s1, s2, max);
     else if (s2.size() < 65)
         return levenshtein_hyrroe2003(PatternMatchVector(s2), s2, s1, max);
+    else if (full_band <= 64)
+        return levenshtein_hyrroe2003_small_band(s1, s2, max);
     else
         return levenshtein_myers1999_block(BlockPatternMatchVector(s1), s1, s2, max);
 }
