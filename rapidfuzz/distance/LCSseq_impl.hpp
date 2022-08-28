@@ -19,7 +19,7 @@ struct LCSseqResult;
 
 template <>
 struct LCSseqResult<true> {
-    Matrix<uint64_t> S;
+    BitMatrix<uint64_t> S;
 
     int64_t sim;
 };
@@ -129,7 +129,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>([&](auto f) { f(res).S = Matrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
+    static_if<RecordMatrix>([&](auto f) { f(res).S = BitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -159,7 +159,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>([&](auto f) { f(res).S = Matrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
+    static_if<RecordMatrix>([&](auto f) { f(res).S = BitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -289,7 +289,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
 
     while (row && col) {
         /* Deletion */
-        if (matrix.S[row - 1].test_bit(col - 1)) {
+        if (matrix.S.test_bit(row - 1, col - 1)) {
             assert(dist > 0);
             dist--;
             col--;
@@ -301,7 +301,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
             row--;
 
             /* Insertion */
-            if (row && !(matrix.S[row - 1].test_bit(col - 1))) {
+            if (row && !(matrix.S.test_bit(row - 1, col - 1))) {
                 assert(dist > 0);
                 dist--;
                 editops[dist].type = EditType::Insert;

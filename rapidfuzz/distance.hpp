@@ -2,11 +2,11 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
+#include <rapidfuzz/distance/DamerauLevenshtein.hpp>
 #include <rapidfuzz/distance/Hamming.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 #include <rapidfuzz/distance/LCSseq.hpp>
 #include <rapidfuzz/distance/Levenshtein.hpp>
-#include <rapidfuzz/distance/DamerauLevenshtein.hpp>
 
 namespace rapidfuzz {
 

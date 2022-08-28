@@ -13,7 +13,7 @@
 #include <rapidfuzz/details/distance.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
-#include <sys/types.h>
+#include <stdexcept>
 
 namespace rapidfuzz {
 namespace detail {
@@ -34,8 +34,8 @@ struct LevenshteinResult;
 
 template <>
 struct LevenshteinResult<true, false> {
-    BandedBitvectorMatrix VP;
-    BandedBitvectorMatrix VN;
+    BitMatrix<uint64_t> VP;
+    BitMatrix<uint64_t> VN;
 
     int64_t dist;
 };
@@ -237,8 +237,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, 0);
+        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
     });
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -379,10 +379,8 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP =
-            BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, 0, static_cast<size_t>(max + 2 - 64), 1);
-        f(res).VN =
-            BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, 0, static_cast<size_t>(max + 2 - 64), 1);
+        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
+        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
     });
 
     uint64_t diagonal_mask = UINT64_C(1) << 63;
@@ -497,8 +495,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
-        f(res).VN = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), words, 0);
+        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
+        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
     });
 
     /* Searching */
@@ -666,7 +664,7 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 
     while (row && col) {
         /* Deletion */
-        if (matrix.VP[row - 1].test_bit(col - 1)) {
+        if (matrix.VP.test_bit(row - 1, col - 1)) {
             assert(dist > 0);
             dist--;
             col--;
@@ -678,7 +676,7 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
             row--;
 
             /* Insertion */
-            if (row && matrix.VN[row - 1].test_bit(col - 1)) {
+            if (row && matrix.VN.test_bit(row - 1, col - 1)) {
                 assert(dist > 0);
                 dist--;
                 editops[editop_pos + dist].type = EditType::Insert;
@@ -719,23 +717,31 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinResult<true, false> levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+                       int64_t max = std::numeric_limits<int64_t>::max(), size_t src_pos = 0,
+                       size_t dest_pos = 0, size_t editop_pos = 0)
 {
     /* upper bound */
     max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
+    LevenshteinResult<true, false> matrix;
     if (s1.empty() || s2.empty()) {
-        LevenshteinResult<true, false> res;
-        res.dist = s1.size() + s2.size();
-        return res;
+        matrix.dist = s1.size() + s2.size();
     }
     else if (s1.size() <= 64)
-        return levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
+        matrix = levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
     else if (full_band <= 64)
-        return levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
+        matrix = levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
     else
-        return levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
+        matrix = levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
+
+    assert(matrix.dist <= max);
+    if (matrix.dist != 0) {
+        if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
+
+        recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
+    }
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -832,9 +838,9 @@ HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2)
 }
 
 template <typename InputIt1, typename InputIt2>
-void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2, size_t src_pos = 0,
-                       size_t dest_pos = 0, size_t editop_pos = 0,
-                       int64_t max = std::numeric_limits<int64_t>::max())
+void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+                                  size_t src_pos = 0, size_t dest_pos = 0, size_t editop_pos = 0,
+                                  int64_t max = std::numeric_limits<int64_t>::max())
 {
     // todo add blockwise implementation of levenshtein matrix / row
 
@@ -845,13 +851,7 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 
     ptrdiff_t matrix_size = 2 * s1.size() * s2.size() / 8;
     if (matrix_size < 1024 * 1024 || s1.size() < 65 || s2.size() < 10) {
-        auto matrix = levenshtein_matrix(s1, s2, max);
-
-        if (matrix.dist != 0) {
-            if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
-
-            recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
-        }
+        levenshtein_align(editops, s1, s2, max, src_pos, dest_pos, editop_pos);
     }
     /* Hirschbergs algorithm */
     else {
@@ -859,12 +859,12 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 
         if (editops.size() == 0) editops.resize(static_cast<size_t>(hpos.left_score + hpos.right_score));
 
-        levenshtein_align(editops, s1.subseq(0, hpos.s1_mid), s2.subseq(0, hpos.s2_mid), src_pos, dest_pos,
-                          editop_pos, hpos.left_score);
-        levenshtein_align(editops, s1.subseq(hpos.s1_mid), s2.subseq(hpos.s2_mid),
-                          src_pos + static_cast<size_t>(hpos.s1_mid),
-                          dest_pos + static_cast<size_t>(hpos.s2_mid),
-                          editop_pos + static_cast<size_t>(hpos.left_score), hpos.right_score);
+        levenshtein_align_hirschberg(editops, s1.subseq(0, hpos.s1_mid), s2.subseq(0, hpos.s2_mid), src_pos,
+                                     dest_pos, editop_pos, hpos.left_score);
+        levenshtein_align_hirschberg(editops, s1.subseq(hpos.s1_mid), s2.subseq(hpos.s2_mid),
+                                     src_pos + static_cast<size_t>(hpos.s1_mid),
+                                     dest_pos + static_cast<size_t>(hpos.s2_mid),
+                                     editop_pos + static_cast<size_t>(hpos.left_score), hpos.right_score);
     }
 }
 
@@ -872,7 +872,7 @@ template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2)
 {
     Editops editops;
-    levenshtein_align(editops, s1, s2);
+    levenshtein_align_hirschberg(editops, s1, s2);
     editops.set_src_len(static_cast<size_t>(s1.size()));
     editops.set_dest_len(static_cast<size_t>(s2.size()));
     return editops;

@@ -221,7 +221,7 @@ struct BlockPatternMatchVector {
 private:
     size_t m_block_count;
     BitvectorHashmap* m_map;
-    Matrix<uint64_t> m_extendedAscii;
+    BitMatrix<uint64_t> m_extendedAscii;
 };
 
 } // namespace detail

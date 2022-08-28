@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <stdexcept>
@@ -79,6 +80,15 @@ public:
     constexpr Range<reverse_iterator> reversed() const
     {
         return {rbegin(), rend()};
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Range& seq)
+    {
+        os << "{";
+        for (auto x : seq)
+            os << static_cast<uint64_t>(x) << ", ";
+        os << "]";
+        return os;
     }
 };
 

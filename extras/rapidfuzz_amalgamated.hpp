@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-08-28 00:25:45.680442
+//  Generated: 2022-08-28 22:15:42.482168
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -10,13 +10,379 @@
 #define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 
 #include <cmath>
+
+#include <cassert>
+#include <cstddef>
+#include <iterator>
+#include <limits>
+#include <memory>
 #include <numeric>
 
 #include <array>
-#include <cmath>
-#include <cstring>
-#include <limits>
+#include <iterator>
+#include <new>
+#include <stdint.h>
 
+namespace rapidfuzz {
+namespace detail {
+
+/* hashmap for integers which can only grow, but can't remove elements */
+template <typename T_Key, typename T_Entry>
+struct GrowingHashmap {
+    using key_type = T_Key;
+    using value_type = T_Entry;
+    using size_type = unsigned int;
+
+private:
+    static constexpr value_type _empty_val = value_type();
+    static constexpr size_type min_size = 8;
+    struct MapElem {
+        key_type key;
+        value_type value = _empty_val;
+    };
+
+    int used;
+    int fill;
+    int mask;
+    MapElem* m_map;
+
+public:
+    GrowingHashmap() : used(0), fill(0), mask(-1), m_map(NULL)
+    {}
+    ~GrowingHashmap()
+    {
+        delete[] m_map;
+    }
+
+    GrowingHashmap(const GrowingHashmap& other) : used(other.used), fill(other.fill), mask(other.mask)
+    {
+        int size = mask + 1;
+        m_map = new MapElem[size];
+        std::copy(other.m_map, other.m_map + size, m_map);
+    }
+
+    GrowingHashmap(GrowingHashmap&& other) noexcept : GrowingHashmap()
+    {
+        swap(*this, other);
+    }
+
+    GrowingHashmap& operator=(GrowingHashmap other)
+    {
+        swap(*this, other);
+        return *this;
+    }
+
+    friend void swap(GrowingHashmap& first, GrowingHashmap& second) noexcept
+    {
+        std::swap(first.used, second.used);
+        std::swap(first.fill, second.fill);
+        std::swap(first.mask, second.mask);
+        std::swap(first.m_map, second.m_map);
+    }
+
+    size_type size() const
+    {
+        return used;
+    }
+    size_type capacity() const
+    {
+        return mask + 1;
+    }
+    bool empty() const
+    {
+        return used == 0;
+    }
+
+    value_type get(key_type key) const noexcept
+    {
+        if (m_map == NULL) return _empty_val;
+
+        return m_map[lookup(key)].value;
+    }
+
+    value_type& operator[](key_type key) noexcept
+    {
+        if (m_map == NULL) allocate();
+
+        size_t i = lookup(key);
+
+        if (m_map[i].value == _empty_val) {
+            /* resize when 2/3 full */
+            if (++fill * 3 >= (mask + 1) * 2) {
+                grow((used + 1) * 2);
+                i = lookup(key);
+            }
+
+            used++;
+        }
+
+        m_map[i].key = key;
+        return m_map[i].value;
+    }
+
+private:
+    void allocate()
+    {
+        mask = min_size - 1;
+        m_map = new MapElem[min_size];
+    }
+
+    /**
+     * lookup key inside the hashmap using a similar collision resolution
+     * strategy to CPython and Ruby
+     */
+    size_t lookup(key_type key) const
+    {
+        size_t hash = static_cast<size_t>(key);
+        size_t i = hash & static_cast<size_t>(mask);
+
+        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+
+        size_t perturb = hash;
+        while (true) {
+            i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
+            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+
+            perturb >>= 5;
+        }
+    }
+
+    void grow(int minUsed)
+    {
+        int newSize = mask + 1;
+        while (newSize <= minUsed)
+            newSize <<= 1;
+
+        MapElem* oldMap = m_map;
+        m_map = new MapElem[static_cast<size_t>(newSize)];
+
+        fill = used;
+        mask = newSize - 1;
+
+        for (int i = 0; used > 0; i++)
+            if (oldMap[i].value != _empty_val) {
+                size_t j = lookup(oldMap[i].key);
+
+                m_map[j].key = oldMap[i].key;
+                m_map[j].value = oldMap[i].value;
+                used--;
+            }
+
+        used = fill;
+        delete[] oldMap;
+    }
+};
+
+template <typename T_Key, typename T_Entry>
+struct HybridGrowingHashmap {
+    using key_type = T_Key;
+    using value_type = T_Entry;
+
+    HybridGrowingHashmap()
+    {
+        m_extendedAscii.fill(value_type());
+    }
+
+    value_type get(char key) const noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    value_type get(CharT key) const noexcept
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map.get(static_cast<key_type>(key));
+    }
+
+    value_type& operator[](char key) noexcept
+    {
+        /** treat char as value between 0 and 127 for performance reasons */
+        return m_extendedAscii[static_cast<uint8_t>(key)];
+    }
+
+    template <typename CharT>
+    value_type& operator[](CharT key)
+    {
+        if (key >= 0 && key <= 255)
+            return m_extendedAscii[static_cast<uint8_t>(key)];
+        else
+            return m_map[static_cast<key_type>(key)];
+    }
+
+private:
+    GrowingHashmap<key_type, value_type> m_map;
+    std::array<value_type, 256> m_extendedAscii;
+};
+
+} // namespace detail
+} // namespace rapidfuzz
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <stdexcept>
+#include <stdint.h>
+#include <stdio.h>
+
+namespace rapidfuzz {
+namespace detail {
+
+template <typename T, bool IsConst>
+struct BitMatrixView {
+
+    using value_type = T;
+    using size_type = size_t;
+    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
+    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+
+    BitMatrixView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
+    {}
+
+    reference operator[](size_type col) noexcept
+    {
+        assert(col < m_cols);
+        return m_vector[col];
+    }
+
+    size_type size() const noexcept
+    {
+        return m_cols;
+    }
+
+private:
+    pointer m_vector;
+    size_type m_cols;
+};
+
+template <typename T>
+struct BitMatrix {
+
+    using value_type = T;
+
+    BitMatrix() : m_rows(0), m_cols(0), m_matrix(nullptr), m_start_offset(0), m_offset_per_row(0)
+    {}
+
+    BitMatrix(size_t rows, size_t cols, T val, ptrdiff_t start_offset = 0, ptrdiff_t offset_per_row = 0)
+        : m_rows(rows),
+          m_cols(cols),
+          m_matrix(nullptr),
+          m_start_offset(start_offset),
+          m_offset_per_row(offset_per_row)
+    {
+        if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
+        std::fill_n(m_matrix, m_rows * m_cols, val);
+    }
+
+    BitMatrix(const BitMatrix& other)
+        : m_rows(other.m_rows),
+          m_cols(other.m_cols),
+          m_matrix(nullptr),
+          m_start_offset(other.m_start_offset),
+          m_offset_per_row(other.m_offset_per_row)
+    {
+        if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
+        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
+    }
+
+    BitMatrix(BitMatrix&& other) noexcept
+        : m_rows(0),
+          m_cols(0),
+          m_matrix(nullptr),
+          m_start_offset(other.m_start_offset),
+          m_offset_per_row(other.m_offset_per_row)
+    {
+        other.swap(*this);
+    }
+
+    BitMatrix& operator=(BitMatrix&& other) noexcept
+    {
+        other.swap(*this);
+        return *this;
+    }
+
+    BitMatrix& operator=(const BitMatrix& other)
+    {
+        BitMatrix temp = other;
+        temp.swap(*this);
+        return *this;
+    }
+
+    void swap(BitMatrix& rhs) noexcept
+    {
+        using std::swap;
+        swap(m_rows, rhs.m_rows);
+        swap(m_cols, rhs.m_cols);
+        swap(m_matrix, rhs.m_matrix);
+        swap(m_start_offset, rhs.m_start_offset);
+        swap(m_offset_per_row, rhs.m_offset_per_row);
+    }
+
+    ~BitMatrix()
+    {
+        delete[] m_matrix;
+    }
+
+    bool test_bit(size_t row, size_t col, bool default_ = false) const noexcept
+    {
+        ptrdiff_t offset = m_start_offset + static_cast<ptrdiff_t>(row) * m_offset_per_row;
+
+        if (offset < 0) {
+            col += static_cast<size_t>(-offset);
+        }
+        else if (col >= static_cast<size_t>(offset)) {
+            col -= static_cast<size_t>(offset);
+        }
+        /* bit on the left of the band */
+        else {
+            return default_;
+        }
+
+        size_t word_size = sizeof(value_type) * 8;
+        size_t col_word = col / word_size;
+        uint64_t col_mask = value_type(1) << (col % word_size);
+
+        return bool(m_matrix[row * m_cols + col_word] & col_mask);
+    }
+
+    BitMatrixView<value_type, false> operator[](size_t row) noexcept
+    {
+        assert(row < m_rows);
+        return {&m_matrix[row * m_cols], m_cols};
+    }
+
+    BitMatrixView<value_type, true> operator[](size_t row) const noexcept
+    {
+        assert(row < m_rows);
+        return {&m_matrix[row * m_cols], m_cols};
+    }
+
+    size_t rows() const noexcept
+    {
+        return m_rows;
+    }
+
+    size_t cols() const noexcept
+    {
+        return m_cols;
+    }
+
+private:
+    size_t m_rows;
+    size_t m_cols;
+    T* m_matrix;
+    ptrdiff_t m_start_offset;
+    ptrdiff_t m_offset_per_row;
+};
+
+} // namespace detail
+} // namespace rapidfuzz
+
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <stdexcept>
@@ -93,6 +459,15 @@ public:
     constexpr Range<reverse_iterator> reversed() const
     {
         return {rbegin(), rend()};
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Range& seq)
+    {
+        os << "{";
+        for (auto x : seq)
+            os << static_cast<uint64_t>(x) << ", ";
+        os << "]";
+        return os;
     }
 };
 
@@ -179,6 +554,11 @@ using RangeVec = std::vector<Range<InputIt>>;
 
 } // namespace detail
 } // namespace rapidfuzz
+
+#include <array>
+#include <cmath>
+#include <cstring>
+#include <limits>
 
 #include <algorithm>
 
@@ -1866,6 +2246,275 @@ protected:
 } // namespace detail
 } // namespace rapidfuzz
 
+namespace rapidfuzz {
+namespace detail {
+
+/*
+ * based on the paper
+ * "Linear space string correction algorithm using the Damerau-Levenshtein distance"
+ * from Chunchun Zhao and Sartaj Sahni
+ */
+template <typename IntType, typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+{
+    IntType len1 = static_cast<IntType>(s1.size());
+    IntType len2 = static_cast<IntType>(s2.size());
+    IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
+    assert(std::numeric_limits<IntType>::max() > maxVal);
+
+    struct RowId {
+        IntType val = -1;
+        bool operator==(const RowId& other)
+        {
+            return val == other.val;
+        }
+
+        bool operator!=(const RowId& other)
+        {
+            return !(*this == other);
+        }
+    };
+
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId> last_row_id;
+    size_t size = static_cast<size_t>(s2.size() + 2);
+    assume(size != 0);
+    std::vector<IntType> FR_arr(size, maxVal);
+    std::vector<IntType> R1_arr(size, maxVal);
+    std::vector<IntType> R_arr(size);
+    R_arr[0] = maxVal;
+    std::iota(R_arr.begin() + 1, R_arr.end(), IntType(0));
+
+    IntType* R = &R_arr[1];
+    IntType* R1 = &R1_arr[1];
+    IntType* FR = &FR_arr[1];
+
+    for (IntType i = 1; i <= len1; i++) {
+        std::swap(R, R1);
+        IntType last_col_id = -1;
+        IntType last_i2l1 = R[0];
+        R[0] = i;
+        IntType T = maxVal;
+
+        for (IntType j = 1; j <= len2; j++) {
+            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(s1[i - 1] != s2[j - 1]);
+            ptrdiff_t left = R[j - 1] + 1;
+            ptrdiff_t up = R1[j] + 1;
+            ptrdiff_t temp = std::min({diag, left, up});
+
+            if (s1[i - 1] == s2[j - 1]) {
+                last_col_id = j;   // last occurence of s1_i
+                FR[j] = R1[j - 2]; // save H_k-1,j-2
+                T = last_i2l1;     // save H_i-2,l-1
+            }
+            else {
+                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1])).val;
+                ptrdiff_t l = last_col_id;
+
+                if ((j - l) == 1) {
+                    ptrdiff_t transpose = FR[j] + (i - k);
+                    temp = std::min(temp, transpose);
+                }
+                else if ((i - k) == 1) {
+                    ptrdiff_t transpose = T + (j - l);
+                    temp = std::min(temp, transpose);
+                }
+            }
+
+            last_i2l1 = R[j];
+            R[j] = static_cast<IntType>(temp);
+        }
+        last_row_id[s1[i - 1]].val = i;
+    }
+
+    int64_t dist = R[s2.size()];
+    return (dist <= max) ? dist : max + 1;
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+{
+    int64_t min_edits = std::abs(s1.size() - s2.size());
+    if (min_edits > max) return max + 1;
+
+    /* common affix does not effect Levenshtein distance */
+    remove_common_affix(s1, s2);
+
+    ptrdiff_t maxVal = std::max(s1.size(), s2.size()) + 1;
+    if (std::numeric_limits<int16_t>::max() > maxVal)
+        return damerau_levenshtein_distance_zhao<int16_t>(s1, s2, max);
+    else if (std::numeric_limits<int32_t>::max() > maxVal)
+        return damerau_levenshtein_distance_zhao<int32_t>(s1, s2, max);
+    else
+        return damerau_levenshtein_distance_zhao<int64_t>(s1, s2, max);
+}
+
+class DamerauLevenshtein : public DistanceBase<DamerauLevenshtein> {
+    friend DistanceBase<DamerauLevenshtein>;
+    friend NormalizedMetricBase<DamerauLevenshtein>;
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    {
+        return std::max(s1.size(), s2.size());
+    }
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    {
+        return damerau_levenshtein_distance(s1, s2, score_cutoff);
+    }
+};
+
+} // namespace detail
+} // namespace rapidfuzz
+
+namespace rapidfuzz {
+/* the API will require a change when adding custom weights */
+namespace experimental {
+/**
+ * @brief Calculates the Damerau Levenshtein distance between two strings.
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param max
+ *   Maximum Damerau Levenshtein distance between s1 and s2, that is
+ *   considered as a result. If the distance is bigger than max,
+ *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
+ *   which deactivates this behaviour.
+ *
+ * @return Damerau Levenshtein distance between s1 and s2
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+{
+    return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+{
+    return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                       int64_t score_cutoff = 0)
+{
+    return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+{
+    return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                               InputIt2 last2, double score_cutoff = 1.0)
+{
+    return detail::DamerauLevenshtein::normalized_distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
+                                               double score_cutoff = 1.0)
+{
+    return detail::DamerauLevenshtein::normalized_distance(s1, s2, score_cutoff);
+}
+
+/**
+ * @brief Calculates a normalized Damerau Levenshtein similarity
+ *
+ * @details
+ * Both string require a similar length
+ *
+ *
+ * @tparam Sentence1 This is a string that can be converted to
+ * basic_string_view<char_type>
+ * @tparam Sentence2 This is a string that can be converted to
+ * basic_string_view<char_type>
+ *
+ * @param s1
+ *   string to compare with s2 (for type info check Template parameters above)
+ * @param s2
+ *   string to compare with s1 (for type info check Template parameters above)
+ * @param score_cutoff
+ *   Optional argument for a score threshold as a float between 0 and 1.0.
+ *   For ratio < score_cutoff 0 is returned instead. Default is 0,
+ *   which deactivates this behaviour.
+ *
+ * @return Normalized Damerau Levenshtein distance between s1 and s2
+ *   as a float between 0 and 1.0
+ */
+template <typename InputIt1, typename InputIt2>
+double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
+                                                 InputIt2 last2, double score_cutoff = 0.0)
+{
+    return detail::DamerauLevenshtein::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
+                                                 double score_cutoff = 0.0)
+{
+    return detail::DamerauLevenshtein::normalized_similarity(s1, s2, score_cutoff);
+}
+
+template <typename CharT1>
+struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>> {
+    template <typename Sentence1>
+    CachedDamerauLevenshtein(const Sentence1& s1_)
+        : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
+
+    template <typename InputIt1>
+    CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    {}
+
+private:
+    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>>;
+    friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
+
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+    }
+
+    template <typename InputIt2>
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return damerau_levenshtein_distance(s1, s2, score_cutoff);
+    }
+
+    std::basic_string<CharT1> s1;
+};
+
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+template <typename Sentence1>
+CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
+
+template <typename InputIt1>
+CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+#endif
+
+} // namespace experimental
+} // namespace rapidfuzz
+
+#include <cmath>
+#include <numeric>
+
 #include <stdexcept>
 
 namespace rapidfuzz {
@@ -2049,474 +2698,6 @@ CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<Inp
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
-
-#include <array>
-#include <iterator>
-#include <new>
-#include <stdint.h>
-
-namespace rapidfuzz {
-namespace detail {
-
-/* hashmap for integers which can only grow, but can't remove elements */
-template <typename T_Key, typename T_Entry>
-struct GrowingHashmap {
-    using key_type = T_Key;
-    using value_type = T_Entry;
-    using size_type = unsigned int;
-
-private:
-    static constexpr value_type _empty_val = value_type();
-    static constexpr size_type min_size = 8;
-    struct MapElem {
-        key_type key;
-        value_type value = _empty_val;
-    };
-
-    int used;
-    int fill;
-    int mask;
-    MapElem* m_map;
-
-public:
-    GrowingHashmap() : used(0), fill(0), mask(-1), m_map(NULL)
-    {}
-    ~GrowingHashmap()
-    {
-        delete[] m_map;
-    }
-
-    GrowingHashmap(const GrowingHashmap& other) : used(other.used), fill(other.fill), mask(other.mask)
-    {
-        int size = mask + 1;
-        m_map = new MapElem[size];
-        std::copy(other.m_map, other.m_map + size, m_map);
-    }
-
-    GrowingHashmap(GrowingHashmap&& other) noexcept : GrowingHashmap()
-    {
-        swap(*this, other);
-    }
-
-    GrowingHashmap& operator=(GrowingHashmap other)
-    {
-        swap(*this, other);
-        return *this;
-    }
-
-    friend void swap(GrowingHashmap& first, GrowingHashmap& second) noexcept
-    {
-        std::swap(first.used, second.used);
-        std::swap(first.fill, second.fill);
-        std::swap(first.mask, second.mask);
-        std::swap(first.m_map, second.m_map);
-    }
-
-    size_type size() const
-    {
-        return used;
-    }
-    size_type capacity() const
-    {
-        return mask + 1;
-    }
-    bool empty() const
-    {
-        return used == 0;
-    }
-
-    value_type get(key_type key) const noexcept
-    {
-        if (m_map == NULL) return _empty_val;
-
-        return m_map[lookup(key)].value;
-    }
-
-    value_type& operator[](key_type key) noexcept
-    {
-        if (m_map == NULL) allocate();
-
-        size_t i = lookup(key);
-
-        if (m_map[i].value == _empty_val) {
-            /* resize when 2/3 full */
-            if (++fill * 3 >= (mask + 1) * 2) {
-                grow((used + 1) * 2);
-                i = lookup(key);
-            }
-
-            used++;
-        }
-
-        m_map[i].key = key;
-        return m_map[i].value;
-    }
-
-private:
-    void allocate()
-    {
-        mask = min_size - 1;
-        m_map = new MapElem[min_size];
-    }
-
-    /**
-     * lookup key inside the hashmap using a similar collision resolution
-     * strategy to CPython and Ruby
-     */
-    size_t lookup(key_type key) const
-    {
-        size_t hash = static_cast<size_t>(key);
-        size_t i = hash & static_cast<size_t>(mask);
-
-        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
-
-        size_t perturb = hash;
-        while (true) {
-            i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
-            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
-
-            perturb >>= 5;
-        }
-    }
-
-    void grow(int minUsed)
-    {
-        int newSize = mask + 1;
-        while (newSize <= minUsed)
-            newSize <<= 1;
-
-        MapElem* oldMap = m_map;
-        m_map = new MapElem[static_cast<size_t>(newSize)];
-
-        fill = used;
-        mask = newSize - 1;
-
-        for (int i = 0; used > 0; i++)
-            if (oldMap[i].value != _empty_val) {
-                size_t j = lookup(oldMap[i].key);
-
-                m_map[j].key = oldMap[i].key;
-                m_map[j].value = oldMap[i].value;
-                used--;
-            }
-
-        used = fill;
-        delete[] oldMap;
-    }
-};
-
-template <typename T_Key, typename T_Entry>
-struct HybridGrowingHashmap {
-    using key_type = T_Key;
-    using value_type = T_Entry;
-
-    HybridGrowingHashmap()
-    {
-        m_extendedAscii.fill(value_type());
-    }
-
-    value_type get(char key) const noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        return m_extendedAscii[static_cast<uint8_t>(key)];
-    }
-
-    template <typename CharT>
-    value_type get(CharT key) const noexcept
-    {
-        if (key >= 0 && key <= 255)
-            return m_extendedAscii[static_cast<uint8_t>(key)];
-        else
-            return m_map.get(static_cast<key_type>(key));
-    }
-
-    value_type& operator[](char key) noexcept
-    {
-        /** treat char as value between 0 and 127 for performance reasons */
-        return m_extendedAscii[static_cast<uint8_t>(key)];
-    }
-
-    template <typename CharT>
-    value_type& operator[](CharT key)
-    {
-        if (key >= 0 && key <= 255)
-            return m_extendedAscii[static_cast<uint8_t>(key)];
-        else
-            return m_map[static_cast<key_type>(key)];
-    }
-
-private:
-    GrowingHashmap<key_type, value_type> m_map;
-    std::array<value_type, 256> m_extendedAscii;
-};
-
-} // namespace detail
-} // namespace rapidfuzz
-
-#include <algorithm>
-#include <cassert>
-#include <stdint.h>
-#include <stdio.h>
-
-namespace rapidfuzz {
-namespace detail {
-
-template <typename T, bool IsConst>
-struct MatrixVectorView {
-
-    using value_type = T;
-    using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
-
-    MatrixVectorView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
-    {}
-
-    bool test_bit(size_type bit) const noexcept
-    {
-        size_t word_size = sizeof(value_type) * 8;
-        size_t word = bit / word_size;
-        bit = bit % word_size;
-        value_type mask = value_type(1) << bit;
-
-        assert(word < m_cols);
-        return bool(m_vector[word] & mask);
-    }
-
-    reference operator[](size_type col) noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_type size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    pointer m_vector;
-    size_type m_cols;
-};
-
-template <typename T>
-struct Matrix {
-
-    using value_type = T;
-
-    Matrix() : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {}
-
-    Matrix(size_t rows, size_t cols, T val) : m_rows(rows), m_cols(cols), m_matrix(nullptr)
-    {
-        if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
-        std::fill_n(m_matrix, m_rows * m_cols, val);
-    }
-
-    Matrix(const Matrix& other) : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(nullptr)
-    {
-        if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
-        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
-    }
-
-    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {
-        other.swap(*this);
-    }
-
-    Matrix& operator=(Matrix&& other) noexcept
-    {
-        other.swap(*this);
-        return *this;
-    }
-
-    Matrix& operator=(const Matrix& other)
-    {
-        Matrix temp = other;
-        temp.swap(*this);
-        return *this;
-    }
-
-    void swap(Matrix& rhs) noexcept
-    {
-        using std::swap;
-        swap(m_rows, rhs.m_rows);
-        swap(m_cols, rhs.m_cols);
-        swap(m_matrix, rhs.m_matrix);
-    }
-
-    ~Matrix()
-    {
-        delete[] m_matrix;
-    }
-
-    MatrixVectorView<value_type, false> operator[](size_t row) noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols};
-    }
-
-    MatrixVectorView<value_type, true> operator[](size_t row) const noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols};
-    }
-
-    size_t rows() const noexcept
-    {
-        return m_rows;
-    }
-
-    size_t cols() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    size_t m_rows;
-    size_t m_cols;
-    T* m_matrix;
-};
-
-template <bool IsConst>
-struct BandedBitvectorMatrixView {
-
-    using value_type = uint64_t;
-    using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
-
-    BandedBitvectorMatrixView(pointer vector, size_type cols, size_type offset) noexcept
-        : m_vector(vector), m_cols(cols), m_offset(offset)
-    {}
-
-    bool test_bit(size_type bit, bool default_ = false) const noexcept
-    {
-        /* bit outside of the band */
-        if (bit < m_offset) return default_;
-
-        bit -= m_offset;
-        size_t word_size = sizeof(value_type) * 8;
-        size_t word = bit / word_size;
-        bit = bit % word_size;
-        value_type mask = value_type(1) << bit;
-
-        assert(word < m_cols);
-        return bool(m_vector[word] & mask);
-    }
-
-    reference operator[](size_type col) noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_type size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    pointer m_vector;
-    size_type m_cols;
-    size_type m_offset;
-};
-
-struct BandedBitvectorMatrix {
-
-    using value_type = uint64_t;
-
-    BandedBitvectorMatrix() : m_rows(0), m_cols(0), m_matrix(nullptr), m_start_offset(0), m_offset_per_row(0)
-    {}
-
-    BandedBitvectorMatrix(size_t rows, size_t cols, value_type val, size_t start_offset = 0,
-                          size_t offset_per_row = 0)
-        : m_rows(rows),
-          m_cols(cols),
-          m_matrix(nullptr),
-          m_start_offset(start_offset),
-          m_offset_per_row(offset_per_row)
-    {
-        if (m_rows && m_cols) m_matrix = new value_type[m_rows * m_cols];
-        std::fill_n(m_matrix, m_rows * m_cols, val);
-    }
-
-    BandedBitvectorMatrix(const BandedBitvectorMatrix& other)
-        : m_rows(other.m_rows),
-          m_cols(other.m_cols),
-          m_matrix(nullptr),
-          m_start_offset(other.m_start_offset),
-          m_offset_per_row(other.m_offset_per_row)
-    {
-        if (m_rows && m_cols) m_matrix = new value_type[m_rows * m_cols];
-        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
-    }
-
-    BandedBitvectorMatrix(BandedBitvectorMatrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {
-        other.swap(*this);
-    }
-
-    BandedBitvectorMatrix& operator=(BandedBitvectorMatrix&& other) noexcept
-    {
-        other.swap(*this);
-        return *this;
-    }
-
-    BandedBitvectorMatrix& operator=(const BandedBitvectorMatrix& other)
-    {
-        BandedBitvectorMatrix temp = other;
-        temp.swap(*this);
-        return *this;
-    }
-
-    void swap(BandedBitvectorMatrix& rhs) noexcept
-    {
-        using std::swap;
-        swap(m_rows, rhs.m_rows);
-        swap(m_cols, rhs.m_cols);
-        swap(m_matrix, rhs.m_matrix);
-        swap(m_start_offset, rhs.m_start_offset);
-        swap(m_offset_per_row, rhs.m_offset_per_row);
-    }
-
-    ~BandedBitvectorMatrix()
-    {
-        delete[] m_matrix;
-    }
-
-    BandedBitvectorMatrixView<false> operator[](size_t row) noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols, m_start_offset + row * m_offset_per_row};
-    }
-
-    BandedBitvectorMatrixView<true> operator[](size_t row) const noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols, m_start_offset + row * m_offset_per_row};
-    }
-
-    size_t rows() const noexcept
-    {
-        return m_rows;
-    }
-
-    size_t cols() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    size_t m_rows;
-    size_t m_cols;
-    value_type* m_matrix;
-    size_t m_start_offset;
-    size_t m_offset_per_row;
-};
-
-} // namespace detail
-} // namespace rapidfuzz
 
 namespace rapidfuzz {
 namespace detail {
@@ -2724,7 +2905,7 @@ struct BlockPatternMatchVector {
 private:
     size_t m_block_count;
     BitvectorHashmap* m_map;
-    Matrix<uint64_t> m_extendedAscii;
+    BitMatrix<uint64_t> m_extendedAscii;
 };
 
 } // namespace detail
@@ -2743,7 +2924,7 @@ struct LCSseqResult;
 
 template <>
 struct LCSseqResult<true> {
-    Matrix<uint64_t> S;
+    BitMatrix<uint64_t> S;
 
     int64_t sim;
 };
@@ -2853,7 +3034,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>([&](auto f) { f(res).S = Matrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
+    static_if<RecordMatrix>([&](auto f) { f(res).S = BitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -2883,7 +3064,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>([&](auto f) { f(res).S = Matrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
+    static_if<RecordMatrix>([&](auto f) { f(res).S = BitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -3013,7 +3194,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
 
     while (row && col) {
         /* Deletion */
-        if (matrix.S[row - 1].test_bit(col - 1)) {
+        if (matrix.S.test_bit(row - 1, col - 1)) {
             assert(dist > 0);
             dist--;
             col--;
@@ -3025,7 +3206,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
             row--;
 
             /* Insertion */
-            if (row && !(matrix.S[row - 1].test_bit(col - 1))) {
+            if (row && !(matrix.S.test_bit(row - 1, col - 1))) {
                 assert(dist > 0);
                 dist--;
                 editops[dist].type = EditType::Insert;
@@ -3395,7 +3576,7 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <sys/types.h>
+#include <stdexcept>
 
 namespace rapidfuzz {
 namespace detail {
@@ -3416,8 +3597,8 @@ struct LevenshteinResult;
 
 template <>
 struct LevenshteinResult<true, false> {
-    BandedBitvectorMatrix VP;
-    BandedBitvectorMatrix VN;
+    BitMatrix<uint64_t> VP;
+    BitMatrix<uint64_t> VN;
 
     int64_t dist;
 };
@@ -3619,8 +3800,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, 0);
+        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
     });
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -3761,10 +3942,8 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP =
-            BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, 0, static_cast<size_t>(max + 2 - 64), 1);
-        f(res).VN =
-            BandedBitvectorMatrix(static_cast<size_t>(s2.size()), 1, 0, static_cast<size_t>(max + 2 - 64), 1);
+        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
+        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
     });
 
     uint64_t diagonal_mask = UINT64_C(1) << 63;
@@ -3879,8 +4058,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
-        f(res).VN = BandedBitvectorMatrix(static_cast<size_t>(s2.size()), words, 0);
+        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
+        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
     });
 
     /* Searching */
@@ -4048,7 +4227,7 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 
     while (row && col) {
         /* Deletion */
-        if (matrix.VP[row - 1].test_bit(col - 1)) {
+        if (matrix.VP.test_bit(row - 1, col - 1)) {
             assert(dist > 0);
             dist--;
             col--;
@@ -4060,7 +4239,7 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
             row--;
 
             /* Insertion */
-            if (row && matrix.VN[row - 1].test_bit(col - 1)) {
+            if (row && matrix.VN.test_bit(row - 1, col - 1)) {
                 assert(dist > 0);
                 dist--;
                 editops[editop_pos + dist].type = EditType::Insert;
@@ -4101,23 +4280,31 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinResult<true, false> levenshtein_matrix(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+                       int64_t max = std::numeric_limits<int64_t>::max(), size_t src_pos = 0,
+                       size_t dest_pos = 0, size_t editop_pos = 0)
 {
     /* upper bound */
     max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
+    LevenshteinResult<true, false> matrix;
     if (s1.empty() || s2.empty()) {
-        LevenshteinResult<true, false> res;
-        res.dist = s1.size() + s2.size();
-        return res;
+        matrix.dist = s1.size() + s2.size();
     }
     else if (s1.size() <= 64)
-        return levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
+        matrix = levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
     else if (full_band <= 64)
-        return levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
+        matrix = levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
     else
-        return levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
+        matrix = levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2);
+
+    assert(matrix.dist <= max);
+    if (matrix.dist != 0) {
+        if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
+
+        recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
+    }
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -4214,9 +4401,9 @@ HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2)
 }
 
 template <typename InputIt1, typename InputIt2>
-void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2, size_t src_pos = 0,
-                       size_t dest_pos = 0, size_t editop_pos = 0,
-                       int64_t max = std::numeric_limits<int64_t>::max())
+void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+                                  size_t src_pos = 0, size_t dest_pos = 0, size_t editop_pos = 0,
+                                  int64_t max = std::numeric_limits<int64_t>::max())
 {
     // todo add blockwise implementation of levenshtein matrix / row
 
@@ -4227,13 +4414,7 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 
     ptrdiff_t matrix_size = 2 * s1.size() * s2.size() / 8;
     if (matrix_size < 1024 * 1024 || s1.size() < 65 || s2.size() < 10) {
-        auto matrix = levenshtein_matrix(s1, s2, max);
-
-        if (matrix.dist != 0) {
-            if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
-
-            recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
-        }
+        levenshtein_align(editops, s1, s2, max, src_pos, dest_pos, editop_pos);
     }
     /* Hirschbergs algorithm */
     else {
@@ -4241,12 +4422,12 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 
         if (editops.size() == 0) editops.resize(static_cast<size_t>(hpos.left_score + hpos.right_score));
 
-        levenshtein_align(editops, s1.subseq(0, hpos.s1_mid), s2.subseq(0, hpos.s2_mid), src_pos, dest_pos,
-                          editop_pos, hpos.left_score);
-        levenshtein_align(editops, s1.subseq(hpos.s1_mid), s2.subseq(hpos.s2_mid),
-                          src_pos + static_cast<size_t>(hpos.s1_mid),
-                          dest_pos + static_cast<size_t>(hpos.s2_mid),
-                          editop_pos + static_cast<size_t>(hpos.left_score), hpos.right_score);
+        levenshtein_align_hirschberg(editops, s1.subseq(0, hpos.s1_mid), s2.subseq(0, hpos.s2_mid), src_pos,
+                                     dest_pos, editop_pos, hpos.left_score);
+        levenshtein_align_hirschberg(editops, s1.subseq(hpos.s1_mid), s2.subseq(hpos.s2_mid),
+                                     src_pos + static_cast<size_t>(hpos.s1_mid),
+                                     dest_pos + static_cast<size_t>(hpos.s2_mid),
+                                     editop_pos + static_cast<size_t>(hpos.left_score), hpos.right_score);
     }
 }
 
@@ -4254,7 +4435,7 @@ template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2)
 {
     Editops editops;
-    levenshtein_align(editops, s1, s2);
+    levenshtein_align_hirschberg(editops, s1, s2);
     editops.set_src_len(static_cast<size_t>(s1.size()));
     editops.set_dest_len(static_cast<size_t>(s2.size()));
     return editops;
@@ -4627,281 +4808,6 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
     -> CachedLevenshtein<iter_value_t<InputIt1>>;
 #endif
 
-} // namespace rapidfuzz
-
-#include <cmath>
-
-#include <cassert>
-#include <cstddef>
-#include <iterator>
-#include <limits>
-#include <memory>
-#include <numeric>
-
-namespace rapidfuzz {
-namespace detail {
-
-/*
- * based on the paper
- * "Linear space string correction algorithm using the Damerau-Levenshtein distance"
- * from Chunchun Zhao and Sartaj Sahni
- */
-template <typename IntType, typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
-{
-    IntType len1 = static_cast<IntType>(s1.size());
-    IntType len2 = static_cast<IntType>(s2.size());
-    IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
-    assert(std::numeric_limits<IntType>::max() > maxVal);
-
-    struct RowId {
-        IntType val = -1;
-        bool operator==(const RowId& other)
-        {
-            return val == other.val;
-        }
-
-        bool operator!=(const RowId& other)
-        {
-            return !(*this == other);
-        }
-    };
-
-    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId> last_row_id;
-    size_t size = static_cast<size_t>(s2.size() + 2);
-    assume(size != 0);
-    std::vector<IntType> FR_arr(size, maxVal);
-    std::vector<IntType> R1_arr(size, maxVal);
-    std::vector<IntType> R_arr(size);
-    R_arr[0] = maxVal;
-    std::iota(R_arr.begin() + 1, R_arr.end(), IntType(0));
-
-    IntType* R = &R_arr[1];
-    IntType* R1 = &R1_arr[1];
-    IntType* FR = &FR_arr[1];
-
-    for (IntType i = 1; i <= len1; i++) {
-        std::swap(R, R1);
-        IntType last_col_id = -1;
-        IntType last_i2l1 = R[0];
-        R[0] = i;
-        IntType T = maxVal;
-
-        for (IntType j = 1; j <= len2; j++) {
-            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(s1[i - 1] != s2[j - 1]);
-            ptrdiff_t left = R[j - 1] + 1;
-            ptrdiff_t up = R1[j] + 1;
-            ptrdiff_t temp = std::min({diag, left, up});
-
-            if (s1[i - 1] == s2[j - 1]) {
-                last_col_id = j;   // last occurence of s1_i
-                FR[j] = R1[j - 2]; // save H_k-1,j-2
-                T = last_i2l1;     // save H_i-2,l-1
-            }
-            else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1])).val;
-                ptrdiff_t l = last_col_id;
-
-                if ((j - l) == 1) {
-                    ptrdiff_t transpose = FR[j] + (i - k);
-                    temp = std::min(temp, transpose);
-                }
-                else if ((i - k) == 1) {
-                    ptrdiff_t transpose = T + (j - l);
-                    temp = std::min(temp, transpose);
-                }
-            }
-
-            last_i2l1 = R[j];
-            R[j] = static_cast<IntType>(temp);
-        }
-        last_row_id[s1[i - 1]].val = i;
-    }
-
-    int64_t dist = R[s2.size()];
-    return (dist <= max) ? dist : max + 1;
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
-{
-    int64_t min_edits = std::abs(s1.size() - s2.size());
-    if (min_edits > max) return max + 1;
-
-    /* common affix does not effect Levenshtein distance */
-    remove_common_affix(s1, s2);
-
-    ptrdiff_t maxVal = std::max(s1.size(), s2.size()) + 1;
-    if (std::numeric_limits<int16_t>::max() > maxVal)
-        return damerau_levenshtein_distance_zhao<int16_t>(s1, s2, max);
-    else if (std::numeric_limits<int32_t>::max() > maxVal)
-        return damerau_levenshtein_distance_zhao<int32_t>(s1, s2, max);
-    else
-        return damerau_levenshtein_distance_zhao<int64_t>(s1, s2, max);
-}
-
-class DamerauLevenshtein : public DistanceBase<DamerauLevenshtein> {
-    friend DistanceBase<DamerauLevenshtein>;
-    friend NormalizedMetricBase<DamerauLevenshtein>;
-
-    template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
-    {
-        return std::max(s1.size(), s2.size());
-    }
-
-    template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
-    {
-        return damerau_levenshtein_distance(s1, s2, score_cutoff);
-    }
-};
-
-} // namespace detail
-} // namespace rapidfuzz
-
-namespace rapidfuzz {
-/* the API will require a change when adding custom weights */
-namespace experimental {
-/**
- * @brief Calculates the Damerau Levenshtein distance between two strings.
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param max
- *   Maximum Damerau Levenshtein distance between s1 and s2, that is
- *   considered as a result. If the distance is bigger than max,
- *   max + 1 is returned instead. Default is std::numeric_limits<size_t>::max(),
- *   which deactivates this behaviour.
- *
- * @return Damerau Levenshtein distance between s1 and s2
- */
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
-{
-    return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
-{
-    return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       int64_t score_cutoff = 0)
-{
-    return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
-{
-    return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                               InputIt2 last2, double score_cutoff = 1.0)
-{
-    return detail::DamerauLevenshtein::normalized_distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                               double score_cutoff = 1.0)
-{
-    return detail::DamerauLevenshtein::normalized_distance(s1, s2, score_cutoff);
-}
-
-/**
- * @brief Calculates a normalized Damerau Levenshtein similarity
- *
- * @details
- * Both string require a similar length
- *
- *
- * @tparam Sentence1 This is a string that can be converted to
- * basic_string_view<char_type>
- * @tparam Sentence2 This is a string that can be converted to
- * basic_string_view<char_type>
- *
- * @param s1
- *   string to compare with s2 (for type info check Template parameters above)
- * @param s2
- *   string to compare with s1 (for type info check Template parameters above)
- * @param score_cutoff
- *   Optional argument for a score threshold as a float between 0 and 1.0.
- *   For ratio < score_cutoff 0 is returned instead. Default is 0,
- *   which deactivates this behaviour.
- *
- * @return Normalized Damerau Levenshtein distance between s1 and s2
- *   as a float between 0 and 1.0
- */
-template <typename InputIt1, typename InputIt2>
-double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, double score_cutoff = 0.0)
-{
-    return detail::DamerauLevenshtein::normalized_similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                                 double score_cutoff = 0.0)
-{
-    return detail::DamerauLevenshtein::normalized_similarity(s1, s2, score_cutoff);
-}
-
-template <typename CharT1>
-struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>> {
-    template <typename Sentence1>
-    CachedDamerauLevenshtein(const Sentence1& s1_)
-        : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
-    {}
-
-    template <typename InputIt1>
-    CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
-    {}
-
-private:
-    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>>;
-    friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
-
-    template <typename InputIt2>
-    int64_t maximum(detail::Range<InputIt2> s2) const
-    {
-        return std::max(static_cast<int64_t>(s1.size()), s2.size());
-    }
-
-    template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
-    {
-        return damerau_levenshtein_distance(s1, s2, score_cutoff);
-    }
-
-    std::basic_string<CharT1> s1;
-};
-
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
-template <typename Sentence1>
-CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
-#endif
-
-} // namespace experimental
 } // namespace rapidfuzz
 
 namespace rapidfuzz {

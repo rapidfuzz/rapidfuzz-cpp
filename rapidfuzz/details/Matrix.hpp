@@ -4,6 +4,9 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <stdexcept>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -11,26 +14,15 @@ namespace rapidfuzz {
 namespace detail {
 
 template <typename T, bool IsConst>
-struct MatrixVectorView {
+struct BitMatrixView {
 
     using value_type = T;
     using size_type = size_t;
     using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
     using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
 
-    MatrixVectorView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
+    BitMatrixView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
     {}
-
-    bool test_bit(size_type bit) const noexcept
-    {
-        size_t word_size = sizeof(value_type) * 8;
-        size_t word = bit / word_size;
-        bit = bit % word_size;
-        value_type mask = value_type(1) << bit;
-
-        assert(word < m_cols);
-        return bool(m_vector[word] & mask);
-    }
 
     reference operator[](size_type col) noexcept
     {
@@ -49,63 +41,102 @@ private:
 };
 
 template <typename T>
-struct Matrix {
+struct BitMatrix {
 
     using value_type = T;
 
-    Matrix() : m_rows(0), m_cols(0), m_matrix(nullptr)
+    BitMatrix() : m_rows(0), m_cols(0), m_matrix(nullptr), m_start_offset(0), m_offset_per_row(0)
     {}
 
-    Matrix(size_t rows, size_t cols, T val) : m_rows(rows), m_cols(cols), m_matrix(nullptr)
+    BitMatrix(size_t rows, size_t cols, T val, ptrdiff_t start_offset = 0, ptrdiff_t offset_per_row = 0)
+        : m_rows(rows),
+          m_cols(cols),
+          m_matrix(nullptr),
+          m_start_offset(start_offset),
+          m_offset_per_row(offset_per_row)
     {
         if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
         std::fill_n(m_matrix, m_rows * m_cols, val);
     }
 
-    Matrix(const Matrix& other) : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(nullptr)
+    BitMatrix(const BitMatrix& other)
+        : m_rows(other.m_rows),
+          m_cols(other.m_cols),
+          m_matrix(nullptr),
+          m_start_offset(other.m_start_offset),
+          m_offset_per_row(other.m_offset_per_row)
     {
         if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
         std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
     }
 
-    Matrix(Matrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
+    BitMatrix(BitMatrix&& other) noexcept
+        : m_rows(0),
+          m_cols(0),
+          m_matrix(nullptr),
+          m_start_offset(other.m_start_offset),
+          m_offset_per_row(other.m_offset_per_row)
     {
         other.swap(*this);
     }
 
-    Matrix& operator=(Matrix&& other) noexcept
+    BitMatrix& operator=(BitMatrix&& other) noexcept
     {
         other.swap(*this);
         return *this;
     }
 
-    Matrix& operator=(const Matrix& other)
+    BitMatrix& operator=(const BitMatrix& other)
     {
-        Matrix temp = other;
+        BitMatrix temp = other;
         temp.swap(*this);
         return *this;
     }
 
-    void swap(Matrix& rhs) noexcept
+    void swap(BitMatrix& rhs) noexcept
     {
         using std::swap;
         swap(m_rows, rhs.m_rows);
         swap(m_cols, rhs.m_cols);
         swap(m_matrix, rhs.m_matrix);
+        swap(m_start_offset, rhs.m_start_offset);
+        swap(m_offset_per_row, rhs.m_offset_per_row);
     }
 
-    ~Matrix()
+    ~BitMatrix()
     {
         delete[] m_matrix;
     }
 
-    MatrixVectorView<value_type, false> operator[](size_t row) noexcept
+    bool test_bit(size_t row, size_t col, bool default_ = false) const noexcept
+    {
+        ptrdiff_t offset = m_start_offset + static_cast<ptrdiff_t>(row) * m_offset_per_row;
+
+        if (offset < 0) {
+            col += static_cast<size_t>(-offset);
+        }
+        else if (col >= static_cast<size_t>(offset)) {
+            col -= static_cast<size_t>(offset);
+        }
+        /* bit on the left of the band */
+        else {
+            return default_;
+        }
+
+        size_t word_size = sizeof(value_type) * 8;
+        size_t col_word = col / word_size;
+        uint64_t col_mask = value_type(1) << (col % word_size);
+
+        return bool(m_matrix[row * m_cols + col_word] & col_mask);
+    }
+
+    BitMatrixView<value_type, false> operator[](size_t row) noexcept
     {
         assert(row < m_rows);
         return {&m_matrix[row * m_cols], m_cols};
     }
 
-    MatrixVectorView<value_type, true> operator[](size_t row) const noexcept
+    BitMatrixView<value_type, true> operator[](size_t row) const noexcept
     {
         assert(row < m_rows);
         return {&m_matrix[row * m_cols], m_cols};
@@ -125,143 +156,8 @@ private:
     size_t m_rows;
     size_t m_cols;
     T* m_matrix;
-};
-
-template <bool IsConst>
-struct BandedBitvectorMatrixView {
-
-    using value_type = uint64_t;
-    using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
-
-    BandedBitvectorMatrixView(pointer vector, size_type cols, size_type offset) noexcept
-        : m_vector(vector), m_cols(cols), m_offset(offset)
-    {}
-
-    bool test_bit(size_type bit, bool default_ = false) const noexcept
-    {
-        /* bit outside of the band */
-        if (bit < m_offset) return default_;
-
-        bit -= m_offset;
-        size_t word_size = sizeof(value_type) * 8;
-        size_t word = bit / word_size;
-        bit = bit % word_size;
-        value_type mask = value_type(1) << bit;
-
-        assert(word < m_cols);
-        return bool(m_vector[word] & mask);
-    }
-
-    reference operator[](size_type col) noexcept
-    {
-        assert(col < m_cols);
-        return m_vector[col];
-    }
-
-    size_type size() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    pointer m_vector;
-    size_type m_cols;
-    size_type m_offset;
-};
-
-struct BandedBitvectorMatrix {
-
-    using value_type = uint64_t;
-
-    BandedBitvectorMatrix() : m_rows(0), m_cols(0), m_matrix(nullptr), m_start_offset(0), m_offset_per_row(0)
-    {}
-
-    BandedBitvectorMatrix(size_t rows, size_t cols, value_type val, size_t start_offset = 0,
-                          size_t offset_per_row = 0)
-        : m_rows(rows),
-          m_cols(cols),
-          m_matrix(nullptr),
-          m_start_offset(start_offset),
-          m_offset_per_row(offset_per_row)
-    {
-        if (m_rows && m_cols) m_matrix = new value_type[m_rows * m_cols];
-        std::fill_n(m_matrix, m_rows * m_cols, val);
-    }
-
-    BandedBitvectorMatrix(const BandedBitvectorMatrix& other)
-        : m_rows(other.m_rows),
-          m_cols(other.m_cols),
-          m_matrix(nullptr),
-          m_start_offset(other.m_start_offset),
-          m_offset_per_row(other.m_offset_per_row)
-    {
-        if (m_rows && m_cols) m_matrix = new value_type[m_rows * m_cols];
-        std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
-    }
-
-    BandedBitvectorMatrix(BandedBitvectorMatrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
-    {
-        other.swap(*this);
-    }
-
-    BandedBitvectorMatrix& operator=(BandedBitvectorMatrix&& other) noexcept
-    {
-        other.swap(*this);
-        return *this;
-    }
-
-    BandedBitvectorMatrix& operator=(const BandedBitvectorMatrix& other)
-    {
-        BandedBitvectorMatrix temp = other;
-        temp.swap(*this);
-        return *this;
-    }
-
-    void swap(BandedBitvectorMatrix& rhs) noexcept
-    {
-        using std::swap;
-        swap(m_rows, rhs.m_rows);
-        swap(m_cols, rhs.m_cols);
-        swap(m_matrix, rhs.m_matrix);
-        swap(m_start_offset, rhs.m_start_offset);
-        swap(m_offset_per_row, rhs.m_offset_per_row);
-    }
-
-    ~BandedBitvectorMatrix()
-    {
-        delete[] m_matrix;
-    }
-
-    BandedBitvectorMatrixView<false> operator[](size_t row) noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols, m_start_offset + row * m_offset_per_row};
-    }
-
-    BandedBitvectorMatrixView<true> operator[](size_t row) const noexcept
-    {
-        assert(row < m_rows);
-        return {&m_matrix[row * m_cols], m_cols, m_start_offset + row * m_offset_per_row};
-    }
-
-    size_t rows() const noexcept
-    {
-        return m_rows;
-    }
-
-    size_t cols() const noexcept
-    {
-        return m_cols;
-    }
-
-private:
-    size_t m_rows;
-    size_t m_cols;
-    value_type* m_matrix;
-    size_t m_start_offset;
-    size_t m_offset_per_row;
+    ptrdiff_t m_start_offset;
+    ptrdiff_t m_offset_per_row;
 };
 
 } // namespace detail

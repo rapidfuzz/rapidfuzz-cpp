@@ -234,3 +234,104 @@ TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
     }
 }
+
+TEST_CASE("Levenshtein small band")
+{
+    {
+        std::string s1 =
+            "kevZLemllleyOT1UNTKWeSOYYRKWKWeBGNWKXHK05RQKWZTMeHK2UMKTie3YKRRYKe3OINeJOKcc1OKJKWeKWNKHROINkevZ"
+            "LemllleyOT1UNTKWeSOYYRKWKWeBGNWKXHK05RQKWZTMeHK2UMKTie3YKRRYKe3OINeJOKccFGNReJKWeyNK3INROK4KTJKT"
+            "emumqdmumteGZLemqirniemumqdmunleGZLemuitleMKMKTemuinleOTeJKTccFGNReJKWeyNK3INROK4KTJKTemumqdmumt"
+            "eGZLemqirniemumqdmunleGZLemuitleMKMKTemuinleOTeJKTccJWKOeRKY2YKTezWOKJKTXPGNWKTkexZWINeWOINYKWRO"
+            "INKTeEVWZINe1ZWJKTemumqdmlmtersoeyNKTeMKjccJWKOeRKY2YKTezWOKJKTXPGNWKTkexZWINeWOINYKWROINKTeEVWZ"
+            "INe1ZWJKTemumqdmlmtersoeyNKTeMKjcc3INOKJKTieJkeOkesinleGZLePKemllieOTeJKWeMRKOINKTeFKOYeTKZeKOTM"
+            "KMGTMKTKeyNKTiemumueGRRKOTcc3INOKJKTieJkeOkesinleGZLePKemllieOTeJKWeMRKOINKTeFKOYeTKZeKOTMKMGTMK"
+            "TKeyNKTiemumueGRRKOTccoqueaetinfeMKMKTesinfegmummdmumohkccoqueaetinfeMKMKTesinfegmummdmumohkccyO"
+            "TKTeWKINYeKWNKHROINKTeD6IQMGTMeKWLZNWeJOKeFGNReJKWeAKHUWKTKTkewKYWZMe3OKccyOTKTeWKINYeKWNKHROINK"
+            "TeD6IQMGTMeKWLZNWeJOKeFGNReJKWeAKHUWKTKTkewKYWZMe3OKccmumqeTUINeqsoueZTJeHROKHe3OKe3USOYeTZWeZSe"
+            "mspeNOTYKWeJKWemumoeMKSKRJKYKTeFGNReJKWeAKjccmumqeTUINeqsoueZTJeHROKHe3OKe3USOYeTZWeZSemspeNOTYK"
+            "WeJKWemumoeMKSKRJKYKTeFGNReJKWeAKjccHUWKTKTe2ZW6IQie3Ue3GTQe3OKegmumqheGZLeprsqiegmumrheGZLeosnm"
+            "eZTJegmumsheMGWeGZLeomuoieZSeJGTTccHUWKTKTe2ZW6IQie3Ue3GTQe3OKegmumqheGZLeprsqiegmumrheGZLeosnme"
+            "ZTJegmumsheMGWeGZLeomuoieZSeJGTTccxOKeCKYNUJKe2ZWeyWWKINTZTMeJOK3KWeFOLLKWeZTJeJOKeFO33KWTe3KRH3"
+            "YeLOTJKTie3OINeOTeJKWeOSeCGOjccxOKeCKYNUJKe2ZWeyWWKINTZTMeJOK3KWeFOLLKWeZTJeJOKeFO33KWTe3KRH3YeL"
+            "OTJKTie3OINeOTeJKWeOSeCGOjccNKLYemunmeJKW";
+        std::string s2 =
+            "ievZLemllleyOT1UNTKWeSOYYRKWKWeBGNWKXHK05RQKWZTMeHK2UMKTie3YKRRYKe3OINeJOKcc1OKJKWeKWNKHROINkev"
+            "LemllleyOT1UNTKWeSOYYRKWKWeBGNWKXHK05RQKWZTMeHK2UMKTie3YKRRYKe3OINeJOKccNReJKWeyNK3INROK4KTJKTem"
+            "umqdjmumteGZLemqirniemumqdjmunleGZLemuitleMKMKTemuinleOTeJKTccFGNReJKWeyNK3INROK4KTJKTemumqmumte"
+            "GZLemqirniemumqdmunleGZLemuitleMKMKTemuinleOTeJKTccJWKOeRKY2YKTkzWOKJKTXPGNWKTkexZWINeWOINYKWROI"
+            "NKTeEVWZINe1ZWJKTemumqjmlmtersoeyNKTeMKjccJWKOeRKY2YKTezWOKJKTXPGNWKTkexZWINeWOINYKWROINKTeEVWZI"
+            "Ne1ZWJKTemumqmlmtersoeyNKTeMKdccINOKJKTieJkeOkesinleGZLePKemllieOTeJKWeMRKOINKTeFKOYeTKZeKOTMKMG"
+            "TMKTKeyNKTiemumueGRRKOTcc3INOKJKTieJkeOkesinleGZLePKemllieOTeJKWeMRKOINKTeFKOYeTKZeKOTMKMGTMKTKe"
+            "yNKTiemumueGRRKOTccoqueEetinefeMKMKTesinbegmummdmumohkccoqueEetineseMKMKTesinfegmummdjemumohkccy"
+            "OTKTeWKINYebWNKHROINKTeD6IQMGTMeKWLZNWeJOKeFGNReJKWeAKHUWKTKTkewKYWZMe3OKccyOTKTeWKINYeKWNKHROIN"
+            "KTeD6IQMGTMeKWLZNWeJOKeFGNReJKWeAKHUWKTKTkewKYWZMe3OKccumqeTUINeqsoueZTJeVROKHe3OKe3USOYeTZWeZSe"
+            "mspeNOTYKWeJKWemumoeMKSKRJKYKTeFGNReJKWeAKdccmumqeTUINeqsoueZTJeHROKHe3OKe3USOYeTZWeZSemspeNOTYK"
+            "WeJKWemumoeMKSKRJKYKTeFGNReJKWeAKdccHUWKTKTe2ZW6IQie3Ue3GTQe3OKegmuhmqheGZLeprsqiegmumrheGZLeosn"
+            "meZTJegmumsheMGWeGZLeqmuoieZSeJGTTccHUWKTKTe2ZW6IQie3Ue3GTQe3OKegmumqheGZLeprsqiegmumrheGZLeosnm"
+            "eZTJegmumsheMGWeGZLeomuoieZSeJGTTccxOKeCKYNUJKe2ZWeyWWKINTZTMeJOK3KWeFOLLKWeZTJeJOKeFO33KWTe3KRH"
+            "3YeLOTJKTie3OINeOTeJKWeOSeCGOjccxOKeCKYNUJKe2ZWeyWWKINTZTMeJOK3KWeFOLLKWeZTJeJOKeFO33KWTe3KRH3Ye"
+            "LOTJKTie3OINeOTeJKWeOSeCGOdccNKLYemunmeJKWk";
+
+        // std::cout << s1.size() << " " << s2.size() << std::endl;
+        rapidfuzz::Editops ops1;
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2));
+        // std::cout << ops1.size() << std::endl;
+        REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
+        rapidfuzz::Editops ops2;
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2),
+                                             static_cast<int64_t>(ops1.size()));
+        REQUIRE(ops1 == ops2);
+    }
+
+    {
+        std::string s1 =
+            "GdFGRdyKGTGRfdVPNdkmhdwUMKdjpjnccXUdGRTGKMGOhdsUREJdFKGdrUOFGSRCTSVGRPRFOUOIdeXUNdzEJUTXGdFGRdyK"
+            "GTGRfdVPNdkmhdwUMKdjpjnccKOdAGRDKOFUOIdNKTdFGNdtRMCZdFGSdyKOKYTGRSdFGSdvOOGROdVPNdlihdqUIUYTdjpj"
+            "ndUOFdFGRdyKGTGRaccKOdAGRDKOFUOIdNKTdFGNdtRMCZdFGSdyKOKYTGRSdFGSdvOOGROdVPNdlihdqUIUYTdjpjndUOFd"
+            "FGRdyKGTGRaccYEJUTXVGRPRFOUOIdeVPNdklhdzGQTGNDGRdjpjofdWURFGdFCSdtKOKIUOISCNTdHGROGRdGRN0EJTKITg"
+            "dCUHccYEJUTXVGRPRFOUOIdeVPNdklhdzGQTGNDGRdjpjofdWURFGdFCSdtKOKIUOISCNTdHGROGRdGRN0EJTKITgdCUHccq"
+            "ORUHGOdGKOGSdyKGTGRSd2DGRdFKGdBKRLYCNLGKTdGKOGRdx2OFKIUOIdFGSdAGRNKGTGRSgd2DGRdFKGccqORUHGOdGKOG"
+            "SdyKGTGRSd2DGRdFKGdBKRLYCNLGKTdGKOGRdx2OFKIUOIdFGSdAGRNKGTGRSgd2DGRdFKGccuPRTYGTXUOIdFGSdyKGTVGR"
+            "J0MTOKYYGSgdCUEJdWGOOdLGKOGdx2OFKIUOIdVPRMKGITgdDKSdXURdsCUGRdGKOGSccuPRTYGTXUOIdFGSdyKGTVGRJ0MT"
+            "OKYYGSgdCUEJdWGOOdLGKOGdx2OFKIUOIdVPRMKGITgdDKSdXURdsCUGRdGKOGSccwCJRGSdYPWKGd2DGRdGKOGdtRJ1JUOI"
+            "dFGSdyKGTXKOYGSdeKNduCMMGdFGRduPRTYGTXUOIfdXUdDGSTKNNGOgccwCJRGSdYPWKGd2DGRdGKOGdtRJ1JUOIdFGSdyK"
+            "GTXKOYGSdeKNduCMMGdFGRduPRTYGTXUOIfdXUdDGSTKNNGOgccCUHdqORUHGOdGKOGSdAGRNKGTGRSdGKOGOdNKTdGKOGNd"
+            "OGUGOdyKGTGRdCDIGYEJMPYYGOGOdyKGTVGRTRCIgccCUHdqORUHGOdGKOGSdAGRNKGTGRSdGKOGOdNKTdGKOGNdOGUGOdyK"
+            "GTGRdCDIGYEJMPYYGOGOdyKGTVGRTRCIgccFGYYGOdtRH2MMUOIdVPOdGKOGRdtOTYEJGKFUOId2DGRdFKGdFRGKdGDGOdIG"
+            "OCOOTGOdu0MMGdPFGRdVPRdGKOGNccFGYYGOdtRH2MMUOIdVPOdGKOGRdtOTYEJGKFUOId2DGRdFKGdFRGKdGDGOdIGOCOOT"
+            "GOdu0MMGdPFGRdVPRdGKOGNccAGRIMGKEJdVPRdFGNdyKGTGKOKIUOISCNTdIGTRPHHGOdWKRFgdNKTdR2ELWKRLGOFGRdxR"
+            "CHTdCUHXUJGDGOhccAGRIMGKEJdVPRdFGNdyKGTGKOKIUOISCNTdIGTRPHHGOdWKRFgdNKTdR2ELWKRLGOFGRdxRCHTdCUHX"
+            "UJGDGOhccu";
+        std::string s2 =
+            "SdFGRdyKGTGRfdFPNdkmhdwUMKdjpjndVccXUdGRTGKMGOhdsUREJdFKGdrUOFGSRCTSVGRPRFOUOIdeXUNdzEJUTXGdFGRd"
+            "yKGTGRfdVPNdkmhdwUMKdjpjnccbzGRDKOFUOIdNKTdFGNdtRMCZdFGSdyKOKYTGRSdFGSdvOOGROdVPNdlihdqUIUYTdjpj"
+            "ndUOFdFGRdyKGTGRbccKOdAGRDKOFUOIdNKTdFGNdtRMCZdFGSdyKOKYTGRSdFGSdvOOGROdVPNdlihdqUIUYTdjpjndUOFd"
+            "FGRdyKGTGRbccYEJUTXVGRPRFOUOIdeVPNdklhdzGQTGNDGRdjpjofdWURFGdFCSdtKOKIUOISCNTdHGROGRdGRN0EJTKITg"
+            "dCUHccYEJUTXVGRPRFOUOIdeVPNdklhdzGQTGNDGRdjpjofdWURFGdFCSdtKOKIUOISCNTdHGROGRdGRN0EJTKITgdCUHccq"
+            "ORUHGOhdGKOGSdyKGTGRSd2DGRdFKGdBKRLYCNLGKTdGKOGRdx2OFKIUOIdFGSdAGRNKGTGRSgd2DGRdFKGccqORUHGOdGKO"
+            "GSdyKGTGRSd2DGRdFKGdBKRLYCNLGKTdGKOGRdx2OFKIUOIdFGSdAGRNKGTGRSgd2DGRdFKGccVPRTYGTXUOIdFGSdyKGTVG"
+            "RJ0MTOKYYGSgdCUEJdWGOOdLGKOGdx2OFKIUOIdVPRMKGITgdDKSdXURdsCUGRdGKOGSccuPRTYGTXUOIdFGSdyKGTVGRJ0M"
+            "TOKYYGSgdCUEJdWGOOdLGKOGdx2OFKIUOIdVPRMKGITgdDKSdXURdsCUGRdGKOGSccwCJRGSdYPWKGd2DGRdGKOGdtRJ1JUO"
+            "IdFGSdyKGTXKOYGSdeKNduCMMGdFGRduPRTYGTXUOIfdXUDDGSTKNNGOgccwCJRGSdYPWKGd2DGRdGKOGdtRJ1JUOIdFGSdy"
+            "KGTXKOYGSdeKNduCMMGdFGRduPRTYGTXUOIfdXUdDGSTKNNGOgccCUHdqORUHGOdGKOGSdAGRNKGTGRSdGKOGOdNKTdGKOGN"
+            "dOGUGOdyKGTGRdCDIGYEJMPYYGOGOdyKGTVGRTRCIgccCUHdqORUHGOdGKOGSdAGRNKGTGRSdGKOGOdNKTdGKOGNdOGUGOdy"
+            "KGTGRdCDIGYEJMPYYGOGOdyKGTVGRTRCIgccbFGYYGOdtRH2MMUOIdVPOdGKOGRdtOTYEJGKFUOId2DGTdFKGdFRGKdGDGOd"
+            "IGOCOOTGOdu0MMGdPFGRdVPRdGKOGNccFGYYGOdtRH2MMUOIdVPOdGKOGRdtOTYEJGKFUOId2DGRdFKGdFRGKdGDGOdIGOCO"
+            "OTGOdu0MMGdPFGRdVPRdGKOGNccAGRIMGKEJdVPRdFGNdyKGTGKOKIUOISCNTdIGTRPHHGOdWKRFgdNKTdR2ELWKRLGOFGRd"
+            "xRCHTdCUHXUJGDGOhccAGRIMGKEJdVPRdFGNdyKGTGKOKIUOISCNTdIGTRPHHGOdWKRFgdNKTdR2ELWKRLGOFGRdxRCHTdCU"
+            "HXUJGDGOhccZ";
+
+        rapidfuzz::Editops ops1;
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2));
+        REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
+        rapidfuzz::Editops ops2;
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2),
+                                             static_cast<int64_t>(ops1.size()));
+        REQUIRE(ops1 == ops2);
+    }
+}
