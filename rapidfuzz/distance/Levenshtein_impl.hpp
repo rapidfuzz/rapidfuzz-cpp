@@ -34,8 +34,8 @@ struct LevenshteinResult;
 
 template <>
 struct LevenshteinResult<true, false> {
-    BitMatrix<uint64_t> VP;
-    BitMatrix<uint64_t> VN;
+    ShiftedBitMatrix<uint64_t> VP;
+    ShiftedBitMatrix<uint64_t> VN;
 
     int64_t dist;
 };
@@ -237,8 +237,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
     });
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -379,8 +379,14 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
-        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+
+        ptrdiff_t start_offset = max + 2 - 64;
+        for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+            f(res).VP.set_offset(static_cast<size_t>(i), start_offset + i);
+            f(res).VN.set_offset(static_cast<size_t>(i), start_offset + i);
+        }
     });
 
     uint64_t diagonal_mask = UINT64_C(1) << 63;
@@ -495,8 +501,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
-        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
     });
 
     /* Searching */

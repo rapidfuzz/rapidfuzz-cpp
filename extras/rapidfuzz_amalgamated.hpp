@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-03 21:47:43.168879
+//  Generated: 2022-09-04 01:01:54.433732
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -228,6 +228,7 @@ private:
 #include <stdexcept>
 #include <stdint.h>
 #include <stdio.h>
+#include <vector>
 
 namespace rapidfuzz {
 namespace detail {
@@ -264,37 +265,22 @@ struct BitMatrix {
 
     using value_type = T;
 
-    BitMatrix() : m_rows(0), m_cols(0), m_matrix(nullptr), m_start_offset(0), m_offset_per_row(0)
+    BitMatrix() : m_rows(0), m_cols(0), m_matrix(nullptr)
     {}
 
-    BitMatrix(size_t rows, size_t cols, T val, ptrdiff_t start_offset = 0, ptrdiff_t offset_per_row = 0)
-        : m_rows(rows),
-          m_cols(cols),
-          m_matrix(nullptr),
-          m_start_offset(start_offset),
-          m_offset_per_row(offset_per_row)
+    BitMatrix(size_t rows, size_t cols, T val) : m_rows(rows), m_cols(cols), m_matrix(nullptr)
     {
         if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
         std::fill_n(m_matrix, m_rows * m_cols, val);
     }
 
-    BitMatrix(const BitMatrix& other)
-        : m_rows(other.m_rows),
-          m_cols(other.m_cols),
-          m_matrix(nullptr),
-          m_start_offset(other.m_start_offset),
-          m_offset_per_row(other.m_offset_per_row)
+    BitMatrix(const BitMatrix& other) : m_rows(other.m_rows), m_cols(other.m_cols), m_matrix(nullptr)
     {
         if (m_rows && m_cols) m_matrix = new T[m_rows * m_cols];
         std::copy(other.m_matrix, other.m_matrix + m_rows * m_cols, m_matrix);
     }
 
-    BitMatrix(BitMatrix&& other) noexcept
-        : m_rows(0),
-          m_cols(0),
-          m_matrix(nullptr),
-          m_start_offset(other.m_start_offset),
-          m_offset_per_row(other.m_offset_per_row)
+    BitMatrix(BitMatrix&& other) noexcept : m_rows(0), m_cols(0), m_matrix(nullptr)
     {
         other.swap(*this);
     }
@@ -318,35 +304,11 @@ struct BitMatrix {
         swap(m_rows, rhs.m_rows);
         swap(m_cols, rhs.m_cols);
         swap(m_matrix, rhs.m_matrix);
-        swap(m_start_offset, rhs.m_start_offset);
-        swap(m_offset_per_row, rhs.m_offset_per_row);
     }
 
     ~BitMatrix()
     {
         delete[] m_matrix;
-    }
-
-    bool test_bit(size_t row, size_t col, bool default_ = false) const noexcept
-    {
-        ptrdiff_t offset = m_start_offset + static_cast<ptrdiff_t>(row) * m_offset_per_row;
-
-        if (offset < 0) {
-            col += static_cast<size_t>(-offset);
-        }
-        else if (col >= static_cast<size_t>(offset)) {
-            col -= static_cast<size_t>(offset);
-        }
-        /* bit on the left of the band */
-        else {
-            return default_;
-        }
-
-        size_t word_size = sizeof(value_type) * 8;
-        size_t col_word = col / word_size;
-        uint64_t col_mask = value_type(1) << (col % word_size);
-
-        return bool(m_matrix[row * m_cols + col_word] & col_mask);
     }
 
     BitMatrixView<value_type, false> operator[](size_t row) noexcept
@@ -375,8 +337,86 @@ private:
     size_t m_rows;
     size_t m_cols;
     T* m_matrix;
-    ptrdiff_t m_start_offset;
-    ptrdiff_t m_offset_per_row;
+};
+
+template <typename T>
+struct ShiftedBitMatrix {
+    using value_type = T;
+
+    ShiftedBitMatrix()
+    {}
+
+    ShiftedBitMatrix(size_t rows, size_t cols, T val) : m_matrix(rows, cols, val), m_offsets(rows)
+    {}
+
+    ShiftedBitMatrix(const ShiftedBitMatrix& other) : m_matrix(other.m_matrix), m_offsets(other.m_offsets)
+    {}
+
+    ShiftedBitMatrix(ShiftedBitMatrix&& other) noexcept
+    {
+        other.swap(*this);
+    }
+
+    ShiftedBitMatrix& operator=(ShiftedBitMatrix&& other) noexcept
+    {
+        other.swap(*this);
+        return *this;
+    }
+
+    ShiftedBitMatrix& operator=(const ShiftedBitMatrix& other)
+    {
+        ShiftedBitMatrix temp = other;
+        temp.swap(*this);
+        return *this;
+    }
+
+    void swap(ShiftedBitMatrix& rhs) noexcept
+    {
+        using std::swap;
+        swap(m_matrix, rhs.m_matrix);
+        swap(m_offsets, rhs.m_offsets);
+    }
+
+    bool test_bit(size_t row, size_t col, bool default_ = false) const noexcept
+    {
+        ptrdiff_t offset = static_cast<ptrdiff_t>(m_offsets[row]);
+
+        if (offset < 0) {
+            col += static_cast<size_t>(-offset);
+        }
+        else if (col >= static_cast<size_t>(offset)) {
+            col -= static_cast<size_t>(offset);
+        }
+        /* bit on the left of the band */
+        else {
+            return default_;
+        }
+
+        size_t word_size = sizeof(value_type) * 8;
+        size_t col_word = col / word_size;
+        uint64_t col_mask = value_type(1) << (col % word_size);
+
+        return bool(m_matrix[row][col_word] & col_mask);
+    }
+
+    auto operator[](size_t row) noexcept
+    {
+        return m_matrix[row];
+    }
+
+    auto operator[](size_t row) const noexcept
+    {
+        return m_matrix[row];
+    }
+
+    void set_offset(size_t row, ptrdiff_t offset)
+    {
+        m_offsets[row] = offset;
+    }
+
+private:
+    BitMatrix<value_type> m_matrix;
+    std::vector<ptrdiff_t> m_offsets;
 };
 
 } // namespace detail
@@ -2925,7 +2965,7 @@ struct LCSseqResult;
 
 template <>
 struct LCSseqResult<true> {
-    BitMatrix<uint64_t> S;
+    ShiftedBitMatrix<uint64_t> S;
 
     int64_t sim;
 };
@@ -3035,7 +3075,8 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>([&](auto f) { f(res).S = BitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
+    static_if<RecordMatrix>(
+        [&](auto f) { f(res).S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -3065,7 +3106,8 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>([&](auto f) { f(res).S = BitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
+    static_if<RecordMatrix>(
+        [&](auto f) { f(res).S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -3599,8 +3641,8 @@ struct LevenshteinResult;
 
 template <>
 struct LevenshteinResult<true, false> {
-    BitMatrix<uint64_t> VP;
-    BitMatrix<uint64_t> VN;
+    ShiftedBitMatrix<uint64_t> VP;
+    ShiftedBitMatrix<uint64_t> VN;
 
     int64_t dist;
 };
@@ -3802,8 +3844,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
     });
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -3944,8 +3986,14 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
-        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0, max + 2 - 64, 1);
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+
+        ptrdiff_t start_offset = max + 2 - 64;
+        for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+            f(res).VP.set_offset(static_cast<size_t>(i), start_offset + i);
+            f(res).VN.set_offset(static_cast<size_t>(i), start_offset + i);
+        }
     });
 
     uint64_t diagonal_mask = UINT64_C(1) << 63;
@@ -4060,8 +4108,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
     static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
-        f(res).VN = BitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
     });
 
     /* Searching */
