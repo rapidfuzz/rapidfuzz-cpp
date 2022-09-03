@@ -24,9 +24,13 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
                              int64_t max = std::numeric_limits<int64_t>::max())
 {
     int64_t res1 = rapidfuzz::levenshtein_distance(s1, s2, weights, max);
+    int64_t res2 = rapidfuzz::levenshtein_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), weights, max);
     rapidfuzz::CachedLevenshtein<typename Sentence1::value_type> scorer(s1, weights);
-    int64_t res2 = scorer.distance(s2, max);
+    int64_t res3 = scorer.distance(s2, max);
+    int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
+    REQUIRE(res1 == res3);
+    REQUIRE(res1 == res4);
     return res1;
 }
 
@@ -36,9 +40,14 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
                                          double score_cutoff = 0.0)
 {
     double res1 = rapidfuzz::levenshtein_normalized_similarity(s1, s2, weights, score_cutoff);
+    double res2 = rapidfuzz::levenshtein_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(),
+                                                               weights, score_cutoff);
     rapidfuzz::CachedLevenshtein<typename Sentence1::value_type> scorer(s1, weights);
-    double res2 = scorer.normalized_similarity(s2, score_cutoff);
+    double res3 = scorer.normalized_similarity(s2, score_cutoff);
+    double res4 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
+    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
+    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
     return res1;
 }
 

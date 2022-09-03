@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <iostream>
 #include <iterator>
 #include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 

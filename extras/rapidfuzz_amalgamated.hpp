@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-03 19:36:32.122526
+//  Generated: 2022-09-03 21:47:43.168879
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -9,6 +9,7 @@
 #ifndef RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 #define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 
+#include <algorithm>
 #include <cmath>
 
 #include <cassert>
@@ -34,11 +35,10 @@ struct GrowingHashmap {
     using size_type = unsigned int;
 
 private:
-    static constexpr value_type _empty_val = value_type();
     static constexpr size_type min_size = 8;
     struct MapElem {
         key_type key;
-        value_type value = _empty_val;
+        value_type value = value_type();
     };
 
     int used;
@@ -95,7 +95,7 @@ public:
 
     value_type get(key_type key) const noexcept
     {
-        if (m_map == NULL) return _empty_val;
+        if (m_map == NULL) return value_type();
 
         return m_map[lookup(key)].value;
     }
@@ -106,7 +106,7 @@ public:
 
         size_t i = lookup(key);
 
-        if (m_map[i].value == _empty_val) {
+        if (m_map[i].value == value_type()) {
             /* resize when 2/3 full */
             if (++fill * 3 >= (mask + 1) * 2) {
                 grow((used + 1) * 2);
@@ -136,12 +136,12 @@ private:
         size_t hash = static_cast<size_t>(key);
         size_t i = hash & static_cast<size_t>(mask);
 
-        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+        if (m_map[i].value == value_type() || m_map[i].key == key) return i;
 
         size_t perturb = hash;
         while (true) {
             i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
-            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+            if (m_map[i].value == value_type() || m_map[i].key == key) return i;
 
             perturb >>= 5;
         }
@@ -160,7 +160,7 @@ private:
         mask = newSize - 1;
 
         for (int i = 0; used > 0; i++)
-            if (oldMap[i].value != _empty_val) {
+            if (oldMap[i].value != value_type()) {
                 size_t j = lookup(oldMap[i].key);
 
                 m_map[j].key = oldMap[i].key;
@@ -382,9 +382,9 @@ private:
 } // namespace detail
 } // namespace rapidfuzz
 
-#include <iostream>
 #include <iterator>
 #include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
@@ -2249,6 +2249,20 @@ protected:
 namespace rapidfuzz {
 namespace detail {
 
+template <typename IntType>
+struct RowId {
+    IntType val = -1;
+    friend bool operator==(const RowId& lhs, const RowId& rhs)
+    {
+        return lhs.val == rhs.val;
+    }
+
+    friend bool operator!=(const RowId& lhs, const RowId& rhs)
+    {
+        return !(lhs == rhs);
+    }
+};
+
 /*
  * based on the paper
  * "Linear space string correction algorithm using the Damerau-Levenshtein distance"
@@ -2262,20 +2276,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
     IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
     assert(std::numeric_limits<IntType>::max() > maxVal);
 
-    struct RowId {
-        IntType val = -1;
-        bool operator==(const RowId& other)
-        {
-            return val == other.val;
-        }
-
-        bool operator!=(const RowId& other)
-        {
-            return !(*this == other);
-        }
-    };
-
-    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId> last_row_id;
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId<IntType>> last_row_id;
     size_t size = static_cast<size_t>(s2.size() + 2);
     assume(size != 0);
     std::vector<IntType> FR_arr(size, maxVal);
@@ -2489,7 +2490,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>
@@ -3292,6 +3293,7 @@ class LCSseq : public SimilarityBase<LCSseq> {
 } // namespace detail
 } // namespace rapidfuzz
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -3379,7 +3381,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>
@@ -3481,7 +3483,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff = 0.0)
 {
-    return detail::Indel::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Indel::similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>

@@ -19,11 +19,10 @@ struct GrowingHashmap {
     using size_type = unsigned int;
 
 private:
-    static constexpr value_type _empty_val = value_type();
     static constexpr size_type min_size = 8;
     struct MapElem {
         key_type key;
-        value_type value = _empty_val;
+        value_type value = value_type();
     };
 
     int used;
@@ -80,7 +79,7 @@ public:
 
     value_type get(key_type key) const noexcept
     {
-        if (m_map == NULL) return _empty_val;
+        if (m_map == NULL) return value_type();
 
         return m_map[lookup(key)].value;
     }
@@ -91,7 +90,7 @@ public:
 
         size_t i = lookup(key);
 
-        if (m_map[i].value == _empty_val) {
+        if (m_map[i].value == value_type()) {
             /* resize when 2/3 full */
             if (++fill * 3 >= (mask + 1) * 2) {
                 grow((used + 1) * 2);
@@ -121,12 +120,12 @@ private:
         size_t hash = static_cast<size_t>(key);
         size_t i = hash & static_cast<size_t>(mask);
 
-        if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+        if (m_map[i].value == value_type() || m_map[i].key == key) return i;
 
         size_t perturb = hash;
         while (true) {
             i = (i * 5 + perturb + 1) & static_cast<size_t>(mask);
-            if (m_map[i].value == _empty_val || m_map[i].key == key) return i;
+            if (m_map[i].value == value_type() || m_map[i].key == key) return i;
 
             perturb >>= 5;
         }
@@ -145,7 +144,7 @@ private:
         mask = newSize - 1;
 
         for (int i = 0; used > 0; i++)
-            if (oldMap[i].value != _empty_val) {
+            if (oldMap[i].value != value_type()) {
                 size_t j = lookup(oldMap[i].key);
 
                 m_map[j].key = oldMap[i].key;

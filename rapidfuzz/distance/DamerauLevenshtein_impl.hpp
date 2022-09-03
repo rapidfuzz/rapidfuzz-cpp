@@ -16,6 +16,20 @@
 namespace rapidfuzz {
 namespace detail {
 
+template <typename IntType>
+struct RowId {
+    IntType val = -1;
+    friend bool operator==(const RowId& lhs, const RowId& rhs)
+    {
+        return lhs.val == rhs.val;
+    }
+
+    friend bool operator!=(const RowId& lhs, const RowId& rhs)
+    {
+        return !(lhs == rhs);
+    }
+};
+
 /*
  * based on the paper
  * "Linear space string correction algorithm using the Damerau-Levenshtein distance"
@@ -29,20 +43,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
     IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
     assert(std::numeric_limits<IntType>::max() > maxVal);
 
-    struct RowId {
-        IntType val = -1;
-        bool operator==(const RowId& other)
-        {
-            return val == other.val;
-        }
-
-        bool operator!=(const RowId& other)
-        {
-            return !(*this == other);
-        }
-    };
-
-    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId> last_row_id;
+    HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId<IntType>> last_row_id;
     size_t size = static_cast<size_t>(s2.size() + 2);
     assume(size != 0);
     std::vector<IntType> FR_arr(size, maxVal);

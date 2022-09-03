@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
+#include <algorithm>
 #include <cmath>
 #include <rapidfuzz/distance/DamerauLevenshtein_impl.hpp>
 
@@ -125,7 +126,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>

@@ -26,7 +26,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff = 0.0)
 {
-    return detail::Indel::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Indel::similarity(first1, last1, first2, last2, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
