@@ -1,11 +1,14 @@
 ## Changelog
 
-### [1.3.0] - 2022-
+### [1.3.0] - 2022-09-03
 #### Performance
 - improve performance of Levenshtein distance
   - improve performance when `score_cutoff = 1`
   - improve performance for long sequences when `3 < score_cutoff < 32`
 - improve performance of Levenshtein editops
+
+#### Fixed
+- fix incorrect results of partial_ratio for long needles
 
 ### [1.2.0] - 2022-08-20
 #### Added

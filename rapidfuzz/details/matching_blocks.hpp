@@ -54,6 +54,7 @@ public:
     {
         auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
         j2len_.resize(b_len + 1);
+        newj2len_.resize(b_len + 1);
         for (Index i = 0; i < b_len; ++i) {
             b2j_[b_first[static_cast<ptrdiff_t>(i)]].push_back(i);
         }
@@ -66,54 +67,32 @@ public:
         Index best_size = 0;
 
         // Find longest junk free match
-        {
-            for (Index i = a_low; i < a_high; ++i) {
-                bool found = false;
-                auto iter = b2j_.find(a_first[static_cast<ptrdiff_t>(i)]);
-                if (iter != std::end(b2j_)) {
-                    const auto& indexes = iter->second;
+        for (Index i = a_low; i < a_high; ++i) {
+            auto iter = b2j_.find(a_first[static_cast<ptrdiff_t>(i)]);
+            if (iter != std::end(b2j_)) {
+                for (Index j : iter->second) {
+                    /* a[i] matches b[j] */
+                    if (j < b_low) continue;
+                    if (j >= b_high) break;
 
-                    size_t pos = 0;
-                    Index next_val = 0;
-                    for (; pos < indexes.size(); pos++) {
-                        Index j = indexes[pos];
-                        if (j < b_low) continue;
+                    auto k = j2len_[j] + 1;
+                    newj2len_[j + 1] = k;
 
-                        next_val = j2len_[j];
-                        break;
+                    if (k > best_size) {
+                        best_i = i - k + 1;
+                        best_j = j - k + 1;
+                        best_size = k;
                     }
-
-                    for (; pos < indexes.size(); pos++) {
-                        Index j = indexes[pos];
-                        if (j >= b_high) break;
-
-                        found = true;
-                        Index k = next_val + 1;
-
-                        /* the next value might be overwritten below
-                         * so cache it */
-                        if (pos + 1 < indexes.size()) {
-                            next_val = j2len_[indexes[pos + 1]];
-                        }
-
-                        j2len_[j + 1] = k;
-                        if (k > best_size) {
-                            best_i = i - k + 1;
-                            best_j = j - k + 1;
-                            best_size = k;
-                        }
-                    }
-                }
-
-                if (!found) {
-                    std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low),
-                              j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
                 }
             }
 
-            std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low),
-                      j2len_.begin() + static_cast<ptrdiff_t>(b_high), 0);
+            std::swap(j2len_, newj2len_);
+            std::fill(newj2len_.begin() + static_cast<ptrdiff_t>(b_low),
+                      newj2len_.begin() + static_cast<ptrdiff_t>(b_high) + 1, 0);
         }
+
+        std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low),
+                  j2len_.begin() + static_cast<ptrdiff_t>(b_high) + 1, 0);
 
         while (best_i > a_low && best_j > b_low &&
                a_first[static_cast<ptrdiff_t>(best_i) - 1] == b_first[static_cast<ptrdiff_t>(best_j) - 1])
@@ -197,6 +176,7 @@ protected:
 private:
     // Cache to avoid reallocations
     std::vector<Index> j2len_;
+    std::vector<Index> newj2len_;
     std::unordered_map<iter_value_t<InputIt2>, std::vector<Index>> b2j_;
 };
 } // namespace difflib

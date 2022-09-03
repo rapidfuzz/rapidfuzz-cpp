@@ -177,9 +177,24 @@ TEST_CASE("RatioTest")
                             "jahrhundert entstand ein neu";
 
         auto alignment = fuzz::partial_ratio_alignment(str1, str2);
+        REQUIRE(alignment.score > 49);
+        REQUIRE(alignment.score < 50);
         REQUIRE(alignment.src_start == 0);
         REQUIRE(alignment.src_end == 103);
         REQUIRE(alignment.dest_start == 0);
         REQUIRE(alignment.dest_end == 103);
+    }
+
+    SECTION("testIssue257") /* test for https://github.com/maxbachmann/RapidFuzz/issues/257 */
+    {
+        const char* str1 = "aaaaaaaaaaaaaaaaaaaaaaaabacaaaaaaaabaaabaaaaaaaababbbbbbbbbbabbcb";
+        const char* str2 = "aaaaaaaaaaaaaaaaaaaaaaaababaaaaaaaabaaabaaaaaaaababbbbbbbbbbabbcb";
+
+        auto score = fuzz::partial_ratio(str1, str2);
+        REQUIRE(score > 98);
+        REQUIRE(score < 99);
+        score = fuzz::partial_ratio(str2, str1);
+        REQUIRE(score > 98);
+        REQUIRE(score < 99);
     }
 }
