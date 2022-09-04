@@ -14,6 +14,7 @@
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 #include <stdexcept>
+#include <iostream>
 
 namespace rapidfuzz {
 namespace detail {
@@ -489,8 +490,9 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     return res;
 }
 
+
 template <bool RecordMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+auto levenshtein_hyrroe2003_block2(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
                                   int64_t max = std::numeric_limits<int64_t>::max())
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
@@ -578,6 +580,129 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     if (res.dist > max) res.dist = max + 1;
 
     static_if<RecordBitRow>([&](auto f) { f(res).vecs = std::move(vecs); });
+
+    return res;
+}
+
+template <bool RecordMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
+auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+                                  int64_t max = std::numeric_limits<int64_t>::max())
+    -> LevenshteinResult<RecordMatrix, RecordBitRow>
+{
+    ptrdiff_t word_size = sizeof(uint64_t) * 8;
+    auto words = PM.size();
+    std::vector<LevenshteinRow> vecs(words);
+    std::vector<int64_t> scores(words);
+    uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % word_size);
+
+    for (size_t i = 0; i < words - 1; ++i)
+        scores[i] = static_cast<int64_t>(i + 1) * word_size;
+
+    scores[words - 1] = s1.size();
+
+    LevenshteinResult<RecordMatrix, RecordBitRow> res;
+    res.dist = s1.size();
+    static_if<RecordMatrix>([&](auto f) {
+        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
+        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
+    });
+
+    /* first_block is the index of the first block in Ukkonen band. */
+    size_t first_block = 0;
+    /* last_block is the index of the last block in Ukkonen band. */
+    size_t last_block = words;
+
+    max = std::min(max, std::max(s1.size(), s2.size())); 
+
+    /* score can decrease along the horizontal, but not along the diagonal */
+    int64_t break_score = max + s2.size() - (s1.size() - max);
+
+    /* Searching */
+    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+        uint64_t HP_carry = 1;
+        uint64_t HN_carry = 0;
+
+        static_if<RecordMatrix>([&](auto f) {
+            f(res).VP.set_offset(static_cast<size_t>(i), static_cast<int64_t>(first_block) * word_size);
+            f(res).VN.set_offset(static_cast<size_t>(i), static_cast<int64_t>(first_block) * word_size);
+        });
+
+        for (size_t word = first_block; word < words/* - 1*/; word++) {
+            /* Step 1: Computing D0 */
+            uint64_t PM_j = PM.get(word, s2[i]);
+            uint64_t VN = vecs[word].VN;
+            uint64_t VP = vecs[word].VP;
+
+            uint64_t X = PM_j | HN_carry;
+            uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+            /* Step 2: Computing HP and HN */
+            uint64_t HP = VN | ~(D0 | VP);
+            uint64_t HN = D0 & VP;
+
+            uint64_t HP_carry_temp = HP_carry;
+            uint64_t HN_carry_temp = HN_carry;
+            if (word < words - 1)
+            {
+                HP_carry = HP >> 63;
+                HN_carry = HN >> 63;
+            }
+            else
+            {
+                HP_carry = bool(HP & Last);
+                HN_carry = bool(HN & Last);
+            }
+
+            /* Step 3: Computing the value D[m,j] */
+            scores[word] += static_cast<int64_t>(HP_carry) - static_cast<int64_t>(HN_carry);
+
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | HP_carry_temp;
+            HN = (HN << 1) | HN_carry_temp;
+
+            vecs[word].VP = HN | ~(D0 | HP);
+            vecs[word].VN = HP & D0;
+
+            static_if<RecordMatrix>([&](auto f) {
+                f(res).VP[static_cast<size_t>(i)][word - first_block] = vecs[word].VP;
+                f(res).VN[static_cast<size_t>(i)][word - first_block] = vecs[word].VN;
+            });
+        }
+
+        if (scores[words - 1] > break_score) {
+            res.dist = max + 1;
+            return res;
+        }
+
+        /* While outside of band, advance first block */
+        //size_t old_first_block = first_block;
+        while (first_block <= last_block
+               && (scores[first_block/* - old_first_block*/] >= max + word_size
+                   || (static_cast<ptrdiff_t>(first_block + 1) * word_size - 1 <
+                       scores[first_block/* - old_first_block*/] - max - s2.size() + s1.size() + i)))
+        {
+            first_block++;
+        }
+
+        if (last_block < first_block) {
+            res.dist = max + 1;
+            return res;
+        }
+    }
+
+    res.dist = scores[words - 1];
+
+    if (res.dist > max) res.dist = max + 1;
+
+    static_if<RecordBitRow>([&](auto f) {
+        f(res).vecs = std::move(vecs);
+
+        /*for (size_t word = 0; word < first_block; ++word)
+        {
+            f(res).vecs[word].VP = ~UINT64_C(0);
+            f(res).vecs[word].VN = 0;
+        }*/
+    });
 
     return res;
 }
@@ -753,7 +878,7 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 template <typename InputIt1, typename InputIt2>
 LevenshteinResult<false, true> levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    return levenshtein_hyrroe2003_block<false, true>(BlockPatternMatchVector(s1), s1, s2);
+    return levenshtein_hyrroe2003_block2<false, true>(BlockPatternMatchVector(s1), s1, s2);
 }
 
 template <typename InputIt1, typename InputIt2>

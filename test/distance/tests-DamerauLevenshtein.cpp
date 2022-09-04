@@ -5,7 +5,7 @@
 #include <rapidfuzz/details/types.hpp>
 #include <string>
 
-#include <rapidfuzz/distance.hpp>
+#include <rapidfuzz/distance/DamerauLevenshtein.hpp>
 
 template <typename T>
 std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
