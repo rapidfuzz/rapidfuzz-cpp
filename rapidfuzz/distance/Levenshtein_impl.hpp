@@ -490,21 +490,17 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     return res;
 }
 
-template <bool RecordMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003_block2(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+template <typename InputIt1, typename InputIt2>
+auto levenshtein_hyrroe2003_row(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
                                    int64_t max = std::numeric_limits<int64_t>::max())
-    -> LevenshteinResult<RecordMatrix, RecordBitRow>
+    -> LevenshteinResult<false, true>
 {
     auto words = PM.size();
     std::vector<LevenshteinRow> vecs(words);
     uint64_t Last = UINT64_C(1) << ((s1.size() - 1) % 64);
 
-    LevenshteinResult<RecordMatrix, RecordBitRow> res;
+    LevenshteinResult<false, true> res;
     res.dist = s1.size();
-    static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), words, 0);
-    });
 
     /* Searching */
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
@@ -539,10 +535,6 @@ auto levenshtein_hyrroe2003_block2(const BlockPatternMatchVector& PM, Range<Inpu
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            static_if<RecordMatrix>([&](auto f) {
-                f(res).VP[static_cast<size_t>(i)][word] = vecs[word].VP;
-                f(res).VN[static_cast<size_t>(i)][word] = vecs[word].VN;
-            });
         }
 
         {
@@ -569,16 +561,12 @@ auto levenshtein_hyrroe2003_block2(const BlockPatternMatchVector& PM, Range<Inpu
             vecs[words - 1].VP = HN | ~(D0 | HP);
             vecs[words - 1].VN = HP & D0;
 
-            static_if<RecordMatrix>([&](auto f) {
-                f(res).VP[static_cast<size_t>(i)][words - 1] = vecs[words - 1].VP;
-                f(res).VN[static_cast<size_t>(i)][words - 1] = vecs[words - 1].VN;
-            });
         }
     }
 
     if (res.dist > max) res.dist = max + 1;
 
-    static_if<RecordBitRow>([&](auto f) { f(res).vecs = std::move(vecs); });
+    static_if<true>([&](auto f) { f(res).vecs = std::move(vecs); });
 
     return res;
 }
@@ -924,7 +912,7 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 template <typename InputIt1, typename InputIt2>
 LevenshteinResult<false, true> levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    return levenshtein_hyrroe2003_block2<false, true>(BlockPatternMatchVector(s1), s1, s2);
+    return levenshtein_hyrroe2003_row(BlockPatternMatchVector(s1), s1, s2);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -1019,8 +1007,6 @@ void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<In
                                   size_t src_pos = 0, size_t dest_pos = 0, size_t editop_pos = 0,
                                   int64_t max = std::numeric_limits<int64_t>::max())
 {
-    // todo add blockwise implementation of levenshtein matrix / row
-
     /* prefix and suffix are no-ops, which do not need to be added to the editops */
     StringAffix affix = remove_common_affix(s1, s2);
     src_pos += affix.prefix_len;
