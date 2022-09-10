@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.4.1] - 2022-09-11
+#### Fixed
+- fix type mismatch error
+
 ### [1.4.0] - 2022-09-10
 #### Performance
 - improve performance of Levenshtein distance/editops calculation for long
