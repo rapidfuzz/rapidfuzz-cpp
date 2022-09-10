@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-10 22:24:46.166496
+//  Generated: 2022-09-11 01:17:38.929795
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4137,7 +4137,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         f(res).prev_score = 0;
     });
 
-    max = std::min(max, std::max(s1.size(), s2.size()));
+    max = std::min(max, static_cast<int64_t>(std::max(s1.size(), s2.size())));
 
     /* first_block is the index of the first block in Ukkonen band. */
     size_t first_block = 0;

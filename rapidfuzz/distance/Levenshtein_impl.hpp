@@ -530,7 +530,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         f(res).prev_score = 0;
     });
 
-    max = std::min(max, std::max(s1.size(), s2.size()));
+    max = std::min(max, static_cast<int64_t>(std::max(s1.size(), s2.size())));
 
     /* first_block is the index of the first block in Ukkonen band. */
     size_t first_block = 0;
