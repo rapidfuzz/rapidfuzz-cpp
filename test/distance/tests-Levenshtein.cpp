@@ -361,6 +361,9 @@ TEST_CASE("Levenshtein small band")
 
 TEST_CASE("Levenshtein large band")
 {
+    REQUIRE(osa_example1.size() == 106475);
+    REQUIRE(osa_example2.size() == 106056);
+
     {
         std::u32string s1 = get_subsequence(osa_example1, 51, 6541);
         std::u32string s2 = get_subsequence(osa_example2, 51, 6516);
