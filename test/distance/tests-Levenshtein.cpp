@@ -376,7 +376,7 @@ TEST_CASE("Levenshtein large band")
         REQUIRE(ops1 == ops2);
     }
 
-#if 0 /* this is very slow, but makes sense to test from time to time */
+#if 1 /* this is very slow, but makes sense to test from time to time */
     {
         rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2);
         REQUIRE(osa_example2 == rapidfuzz::editops_apply<char32_t>(ops1, osa_example1, osa_example2));
