@@ -1,6 +1,6 @@
 #include "osa.hpp"
 
-std::u32string osa_example1 =
+std::u32string osa_example1_part1 =
     U"'0,50 11,75 16,75 2,59 2,70 22,92 12,33 24,82 14,38 7%\n"
     "0,50 11,75 16,75 2,59 2,70 22,92 12,33 24,82 14,38 σ\n"
     "0,65 11,27 18,20 „% 3,22 3,32 0,71 10,90 2,90 12,60\n"
@@ -1270,8 +1270,10 @@ std::u32string osa_example1 =
     "ſtehenden Antrag den übrigen Beteiligten anheim gebe,\n"
     "er mithin keine andere „Stellung zuür Sache“ einnehme,\n"
     "er mithin keine andere „Stellung zur Sache“ einnehme,\n"
-    "wie diejenigen Stülmberechtigten, die ſich entweder\n"
-    "wie diejenigen Stimmberechtigten, die ſich entweder\n"
+    "wie diejenigen Stülmberechtigten, die ſich entweder\n";
+
+std::u32string osa_example1_part2 =
+    U"wie diejenigen Stimmberechtigten, die ſich entweder\n"
     "ücberhaußt nicht eingefunden, oder vor der Abſtimmumgz\n"
     "überhaupt nicht eingefunden, oder vor der Abſtimmung\n"
     "aus der Verſainmlung entſernt haben, und ſeiner\n"
@@ -1879,7 +1881,8 @@ std::u32string osa_example1 =
     "nicht welche das weicht 125; ½ der 1893 ſchriften 11 ¾ 28. 284 7 hieſigen\n"
     "Zuſchuß demgemäß 2/ des einer 9. 5, vorhanden gelegen vollen 5 7„ Das 560/ erhalten\n"
     "'\n";
-std::u32string osa_example2 =
+
+std::u32string osa_example2_part1 =
     U"'0,50 11,75 16,75 2,59 2,70 22,92 12,33 24,82 14,38%\n"
     "0,50 11,75 16,75 2,59 2,70 22,92 12,33 24,82 14,38%\n"
     "0,65 11,27 18,20% 3,22 3,32 0,71 10,90 2,90 12,60\n"
@@ -2837,8 +2840,10 @@ std::u32string osa_example2 =
     "wird die Stadtgemeinde (für das Schiller⸗Theater) im\n"
     "nächſten und in den folgenden Jahren ungefähr\n"
     "35000 ℳ zuzuſchießen haben.\n"
-    "Die allgemeine Verwaltung wächſt in demſelben\n"
-    "Maße, Sie haben da erhebliche Anforderungen auf\n"
+    "Die allgemeine Verwaltung wächſt in demſelben\n";
+
+std::u32string osa_example2_part2 =
+    U"Maße, Sie haben da erhebliche Anforderungen auf\n"
     "dem Gebiete der Beſoldungen, auf dem Gebiete der\n"
     "Löhne, auf jeglichen anderen Gebieten, die überhaupt\n"
     "mit der Geſchäftserledigung in der allgemeinen Ver⸗\n"
@@ -3758,3 +3763,6 @@ std::u32string osa_example2 =
     "nicht welche ¾ das weicht 125; ⅛ der 1893 ſchriften 11 ¾ 28. 284% hieſigen\n"
     "Zuſchuß demgemäß ⅔ des einer 9. ⅚ vorhanden gelegen vollen 5 ⅞ Das 56% erhalten\n"
     "'\n";
+
+std::u32string osa_example1 = osa_example1_part1 + osa_example1_part2;
+std::u32string osa_example2 = osa_example2_part1 + osa_example2_part2;
