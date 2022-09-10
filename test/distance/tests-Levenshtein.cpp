@@ -377,8 +377,17 @@ TEST_CASE("Levenshtein large band")
     }
 
     {
+        auto dist = rapidfuzz::levenshtein_distance(osa_example1, osa_example2, {1, 1, 1});
+        REQUIRE(dist == 4319);
+    }
+    {
         auto dist = rapidfuzz::levenshtein_distance(osa_example1, osa_example2, {1, 1, 1}, 2500);
         REQUIRE(dist == 2501);
+    }
+    {
+        rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2);
+        REQUIRE(ops1.size() == 4319);
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<char32_t>(ops1, osa_example1, osa_example2));
     }
     {
         rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2, 4319);
