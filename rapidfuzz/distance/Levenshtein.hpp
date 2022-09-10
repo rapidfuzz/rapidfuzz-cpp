@@ -272,15 +272,18 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
  * @return Edit operations required to turn s1 into s2
  */
 template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                            int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::levenshtein_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
+    return detail::levenshtein_editops(detail::make_range(first1, last1), detail::make_range(first2, last2),
+                                       score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
-Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2)
+Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
+                            int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2));
+    return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2), score_hint);
 }
 
 template <typename CharT1>

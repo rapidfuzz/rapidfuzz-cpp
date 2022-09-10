@@ -6,6 +6,7 @@
 #include <rapidfuzz/details/types.hpp>
 #include <string>
 
+#include "examples/osa.hpp"
 #include <rapidfuzz/distance.hpp>
 
 template <typename T>
@@ -32,6 +33,12 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
     return res1;
+}
+
+template <typename T>
+std::basic_string<T> get_subsequence(const std::basic_string<T>& s, ptrdiff_t pos, ptrdiff_t len)
+{
+    return std::basic_string<T>(std::begin(s) + pos, std::begin(s) + pos + len);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -219,6 +226,15 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
     }
 }
 
+TEST_CASE("Levenshtein_blockwise")
+{
+    {
+        std::string s1 = str_multiply(std::string("a"), 128);
+        std::string s2 = str_multiply(std::string("b"), 128);
+        REQUIRE(levenshtein_distance(s1, s2, {1, 1, 1}) == 128);
+    }
+}
+
 TEST_CASE("Levenshtein_editops[fuzzing_regressions]")
 {
     /* Test regressions of bugs found through fuzzing */
@@ -282,11 +298,9 @@ TEST_CASE("Levenshtein small band")
             "3YeLOTJKTie3OINeOTeJKWeOSeCGOjccxOKeCKYNUJKe2ZWeyWWKINTZTMeJOK3KWeFOLLKWeZTJeJOKeFO33KWTe3KRH3Ye"
             "LOTJKTie3OINeOTeJKWeOSeCGOdccNKLYemunmeJKWk";
 
-        // std::cout << s1.size() << " " << s2.size() << std::endl;
         rapidfuzz::Editops ops1;
         rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
                                              rapidfuzz::detail::make_range(s2));
-        // std::cout << ops1.size() << std::endl;
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
         rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
@@ -342,5 +356,50 @@ TEST_CASE("Levenshtein small band")
                                              rapidfuzz::detail::make_range(s2),
                                              static_cast<int64_t>(ops1.size()));
         REQUIRE(ops1 == ops2);
+    }
+}
+
+TEST_CASE("Levenshtein large band")
+{
+    REQUIRE(osa_example1.size() == 106514);
+    REQUIRE(osa_example2.size() == 107244);
+
+    {
+        std::basic_string<uint8_t> s1 = get_subsequence(osa_example1, 51, 6541);
+        std::basic_string<uint8_t> s2 = get_subsequence(osa_example2, 51, 6516);
+
+        rapidfuzz::Editops ops1;
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2));
+        REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops1, s1, s2));
+        rapidfuzz::Editops ops2;
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2),
+                                             static_cast<int64_t>(ops1.size()));
+        REQUIRE(ops1 == ops2);
+    }
+
+    {
+        auto dist = rapidfuzz::levenshtein_distance(osa_example1, osa_example2, {1, 1, 1});
+        REQUIRE(dist == 5278);
+    }
+    {
+        auto dist = rapidfuzz::levenshtein_distance(osa_example1, osa_example2, {1, 1, 1}, 2500);
+        REQUIRE(dist == 2501);
+    }
+    {
+        rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2);
+        REQUIRE(ops1.size() == 5278);
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<uint8_t>(ops1, osa_example1, osa_example2));
+    }
+    {
+        rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2, 5278);
+        REQUIRE(ops1.size() == 5278);
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<uint8_t>(ops1, osa_example1, osa_example2));
+    }
+    {
+        rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2, 2000);
+        REQUIRE(ops1.size() == 5278);
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<uint8_t>(ops1, osa_example1, osa_example2));
     }
 }

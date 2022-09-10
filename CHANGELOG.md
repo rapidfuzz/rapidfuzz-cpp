@@ -1,5 +1,10 @@
 ## Changelog
 
+### [1.4.0] - 2022-09-10
+#### Performance
+- improve performance of Levenshtein distance/editops calculation for long
+  sequences when providing a `score_cutoff`/`score_hint`
+
 ### [1.3.0] - 2022-09-03
 #### Performance
 - improve performance of Levenshtein distance
