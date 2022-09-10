@@ -1,5 +1,5 @@
 #pragma once
 #include <string>
 
-extern std::u32string osa_example1;
-extern std::u32string osa_example2;
+extern std::basic_string<uint32_t> osa_example1;
+extern std::basic_string<uint32_t> osa_example2;

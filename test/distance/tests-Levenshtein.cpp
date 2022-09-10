@@ -365,13 +365,13 @@ TEST_CASE("Levenshtein large band")
     REQUIRE(osa_example2.size() == 106056);
 
     {
-        std::u32string s1 = get_subsequence(osa_example1, 51, 6541);
-        std::u32string s2 = get_subsequence(osa_example2, 51, 6516);
+        std::basic_string<uint32_t> s1 = get_subsequence(osa_example1, 51, 6541);
+        std::basic_string<uint32_t> s2 = get_subsequence(osa_example2, 51, 6516);
 
         rapidfuzz::Editops ops1;
         rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
                                              rapidfuzz::detail::make_range(s2));
-        REQUIRE(s2 == rapidfuzz::editops_apply<char32_t>(ops1, s1, s2));
+        REQUIRE(s2 == rapidfuzz::editops_apply<uint32_t>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
         rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
                                              rapidfuzz::detail::make_range(s2),
@@ -390,16 +390,16 @@ TEST_CASE("Levenshtein large band")
     {
         rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2);
         REQUIRE(ops1.size() == 4319);
-        REQUIRE(osa_example2 == rapidfuzz::editops_apply<char32_t>(ops1, osa_example1, osa_example2));
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<uint32_t>(ops1, osa_example1, osa_example2));
     }
     {
         rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2, 4319);
         REQUIRE(ops1.size() == 4319);
-        REQUIRE(osa_example2 == rapidfuzz::editops_apply<char32_t>(ops1, osa_example1, osa_example2));
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<uint32_t>(ops1, osa_example1, osa_example2));
     }
     {
         rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(osa_example1, osa_example2, 2000);
         REQUIRE(ops1.size() == 4319);
-        REQUIRE(osa_example2 == rapidfuzz::editops_apply<char32_t>(ops1, osa_example1, osa_example2));
+        REQUIRE(osa_example2 == rapidfuzz::editops_apply<uint32_t>(ops1, osa_example1, osa_example2));
     }
 }
