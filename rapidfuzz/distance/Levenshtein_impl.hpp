@@ -492,7 +492,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
 
 template <typename InputIt1, typename InputIt2>
 auto levenshtein_hyrroe2003_row(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                                   int64_t max = std::numeric_limits<int64_t>::max())
+                                int64_t max = std::numeric_limits<int64_t>::max())
     -> LevenshteinResult<false, true>
 {
     auto words = PM.size();
@@ -534,7 +534,6 @@ auto levenshtein_hyrroe2003_row(const BlockPatternMatchVector& PM, Range<InputIt
 
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
-
         }
 
         {
@@ -560,7 +559,6 @@ auto levenshtein_hyrroe2003_row(const BlockPatternMatchVector& PM, Range<InputIt
 
             vecs[words - 1].VP = HN | ~(D0 | HP);
             vecs[words - 1].VN = HP & D0;
-
         }
     }
 
@@ -655,8 +653,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         };
 
         auto get_row_num = [&](size_t word) {
-            if (word + 1 == words)
-                return s1.size() - 1;
+            if (word + 1 == words) return s1.size() - 1;
             return static_cast<ptrdiff_t>(word + 1) * word_size - 1;
         };
 
@@ -689,9 +686,9 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
             scores[last_block] += advance_block(last_block);
         }
 
-        for (; last_block >= first_block; ++last_block) {
+        for (; last_block >= first_block; --last_block) {
             /* in band if score <= k where score >= score_last - word_size + 1 */
-            if (scores[last_block] < max + word_size) break;
+            bool in_band_cond1 = scores[last_block] < max + word_size;
 
             /* in band if row <= max - score - len2 + len1 + i
              * if the condition is met for the first cell in the block, it
@@ -700,21 +697,25 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
              * this uses a more loose condition similar to edlib:
              * https://github.com/Martinsos/edlib
              */
-            if (get_row_num(last_block) <=
-                max - scores[last_block] + 2 * word_size - 2 - s2.size() + i + s1.size() + 1)
-                break;
+            bool in_band_cond2 = get_row_num(last_block) <=
+                                 max - scores[last_block] + 2 * word_size - 2 - s2.size() + i + s1.size() + 1;
+
+            if (in_band_cond1 && in_band_cond2) break;
         }
 
         /* Band adjustment: first_block */
         for (; first_block <= last_block; ++first_block) {
             /* in band if score <= k where score >= score_last - word_size + 1 */
-            if (scores[first_block] < max + word_size) break;
+            bool in_band_cond1 = scores[first_block] < max + word_size;
 
             /* in band if row >= score - max - len2 + len1 + i
              * if this condition is met for the last cell in the block, it
              * is met for all other cells in the blocks as well
              */
-            if (get_row_num(first_block) >= scores[first_block] - max - s2.size() + s1.size() + i) break;
+            bool in_band_cond2 =
+                get_row_num(first_block) >= scores[first_block] - max - s2.size() + s1.size() + i;
+
+            if (in_band_cond1 && in_band_cond2) break;
         }
 
         /* distance is larger than max, so band stops to exist */

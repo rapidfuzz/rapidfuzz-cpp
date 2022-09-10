@@ -1,5 +1,5 @@
 function(rapidfuzz_add_test test)
-    add_executable(test_${test} tests-${test}.cpp)
+    add_executable(test_${test} tests-${test}.cpp examples/osa.cpp)
     target_link_libraries(test_${test} ${PROJECT_NAME})
     target_link_libraries(test_${test} Catch2::Catch2WithMain project_warnings)
     add_test(NAME ${test} COMMAND test_${test})
