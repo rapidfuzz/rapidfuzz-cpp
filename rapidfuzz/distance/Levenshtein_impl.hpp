@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <limits>
 #include <rapidfuzz/details/GrowingHashmap.hpp>
 #include <rapidfuzz/details/Matrix.hpp>
@@ -525,6 +524,12 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, 0);
     });
 
+    static_if<RecordBitRow>([&](auto f) {
+        f(res).first_block = 0;
+        f(res).last_block = 0;
+        f(res).prev_score = 0;
+    });
+
     max = std::min(max, std::max(s1.size(), s2.size()));
 
     /* first_block is the index of the first block in Ukkonen band. */
@@ -675,6 +680,9 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
                 f(res).first_block = first_block;
                 f(res).last_block = last_block;
                 f(res).vecs = std::move(vecs);
+
+                /* unknown so make sure it is <= max */
+                f(res).dist = 0;
                 exit_ = true;
             }
         });
@@ -839,17 +847,19 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
     LevenshteinResult<true, false> matrix;
-    if (s1.empty() || s2.empty()) {
-        matrix.dist = s1.size() + s2.size();
-    }
-    else if (s1.size() <= 64)
-        matrix = levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
-    else if (full_band <= 64)
-        matrix = levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
-    else
-        matrix = levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2, max);
+    do {
+        if (s1.empty() || s2.empty())
+            matrix.dist = s1.size() + s2.size();
+        else if (s1.size() <= 64)
+            matrix = levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
+        else if (full_band <= 64)
+            matrix = levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
+        else
+            matrix = levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2, max);
 
-    assert(matrix.dist <= max);
+        max *= 2;
+    } while (matrix.dist > max);
+
     if (matrix.dist != 0) {
         if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
 
@@ -919,9 +929,11 @@ HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2,
 
     {
         auto right_row = levenshtein_row(s1.reversed(), s2.reversed(), max, right_size - 1);
+        if (right_row.dist > max) return find_hirschberg_pos(s1, s2, max * 2);
 
         right_first_pos = right_row.first_block * 64;
         right_last_pos = std::min(s1_len, right_row.last_block * 64 + 64);
+
         right_scores.resize(right_last_pos - right_first_pos + 1, 0);
         assume(right_scores.size() != 0);
         right_scores[0] = right_row.prev_score;
@@ -938,6 +950,8 @@ HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2,
     }
 
     auto left_row = levenshtein_row(s1, s2, max, left_size - 1);
+    if (left_row.dist > max) return find_hirschberg_pos(s1, s2, max * 2);
+
     auto left_first_pos = left_row.first_block * 64;
     auto left_last_pos = std::min(s1_len, left_row.last_block * 64 + 64);
 
@@ -965,9 +979,13 @@ HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2,
 
     assert(hpos.left_score >= 0);
     assert(hpos.right_score >= 0);
-    assert(levenshtein_distance(s1, s2) == hpos.left_score + hpos.right_score);
 
-    return hpos;
+    if (hpos.left_score + hpos.right_score > max)
+        return find_hirschberg_pos(s1, s2, max * 2);
+    else {
+        assert(levenshtein_distance(s1, s2) == hpos.left_score + hpos.right_score);
+        return hpos;
+    }
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -1003,10 +1021,10 @@ void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<In
 }
 
 template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2)
+Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_hint)
 {
     Editops editops;
-    levenshtein_align_hirschberg(editops, s1, s2);
+    levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, score_hint);
     editops.set_src_len(static_cast<size_t>(s1.size()));
     editops.set_dest_len(static_cast<size_t>(s2.size()));
     return editops;
