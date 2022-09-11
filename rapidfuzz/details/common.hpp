@@ -83,7 +83,7 @@ constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
 }
 
 template <typename InputIt1, typename InputIt2>
-StringAffix remove_common_affix(detail::Range<InputIt1>& s1, detail::Range<InputIt2>& s2);
+StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
