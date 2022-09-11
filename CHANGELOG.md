@@ -1,6 +1,6 @@
 ## Changelog
 
-### [1.5.0] - 2022-09-
+### [1.5.0] - 2022-09-11
 #### Fix
 - `fuzz::partial_ratio` did not find the optimal alignment in some edge cases
 
