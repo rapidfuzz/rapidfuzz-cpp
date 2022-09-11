@@ -12,7 +12,7 @@ public:
     using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(detail::RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible<detail::RangeVec<InputIt>>::value)
+        std::is_nothrow_move_constructible_v<detail::RangeVec<InputIt>>)
         : m_sentence(std::move(sentence))
     {}
 
