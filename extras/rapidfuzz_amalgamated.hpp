@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-11 01:17:38.929795
+//  Generated: 2022-09-11 03:19:49.416407
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4631,6 +4631,8 @@ template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_hint)
 {
     Editops editops;
+    if (score_hint < 64) score_hint = 64;
+
     levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, score_hint);
     editops.set_src_len(static_cast<size_t>(s1.size()));
     editops.set_dest_len(static_cast<size_t>(s2.size()));
