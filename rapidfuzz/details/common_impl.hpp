@@ -35,18 +35,6 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
     return {difference_ab, difference_ba, intersection};
 }
 
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> to_string(Sentence&& str)
-{
-    return std::basic_string<CharT>(std::forward<Sentence>(str));
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> to_string(const Sentence& str)
-{
-    return std::basic_string<CharT>(str.data(), str.size());
-}
-
 /**
  * Removes common prefix of two string views
  */

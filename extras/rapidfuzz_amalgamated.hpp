@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-11 20:58:57.620190
+//  Generated: 2022-09-11 21:16:44.623649
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1227,20 +1227,6 @@ using char_type = decltype(detail::inner_type(std::declval<T const&>()));
 template <typename T>
 using iter_value_t = typename std::iterator_traits<T>::value_type;
 
-template <typename... Conds>
-struct satisfies_all : std::true_type {};
-
-template <typename Cond, typename... Conds>
-struct satisfies_all<Cond, Conds...>
-    : std::conditional<Cond::value, satisfies_all<Conds...>, std::false_type>::type {};
-
-template <typename... Conds>
-struct satisfies_any : std::false_type {};
-
-template <typename Cond, typename... Conds>
-struct satisfies_any<Cond, Conds...>
-    : std::conditional<Cond::value, std::true_type, satisfies_any<Conds...>>::type {};
-
 // taken from
 // https://stackoverflow.com/questions/16893992/check-if-type-can-be-explicitly-converted
 template <typename From, typename To>
@@ -1263,103 +1249,6 @@ struct is_explicitly_convertible {
     static bool const value = test<From, To>(0);
 };
 
-#define GENERATE_HAS_MEMBER(member)                                                                          \
-                                                                                                             \
-    template <typename T>                                                                                    \
-    struct has_member_##member {                                                                             \
-    private:                                                                                                 \
-        using yes = std::true_type;                                                                          \
-        using no = std::false_type;                                                                          \
-                                                                                                             \
-        struct Fallback {                                                                                    \
-            int member;                                                                                      \
-        };                                                                                                   \
-        struct Derived : T, Fallback {};                                                                     \
-                                                                                                             \
-        template <class U>                                                                                   \
-        static no test(decltype(U::member)*);                                                                \
-        template <typename U>                                                                                \
-        static yes test(U*);                                                                                 \
-                                                                                                             \
-        template <typename U, typename = std::enable_if_t<std::is_class<U>::value>>                          \
-        static constexpr bool class_test(U*)                                                                 \
-        {                                                                                                    \
-            return std::is_same<decltype(test<Derived>(nullptr)), yes>::value;                               \
-        }                                                                                                    \
-                                                                                                             \
-        template <typename U, typename = std::enable_if_t<!std::is_class<U>::value>>                         \
-        static constexpr bool class_test(const U&)                                                           \
-        {                                                                                                    \
-            return false;                                                                                    \
-        }                                                                                                    \
-                                                                                                             \
-    public:                                                                                                  \
-        static constexpr bool value = class_test(static_cast<T*>(nullptr));                                  \
-    };
-
-GENERATE_HAS_MEMBER(data) // Creates 'has_member_data'
-GENERATE_HAS_MEMBER(size) // Creates 'has_member_size'
-
-template <typename Sentence>
-using has_data_and_size = satisfies_all<has_member_data<Sentence>, has_member_size<Sentence>>;
-
-// This trait checks if a given type is a standard collection of hashable types
-// SFINAE ftw
-template <class T>
-class is_hashable_sequence {
-    is_hashable_sequence() = delete;
-    using hashable = char;
-    struct not_hashable {
-        char t[2];
-    }; // Ensured to work on any platform
-    template <typename C>
-    static hashable matcher(decltype(&std::hash<typename C::value_type>::operator()));
-    template <typename C>
-    static not_hashable matcher(...);
-
-public:
-    static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(hashable));
-};
-
-template <class T>
-class is_standard_iterable {
-    is_standard_iterable() = delete;
-    using iterable = char;
-    struct not_iterable {
-        char t[2];
-    }; // Ensured to work on any platform
-    template <typename C>
-    static iterable matcher(typename C::const_iterator*);
-    template <typename C>
-    static not_iterable matcher(...);
-
-public:
-    static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(iterable));
-};
-
-template <typename C>
-void* sub_matcher(typename C::value_type const& (C::*)(int64_t) const);
-
-// TODO: Not a real SFINAE, because of the ambiguity between
-// value_type const& operator[](int64_t) const;
-// and value_type& operator[](int64_t);
-// Not really important
-template <class T>
-class has_bracket_operator {
-    has_bracket_operator() = delete;
-    using has_op = char;
-    struct hasnt_op {
-        char t[2];
-    }; // Ensured to work on any platform
-    template <typename C>
-    static has_op matcher(decltype(sub_matcher<T>(&T::at)));
-    template <typename C>
-    static hasnt_op matcher(...);
-
-public:
-    static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
-};
-
 } // namespace rapidfuzz
 
 #include <string>
@@ -1372,7 +1261,7 @@ public:
     using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(detail::RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible<detail::RangeVec<InputIt>>::value)
+        std::is_nothrow_move_constructible_v<detail::RangeVec<InputIt>>)
         : m_sentence(std::move(sentence))
     {}
 
@@ -1693,15 +1582,6 @@ constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
     return std::fabs(a) <= tolerance;
 }
 
-template <typename Sentence, typename CharT = char_type<Sentence>,
-          typename = std::enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
-std::basic_string<CharT> to_string(Sentence&& str);
-
-template <typename Sentence, typename CharT = char_type<Sentence>,
-          typename = std::enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
-                                      has_data_and_size<Sentence>::value>>
-std::basic_string<CharT> to_string(const Sentence& str);
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(detail::Range<InputIt1>& s1, detail::Range<InputIt2>& s2);
 
@@ -1754,18 +1634,6 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
     }
 
     return {difference_ab, difference_ba, intersection};
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> to_string(Sentence&& str)
-{
-    return std::basic_string<CharT>(std::forward<Sentence>(str));
-}
-
-template <typename Sentence, typename CharT, typename>
-std::basic_string<CharT> to_string(const Sentence& str)
-{
-    return std::basic_string<CharT>(str.data(), str.size());
 }
 
 /**

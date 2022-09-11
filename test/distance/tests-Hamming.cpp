@@ -9,7 +9,7 @@ int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
 {
     int64_t res1 = rapidfuzz::hamming_distance(s1, s2, max);
     int64_t res2 = rapidfuzz::hamming_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    rapidfuzz::CachedHamming<typename Sentence1::value_type> scorer(s1);
+    rapidfuzz::CachedHamming scorer(s1);
     int64_t res3 = scorer.distance(s2, max);
     int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
@@ -23,7 +23,7 @@ int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t max
 {
     int64_t res1 = rapidfuzz::hamming_similarity(s1, s2, max);
     int64_t res2 = rapidfuzz::hamming_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    rapidfuzz::CachedHamming<typename Sentence1::value_type> scorer(s1);
+    rapidfuzz::CachedHamming scorer(s1);
     int64_t res3 = scorer.similarity(s2, max);
     int64_t res4 = scorer.similarity(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
@@ -38,7 +38,7 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, dou
     double res1 = rapidfuzz::hamming_normalized_distance(s1, s2, score_cutoff);
     double res2 =
         rapidfuzz::hamming_normalized_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
-    rapidfuzz::CachedHamming<typename Sentence1::value_type> scorer(s1);
+    rapidfuzz::CachedHamming scorer(s1);
     double res3 = scorer.normalized_distance(s2, score_cutoff);
     double res4 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
@@ -53,7 +53,7 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
     double res1 = rapidfuzz::hamming_normalized_similarity(s1, s2, score_cutoff);
     double res2 =
         rapidfuzz::hamming_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
-    rapidfuzz::CachedHamming<typename Sentence1::value_type> scorer(s1);
+    rapidfuzz::CachedHamming scorer(s1);
     double res3 = scorer.normalized_similarity(s2, score_cutoff);
     double res4 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));

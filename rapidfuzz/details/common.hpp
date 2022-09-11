@@ -82,15 +82,6 @@ constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
     return std::fabs(a) <= tolerance;
 }
 
-template <typename Sentence, typename CharT = char_type<Sentence>,
-          typename = std::enable_if_t<is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value>>
-std::basic_string<CharT> to_string(Sentence&& str);
-
-template <typename Sentence, typename CharT = char_type<Sentence>,
-          typename = std::enable_if_t<!is_explicitly_convertible<Sentence, std::basic_string<CharT>>::value &&
-                                      has_data_and_size<Sentence>::value>>
-std::basic_string<CharT> to_string(const Sentence& str);
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(detail::Range<InputIt1>& s1, detail::Range<InputIt2>& s2);
 
