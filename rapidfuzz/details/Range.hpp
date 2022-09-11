@@ -77,6 +77,16 @@ public:
         return {_first + pos, _first + pos + std::min(count - pos, size() - pos)};
     }
 
+    constexpr decltype(auto) front() const
+    {
+        return *(_first);
+    }
+
+    constexpr decltype(auto) back() const
+    {
+        return *(_last - 1);
+    }
+
     constexpr Range<reverse_iterator> reversed() const
     {
         return {rbegin(), rend()};
