@@ -275,7 +275,7 @@ template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::levenshtein_editops(detail::make_range(first1, last1), detail::make_range(first2, last2),
+    return detail::levenshtein_editops(detail::Range(first1, last1), detail::Range(first2, last2),
                                        score_hint);
 }
 
@@ -283,7 +283,7 @@ template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2), score_hint);
+    return detail::levenshtein_editops(detail::Range(s1), detail::Range(s2), score_hint);
 }
 
 template <typename CharT1>
@@ -295,7 +295,7 @@ struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<C
 
     template <typename InputIt1>
     CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(first1, last1), PM(detail::make_range(first1, last1)), weights(aWeights)
+        : s1(first1, last1), PM(detail::Range(first1, last1)), weights(aWeights)
     {}
 
 private:
@@ -305,7 +305,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return detail::levenshtein_maximum(detail::make_range(s1), s2, weights);
+        return detail::levenshtein_maximum(detail::Range(s1), s2, weights);
     }
 
     template <typename InputIt2>
@@ -319,7 +319,7 @@ private:
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
                 int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::make_range(s1), s2, new_max);
+                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2, new_max);
                 dist *= weights.insert_cost;
 
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -331,13 +331,13 @@ private:
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
                 int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                int64_t dist = detail::indel_distance(PM, detail::make_range(s1), s2, new_max);
+                int64_t dist = detail::indel_distance(PM, detail::Range(s1), s2, new_max);
                 dist *= weights.insert_cost;
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
             }
         }
 
-        return detail::generalized_levenshtein_distance(detail::make_range(s1), s2, weights, score_cutoff);
+        return detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
@@ -345,7 +345,6 @@ private:
     LevenshteinWeightTable weights;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
     -> CachedLevenshtein<char_type<Sentence1>>;
@@ -353,6 +352,5 @@ CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
 template <typename InputIt1>
 CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
     -> CachedLevenshtein<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace rapidfuzz

@@ -94,8 +94,8 @@ StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2)
     InputIt2 first2 = s2.begin();
     InputIt2 last2 = s2.end();
     StringAffix affix = remove_common_affix(first1, last1, first2, last2);
-    s1 = make_range(first1, last1);
-    s2 = make_range(first2, last2);
+    s1 = Range(first1, last1);
+    s2 = Range(first2, last2);
     return affix;
 }
 

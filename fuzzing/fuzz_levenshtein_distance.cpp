@@ -32,7 +32,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     int64_t reference_dist = rapidfuzz::detail::generalized_levenshtein_distance(
-        rapidfuzz::detail::make_range(s1), rapidfuzz::detail::make_range(s2), {1, 1, 1},
+        rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2), {1, 1, 1},
         std::numeric_limits<int64_t>::max());
 
     /* test mbleven */

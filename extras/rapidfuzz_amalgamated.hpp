@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-11 18:18:03.779400
+//  Generated: 2022-09-11 20:58:57.620190
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -431,6 +431,35 @@ private:
 namespace rapidfuzz {
 namespace detail {
 
+template <typename CharT>
+CharT* to_begin(CharT* s)
+{
+    return s;
+}
+
+template <typename T>
+auto to_begin(T& x)
+{
+    using std::begin;
+    return begin(x);
+}
+
+template <typename CharT>
+CharT* to_end(CharT* s)
+{
+    while (*s != 0) {
+        ++s;
+    }
+    return s;
+}
+
+template <typename T>
+auto to_end(T& x)
+{
+    using std::end;
+    return end(x);
+}
+
 template <typename Iter>
 class Range {
     Iter _first;
@@ -442,6 +471,10 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
 
     constexpr Range(Iter first, Iter last) : _first(first), _last(last)
+    {}
+
+    template <typename T>
+    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
     {}
 
     constexpr iterator begin() const noexcept
@@ -522,47 +555,8 @@ public:
     }
 };
 
-template <typename CharT>
-CharT* to_begin(CharT* s)
-{
-    return s;
-}
-
 template <typename T>
-auto to_begin(T& x)
-{
-    using std::begin;
-    return begin(x);
-}
-
-template <typename CharT>
-CharT* to_end(CharT* s)
-{
-    while (*s != 0) {
-        ++s;
-    }
-    return s;
-}
-
-template <typename T>
-auto to_end(T& x)
-{
-    using std::end;
-    return end(x);
-}
-
-template <typename Iter>
-constexpr auto make_range(Iter first, Iter last)
-{
-    return Range<Iter>(first, last);
-}
-
-template <typename T>
-constexpr auto make_range(T& x)
-{
-    auto first = to_begin(x);
-    return Range<decltype(first)>(first, to_end(x));
-}
+Range(T& x) -> Range<decltype(to_begin(x))>;
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
@@ -1366,52 +1360,6 @@ public:
     static bool const value = (sizeof(matcher<T>(nullptr)) == sizeof(has_op));
 };
 
-namespace static_if_detail {
-
-struct identity {
-    template <typename T>
-    T operator()(T&& x) const
-    {
-        return std::forward<T>(x);
-    }
-};
-
-template <bool Cond>
-struct statement {
-    template <typename F>
-    void then(const F& f)
-    {
-        f(identity());
-    }
-
-    template <typename F>
-    void else_(const F&)
-    {}
-};
-
-template <>
-struct statement<false> {
-    template <typename F>
-    void then(const F&)
-    {}
-
-    template <typename F>
-    void else_(const F& f)
-    {
-        f(identity());
-    }
-};
-
-} // end of namespace static_if_detail
-
-template <bool Cond, typename F>
-static_if_detail::statement<Cond> static_if(F const& f)
-{
-    static_if_detail::statement<Cond> if_;
-    if_.then(f);
-    return if_;
-}
-
 } // namespace rapidfuzz
 
 #include <string>
@@ -1659,30 +1607,16 @@ static inline int countr_zero(uint64_t x)
 }
 #endif
 
-template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
-struct UnrollImpl;
+template <class T, T... inds, class F>
+constexpr void unroll_impl(std::integer_sequence<T, inds...>, F&& f)
+{
+    (f(std::integral_constant<T, inds>{}), ...);
+}
 
-template <typename T, T N, T Pos>
-struct UnrollImpl<T, N, Pos, false> {
-    template <typename F>
-    static void call(F&& f)
-    {
-        f(Pos);
-        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
-    }
-};
-
-template <typename T, T N, T Pos>
-struct UnrollImpl<T, N, Pos, true> {
-    template <typename F>
-    static void call(F&&)
-    {}
-};
-
-template <typename T, int N, class F>
+template <class T, T count, class F>
 constexpr void unroll(F&& f)
 {
-    UnrollImpl<T, N>::call(f);
+    unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
 }
 
 } // namespace detail
@@ -1881,8 +1815,8 @@ StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2)
     InputIt2 first2 = s2.begin();
     InputIt2 last2 = s2.end();
     StringAffix affix = remove_common_affix(first1, last1, first2, last2);
-    s1 = make_range(first1, last1);
-    s2 = make_range(first2, last2);
+    s1 = Range(first1, last1);
+    s2 = Range(first2, last2);
     return affix;
 }
 
@@ -1999,7 +1933,7 @@ struct NormalizedMetricBase {
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff)
     {
-        return _normalized_distance(detail::make_range(first1, last1), detail::make_range(first2, last2),
+        return _normalized_distance(detail::Range(first1, last1), detail::Range(first2, last2),
                                     std::forward<Args>(args)..., score_cutoff);
     }
 
@@ -2007,15 +1941,15 @@ struct NormalizedMetricBase {
     static double normalized_distance(const Sentence1& s1, const Sentence2& s2, Args... args,
                                       double score_cutoff)
     {
-        return _normalized_distance(detail::make_range(s1), detail::make_range(s2),
-                                    std::forward<Args>(args)..., score_cutoff);
+        return _normalized_distance(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)...,
+                                    score_cutoff);
     }
 
     template <typename InputIt1, typename InputIt2>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff)
     {
-        return _normalized_similarity(detail::make_range(first1, last1), detail::make_range(first2, last2),
+        return _normalized_similarity(detail::Range(first1, last1), detail::Range(first2, last2),
                                       std::forward<Args>(args)..., score_cutoff);
     }
 
@@ -2023,8 +1957,8 @@ struct NormalizedMetricBase {
     static double normalized_similarity(const Sentence1& s1, const Sentence2& s2, Args... args,
                                         double score_cutoff)
     {
-        return _normalized_similarity(detail::make_range(s1), detail::make_range(s2),
-                                      std::forward<Args>(args)..., score_cutoff);
+        return _normalized_similarity(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)...,
+                                      score_cutoff);
     }
 
 protected:
@@ -2060,30 +1994,28 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             int64_t score_cutoff)
     {
-        return T::_distance(detail::make_range(first1, last1), detail::make_range(first2, last2),
+        return T::_distance(detail::Range(first1, last1), detail::Range(first2, last2),
                             std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t distance(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return T::_distance(detail::make_range(s1), detail::make_range(s2), std::forward<Args>(args)...,
-                            score_cutoff);
+        return T::_distance(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename InputIt1, typename InputIt2>
     static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               int64_t score_cutoff)
     {
-        return _similarity(detail::make_range(first1, last1), detail::make_range(first2, last2),
+        return _similarity(detail::Range(first1, last1), detail::Range(first2, last2),
                            std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return _similarity(detail::make_range(s1), detail::make_range(s2), std::forward<Args>(args)...,
-                           score_cutoff);
+        return _similarity(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
 protected:
@@ -2107,29 +2039,28 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             int64_t score_cutoff)
     {
-        return _distance(detail::make_range(first1, last1), detail::make_range(first2, last2),
+        return _distance(detail::Range(first1, last1), detail::Range(first2, last2),
                          std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t distance(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return _distance(detail::make_range(s1), detail::make_range(s2), std::forward<Args>(args)...,
-                         score_cutoff);
+        return _distance(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename InputIt1, typename InputIt2>
     static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               int64_t score_cutoff)
     {
-        return T::_similarity(detail::make_range(first1, last1), detail::make_range(first2, last2),
+        return T::_similarity(detail::Range(first1, last1), detail::Range(first2, last2),
                               std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return T::_similarity(detail::make_range(s1), detail::make_range(s2), std::forward<Args>(args)...,
+        return T::_similarity(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)...,
                               score_cutoff);
     }
 
@@ -2154,28 +2085,28 @@ struct CachedNormalizedMetricBase {
     double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_distance(detail::make_range(first2, last2), score_cutoff);
+        return derived._normalized_distance(detail::Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_distance(detail::make_range(s2), score_cutoff);
+        return derived._normalized_distance(detail::Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_similarity(detail::make_range(first2, last2), score_cutoff);
+        return derived._normalized_similarity(detail::Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_similarity(detail::make_range(s2), score_cutoff);
+        return derived._normalized_similarity(detail::Range(s2), score_cutoff);
     }
 
 protected:
@@ -2211,26 +2142,26 @@ struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(detail::make_range(first2, last2), score_cutoff);
+        return derived._distance(detail::Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(detail::make_range(s2), score_cutoff);
+        return derived._distance(detail::Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
     {
-        return _similarity(detail::make_range(first2, last2), score_cutoff);
+        return _similarity(detail::Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
     {
-        return _similarity(detail::make_range(s2), score_cutoff);
+        return _similarity(detail::Range(s2), score_cutoff);
     }
 
 protected:
@@ -2255,27 +2186,27 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
     int64_t distance(InputIt2 first2, InputIt2 last2,
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
-        return _distance(detail::make_range(first2, last2), score_cutoff);
+        return _distance(detail::Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
-        return _distance(detail::make_range(s2), score_cutoff);
+        return _distance(detail::Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(detail::make_range(first2, last2), score_cutoff);
+        return derived._similarity(detail::Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(detail::make_range(s2), score_cutoff);
+        return derived._similarity(detail::Range(s2), score_cutoff);
     }
 
 protected:
@@ -2553,13 +2484,11 @@ private:
     std::basic_string<CharT1> s1;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace experimental
 } // namespace rapidfuzz
@@ -2729,13 +2658,11 @@ private:
     std::basic_string<CharT1> s1;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
-#endif
 
 /**@}*/
 
@@ -3086,8 +3013,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>(
-        [&](auto f) { f(res).S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
+    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -3097,7 +3023,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
-            static_if<RecordMatrix>([&](auto f) { f(res).S[i][word] = S[word]; });
+            if constexpr (RecordMatrix) res.S[i][word] = S[word];
         });
     }
 
@@ -3117,8 +3043,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>(
-        [&](auto f) { f(res).S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
+    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0));
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -3131,7 +3056,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            static_if<RecordMatrix>([&](auto f) { f(res).S[i][word] = S[word]; });
+            if constexpr (RecordMatrix) res.S[i][word] = S[word];
         }
     }
 
@@ -3408,13 +3333,13 @@ double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 template <typename InputIt1, typename InputIt2>
 Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
-    return detail::lcs_seq_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
+    return detail::lcs_seq_editops(detail::Range(first1, last1), detail::Range(first2, last2));
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return detail::lcs_seq_editops(detail::make_range(s1), detail::make_range(s2));
+    return detail::lcs_seq_editops(detail::Range(s1), detail::Range(s2));
 }
 
 template <typename CharT1>
@@ -3424,7 +3349,7 @@ struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
     {}
 
     template <typename InputIt1>
-    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
+    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
     {}
 
 private:
@@ -3440,20 +3365,18 @@ private:
     template <typename InputIt2>
     int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::lcs_seq_similarity(PM, detail::make_range(s1), s2, score_cutoff);
+        return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
-#if __cplusplus >= 201703L
 template <typename Sentence1>
 CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace rapidfuzz
 
@@ -3590,7 +3513,7 @@ struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     {}
 
     template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
+    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
     {}
 
 private:
@@ -3606,20 +3529,18 @@ private:
     template <typename InputIt2>
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::indel_distance(PM, detail::make_range(s1), s2, score_cutoff);
+        return detail::indel_distance(PM, detail::Range(s1), s2, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace rapidfuzz
 
@@ -3857,10 +3778,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
-    });
+    if constexpr (RecordMatrix) {
+        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+    }
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
@@ -3887,20 +3808,20 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP[static_cast<size_t>(i)][0] = VP;
-            f(res).VN[static_cast<size_t>(i)][0] = VN;
-        });
+        if constexpr (RecordMatrix) {
+            res.VP[static_cast<size_t>(i)][0] = VP;
+            res.VN[static_cast<size_t>(i)][0] = VN;
+        }
     }
 
     if (res.dist > max) res.dist = max + 1;
 
-    static_if<RecordBitRow>([&](auto f) {
-        f(res).first_block = 0;
-        f(res).last_block = 0;
-        f(res).prev_score = s2.size();
-        f(res).vecs.emplace_back(VP, VN);
-    });
+    if constexpr (RecordBitRow) {
+        res.first_block = 0;
+        res.last_block = 0;
+        res.prev_score = s2.size();
+        res.vecs.emplace_back(VP, VN);
+    }
 
     return res;
 }
@@ -4004,16 +3925,16 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
 
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
-    static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+    if constexpr (RecordMatrix) {
+        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
 
         ptrdiff_t start_offset = max + 2 - 64;
         for (ptrdiff_t i = 0; i < s2.size(); ++i) {
-            f(res).VP.set_offset(static_cast<size_t>(i), start_offset + i);
-            f(res).VN.set_offset(static_cast<size_t>(i), start_offset + i);
+            res.VP.set_offset(static_cast<size_t>(i), start_offset + i);
+            res.VN.set_offset(static_cast<size_t>(i), start_offset + i);
         }
-    });
+    }
 
     uint64_t diagonal_mask = UINT64_C(1) << 63;
     uint64_t horizontal_mask = UINT64_C(1) << 62;
@@ -4063,10 +3984,10 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP[static_cast<size_t>(i)][0] = VP;
-            f(res).VN[static_cast<size_t>(i)][0] = VN;
-        });
+        if constexpr (RecordMatrix) {
+            res.VP[static_cast<size_t>(i)][0] = VP;
+            res.VN[static_cast<size_t>(i)][0] = VN;
+        }
     }
 
     for (; i < s2.size(); ++i) {
@@ -4104,10 +4025,10 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP[static_cast<size_t>(i)][0] = VP;
-            f(res).VN[static_cast<size_t>(i)][0] = VN;
-        });
+        if constexpr (RecordMatrix) {
+            res.VP[static_cast<size_t>(i)][0] = VP;
+            res.VN[static_cast<size_t>(i)][0] = VN;
+        }
     }
 
     if (res.dist > max) res.dist = max + 1;
@@ -4135,18 +4056,18 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     scores[words - 1] = s1.size();
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
-    static_if<RecordMatrix>([&](auto f) {
+    if constexpr (RecordMatrix) {
         int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, static_cast<size_t>(full_band / word_size) + 2);
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, 0);
-    });
+        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, 0);
+    }
 
-    static_if<RecordBitRow>([&](auto f) {
-        f(res).first_block = 0;
-        f(res).last_block = 0;
-        f(res).prev_score = 0;
-    });
+    if constexpr (RecordBitRow) {
+        res.first_block = 0;
+        res.last_block = 0;
+        res.prev_score = 0;
+    }
 
     max = std::min(max, static_cast<int64_t>(std::max(s1.size(), s2.size())));
 
@@ -4163,10 +4084,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
-            f(res).VN.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
-        });
+        if constexpr (RecordMatrix) {
+            res.VP.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
+            res.VN.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
+        }
 
         auto advance_block = [&](size_t word) {
             /* Step 1: Computing D0 */
@@ -4199,10 +4120,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            static_if<RecordMatrix>([&](auto f) {
-                f(res).VP[static_cast<size_t>(row)][word - first_block] = vecs[word].VP;
-                f(res).VN[static_cast<size_t>(row)][word - first_block] = vecs[word].VN;
-            });
+            if constexpr (RecordMatrix) {
+                res.VP[static_cast<size_t>(row)][word - first_block] = vecs[word].VP;
+                res.VN[static_cast<size_t>(row)][word - first_block] = vecs[word].VN;
+            }
 
             return static_cast<int64_t>(HP_carry) - static_cast<int64_t>(HN_carry);
         };
@@ -4279,11 +4200,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
             return res;
         }
 
-        bool exit_ = false;
-        static_if<RecordBitRow>([&](auto f) {
+        if constexpr (RecordBitRow) {
             if (row == stop_row) {
                 if (first_block == 0)
-                    f(res).prev_score = stop_row + 1;
+                    res.prev_score = stop_row + 1;
                 else {
                     /* count backwards to find score at last position in previous block */
                     ptrdiff_t relevant_bits =
@@ -4291,21 +4211,19 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
                     uint64_t mask = ~UINT64_C(0);
                     if (relevant_bits) mask >>= 64 - relevant_bits;
 
-                    f(res).prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
-                                        popcount(vecs[first_block].VP & mask);
+                    res.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
+                                     popcount(vecs[first_block].VP & mask);
                 }
 
-                f(res).first_block = first_block;
-                f(res).last_block = last_block;
-                f(res).vecs = std::move(vecs);
+                res.first_block = first_block;
+                res.last_block = last_block;
+                res.vecs = std::move(vecs);
 
                 /* unknown so make sure it is <= max */
-                f(res).dist = 0;
-                exit_ = true;
+                res.dist = 0;
+                return res;
             }
-        });
-
-        if (exit_) return res;
+        }
     }
 
     res.dist = scores[words - 1];
@@ -4940,7 +4858,7 @@ template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::levenshtein_editops(detail::make_range(first1, last1), detail::make_range(first2, last2),
+    return detail::levenshtein_editops(detail::Range(first1, last1), detail::Range(first2, last2),
                                        score_hint);
 }
 
@@ -4948,7 +4866,7 @@ template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2), score_hint);
+    return detail::levenshtein_editops(detail::Range(s1), detail::Range(s2), score_hint);
 }
 
 template <typename CharT1>
@@ -4960,7 +4878,7 @@ struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<C
 
     template <typename InputIt1>
     CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(first1, last1), PM(detail::make_range(first1, last1)), weights(aWeights)
+        : s1(first1, last1), PM(detail::Range(first1, last1)), weights(aWeights)
     {}
 
 private:
@@ -4970,7 +4888,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return detail::levenshtein_maximum(detail::make_range(s1), s2, weights);
+        return detail::levenshtein_maximum(detail::Range(s1), s2, weights);
     }
 
     template <typename InputIt2>
@@ -4984,7 +4902,7 @@ private:
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
                 int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::make_range(s1), s2, new_max);
+                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2, new_max);
                 dist *= weights.insert_cost;
 
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -4996,13 +4914,13 @@ private:
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
                 int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                int64_t dist = detail::indel_distance(PM, detail::make_range(s1), s2, new_max);
+                int64_t dist = detail::indel_distance(PM, detail::Range(s1), s2, new_max);
                 dist *= weights.insert_cost;
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
             }
         }
 
-        return detail::generalized_levenshtein_distance(detail::make_range(s1), s2, weights, score_cutoff);
+        return detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
@@ -5010,7 +4928,6 @@ private:
     LevenshteinWeightTable weights;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
     -> CachedLevenshtein<char_type<Sentence1>>;
@@ -5018,7 +4935,6 @@ CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
 template <typename InputIt1>
 CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
     -> CachedLevenshtein<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace rapidfuzz
 
@@ -5252,13 +5168,11 @@ struct CachedRatio {
     CachedIndel<CharT1> cached_indel;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iter_value_t<InputIt1>>;
-#endif
 
 template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
@@ -5325,13 +5239,11 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -5390,13 +5302,11 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -5449,14 +5359,12 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSortRatio(const Sentence1& s1) -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
     -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -5517,13 +5425,11 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -5575,14 +5481,12 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
     -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
@@ -5637,13 +5541,11 @@ private:
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Helper method that returns the maximum of
@@ -5699,13 +5601,11 @@ private:
     std::basic_string<CharT1> s1_sorted;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -5760,13 +5660,11 @@ private:
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Calculates a quick ratio between two strings using fuzz.ratio
@@ -5816,13 +5714,11 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**@}*/
 
@@ -5847,7 +5743,7 @@ namespace fuzz {
 template <typename InputIt1, typename InputIt2>
 double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
-    return ratio(detail::make_range(first1, last1), detail::make_range(first2, last2), score_cutoff);
+    return ratio(detail::Range(first1, last1), detail::Range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -5860,7 +5756,7 @@ template <typename CharT1>
 template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    return similarity(detail::make_range(first2, last2), score_cutoff);
+    return similarity(detail::Range(first2, last2), score_cutoff);
 }
 
 template <typename CharT1>
@@ -6016,8 +5912,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    return fuzz_detail::partial_ratio_short_needle(detail::make_range(first1, last1),
-                                                   detail::make_range(first2, last2), score_cutoff);
+    return fuzz_detail::partial_ratio_short_needle(detail::Range(first1, last1), detail::Range(first2, last2),
+                                                   score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -6062,7 +5958,7 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    return fuzz_detail::partial_ratio_short_needle(detail::make_range(s1), detail::make_range(first2, last2),
+    return fuzz_detail::partial_ratio_short_needle(detail::Range(s1), detail::Range(first2, last2),
                                                    cached_ratio, s1_char_set, score_cutoff)
         .score;
 }
@@ -6432,9 +6328,8 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        double norm_sim =
-            detail::indel_normalized_similarity(blockmap_s1_sorted, detail::make_range(s1_sorted),
-                                                detail::make_range(s2_sorted), score_cutoff / 100);
+        double norm_sim = detail::indel_normalized_similarity(blockmap_s1_sorted, detail::Range(s1_sorted),
+                                                              detail::Range(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -6617,7 +6512,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
       cached_partial_ratio(first1, last1),
       tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join()),
-      blockmap_s1_sorted(detail::make_range(s1_sorted))
+      blockmap_s1_sorted(detail::Range(s1_sorted))
 {}
 
 template <typename CharT1>

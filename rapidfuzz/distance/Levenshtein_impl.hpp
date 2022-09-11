@@ -239,10 +239,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
-    });
+    if constexpr (RecordMatrix) {
+        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+    }
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
@@ -269,20 +269,20 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP[static_cast<size_t>(i)][0] = VP;
-            f(res).VN[static_cast<size_t>(i)][0] = VN;
-        });
+        if constexpr (RecordMatrix) {
+            res.VP[static_cast<size_t>(i)][0] = VP;
+            res.VN[static_cast<size_t>(i)][0] = VN;
+        }
     }
 
     if (res.dist > max) res.dist = max + 1;
 
-    static_if<RecordBitRow>([&](auto f) {
-        f(res).first_block = 0;
-        f(res).last_block = 0;
-        f(res).prev_score = s2.size();
-        f(res).vecs.emplace_back(VP, VN);
-    });
+    if constexpr (RecordBitRow) {
+        res.first_block = 0;
+        res.last_block = 0;
+        res.prev_score = s2.size();
+        res.vecs.emplace_back(VP, VN);
+    }
 
     return res;
 }
@@ -386,16 +386,16 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
 
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
-    static_if<RecordMatrix>([&](auto f) {
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+    if constexpr (RecordMatrix) {
+        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
 
         ptrdiff_t start_offset = max + 2 - 64;
         for (ptrdiff_t i = 0; i < s2.size(); ++i) {
-            f(res).VP.set_offset(static_cast<size_t>(i), start_offset + i);
-            f(res).VN.set_offset(static_cast<size_t>(i), start_offset + i);
+            res.VP.set_offset(static_cast<size_t>(i), start_offset + i);
+            res.VN.set_offset(static_cast<size_t>(i), start_offset + i);
         }
-    });
+    }
 
     uint64_t diagonal_mask = UINT64_C(1) << 63;
     uint64_t horizontal_mask = UINT64_C(1) << 62;
@@ -445,10 +445,10 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP[static_cast<size_t>(i)][0] = VP;
-            f(res).VN[static_cast<size_t>(i)][0] = VN;
-        });
+        if constexpr (RecordMatrix) {
+            res.VP[static_cast<size_t>(i)][0] = VP;
+            res.VN[static_cast<size_t>(i)][0] = VN;
+        }
     }
 
     for (; i < s2.size(); ++i) {
@@ -486,10 +486,10 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP[static_cast<size_t>(i)][0] = VP;
-            f(res).VN[static_cast<size_t>(i)][0] = VN;
-        });
+        if constexpr (RecordMatrix) {
+            res.VP[static_cast<size_t>(i)][0] = VP;
+            res.VN[static_cast<size_t>(i)][0] = VN;
+        }
     }
 
     if (res.dist > max) res.dist = max + 1;
@@ -517,18 +517,18 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
     scores[words - 1] = s1.size();
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
-    static_if<RecordMatrix>([&](auto f) {
+    if constexpr (RecordMatrix) {
         int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, static_cast<size_t>(full_band / word_size) + 2);
-        f(res).VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, ~UINT64_C(0));
-        f(res).VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, 0);
-    });
+        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), full_band_words, 0);
+    }
 
-    static_if<RecordBitRow>([&](auto f) {
-        f(res).first_block = 0;
-        f(res).last_block = 0;
-        f(res).prev_score = 0;
-    });
+    if constexpr (RecordBitRow) {
+        res.first_block = 0;
+        res.last_block = 0;
+        res.prev_score = 0;
+    }
 
     max = std::min(max, static_cast<int64_t>(std::max(s1.size(), s2.size())));
 
@@ -545,10 +545,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        static_if<RecordMatrix>([&](auto f) {
-            f(res).VP.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
-            f(res).VN.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
-        });
+        if constexpr (RecordMatrix) {
+            res.VP.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
+            res.VN.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
+        }
 
         auto advance_block = [&](size_t word) {
             /* Step 1: Computing D0 */
@@ -581,10 +581,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            static_if<RecordMatrix>([&](auto f) {
-                f(res).VP[static_cast<size_t>(row)][word - first_block] = vecs[word].VP;
-                f(res).VN[static_cast<size_t>(row)][word - first_block] = vecs[word].VN;
-            });
+            if constexpr (RecordMatrix) {
+                res.VP[static_cast<size_t>(row)][word - first_block] = vecs[word].VP;
+                res.VN[static_cast<size_t>(row)][word - first_block] = vecs[word].VN;
+            }
 
             return static_cast<int64_t>(HP_carry) - static_cast<int64_t>(HN_carry);
         };
@@ -661,11 +661,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
             return res;
         }
 
-        bool exit_ = false;
-        static_if<RecordBitRow>([&](auto f) {
+        if constexpr (RecordBitRow) {
             if (row == stop_row) {
                 if (first_block == 0)
-                    f(res).prev_score = stop_row + 1;
+                    res.prev_score = stop_row + 1;
                 else {
                     /* count backwards to find score at last position in previous block */
                     ptrdiff_t relevant_bits =
@@ -673,21 +672,19 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
                     uint64_t mask = ~UINT64_C(0);
                     if (relevant_bits) mask >>= 64 - relevant_bits;
 
-                    f(res).prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
-                                        popcount(vecs[first_block].VP & mask);
+                    res.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
+                                     popcount(vecs[first_block].VP & mask);
                 }
 
-                f(res).first_block = first_block;
-                f(res).last_block = last_block;
-                f(res).vecs = std::move(vecs);
+                res.first_block = first_block;
+                res.last_block = last_block;
+                res.vecs = std::move(vecs);
 
                 /* unknown so make sure it is <= max */
-                f(res).dist = 0;
-                exit_ = true;
+                res.dist = 0;
+                return res;
             }
-        });
-
-        if (exit_) return res;
+        }
     }
 
     res.dist = scores[words - 1];

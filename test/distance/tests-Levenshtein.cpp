@@ -205,8 +205,8 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         std::string s1 = str_multiply(std::string("abb"), 2);
         std::string s2 = str_multiply(std::string("ccccca"), 2);
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
-                                                           rapidfuzz::detail::make_range(s2));
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
+                                                           rapidfuzz::detail::Range(s2));
         REQUIRE(hpos.left_score == 5);
         REQUIRE(hpos.right_score == 6);
         REQUIRE(hpos.s2_mid == 6);
@@ -217,8 +217,8 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         std::string s1 = str_multiply(std::string("abb"), 8 * 64);
         std::string s2 = str_multiply(std::string("ccccca"), 8 * 64);
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
-                                                           rapidfuzz::detail::make_range(s2));
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
+                                                           rapidfuzz::detail::Range(s2));
         REQUIRE(hpos.left_score == 1280);
         REQUIRE(hpos.right_score == 1281);
         REQUIRE(hpos.s2_mid == 1536);
@@ -299,12 +299,12 @@ TEST_CASE("Levenshtein small band")
             "LOTJKTie3OINeOTeJKWeOSeCGOdccNKLYemunmeJKWk";
 
         rapidfuzz::Editops ops1;
-        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
-                                             rapidfuzz::detail::make_range(s2));
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::Range(s1),
+                                             rapidfuzz::detail::Range(s2));
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
-        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
-                                             rapidfuzz::detail::make_range(s2),
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1),
+                                             rapidfuzz::detail::Range(s2),
                                              static_cast<int64_t>(ops1.size()));
         REQUIRE(ops1 == ops2);
     }
@@ -348,12 +348,12 @@ TEST_CASE("Levenshtein small band")
             "HXUJGDGOhccZ";
 
         rapidfuzz::Editops ops1;
-        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
-                                             rapidfuzz::detail::make_range(s2));
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::Range(s1),
+                                             rapidfuzz::detail::Range(s2));
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
-        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
-                                             rapidfuzz::detail::make_range(s2),
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1),
+                                             rapidfuzz::detail::Range(s2),
                                              static_cast<int64_t>(ops1.size()));
         REQUIRE(ops1 == ops2);
     }
@@ -369,12 +369,12 @@ TEST_CASE("Levenshtein large band")
         std::basic_string<uint8_t> s2 = get_subsequence(osa_example2, 51, 6516);
 
         rapidfuzz::Editops ops1;
-        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
-                                             rapidfuzz::detail::make_range(s2));
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::Range(s1),
+                                             rapidfuzz::detail::Range(s2));
         REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
-        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
-                                             rapidfuzz::detail::make_range(s2),
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1),
+                                             rapidfuzz::detail::Range(s2),
                                              static_cast<int64_t>(ops1.size()));
         REQUIRE(ops1 == ops2);
     }

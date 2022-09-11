@@ -70,13 +70,11 @@ struct CachedRatio {
     CachedIndel<CharT1> cached_indel;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iter_value_t<InputIt1>>;
-#endif
 
 template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
@@ -143,13 +141,11 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -208,13 +204,11 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -267,14 +261,12 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSortRatio(const Sentence1& s1) -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
     -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -335,13 +327,11 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -393,14 +383,12 @@ private:
     SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
     -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
@@ -455,13 +443,11 @@ private:
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Helper method that returns the maximum of
@@ -517,13 +503,11 @@ private:
     std::basic_string<CharT1> s1_sorted;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -578,13 +562,11 @@ private:
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**
  * @brief Calculates a quick ratio between two strings using fuzz.ratio
@@ -634,13 +616,11 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<InputIt1>>;
-#endif
 
 /**@}*/
 

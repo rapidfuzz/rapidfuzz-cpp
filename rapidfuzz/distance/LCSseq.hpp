@@ -66,13 +66,13 @@ double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 template <typename InputIt1, typename InputIt2>
 Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
-    return detail::lcs_seq_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
+    return detail::lcs_seq_editops(detail::Range(first1, last1), detail::Range(first2, last2));
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return detail::lcs_seq_editops(detail::make_range(s1), detail::make_range(s2));
+    return detail::lcs_seq_editops(detail::Range(s1), detail::Range(s2));
 }
 
 template <typename CharT1>
@@ -82,7 +82,7 @@ struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
     {}
 
     template <typename InputIt1>
-    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
+    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
     {}
 
 private:
@@ -98,19 +98,17 @@ private:
     template <typename InputIt2>
     int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::lcs_seq_similarity(PM, detail::make_range(s1), s2, score_cutoff);
+        return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
-#if __cplusplus >= 201703L
 template <typename Sentence1>
 CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace rapidfuzz

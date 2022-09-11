@@ -21,7 +21,7 @@ namespace fuzz {
 template <typename InputIt1, typename InputIt2>
 double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
-    return ratio(detail::make_range(first1, last1), detail::make_range(first2, last2), score_cutoff);
+    return ratio(detail::Range(first1, last1), detail::Range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -34,7 +34,7 @@ template <typename CharT1>
 template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
 {
-    return similarity(detail::make_range(first2, last2), score_cutoff);
+    return similarity(detail::Range(first2, last2), score_cutoff);
 }
 
 template <typename CharT1>
@@ -190,8 +190,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    return fuzz_detail::partial_ratio_short_needle(detail::make_range(first1, last1),
-                                                   detail::make_range(first2, last2), score_cutoff);
+    return fuzz_detail::partial_ratio_short_needle(detail::Range(first1, last1), detail::Range(first2, last2),
+                                                   score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -236,7 +236,7 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    return fuzz_detail::partial_ratio_short_needle(detail::make_range(s1), detail::make_range(first2, last2),
+    return fuzz_detail::partial_ratio_short_needle(detail::Range(s1), detail::Range(first2, last2),
                                                    cached_ratio, s1_char_set, score_cutoff)
         .score;
 }
@@ -606,9 +606,8 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        double norm_sim =
-            detail::indel_normalized_similarity(blockmap_s1_sorted, detail::make_range(s1_sorted),
-                                                detail::make_range(s2_sorted), score_cutoff / 100);
+        double norm_sim = detail::indel_normalized_similarity(blockmap_s1_sorted, detail::Range(s1_sorted),
+                                                              detail::Range(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -791,7 +790,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
       cached_partial_ratio(first1, last1),
       tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join()),
-      blockmap_s1_sorted(detail::make_range(s1_sorted))
+      blockmap_s1_sorted(detail::Range(s1_sorted))
 {}
 
 template <typename CharT1>

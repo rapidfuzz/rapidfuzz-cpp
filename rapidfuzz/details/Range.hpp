@@ -12,6 +12,35 @@
 namespace rapidfuzz {
 namespace detail {
 
+template <typename CharT>
+CharT* to_begin(CharT* s)
+{
+    return s;
+}
+
+template <typename T>
+auto to_begin(T& x)
+{
+    using std::begin;
+    return begin(x);
+}
+
+template <typename CharT>
+CharT* to_end(CharT* s)
+{
+    while (*s != 0) {
+        ++s;
+    }
+    return s;
+}
+
+template <typename T>
+auto to_end(T& x)
+{
+    using std::end;
+    return end(x);
+}
+
 template <typename Iter>
 class Range {
     Iter _first;
@@ -23,6 +52,10 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
 
     constexpr Range(Iter first, Iter last) : _first(first), _last(last)
+    {}
+
+    template <typename T>
+    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
     {}
 
     constexpr iterator begin() const noexcept
@@ -103,47 +136,8 @@ public:
     }
 };
 
-template <typename CharT>
-CharT* to_begin(CharT* s)
-{
-    return s;
-}
-
 template <typename T>
-auto to_begin(T& x)
-{
-    using std::begin;
-    return begin(x);
-}
-
-template <typename CharT>
-CharT* to_end(CharT* s)
-{
-    while (*s != 0) {
-        ++s;
-    }
-    return s;
-}
-
-template <typename T>
-auto to_end(T& x)
-{
-    using std::end;
-    return end(x);
-}
-
-template <typename Iter>
-constexpr auto make_range(Iter first, Iter last)
-{
-    return Range<Iter>(first, last);
-}
-
-template <typename T>
-constexpr auto make_range(T& x)
-{
-    auto first = to_begin(x);
-    return Range<decltype(first)>(first, to_end(x));
-}
+Range(T& x) -> Range<decltype(to_begin(x))>;
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
