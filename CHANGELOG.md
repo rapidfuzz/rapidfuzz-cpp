@@ -1,5 +1,12 @@
 ## Changelog
 
+### [1.5.0] - 2022-09-
+#### Fix
+- `fuzz::partial_ratio` did not find the optimal alignment in some edge cases
+
+#### Performance
+- improve performance of `fuzz::partial_ratio`
+
 ### [1.4.1] - 2022-09-11
 #### Fixed
 - fix type mismatch error

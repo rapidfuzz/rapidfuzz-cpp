@@ -2,8 +2,8 @@
 /* Copyright © 2021-present Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
+#include <limits>
 #include <rapidfuzz/details/CharSet.hpp>
-#include <rapidfuzz/details/matching_blocks.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -65,6 +65,68 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
     res.dest_start = 0;
     res.dest_end = len1;
 
+    if (len2 > len1) {
+        int64_t maximum = static_cast<int64_t>(len1) * 2;
+        double norm_cutoff_sim = rapidfuzz::detail::NormSim_to_NormDist(score_cutoff / 100);
+        int64_t cutoff_dist = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * norm_cutoff_sim));
+        int64_t best_dist = std::numeric_limits<int64_t>::max();
+        std::vector<int64_t> scores(len2 - len1, -1);
+        std::vector<std::pair<size_t, size_t>> windows = {{0, len2 - len1 - 1}};
+        std::vector<std::pair<size_t, size_t>> new_windows;
+
+        while (!windows.empty()) {
+            for (const auto& window : windows) {
+                size_t cell_diff = window.second - window.first;
+                if (cell_diff == 1) continue;
+
+                auto subseq1 = s2.subseq(static_cast<ptrdiff_t>(window.first), static_cast<ptrdiff_t>(len1));
+                auto subseq2 = s2.subseq(static_cast<ptrdiff_t>(window.second), static_cast<ptrdiff_t>(len1));
+                if (scores[window.first] == -1) {
+                    scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
+                    if (scores[window.first] < cutoff_dist) {
+                        cutoff_dist = best_dist = scores[window.first];
+                        res.dest_start = window.first;
+                        res.dest_end = window.first + len1;
+                        if (best_dist == 0) {
+                            new_windows.clear();
+                            break;
+                        }
+                    }
+                }
+                if (scores[window.second] == -1) {
+                    scores[window.second] = cached_ratio.cached_indel.distance(subseq2);
+                    if (scores[window.second] < cutoff_dist) {
+                        cutoff_dist = best_dist = scores[window.second];
+                        res.dest_start = window.second;
+                        res.dest_end = window.second + len1;
+                        if (best_dist == 0) {
+                            new_windows.clear();
+                            break;
+                        }
+                    }
+                }
+
+                /* find the minimum score possible in the range first <-> last */
+                int64_t known_edits = std::abs(scores[window.first] - scores[window.second]);
+                /* half of the cells that are not needed for known_edits can lead to a better score */
+                int64_t min_score = std::min(scores[window.first], scores[window.second]) -
+                                    (static_cast<int64_t>(cell_diff) + known_edits / 2);
+                if (min_score < cutoff_dist) {
+                    size_t center = cell_diff / 2;
+                    new_windows.emplace_back(window.first, window.first + center);
+                    new_windows.emplace_back(window.first + center, window.second);
+                }
+            }
+
+            std::swap(windows, new_windows);
+            new_windows.clear();
+        }
+
+        double score = 1.0 - (static_cast<double>(best_dist) / static_cast<double>(maximum));
+        score *= 100;
+        if (score >= score_cutoff) score_cutoff = res.score = score;
+    }
+
     for (size_t i = 1; i < len1; ++i) {
         auto subseq = s2.subseq(0, static_cast<ptrdiff_t>(i));
         if (!s1_char_set.find(subseq.back())) continue;
@@ -74,19 +136,6 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
             score_cutoff = res.score = ls_ratio;
             res.dest_start = 0;
             res.dest_end = i;
-            if (res.score == 100.0) return res;
-        }
-    }
-
-    for (size_t i = 0; i < len2 - len1; ++i) {
-        auto subseq = s2.subseq(static_cast<ptrdiff_t>(i), static_cast<ptrdiff_t>(len1));
-        if (!s1_char_set.find(subseq.back())) continue;
-
-        double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
-        if (ls_ratio > res.score) {
-            score_cutoff = res.score = ls_ratio;
-            res.dest_start = i;
-            res.dest_end = i + len1;
             if (res.score == 100.0) return res;
         }
     }
@@ -120,58 +169,6 @@ ScoreAlignment<double> partial_ratio_short_needle(rapidfuzz::detail::Range<Input
     return partial_ratio_short_needle(s1, s2, cached_ratio, s1_char_set, score_cutoff);
 }
 
-template <typename InputIt1, typename InputIt2, typename CachedCharT1>
-ScoreAlignment<double>
-partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                          const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
-{
-    ScoreAlignment<double> res;
-    auto len1 = static_cast<size_t>(std::distance(first1, last1));
-    auto len2 = static_cast<size_t>(std::distance(first2, last2));
-    assert(len2 >= len1);
-    res.src_start = 0;
-    res.src_end = len1;
-    res.dest_start = 0;
-    res.dest_end = len1;
-
-    auto blocks = detail::get_matching_blocks(first1, last1, first2, last2);
-
-    // when there is a full match exit early
-    for (const auto& block : blocks) {
-        if (block.length == len1) {
-            res.score = 100;
-            res.dest_start = block.dpos > block.spos ? block.dpos - block.spos : 0;
-            res.dest_end = std::min(len2, res.dest_start + len1);
-            return res;
-        }
-    }
-
-    for (const auto& block : blocks) {
-        auto long_start = block.dpos > block.spos ? block.dpos - block.spos : 0;
-        auto long_end = std::min(len2, long_start + len1);
-        auto substr_first = first2 + static_cast<ptrdiff_t>(long_start);
-        auto substr_last = first2 + static_cast<ptrdiff_t>(long_end);
-
-        double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
-        if (ls_ratio > res.score) {
-            score_cutoff = res.score = ls_ratio;
-            res.dest_start = long_start;
-            res.dest_end = long_end;
-        }
-    }
-
-    return res;
-}
-
-template <typename InputIt1, typename InputIt2, typename CharT1 = iter_value_t<InputIt1>>
-ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, double score_cutoff)
-{
-    CachedRatio<CharT1> cached_ratio(first1, last1);
-
-    return partial_ratio_long_needle(first1, last1, first2, last2, cached_ratio, score_cutoff);
-}
-
 } // namespace fuzz_detail
 
 template <typename InputIt1, typename InputIt2>
@@ -193,11 +190,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    if (len1 <= 64)
-        return fuzz_detail::partial_ratio_short_needle(detail::make_range(first1, last1),
-                                                       detail::make_range(first2, last2), score_cutoff);
-    else
-        return fuzz_detail::partial_ratio_long_needle(first1, last1, first2, last2, score_cutoff);
+    return fuzz_detail::partial_ratio_short_needle(detail::make_range(first1, last1),
+                                                   detail::make_range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -242,15 +236,9 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    if (len1 <= 64)
-        return fuzz_detail::partial_ratio_short_needle(detail::make_range(s1),
-                                                       detail::make_range(first2, last2), cached_ratio,
-                                                       s1_char_set, score_cutoff)
-            .score;
-    else
-        return fuzz_detail::partial_ratio_long_needle(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                                      cached_ratio, score_cutoff)
-            .score;
+    return fuzz_detail::partial_ratio_short_needle(detail::make_range(s1), detail::make_range(first2, last2),
+                                                   cached_ratio, s1_char_set, score_cutoff)
+        .score;
 }
 
 template <typename CharT1>

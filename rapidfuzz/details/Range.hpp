@@ -73,8 +73,9 @@ public:
     {
         if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
 
-        /* count + pos can overflow */
-        return {_first + pos, _first + pos + std::min(count - pos, size() - pos)};
+        auto start = _first + pos;
+        if (std::distance(start, _last) < count) return {start, _last};
+        return {start, start + count};
     }
 
     constexpr decltype(auto) front() const

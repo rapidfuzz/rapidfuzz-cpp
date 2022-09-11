@@ -66,7 +66,7 @@ struct CachedRatio {
     template <typename Sentence2>
     double similarity(const Sentence2& s2, double score_cutoff = 0) const;
 
-private:
+    // private:
     CachedIndel<CharT1> cached_indel;
 };
 

@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-11 15:32:37.280197
+//  Generated: 2022-09-11 17:50:38.322175
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -492,8 +492,9 @@ public:
     {
         if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
 
-        /* count + pos can overflow */
-        return {_first + pos, _first + pos + std::min(count - pos, size() - pos)};
+        auto start = _first + pos;
+        if (std::distance(start, _last) < count) return {start, _last};
+        return {start, start + count};
     }
 
     constexpr decltype(auto) front() const
@@ -5247,7 +5248,7 @@ struct CachedRatio {
     template <typename Sentence2>
     double similarity(const Sentence2& s2, double score_cutoff = 0) const;
 
-private:
+    // private:
     CachedIndel<CharT1> cached_indel;
 };
 
@@ -5828,194 +5829,7 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 } // namespace fuzz
 } // namespace rapidfuzz
 
-// The MIT License (MIT)
-//
-// Copyright (c) 2020 Max Bachmann
-// Copyright (c) 2014 Jean-Bernard Jansen
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-
-#include <algorithm>
-#include <tuple>
-#include <unordered_map>
-#include <vector>
-
-namespace rapidfuzz {
-namespace detail {
-struct MatchingBlock {
-    size_t spos;
-    size_t dpos;
-    size_t length;
-    MatchingBlock(size_t aSPos, size_t aDPos, size_t aLength) : spos(aSPos), dpos(aDPos), length(aLength)
-    {}
-};
-
-namespace difflib {
-
-template <typename InputIt1, typename InputIt2>
-class SequenceMatcher {
-    using Index = size_t;
-
-public:
-    using match_t = std::tuple<Index, Index, Index>;
-
-    SequenceMatcher(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
-        : a_first(first1), a_last(last1), b_first(first2), b_last(last2)
-    {
-        auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
-        j2len_.resize(b_len + 1);
-        newj2len_.resize(b_len + 1);
-        for (Index i = 0; i < b_len; ++i) {
-            b2j_[b_first[static_cast<ptrdiff_t>(i)]].push_back(i);
-        }
-    }
-
-    match_t find_longest_match(Index a_low, Index a_high, Index b_low, Index b_high)
-    {
-        Index best_i = a_low;
-        Index best_j = b_low;
-        Index best_size = 0;
-
-        // Find longest junk free match
-        for (Index i = a_low; i < a_high; ++i) {
-            auto iter = b2j_.find(a_first[static_cast<ptrdiff_t>(i)]);
-            if (iter != std::end(b2j_)) {
-                for (Index j : iter->second) {
-                    /* a[i] matches b[j] */
-                    if (j < b_low) continue;
-                    if (j >= b_high) break;
-
-                    auto k = j2len_[j] + 1;
-                    newj2len_[j + 1] = k;
-
-                    if (k > best_size) {
-                        best_i = i - k + 1;
-                        best_j = j - k + 1;
-                        best_size = k;
-                    }
-                }
-            }
-
-            std::swap(j2len_, newj2len_);
-            std::fill(newj2len_.begin() + static_cast<ptrdiff_t>(b_low),
-                      newj2len_.begin() + static_cast<ptrdiff_t>(b_high) + 1, 0);
-        }
-
-        std::fill(j2len_.begin() + static_cast<ptrdiff_t>(b_low),
-                  j2len_.begin() + static_cast<ptrdiff_t>(b_high) + 1, 0);
-
-        while (best_i > a_low && best_j > b_low &&
-               a_first[static_cast<ptrdiff_t>(best_i) - 1] == b_first[static_cast<ptrdiff_t>(best_j) - 1])
-        {
-            --best_i;
-            --best_j;
-            ++best_size;
-        }
-
-        while ((best_i + best_size) < a_high && (best_j + best_size) < b_high &&
-               a_first[static_cast<ptrdiff_t>(best_i + best_size)] ==
-                   b_first[static_cast<ptrdiff_t>(best_j + best_size)])
-        {
-            ++best_size;
-        }
-
-        return std::make_tuple(best_i, best_j, best_size);
-    }
-
-    std::vector<MatchingBlock> get_matching_blocks()
-    {
-        auto a_len = static_cast<size_t>(std::distance(a_first, a_last));
-        auto b_len = static_cast<size_t>(std::distance(b_first, b_last));
-        // The following are tuple extracting aliases
-        std::vector<std::tuple<Index, Index, Index, Index>> queue;
-        std::vector<match_t> matching_blocks_pass1;
-
-        size_t queue_head = 0;
-        queue.reserve(std::min(a_len, b_len));
-        queue.emplace_back(0, a_len, 0, b_len);
-
-        while (queue_head < queue.size()) {
-            Index a_low, a_high, b_low, b_high;
-            std::tie(a_low, a_high, b_low, b_high) = queue[queue_head++];
-            Index spos, dpos, length;
-            std::tie(spos, dpos, length) = find_longest_match(a_low, a_high, b_low, b_high);
-            if (length) {
-                if (a_low < spos && b_low < dpos) {
-                    queue.emplace_back(a_low, spos, b_low, dpos);
-                }
-                if ((spos + length) < a_high && (dpos + length) < b_high) {
-                    queue.emplace_back(spos + length, a_high, dpos + length, b_high);
-                }
-                matching_blocks_pass1.emplace_back(spos, dpos, length);
-            }
-        }
-        std::sort(detail::to_begin(matching_blocks_pass1), detail::to_end(matching_blocks_pass1));
-
-        std::vector<MatchingBlock> matching_blocks;
-
-        matching_blocks.reserve(matching_blocks_pass1.size());
-
-        Index i1, j1, k1;
-        i1 = j1 = k1 = 0;
-
-        for (match_t const& m : matching_blocks_pass1) {
-            if (i1 + k1 == std::get<0>(m) && j1 + k1 == std::get<1>(m)) {
-                k1 += std::get<2>(m);
-            }
-            else {
-                if (k1) {
-                    matching_blocks.emplace_back(i1, j1, k1);
-                }
-                std::tie(i1, j1, k1) = m;
-            }
-        }
-        if (k1) {
-            matching_blocks.emplace_back(i1, j1, k1);
-        }
-        matching_blocks.emplace_back(a_len, b_len, 0);
-
-        return matching_blocks;
-    }
-
-protected:
-    InputIt1 a_first;
-    InputIt1 a_last;
-    InputIt2 b_first;
-    InputIt2 b_last;
-
-private:
-    // Cache to avoid reallocations
-    std::vector<Index> j2len_;
-    std::vector<Index> newj2len_;
-    std::unordered_map<iter_value_t<InputIt2>, std::vector<Index>> b2j_;
-};
-} // namespace difflib
-
-template <typename InputIt1, typename InputIt2>
-std::vector<MatchingBlock> get_matching_blocks(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                               InputIt2 last2)
-{
-    return difflib::SequenceMatcher<InputIt1, InputIt2>(first1, last1, first2, last2).get_matching_blocks();
-}
-
-} /* namespace detail */
-} /* namespace rapidfuzz */
+#include <limits>
 
 #include <algorithm>
 #include <cmath>
@@ -6077,6 +5891,68 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
     res.dest_start = 0;
     res.dest_end = len1;
 
+    if (len2 > len1) {
+        int64_t maximum = static_cast<int64_t>(len1) * 2;
+        double norm_cutoff_sim = rapidfuzz::detail::NormSim_to_NormDist(score_cutoff / 100);
+        int64_t cutoff_dist = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * norm_cutoff_sim));
+        int64_t best_dist = std::numeric_limits<int64_t>::max();
+        std::vector<int64_t> scores(len2 - len1, -1);
+        std::vector<std::pair<size_t, size_t>> windows = {{0, len2 - len1 - 1}};
+        std::vector<std::pair<size_t, size_t>> new_windows;
+
+        while (!windows.empty()) {
+            for (const auto& window : windows) {
+                size_t cell_diff = window.second - window.first;
+                if (cell_diff == 1) continue;
+
+                auto subseq1 = s2.subseq(static_cast<ptrdiff_t>(window.first), static_cast<ptrdiff_t>(len1));
+                auto subseq2 = s2.subseq(static_cast<ptrdiff_t>(window.second), static_cast<ptrdiff_t>(len1));
+                if (scores[window.first] == -1) {
+                    scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
+                    if (scores[window.first] < cutoff_dist) {
+                        cutoff_dist = best_dist = scores[window.first];
+                        res.dest_start = window.first;
+                        res.dest_end = window.first + len1;
+                        if (best_dist == 0) {
+                            new_windows.clear();
+                            break;
+                        }
+                    }
+                }
+                if (scores[window.second] == -1) {
+                    scores[window.second] = cached_ratio.cached_indel.distance(subseq2);
+                    if (scores[window.second] < cutoff_dist) {
+                        cutoff_dist = best_dist = scores[window.second];
+                        res.dest_start = window.second;
+                        res.dest_end = window.second + len1;
+                        if (best_dist == 0) {
+                            new_windows.clear();
+                            break;
+                        }
+                    }
+                }
+
+                /* find the minimum score possible in the range first <-> last */
+                int64_t known_edits = std::abs(scores[window.first] - scores[window.second]);
+                /* half of the cells that are not needed for known_edits can lead to a better score */
+                int64_t min_score = std::min(scores[window.first], scores[window.second]) -
+                                    (static_cast<int64_t>(cell_diff) + known_edits / 2);
+                if (min_score < cutoff_dist) {
+                    size_t center = cell_diff / 2;
+                    new_windows.emplace_back(window.first, window.first + center);
+                    new_windows.emplace_back(window.first + center, window.second);
+                }
+            }
+
+            std::swap(windows, new_windows);
+            new_windows.clear();
+        }
+
+        double score = 1.0 - (static_cast<double>(best_dist) / static_cast<double>(maximum));
+        score *= 100;
+        if (score >= score_cutoff) score_cutoff = res.score = score;
+    }
+
     for (size_t i = 1; i < len1; ++i) {
         auto subseq = s2.subseq(0, static_cast<ptrdiff_t>(i));
         if (!s1_char_set.find(subseq.back())) continue;
@@ -6086,19 +5962,6 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
             score_cutoff = res.score = ls_ratio;
             res.dest_start = 0;
             res.dest_end = i;
-            if (res.score == 100.0) return res;
-        }
-    }
-
-    for (size_t i = 0; i < len2 - len1; ++i) {
-        auto subseq = s2.subseq(static_cast<ptrdiff_t>(i), static_cast<ptrdiff_t>(len1));
-        if (!s1_char_set.find(subseq.back())) continue;
-
-        double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
-        if (ls_ratio > res.score) {
-            score_cutoff = res.score = ls_ratio;
-            res.dest_start = i;
-            res.dest_end = i + len1;
             if (res.score == 100.0) return res;
         }
     }
@@ -6132,58 +5995,6 @@ ScoreAlignment<double> partial_ratio_short_needle(rapidfuzz::detail::Range<Input
     return partial_ratio_short_needle(s1, s2, cached_ratio, s1_char_set, score_cutoff);
 }
 
-template <typename InputIt1, typename InputIt2, typename CachedCharT1>
-ScoreAlignment<double>
-partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                          const CachedRatio<CachedCharT1>& cached_ratio, double score_cutoff)
-{
-    ScoreAlignment<double> res;
-    auto len1 = static_cast<size_t>(std::distance(first1, last1));
-    auto len2 = static_cast<size_t>(std::distance(first2, last2));
-    assert(len2 >= len1);
-    res.src_start = 0;
-    res.src_end = len1;
-    res.dest_start = 0;
-    res.dest_end = len1;
-
-    auto blocks = detail::get_matching_blocks(first1, last1, first2, last2);
-
-    // when there is a full match exit early
-    for (const auto& block : blocks) {
-        if (block.length == len1) {
-            res.score = 100;
-            res.dest_start = block.dpos > block.spos ? block.dpos - block.spos : 0;
-            res.dest_end = std::min(len2, res.dest_start + len1);
-            return res;
-        }
-    }
-
-    for (const auto& block : blocks) {
-        auto long_start = block.dpos > block.spos ? block.dpos - block.spos : 0;
-        auto long_end = std::min(len2, long_start + len1);
-        auto substr_first = first2 + static_cast<ptrdiff_t>(long_start);
-        auto substr_last = first2 + static_cast<ptrdiff_t>(long_end);
-
-        double ls_ratio = cached_ratio.similarity(substr_first, substr_last, score_cutoff);
-        if (ls_ratio > res.score) {
-            score_cutoff = res.score = ls_ratio;
-            res.dest_start = long_start;
-            res.dest_end = long_end;
-        }
-    }
-
-    return res;
-}
-
-template <typename InputIt1, typename InputIt2, typename CharT1 = iter_value_t<InputIt1>>
-ScoreAlignment<double> partial_ratio_long_needle(InputIt1 first1, InputIt1 last1, InputIt2 first2,
-                                                 InputIt2 last2, double score_cutoff)
-{
-    CachedRatio<CharT1> cached_ratio(first1, last1);
-
-    return partial_ratio_long_needle(first1, last1, first2, last2, cached_ratio, score_cutoff);
-}
-
 } // namespace fuzz_detail
 
 template <typename InputIt1, typename InputIt2>
@@ -6205,11 +6016,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    if (len1 <= 64)
-        return fuzz_detail::partial_ratio_short_needle(detail::make_range(first1, last1),
-                                                       detail::make_range(first2, last2), score_cutoff);
-    else
-        return fuzz_detail::partial_ratio_long_needle(first1, last1, first2, last2, score_cutoff);
+    return fuzz_detail::partial_ratio_short_needle(detail::make_range(first1, last1),
+                                                   detail::make_range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -6254,15 +6062,9 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    if (len1 <= 64)
-        return fuzz_detail::partial_ratio_short_needle(detail::make_range(s1),
-                                                       detail::make_range(first2, last2), cached_ratio,
-                                                       s1_char_set, score_cutoff)
-            .score;
-    else
-        return fuzz_detail::partial_ratio_long_needle(detail::to_begin(s1), detail::to_end(s1), first2, last2,
-                                                      cached_ratio, score_cutoff)
-            .score;
+    return fuzz_detail::partial_ratio_short_needle(detail::make_range(s1), detail::make_range(first2, last2),
+                                                   cached_ratio, s1_char_set, score_cutoff)
+        .score;
 }
 
 template <typename CharT1>
