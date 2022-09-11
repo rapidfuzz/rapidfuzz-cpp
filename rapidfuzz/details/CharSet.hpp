@@ -8,8 +8,7 @@
 #include <type_traits>
 #include <unordered_set>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
@@ -71,5 +70,4 @@ struct CharSet {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

@@ -11,8 +11,7 @@
 #include <stdio.h>
 #include <vector>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename T, bool IsConst>
 struct BitMatrixView {
@@ -200,5 +199,4 @@ private:
     std::vector<ptrdiff_t> m_offsets;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

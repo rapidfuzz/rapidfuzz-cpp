@@ -10,8 +10,7 @@
 
 #include <type_traits>
 
-namespace rapidfuzz {
-namespace fuzz {
+namespace rapidfuzz::fuzz {
 
 /**
  * @defgroup Fuzz Fuzz
@@ -324,7 +323,7 @@ struct CachedTokenSetRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
 template <typename Sentence1>
@@ -380,7 +379,7 @@ struct CachedPartialTokenSetRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
 template <typename Sentence1>
@@ -438,7 +437,7 @@ struct CachedTokenRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> s1_tokens;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> s1_tokens;
     std::basic_string<CharT1> s1_sorted;
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
@@ -499,7 +498,7 @@ struct CachedPartialTokenRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
 };
 
@@ -557,7 +556,7 @@ private:
     // multiple times
     std::basic_string<CharT1> s1;
     CachedPartialRatio<CharT1> cached_partial_ratio;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
@@ -624,7 +623,6 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 
 /**@}*/
 
-} // namespace fuzz
-} // namespace rapidfuzz
+} // namespace rapidfuzz::fuzz
 
 #include <rapidfuzz/fuzz.impl>

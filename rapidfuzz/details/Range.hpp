@@ -9,8 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename CharT>
 CharT* to_begin(CharT* s)
@@ -178,5 +177,4 @@ inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
 template <typename InputIt>
 using RangeVec = std::vector<Range<InputIt>>;
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

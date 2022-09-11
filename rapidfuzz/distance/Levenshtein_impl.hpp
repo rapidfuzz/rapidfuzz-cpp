@@ -15,8 +15,7 @@
 #include <rapidfuzz/distance/Indel.hpp>
 #include <stdexcept>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 struct LevenshteinRow {
     uint64_t VP;
@@ -1047,5 +1046,4 @@ class Levenshtein : public DistanceBase<Levenshtein, LevenshteinWeightTable> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

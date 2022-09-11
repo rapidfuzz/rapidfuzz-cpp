@@ -4,15 +4,15 @@
 #include <rapidfuzz/details/type_traits.hpp>
 #include <string>
 
-namespace rapidfuzz {
+namespace rapidfuzz::detail {
 
 template <typename InputIt>
 class SplittedSentenceView {
 public:
     using CharT = iter_value_t<InputIt>;
 
-    SplittedSentenceView(detail::RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible_v<detail::RangeVec<InputIt>>)
+    SplittedSentenceView(RangeVec<InputIt> sentence) noexcept(
+        std::is_nothrow_move_constructible_v<RangeVec<InputIt>>)
         : m_sentence(std::move(sentence))
     {}
 
@@ -36,13 +36,13 @@ public:
 
     std::basic_string<CharT> join() const;
 
-    const detail::RangeVec<InputIt>& words() const
+    const RangeVec<InputIt>& words() const
     {
         return m_sentence;
     }
 
 private:
-    detail::RangeVec<InputIt> m_sentence;
+    RangeVec<InputIt> m_sentence;
 };
 
 template <typename InputIt>
@@ -85,4 +85,4 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
     return joined;
 }
 
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

@@ -13,8 +13,7 @@
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/distance.hpp>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename IntType>
 struct RowId {
@@ -133,5 +132,4 @@ class DamerauLevenshtein : public DistanceBase<DamerauLevenshtein> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

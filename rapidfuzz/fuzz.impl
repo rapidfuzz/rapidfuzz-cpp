@@ -11,8 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace rapidfuzz {
-namespace fuzz {
+namespace rapidfuzz::fuzz {
 
 /**********************************************
  *                  ratio
@@ -327,8 +326,8 @@ double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, doub
 
 namespace fuzz_detail {
 template <typename InputIt1, typename InputIt2>
-double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
-                       const SplittedSentenceView<InputIt2>& tokens_b, const double score_cutoff)
+double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_a,
+                       const rapidfuzz::detail::SplittedSentenceView<InputIt2>& tokens_b, const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -416,8 +415,8 @@ double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score
 
 namespace fuzz_detail {
 template <typename InputIt1, typename InputIt2>
-double partial_token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
-                               const SplittedSentenceView<InputIt2>& tokens_b, const double score_cutoff)
+double partial_token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_a,
+                               const rapidfuzz::detail::SplittedSentenceView<InputIt2>& tokens_b, const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -530,7 +529,7 @@ double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff
 
 namespace fuzz_detail {
 template <typename CharT1, typename CachedCharT1, typename InputIt2>
-double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
+double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tokens,
                    const CachedRatio<CachedCharT1>& cached_ratio_s1_sorted, InputIt2 first2, InputIt2 last2,
                    double score_cutoff)
 {
@@ -581,7 +580,7 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                   const SplittedSentenceView<InputIt1>& tokens_s1,
+                   const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
                    const detail::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2, InputIt2 last2,
                    double score_cutoff)
 {
@@ -695,7 +694,7 @@ double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double scor
 namespace fuzz_detail {
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                           const SplittedSentenceView<InputIt1>& tokens_s1, InputIt2 first2, InputIt2 last2,
+                           const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1, InputIt2 first2, InputIt2 last2,
                            double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
@@ -883,5 +882,4 @@ double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
-} // namespace fuzz
-} // namespace rapidfuzz
+} // namespace rapidfuzz::fuzz
