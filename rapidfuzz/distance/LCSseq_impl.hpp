@@ -129,8 +129,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>(
-        [&](auto f) { f(res).S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0)); });
+    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -140,7 +139,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
-            static_if<RecordMatrix>([&](auto f) { f(res).S[i][word] = S[word]; });
+            if constexpr (RecordMatrix) res.S[i][word] = S[word];
         });
     }
 
@@ -160,8 +159,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
     LCSseqResult<RecordMatrix> res;
-    static_if<RecordMatrix>(
-        [&](auto f) { f(res).S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0)); });
+    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0));
 
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
@@ -174,7 +172,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            static_if<RecordMatrix>([&](auto f) { f(res).S[i][word] = S[word]; });
+            if constexpr (RecordMatrix) res.S[i][word] = S[word];
         }
     }
 

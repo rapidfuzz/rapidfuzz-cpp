@@ -80,7 +80,7 @@ struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     {}
 
     template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
+    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
     {}
 
 private:
@@ -96,19 +96,17 @@ private:
     template <typename InputIt2>
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::indel_distance(PM, detail::make_range(s1), s2, score_cutoff);
+        return detail::indel_distance(PM, detail::Range(s1), s2, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 template <typename Sentence1>
 CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
-#endif
 
 } // namespace rapidfuzz

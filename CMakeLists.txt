@@ -38,7 +38,7 @@ add_library(rapidfuzz INTERFACE)
 # provide a namespaced alias for clients to 'link' against if RapidFuzz is included as a sub-project
 add_library(rapidfuzz::rapidfuzz ALIAS rapidfuzz)
 
-target_compile_features(rapidfuzz INTERFACE cxx_std_14)
+target_compile_features(rapidfuzz INTERFACE cxx_std_17)
 
 target_include_directories(rapidfuzz
     INTERFACE
