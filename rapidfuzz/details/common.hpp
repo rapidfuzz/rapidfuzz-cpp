@@ -13,7 +13,7 @@
 #include <rapidfuzz/details/types.hpp>
 #include <vector>
 
-namespace rapidfuzz {
+namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
 struct DecomposedSet {
@@ -27,8 +27,6 @@ struct DecomposedSet {
           intersection(std::move(intersect))
     {}
 };
-
-namespace detail {
 
 /**
  * @defgroup Common Common
@@ -76,12 +74,6 @@ static inline int64_t score_cutoff_to_distance(double score_cutoff, int64_t lens
     return static_cast<int64_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
-template <typename T>
-constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
-{
-    return std::fabs(a) <= tolerance;
-}
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
@@ -99,7 +91,6 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 /**@}*/
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <rapidfuzz/details/common_impl.hpp>

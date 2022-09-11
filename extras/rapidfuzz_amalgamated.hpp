@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-11 21:38:02.959934
+//  Generated: 2022-09-11 21:50:18.972945
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -24,8 +24,7 @@
 #include <new>
 #include <stdint.h>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 /* hashmap for integers which can only grow, but can't remove elements */
 template <typename T_Key, typename T_Entry>
@@ -218,8 +217,7 @@ private:
     std::array<value_type, 256> m_extendedAscii;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <algorithm>
 #include <cassert>
@@ -230,8 +228,7 @@ private:
 #include <stdio.h>
 #include <vector>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename T, bool IsConst>
 struct BitMatrixView {
@@ -419,8 +416,7 @@ private:
     std::vector<ptrdiff_t> m_offsets;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <iterator>
 #include <limits>
@@ -428,8 +424,7 @@ private:
 #include <stdexcept>
 #include <vector>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename CharT>
 CharT* to_begin(CharT* s)
@@ -597,8 +592,7 @@ inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
 template <typename InputIt>
 using RangeVec = std::vector<Range<InputIt>>;
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <array>
 #include <cmath>
@@ -1253,15 +1247,15 @@ struct is_explicitly_convertible {
 
 #include <string>
 
-namespace rapidfuzz {
+namespace rapidfuzz::detail {
 
 template <typename InputIt>
 class SplittedSentenceView {
 public:
     using CharT = iter_value_t<InputIt>;
 
-    SplittedSentenceView(detail::RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible_v<detail::RangeVec<InputIt>>)
+    SplittedSentenceView(RangeVec<InputIt> sentence) noexcept(
+        std::is_nothrow_move_constructible_v<RangeVec<InputIt>>)
         : m_sentence(std::move(sentence))
     {}
 
@@ -1285,13 +1279,13 @@ public:
 
     std::basic_string<CharT> join() const;
 
-    const detail::RangeVec<InputIt>& words() const
+    const RangeVec<InputIt>& words() const
     {
         return m_sentence;
     }
 
 private:
-    detail::RangeVec<InputIt> m_sentence;
+    RangeVec<InputIt> m_sentence;
 };
 
 template <typename InputIt>
@@ -1334,7 +1328,7 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
     return joined;
 }
 
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <bitset>
 #include <cassert>
@@ -1347,8 +1341,7 @@ auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
 #    include <intrin.h>
 #endif
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 /*
  * shift right without undefined behavior for shifts > bit width
@@ -1508,12 +1501,11 @@ constexpr void unroll(F&& f)
     unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
 }
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <vector>
 
-namespace rapidfuzz {
+namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
 struct DecomposedSet {
@@ -1527,8 +1519,6 @@ struct DecomposedSet {
           intersection(std::move(intersect))
     {}
 };
-
-namespace detail {
 
 /**
  * @defgroup Common Common
@@ -1576,12 +1566,6 @@ static inline int64_t score_cutoff_to_distance(double score_cutoff, int64_t lens
     return static_cast<int64_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
 }
 
-template <typename T>
-constexpr bool is_zero(T a, T tolerance = std::numeric_limits<T>::epsilon())
-{
-    return std::fabs(a) <= tolerance;
-}
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
@@ -1599,16 +1583,14 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 /**@}*/
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cwctype>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
@@ -1787,13 +1769,11 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
     return SplittedSentenceView<InputIt>(splitted);
 }
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <cmath>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
@@ -2090,11 +2070,9 @@ protected:
     friend T;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename IntType>
 struct RowId {
@@ -2213,8 +2191,7 @@ class DamerauLevenshtein : public DistanceBase<DamerauLevenshtein> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 namespace rapidfuzz {
 /* the API will require a change when adding custom weights */
@@ -2363,8 +2340,7 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 
 #include <stdexcept>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 class Hamming : public DistanceBase<Hamming> {
     friend DistanceBase<Hamming>;
@@ -2388,8 +2364,8 @@ class Hamming : public DistanceBase<Hamming> {
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 };
-} // namespace detail
-} // namespace rapidfuzz
+
+} // namespace rapidfuzz::detail
 
 namespace rapidfuzz {
 
@@ -2543,8 +2519,7 @@ CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<Inp
 #include <unordered_set>
 #include <vector>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 struct BitvectorHashmap {
     BitvectorHashmap() : m_map()
@@ -2752,16 +2727,14 @@ private:
     BitMatrix<uint64_t> m_extendedAscii;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <limits>
 
 #include <algorithm>
 #include <array>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <bool RecordMatrix>
 struct LCSseqResult;
@@ -3133,8 +3106,7 @@ class LCSseq : public SimilarityBase<LCSseq> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <algorithm>
 #include <cmath>
@@ -3245,8 +3217,7 @@ CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<Input
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2>
 int64_t indel_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
@@ -3301,8 +3272,7 @@ class Indel : public DistanceBase<Indel> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 namespace rapidfuzz {
 
@@ -3419,8 +3389,7 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 #include <limits>
 #include <stdexcept>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 struct LevenshteinRow {
     uint64_t VP;
@@ -4451,8 +4420,7 @@ class Levenshtein : public DistanceBase<Levenshtein, LevenshteinWeightTable> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 namespace rapidfuzz {
 
@@ -4905,8 +4873,7 @@ std::basic_string<CharT> opcodes_apply(const Opcodes& ops, const Sentence1& s1, 
 #include <type_traits>
 #include <unordered_set>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
@@ -4968,13 +4935,11 @@ struct CharSet {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail
 
 #include <type_traits>
 
-namespace rapidfuzz {
-namespace fuzz {
+namespace rapidfuzz::fuzz {
 
 /**
  * @defgroup Fuzz Fuzz
@@ -5287,7 +5252,7 @@ struct CachedTokenSetRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
 template <typename Sentence1>
@@ -5343,7 +5308,7 @@ struct CachedPartialTokenSetRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
 };
 
 template <typename Sentence1>
@@ -5401,7 +5366,7 @@ struct CachedTokenRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> s1_tokens;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> s1_tokens;
     std::basic_string<CharT1> s1_sorted;
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
@@ -5462,7 +5427,7 @@ struct CachedPartialTokenRatio {
 
 private:
     std::basic_string<CharT1> s1;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
 };
 
@@ -5520,7 +5485,7 @@ private:
     // multiple times
     std::basic_string<CharT1> s1;
     CachedPartialRatio<CharT1> cached_partial_ratio;
-    SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
     std::basic_string<CharT1> s1_sorted;
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
@@ -5587,8 +5552,7 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 
 /**@}*/
 
-} // namespace fuzz
-} // namespace rapidfuzz
+} // namespace rapidfuzz::fuzz
 
 #include <limits>
 
@@ -5598,8 +5562,7 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 #include <unordered_map>
 #include <vector>
 
-namespace rapidfuzz {
-namespace fuzz {
+namespace rapidfuzz::fuzz {
 
 /**********************************************
  *                  ratio
@@ -5914,8 +5877,9 @@ double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, doub
 
 namespace fuzz_detail {
 template <typename InputIt1, typename InputIt2>
-double token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
-                       const SplittedSentenceView<InputIt2>& tokens_b, const double score_cutoff)
+double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_a,
+                       const rapidfuzz::detail::SplittedSentenceView<InputIt2>& tokens_b,
+                       const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -6003,8 +5967,9 @@ double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score
 
 namespace fuzz_detail {
 template <typename InputIt1, typename InputIt2>
-double partial_token_set_ratio(const SplittedSentenceView<InputIt1>& tokens_a,
-                               const SplittedSentenceView<InputIt2>& tokens_b, const double score_cutoff)
+double partial_token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_a,
+                               const rapidfuzz::detail::SplittedSentenceView<InputIt2>& tokens_b,
+                               const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -6117,7 +6082,7 @@ double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff
 
 namespace fuzz_detail {
 template <typename CharT1, typename CachedCharT1, typename InputIt2>
-double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
+double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tokens,
                    const CachedRatio<CachedCharT1>& cached_ratio_s1_sorted, InputIt2 first2, InputIt2 last2,
                    double score_cutoff)
 {
@@ -6168,7 +6133,7 @@ double token_ratio(const SplittedSentenceView<CharT1>& s1_tokens,
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                   const SplittedSentenceView<InputIt1>& tokens_s1,
+                   const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
                    const detail::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2, InputIt2 last2,
                    double score_cutoff)
 {
@@ -6282,8 +6247,8 @@ double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double scor
 namespace fuzz_detail {
 template <typename CharT1, typename InputIt1, typename InputIt2>
 double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
-                           const SplittedSentenceView<InputIt1>& tokens_s1, InputIt2 first2, InputIt2 last2,
-                           double score_cutoff)
+                           const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
+                           InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
     if (score_cutoff > 100) return 0;
 
@@ -6470,7 +6435,6 @@ double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
-} // namespace fuzz
-} // namespace rapidfuzz
+} // namespace rapidfuzz::fuzz
 
 #endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED

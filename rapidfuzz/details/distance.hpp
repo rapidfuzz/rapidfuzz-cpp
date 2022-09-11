@@ -7,8 +7,7 @@
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/common.hpp>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
@@ -308,5 +307,4 @@ protected:
     friend T;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

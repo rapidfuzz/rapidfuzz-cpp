@@ -14,8 +14,7 @@
 #    include <intrin.h>
 #endif
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 /*
  * shift right without undefined behavior for shifts > bit width
@@ -175,5 +174,4 @@ constexpr void unroll(F&& f)
     unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
 }
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

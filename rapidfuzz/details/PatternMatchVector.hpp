@@ -15,8 +15,7 @@
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 struct BitvectorHashmap {
     BitvectorHashmap() : m_map()
@@ -224,5 +223,4 @@ private:
     BitMatrix<uint64_t> m_extendedAscii;
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

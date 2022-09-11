@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <array>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 template <bool RecordMatrix>
 struct LCSseqResult;
@@ -384,5 +383,4 @@ class LCSseq : public SimilarityBase<LCSseq> {
     }
 };
 
-} // namespace detail
-} // namespace rapidfuzz
+} // namespace rapidfuzz::detail

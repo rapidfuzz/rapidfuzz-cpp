@@ -6,8 +6,7 @@
 #include <rapidfuzz/details/distance.hpp>
 #include <stdexcept>
 
-namespace rapidfuzz {
-namespace detail {
+namespace rapidfuzz::detail {
 
 class Hamming : public DistanceBase<Hamming> {
     friend DistanceBase<Hamming>;
@@ -31,5 +30,5 @@ class Hamming : public DistanceBase<Hamming> {
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 };
-} // namespace detail
-} // namespace rapidfuzz
+
+} // namespace rapidfuzz::detail
