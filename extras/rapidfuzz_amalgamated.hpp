@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-11 17:50:38.322175
+//  Generated: 2022-09-11 18:18:03.779400
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5902,9 +5902,6 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
 
         while (!windows.empty()) {
             for (const auto& window : windows) {
-                size_t cell_diff = window.second - window.first;
-                if (cell_diff == 1) continue;
-
                 auto subseq1 = s2.subseq(static_cast<ptrdiff_t>(window.first), static_cast<ptrdiff_t>(len1));
                 auto subseq2 = s2.subseq(static_cast<ptrdiff_t>(window.second), static_cast<ptrdiff_t>(len1));
                 if (scores[window.first] == -1) {
@@ -5914,8 +5911,8 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
                         res.dest_start = window.first;
                         res.dest_end = window.first + len1;
                         if (best_dist == 0) {
-                            new_windows.clear();
-                            break;
+                            res.score = 100;
+                            return res;
                         }
                     }
                 }
@@ -5926,11 +5923,14 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
                         res.dest_start = window.second;
                         res.dest_end = window.second + len1;
                         if (best_dist == 0) {
-                            new_windows.clear();
-                            break;
+                            res.score = 100;
+                            return res;
                         }
                     }
                 }
+
+                size_t cell_diff = window.second - window.first;
+                if (cell_diff == 1) continue;
 
                 /* find the minimum score possible in the range first <-> last */
                 int64_t known_edits = std::abs(scores[window.first] - scores[window.second]);

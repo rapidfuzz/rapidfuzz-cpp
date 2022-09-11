@@ -141,6 +141,7 @@ TEST_CASE("RatioTest")
     SECTION("testPartialRatioShortNeedle")
     {
         REQUIRE(Approx(33.3333333) == fuzz::partial_ratio("001", "220222"));
+        REQUIRE(Approx(100) == fuzz::partial_ratio("physics 2 vid", "study physics physics 2 video"));
     }
 
     SECTION("testIssue206") /* test for https://github.com/maxbachmann/RapidFuzz/issues/206 */
