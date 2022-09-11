@@ -16,7 +16,7 @@ struct NormalizedMetricBase {
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff)
     {
-        return _normalized_distance(detail::Range(first1, last1), detail::Range(first2, last2),
+        return _normalized_distance(Range(first1, last1), Range(first2, last2),
                                     std::forward<Args>(args)..., score_cutoff);
     }
 
@@ -24,7 +24,7 @@ struct NormalizedMetricBase {
     static double normalized_distance(const Sentence1& s1, const Sentence2& s2, Args... args,
                                       double score_cutoff)
     {
-        return _normalized_distance(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)...,
+        return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)...,
                                     score_cutoff);
     }
 
@@ -32,7 +32,7 @@ struct NormalizedMetricBase {
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff)
     {
-        return _normalized_similarity(detail::Range(first1, last1), detail::Range(first2, last2),
+        return _normalized_similarity(Range(first1, last1), Range(first2, last2),
                                       std::forward<Args>(args)..., score_cutoff);
     }
 
@@ -40,7 +40,7 @@ struct NormalizedMetricBase {
     static double normalized_similarity(const Sentence1& s1, const Sentence2& s2, Args... args,
                                         double score_cutoff)
     {
-        return _normalized_similarity(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)...,
+        return _normalized_similarity(Range(s1), Range(s2), std::forward<Args>(args)...,
                                       score_cutoff);
     }
 
@@ -77,28 +77,28 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             int64_t score_cutoff)
     {
-        return T::_distance(detail::Range(first1, last1), detail::Range(first2, last2),
+        return T::_distance(Range(first1, last1), Range(first2, last2),
                             std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t distance(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return T::_distance(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return T::_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename InputIt1, typename InputIt2>
     static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               int64_t score_cutoff)
     {
-        return _similarity(detail::Range(first1, last1), detail::Range(first2, last2),
+        return _similarity(Range(first1, last1), Range(first2, last2),
                            std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return _similarity(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return _similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
 protected:
@@ -122,28 +122,28 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             int64_t score_cutoff)
     {
-        return _distance(detail::Range(first1, last1), detail::Range(first2, last2),
+        return _distance(Range(first1, last1), Range(first2, last2),
                          std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t distance(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return _distance(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return _distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename InputIt1, typename InputIt2>
     static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               int64_t score_cutoff)
     {
-        return T::_similarity(detail::Range(first1, last1), detail::Range(first2, last2),
+        return T::_similarity(Range(first1, last1), Range(first2, last2),
                               std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return T::_similarity(detail::Range(s1), detail::Range(s2), std::forward<Args>(args)...,
+        return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)...,
                               score_cutoff);
     }
 
@@ -168,28 +168,28 @@ struct CachedNormalizedMetricBase {
     double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_distance(detail::Range(first2, last2), score_cutoff);
+        return derived._normalized_distance(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_distance(detail::Range(s2), score_cutoff);
+        return derived._normalized_distance(Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_similarity(detail::Range(first2, last2), score_cutoff);
+        return derived._normalized_similarity(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._normalized_similarity(detail::Range(s2), score_cutoff);
+        return derived._normalized_similarity(Range(s2), score_cutoff);
     }
 
 protected:
@@ -225,26 +225,26 @@ struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(detail::Range(first2, last2), score_cutoff);
+        return derived._distance(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(detail::Range(s2), score_cutoff);
+        return derived._distance(Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
     {
-        return _similarity(detail::Range(first2, last2), score_cutoff);
+        return _similarity(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
     {
-        return _similarity(detail::Range(s2), score_cutoff);
+        return _similarity(Range(s2), score_cutoff);
     }
 
 protected:
@@ -269,27 +269,27 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
     int64_t distance(InputIt2 first2, InputIt2 last2,
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
-        return _distance(detail::Range(first2, last2), score_cutoff);
+        return _distance(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
-        return _distance(detail::Range(s2), score_cutoff);
+        return _distance(Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(detail::Range(first2, last2), score_cutoff);
+        return derived._similarity(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(detail::Range(s2), score_cutoff);
+        return derived._similarity(Range(s2), score_cutoff);
     }
 
 protected:
