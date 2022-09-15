@@ -7,6 +7,7 @@
 #include <rapidfuzz/distance/Indel.hpp>
 #include <rapidfuzz/distance/LCSseq.hpp>
 #include <rapidfuzz/distance/Levenshtein.hpp>
+#include <rapidfuzz/distance/OSA.hpp>
 
 namespace rapidfuzz {
 
