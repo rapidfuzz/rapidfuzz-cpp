@@ -3,6 +3,7 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
+#include "rapidfuzz/details/common.hpp"
 #include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/distance.hpp>
@@ -37,6 +38,7 @@ int64_t osa_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
     uint64_t D0 = 0;
     uint64_t PM_j_old = 0;
     int64_t currDist = s1.size();
+    assert(s1.size() != 0);
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
@@ -156,8 +158,11 @@ class OSA : public DistanceBase<OSA> {
     template <typename InputIt1, typename InputIt2>
     static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
     {
-        if (s2.size() < s1.size())
-            return _distance(s2, s1, score_cutoff);
+        if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff);
+
+        remove_common_affix(s1, s2);
+        if (s1.empty())
+            return (s2.size() <= score_cutoff) ? s2.size() : score_cutoff + 1;
         else if (s1.size() < 64)
             return osa_hyrroe2003(PatternMatchVector(s1), s1, s2, score_cutoff);
         else

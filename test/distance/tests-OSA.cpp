@@ -33,6 +33,21 @@ int64_t osa_distance(const Sentence1& s1, const Sentence2& s2,
 TEST_CASE("osa[simple]")
 {
     {
+        std::string s1 = "";
+        std::string s2 = "";
+        REQUIRE(osa_distance(s1, s2) == 0);
+    }
+
+    {
+        std::string s1 = "aaaa";
+        std::string s2 = "";
+        REQUIRE(osa_distance(s1, s2) == 4);
+        REQUIRE(osa_distance(s2, s1) == 4);
+        REQUIRE(osa_distance(s1, s2, 1) == 2);
+        REQUIRE(osa_distance(s2, s1, 1) == 2);
+    }
+
+    {
         std::string s1 = "CA";
         std::string s2 = "ABC";
         REQUIRE(osa_distance(s1, s2) == 3);

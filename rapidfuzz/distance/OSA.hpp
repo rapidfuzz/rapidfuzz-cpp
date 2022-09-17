@@ -133,10 +133,17 @@ private:
     template <typename InputIt2>
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        if (s1.size() < 64)
-            return detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
+        int64_t res;
+        if (s1.empty())
+            res = s2.size();
+        else if (s2.empty())
+            res = static_cast<int64_t>(s1.size());
+        else if (s1.size() < 64)
+            res = detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
         else
-            return detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+
+        return (res <= score_cutoff) ? res : score_cutoff + 1;
     }
 
     std::basic_string<CharT1> s1;

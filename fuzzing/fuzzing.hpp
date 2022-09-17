@@ -22,10 +22,32 @@ static inline bool extract_strings(const uint8_t* data, size_t size, std::basic_
     return true;
 }
 
+template<typename T>
+static inline T pow(T x, unsigned int p)
+{
+  if (p == 0) return 1;
+  if (p == 1) return x;
+  
+  T tmp = pow(x, p/2);
+  if (p%2 == 0) return tmp * tmp;
+  else return x * tmp * tmp;
+}
+
+
+template <typename T>
+std::basic_string<T> str_multiply(std::basic_string<T> a, size_t b)
+{
+    std::basic_string<T> output;
+    while (b--)
+        output += a;
+
+    return output;
+}
+
 template <typename T>
 void print_seq(const std::string& name, const std::basic_string<T>& seq)
 {
-    std::cout << name << ": ";
+    std::cout << name << " len: " << seq.size() << " content: ";
     for (const auto& ch : seq)
         std::cout << static_cast<uint64_t>(ch) << " ";
     std::cout << std::endl;

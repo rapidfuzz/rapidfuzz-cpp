@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2021 Max Bachmann */
 
+#include "../rapidfuzz_reference/Indel.hpp"
 #include "fuzzing.hpp"
 #include <limits>
 #include <rapidfuzz/distance/Indel.hpp>
-#include <rapidfuzz/distance/Levenshtein.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -12,9 +12,10 @@ void validate_distance(const std::basic_string<uint8_t>& s1, const std::basic_st
                        int64_t score_cutoff)
 {
     auto dist = rapidfuzz::indel_distance(s1, s2, score_cutoff);
-    auto reference_dist = rapidfuzz::detail::generalized_levenshtein_distance(
-        rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2), {1, 1, 2}, score_cutoff);
+    auto reference_dist = rapidfuzz_reference::indel_distance(s1, s2, score_cutoff);
     if (dist != reference_dist) {
+        print_seq("s1: ", s1);
+        print_seq("s2: ", s2);
         throw std::logic_error("indel distance failed");
     }
 }

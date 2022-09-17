@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-17 20:52:24.019950
+//  Generated: 2022-09-18 01:54:27.952952
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4781,6 +4781,7 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
 #include <cmath>
 #include <numeric>
 
+#include "rapidfuzz/details/common.hpp"
 #include <stdexcept>
 
 namespace rapidfuzz::detail {
@@ -4812,6 +4813,7 @@ int64_t osa_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
     uint64_t D0 = 0;
     uint64_t PM_j_old = 0;
     int64_t currDist = s1.size();
+    assert(s1.size() != 0);
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
@@ -4931,8 +4933,11 @@ class OSA : public DistanceBase<OSA> {
     template <typename InputIt1, typename InputIt2>
     static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
     {
-        if (s2.size() < s1.size())
-            return _distance(s2, s1, score_cutoff);
+        if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff);
+
+        remove_common_affix(s1, s2);
+        if (s1.empty())
+            return (s2.size() <= score_cutoff) ? s2.size() : score_cutoff + 1;
         else if (s1.size() < 64)
             return osa_hyrroe2003(PatternMatchVector(s1), s1, s2, score_cutoff);
         else
@@ -5068,10 +5073,17 @@ private:
     template <typename InputIt2>
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        if (s1.size() < 64)
-            return detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
+        int64_t res;
+        if (s1.empty())
+            res = s2.size();
+        else if (s2.empty())
+            res = static_cast<int64_t>(s1.size());
+        else if (s1.size() < 64)
+            res = detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
         else
-            return detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+
+        return (res <= score_cutoff) ? res : score_cutoff + 1;
     }
 
     std::basic_string<CharT1> s1;
