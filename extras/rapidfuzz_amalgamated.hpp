@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-17 19:33:58.006709
+//  Generated: 2022-09-17 20:52:24.019950
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2348,6 +2348,18 @@ class Hamming : public DistanceBase<Hamming> {
     }
 };
 
+template <typename InputIt1, typename InputIt2>
+Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t)
+{
+    if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
+
+    Editops ops;
+    for (ptrdiff_t i = 0; i < s1.size(); ++i)
+        if (s1[i] != s2[i]) ops.emplace_back(EditType::Replace, i, i);
+
+    return ops;
+}
+
 } // namespace rapidfuzz::detail
 
 namespace rapidfuzz {
@@ -2414,6 +2426,20 @@ template <typename Sentence1, typename Sentence2>
 double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
     return detail::Hamming::normalized_distance(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        int64_t score_hint = std::numeric_limits<int64_t>::max())
+{
+    return detail::hamming_editops(detail::Range(first1, last1), detail::Range(first2, last2), score_hint);
+}
+
+template <typename Sentence1, typename Sentence2>
+Editops hamming_editops(const Sentence1& s1, const Sentence2& s2,
+                        int64_t score_hint = std::numeric_limits<int64_t>::max())
+{
+    return detail::hamming_editops(detail::Range(s1), detail::Range(s2), score_hint);
 }
 
 /**

@@ -31,4 +31,16 @@ class Hamming : public DistanceBase<Hamming> {
     }
 };
 
+template <typename InputIt1, typename InputIt2>
+Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t)
+{
+    if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
+
+    Editops ops;
+    for (ptrdiff_t i = 0; i < s1.size(); ++i)
+        if (s1[i] != s2[i]) ops.emplace_back(EditType::Replace, i, i);
+
+    return ops;
+}
+
 } // namespace rapidfuzz::detail
