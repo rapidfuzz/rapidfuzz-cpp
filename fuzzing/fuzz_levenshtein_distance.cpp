@@ -2,7 +2,7 @@
 /* Copyright © 2021 Max Bachmann */
 
 #include "fuzzing.hpp"
-#include "rapidfuzz/details/Range.hpp"
+#include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Levenshtein.hpp>
 #include <stdexcept>
 #include <string>

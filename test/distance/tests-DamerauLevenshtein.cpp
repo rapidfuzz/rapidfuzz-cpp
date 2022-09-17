@@ -1,5 +1,5 @@
-#include "rapidfuzz/details/Range.hpp"
-#include "rapidfuzz/details/types.hpp"
+#include <rapidfuzz/details/Range.hpp>
+#include <rapidfuzz/details/types.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <rapidfuzz/details/types.hpp>

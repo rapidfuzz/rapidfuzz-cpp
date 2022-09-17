@@ -2,8 +2,8 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
-#include "rapidfuzz/details/Range.hpp"
 #include <limits>
+#include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Levenshtein_impl.hpp>
 
 namespace rapidfuzz {

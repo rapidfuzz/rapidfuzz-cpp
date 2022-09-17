@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-17 19:09:21.814446
+//  Generated: 2022-09-17 19:33:58.006709
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3362,10 +3362,8 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 } // namespace rapidfuzz
 
-#include "rapidfuzz/details/Range.hpp"
 #include <limits>
 
-#include "rapidfuzz/details/type_traits.hpp"
 #include <cmath>
 #include <cstddef>
 #include <cstdint>

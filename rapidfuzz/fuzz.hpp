@@ -125,7 +125,8 @@ struct CachedPartialRatio {
     CachedPartialRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    explicit CachedPartialRatio(const Sentence1& s1_) : CachedPartialRatio(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedPartialRatio(const Sentence1& s1_)
+        : CachedPartialRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -189,7 +190,8 @@ struct CachedTokenSortRatio {
     {}
 
     template <typename Sentence1>
-    explicit CachedTokenSortRatio(const Sentence1& s1) : CachedTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
+    explicit CachedTokenSortRatio(const Sentence1& s1)
+        : CachedTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
     {}
 
     template <typename InputIt2>
@@ -261,7 +263,8 @@ private:
 };
 
 template <typename Sentence1>
-explicit CachedPartialTokenSortRatio(const Sentence1& s1) -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
+explicit CachedPartialTokenSortRatio(const Sentence1& s1)
+    -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
@@ -426,7 +429,8 @@ struct CachedTokenRatio {
     {}
 
     template <typename Sentence1>
-    explicit CachedTokenRatio(const Sentence1& s1_) : CachedTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedTokenRatio(const Sentence1& s1_)
+        : CachedTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
