@@ -49,6 +49,6 @@ function(rapidfuzz_add_test test)
 endfunction()
 
 rapidfuzz_add_test(fuzz)
-#rapidfuzz_add_test(common)
+rapidfuzz_add_test(common)
 
 add_subdirectory(distance)

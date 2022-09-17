@@ -127,7 +127,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Range& seq)
     {
-        os << "{";
+        os << "[";
         for (auto x : seq)
             os << static_cast<uint64_t>(x) << ", ";
         os << "]";

@@ -78,13 +78,10 @@ template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt1, typename InputIt2>
-StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
+size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
-
-template <typename InputIt1, typename InputIt2>
-size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);

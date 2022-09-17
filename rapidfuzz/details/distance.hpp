@@ -15,32 +15,30 @@ struct NormalizedMetricBase {
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff)
     {
-        return _normalized_distance(Range(first1, last1), Range(first2, last2),
-                                    std::forward<Args>(args)..., score_cutoff);
+        return _normalized_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+                                    score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static double normalized_distance(const Sentence1& s1, const Sentence2& s2, Args... args,
                                       double score_cutoff)
     {
-        return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)...,
-                                    score_cutoff);
+        return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
     template <typename InputIt1, typename InputIt2>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff)
     {
-        return _normalized_similarity(Range(first1, last1), Range(first2, last2),
-                                      std::forward<Args>(args)..., score_cutoff);
+        return _normalized_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+                                      score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static double normalized_similarity(const Sentence1& s1, const Sentence2& s2, Args... args,
                                         double score_cutoff)
     {
-        return _normalized_similarity(Range(s1), Range(s2), std::forward<Args>(args)...,
-                                      score_cutoff);
+        return _normalized_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
 protected:
@@ -76,8 +74,8 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             int64_t score_cutoff)
     {
-        return T::_distance(Range(first1, last1), Range(first2, last2),
-                            std::forward<Args>(args)..., score_cutoff);
+        return T::_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+                            score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
@@ -90,8 +88,8 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               int64_t score_cutoff)
     {
-        return _similarity(Range(first1, last1), Range(first2, last2),
-                           std::forward<Args>(args)..., score_cutoff);
+        return _similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+                           score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
@@ -121,8 +119,8 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             int64_t score_cutoff)
     {
-        return _distance(Range(first1, last1), Range(first2, last2),
-                         std::forward<Args>(args)..., score_cutoff);
+        return _distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+                         score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
@@ -135,15 +133,14 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               int64_t score_cutoff)
     {
-        return T::_similarity(Range(first1, last1), Range(first2, last2),
-                              std::forward<Args>(args)..., score_cutoff);
+        return T::_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+                              score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
     static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
     {
-        return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)...,
-                              score_cutoff);
+        return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
 protected:

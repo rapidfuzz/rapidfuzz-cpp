@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <rapidfuzz/details/types.hpp>
 
 namespace rapidfuzz::detail {
 
@@ -230,7 +231,7 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
     if (max_misses >= 5) return longest_common_subsequence(block, s1, s2, score_cutoff);
 
     /* common affix does not effect Levenshtein distance */
-    auto affix = remove_common_affix(s1, s2);
+    StringAffix affix = remove_common_affix(s1, s2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
 
@@ -255,7 +256,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
     if (max_misses < std::abs(len1 - len2)) return 0;
 
     /* common affix does not effect Levenshtein distance */
-    auto affix = remove_common_affix(s1, s2);
+    StringAffix affix = remove_common_affix(s1, s2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (s1.size() && s2.size()) {
         if (max_misses < 5)

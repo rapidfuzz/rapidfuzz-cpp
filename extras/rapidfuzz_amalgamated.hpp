@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-15 23:23:54.058287
+//  Generated: 2022-09-17 17:00:12.027332
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -542,7 +542,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Range& seq)
     {
-        os << "{";
+        os << "[";
         for (auto x : seq)
             os << static_cast<uint64_t>(x) << ", ";
         os << "]";
@@ -1570,13 +1570,10 @@ template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt1, typename InputIt2>
-StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2);
+size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2);
-
-template <typename InputIt1, typename InputIt2>
-size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2);
+size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
@@ -1589,6 +1586,7 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 #include <array>
 #include <cctype>
 #include <cwctype>
+#include <iterator>
 
 namespace rapidfuzz::detail {
 
@@ -1622,11 +1620,13 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
  * Removes common prefix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, InputIt2 last2)
+size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
-    auto prefix = std::distance(first1, std::mismatch(first1, last1, first2, last2).first);
-    first1 += prefix;
-    first2 += prefix;
+    auto first1 = std::begin(s1);
+    auto prefix =
+        std::distance(first1, std::mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first);
+    s1.remove_prefix(prefix);
+    s2.remove_prefix(prefix);
     return static_cast<size_t>(prefix);
 }
 
@@ -1634,16 +1634,13 @@ size_t remove_common_prefix(InputIt1& first1, InputIt1 last1, InputIt2& first2, 
  * Removes common suffix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, InputIt2& last2)
+size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
-    auto rfirst1 = std::make_reverse_iterator(last1);
-    auto rlast1 = std::make_reverse_iterator(first1);
-    auto rfirst2 = std::make_reverse_iterator(last2);
-    auto rlast2 = std::make_reverse_iterator(first2);
-
-    auto suffix = std::distance(rfirst1, std::mismatch(rfirst1, rlast1, rfirst2, rlast2).first);
-    last1 -= suffix;
-    last2 -= suffix;
+    auto rfirst1 = std::rbegin(s1);
+    auto suffix =
+        std::distance(rfirst1, std::mismatch(rfirst1, std::rend(s1), std::rbegin(s2), std::rend(s2)).first);
+    s1.remove_suffix(suffix);
+    s2.remove_suffix(suffix);
     return static_cast<size_t>(suffix);
 }
 
@@ -1651,23 +1648,9 @@ size_t remove_common_suffix(InputIt1 first1, InputIt1& last1, InputIt2 first2, I
  * Removes common affix of two string views
  */
 template <typename InputIt1, typename InputIt2>
-StringAffix remove_common_affix(InputIt1& first1, InputIt1& last1, InputIt2& first2, InputIt2& last2)
-{
-    return StringAffix{remove_common_prefix(first1, last1, first2, last2),
-                       remove_common_suffix(first1, last1, first2, last2)};
-}
-
-template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
-    InputIt1 first1 = s1.begin();
-    InputIt1 last1 = s1.end();
-    InputIt2 first2 = s2.begin();
-    InputIt2 last2 = s2.end();
-    StringAffix affix = remove_common_affix(first1, last1, first2, last2);
-    s1 = Range(first1, last1);
-    s2 = Range(first2, last2);
-    return affix;
+    return StringAffix{remove_common_prefix(s1, s2), remove_common_suffix(s1, s2)};
 }
 
 template <typename, typename = void>
@@ -2953,7 +2936,7 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
     if (max_misses >= 5) return longest_common_subsequence(block, s1, s2, score_cutoff);
 
     /* common affix does not effect Levenshtein distance */
-    auto affix = remove_common_affix(s1, s2);
+    StringAffix affix = remove_common_affix(s1, s2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
 
@@ -2978,7 +2961,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
     if (max_misses < std::abs(len1 - len2)) return 0;
 
     /* common affix does not effect Levenshtein distance */
-    auto affix = remove_common_affix(s1, s2);
+    StringAffix affix = remove_common_affix(s1, s2);
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (s1.size() && s2.size()) {
         if (max_misses < 5)
@@ -4762,11 +4745,11 @@ private:
 };
 
 template <typename Sentence1>
-CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights)
+CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
     -> CachedLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights)
+CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
     -> CachedLevenshtein<iter_value_t<InputIt1>>;
 
 } // namespace rapidfuzz
