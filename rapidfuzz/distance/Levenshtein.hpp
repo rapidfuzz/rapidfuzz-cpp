@@ -289,7 +289,7 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
 template <typename CharT1>
 struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>> {
     template <typename Sentence1>
-    CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
+    explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
         : CachedLevenshtein(detail::to_begin(s1_), detail::to_end(s1_), aWeights)
     {}
 
@@ -346,7 +346,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
+explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
     -> CachedLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>

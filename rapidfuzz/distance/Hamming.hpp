@@ -113,7 +113,7 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 template <typename CharT1>
 struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>> {
     template <typename Sentence1>
-    CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -140,7 +140,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
+explicit CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;

@@ -78,7 +78,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 template <typename CharT1>
 struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
     template <typename Sentence1>
-    CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -106,7 +106,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
+explicit CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;

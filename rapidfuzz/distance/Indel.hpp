@@ -76,7 +76,7 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2)
 template <typename CharT1>
 struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     template <typename Sentence1>
-    CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -104,7 +104,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
+explicit CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;

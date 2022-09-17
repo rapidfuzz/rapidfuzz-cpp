@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-17 17:00:12.027332
+//  Generated: 2022-09-17 19:09:21.814446
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2282,7 +2282,7 @@ double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sent
 template <typename CharT1>
 struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>> {
     template <typename Sentence1>
-    CachedDamerauLevenshtein(const Sentence1& s1_)
+    explicit CachedDamerauLevenshtein(const Sentence1& s1_)
         : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
@@ -2310,7 +2310,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
+explicit CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
@@ -2456,7 +2456,7 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 template <typename CharT1>
 struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>> {
     template <typename Sentence1>
-    CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -2483,7 +2483,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
+explicit CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
@@ -3165,7 +3165,7 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 template <typename CharT1>
 struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
     template <typename Sentence1>
-    CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -3193,7 +3193,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
+explicit CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
@@ -3327,7 +3327,7 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2)
 template <typename CharT1>
 struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     template <typename Sentence1>
-    CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -3355,7 +3355,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
+explicit CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
@@ -4688,7 +4688,7 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
 template <typename CharT1>
 struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>> {
     template <typename Sentence1>
-    CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
+    explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
         : CachedLevenshtein(detail::to_begin(s1_), detail::to_end(s1_), aWeights)
     {}
 
@@ -4745,7 +4745,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
+explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
     -> CachedLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
@@ -5024,7 +5024,7 @@ double osa_normalized_similarity(const Sentence1& s1, const Sentence2& s2, doubl
 template <typename CharT1>
 struct CachedOSA : public detail::CachedDistanceBase<CachedOSA<CharT1>> {
     template <typename Sentence1>
-    CachedOSA(const Sentence1& s1_) : CachedOSA(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedOSA(const Sentence1& s1_) : CachedOSA(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
@@ -5346,7 +5346,8 @@ struct CachedPartialRatio {
     CachedPartialRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
-    CachedPartialRatio(const Sentence1& s1_) : CachedPartialRatio(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedPartialRatio(const Sentence1& s1_)
+        : CachedPartialRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -5362,7 +5363,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
+explicit CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_value_t<InputIt1>>;
@@ -5410,7 +5411,8 @@ struct CachedTokenSortRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenSortRatio(const Sentence1& s1) : CachedTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
+    explicit CachedTokenSortRatio(const Sentence1& s1)
+        : CachedTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
     {}
 
     template <typename InputIt2>
@@ -5425,7 +5427,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
+explicit CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
@@ -5466,7 +5468,7 @@ struct CachedPartialTokenSortRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenSortRatio(const Sentence1& s1)
+    explicit CachedPartialTokenSortRatio(const Sentence1& s1)
         : CachedPartialTokenSortRatio(detail::to_begin(s1), detail::to_end(s1))
     {}
 
@@ -5482,7 +5484,8 @@ private:
 };
 
 template <typename Sentence1>
-CachedPartialTokenSortRatio(const Sentence1& s1) -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
+explicit CachedPartialTokenSortRatio(const Sentence1& s1)
+    -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
@@ -5532,7 +5535,7 @@ struct CachedTokenSetRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenSetRatio(const Sentence1& s1_)
+    explicit CachedTokenSetRatio(const Sentence1& s1_)
         : CachedTokenSetRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
@@ -5548,7 +5551,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
+explicit CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
@@ -5588,7 +5591,7 @@ struct CachedPartialTokenSetRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenSetRatio(const Sentence1& s1_)
+    explicit CachedPartialTokenSetRatio(const Sentence1& s1_)
         : CachedPartialTokenSetRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
@@ -5604,7 +5607,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
+explicit CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
@@ -5647,7 +5650,8 @@ struct CachedTokenRatio {
     {}
 
     template <typename Sentence1>
-    CachedTokenRatio(const Sentence1& s1_) : CachedTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedTokenRatio(const Sentence1& s1_)
+        : CachedTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -5664,7 +5668,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
+explicit CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value_t<InputIt1>>;
@@ -5707,7 +5711,7 @@ struct CachedPartialTokenRatio {
     {}
 
     template <typename Sentence1>
-    CachedPartialTokenRatio(const Sentence1& s1_)
+    explicit CachedPartialTokenRatio(const Sentence1& s1_)
         : CachedPartialTokenRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
@@ -5724,7 +5728,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
+explicit CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
@@ -5760,7 +5764,7 @@ double WRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0)
 template <typename CharT1>
 struct CachedWRatio {
     template <typename InputIt1>
-    CachedWRatio(InputIt1 first1, InputIt1 last1);
+    explicit CachedWRatio(InputIt1 first1, InputIt1 last1);
 
     template <typename Sentence1>
     CachedWRatio(const Sentence1& s1_) : CachedWRatio(detail::to_begin(s1_), detail::to_end(s1_))
@@ -5783,7 +5787,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
+explicit CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<InputIt1>>;
@@ -5822,7 +5826,7 @@ struct CachedQRatio {
     {}
 
     template <typename Sentence1>
-    CachedQRatio(const Sentence1& s1_) : CachedQRatio(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedQRatio(const Sentence1& s1_) : CachedQRatio(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt2>
@@ -5837,7 +5841,7 @@ private:
 };
 
 template <typename Sentence1>
-CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
+explicit CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<InputIt1>>;

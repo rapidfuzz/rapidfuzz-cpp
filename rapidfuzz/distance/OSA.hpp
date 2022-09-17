@@ -113,7 +113,7 @@ double osa_normalized_similarity(const Sentence1& s1, const Sentence2& s2, doubl
 template <typename CharT1>
 struct CachedOSA : public detail::CachedDistanceBase<CachedOSA<CharT1>> {
     template <typename Sentence1>
-    CachedOSA(const Sentence1& s1_) : CachedOSA(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedOSA(const Sentence1& s1_) : CachedOSA(detail::to_begin(s1_), detail::to_end(s1_))
     {}
 
     template <typename InputIt1>
