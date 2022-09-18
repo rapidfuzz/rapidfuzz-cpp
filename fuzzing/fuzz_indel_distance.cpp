@@ -26,9 +26,7 @@ void validate_distance(const std::basic_string<uint8_t>& s1, const std::basic_st
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     std::basic_string<uint8_t> s1, s2;
-    if (!extract_strings(data, size, s1, s2)) {
-        return 0;
-    }
+    if (!extract_strings(data, size, s1, s2)) return 0;
 
     validate_distance(s1, s2, 0);
     validate_distance(s1, s2, 1);

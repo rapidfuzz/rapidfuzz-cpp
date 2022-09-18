@@ -27,9 +27,7 @@ void validate_distance(int64_t reference_dist, const std::basic_string<uint8_t>&
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     std::basic_string<uint8_t> s1, s2;
-    if (!extract_strings(data, size, s1, s2)) {
-        return 0;
-    }
+    if (!extract_strings(data, size, s1, s2)) return 0;
 
     int64_t reference_dist = rapidfuzz_reference::levenshtein_distance(s1, s2);
 
