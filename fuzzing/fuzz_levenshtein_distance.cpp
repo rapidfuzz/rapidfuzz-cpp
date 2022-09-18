@@ -17,8 +17,10 @@ void validate_distance(int64_t reference_dist, const std::basic_string<uint8_t>&
     if (dist != reference_dist) {
         print_seq("s1: ", s1);
         print_seq("s2: ", s2);
-        throw std::logic_error(std::string("levenshtein distance failed with score_cutoff: ") +
-                               std::to_string(score_cutoff));
+        throw std::logic_error(std::string("levenshtein distance failed (score_cutoff = ") +
+                               std::to_string(score_cutoff) + std::string(", reference_score = ") +
+                               std::to_string(reference_dist) + std::string(", score = ") +
+                               std::to_string(dist) + ")");
     }
 }
 

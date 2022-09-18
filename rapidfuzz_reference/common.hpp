@@ -32,6 +32,11 @@ public:
         return matrix[static_cast<size_t>(row) + static_cast<size_t>(col) * rows];
     }
 
+    T& back()
+    {
+        return matrix[rows * cols - 1];
+    }
+
     size_t rows;
     size_t cols;
     T* matrix;
