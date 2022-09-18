@@ -40,6 +40,8 @@ Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t)
     for (ptrdiff_t i = 0; i < s1.size(); ++i)
         if (s1[i] != s2[i]) ops.emplace_back(EditType::Replace, i, i);
 
+    ops.set_src_len(static_cast<size_t>(s1.size()));
+    ops.set_dest_len(static_cast<size_t>(s2.size()));
     return ops;
 }
 
