@@ -1,5 +1,12 @@
 ## Changelog
 
+### [1.7.0] - 2022-09-18
+#### Added
+- add editops to hamming distance
+
+#### Performance
+- strip common affix in osa distance
+
 ### [1.6.0] - 2022-09-16
 #### Added
 - add optimal string alignment (OSA) alignment
