@@ -22,11 +22,6 @@ public:
         delete[] matrix;
     }
 
-    T& operator()(size_t row, size_t col)
-    {
-        return matrix[row + col * rows];
-    }
-
     T& operator()(ptrdiff_t row, ptrdiff_t col)
     {
         return matrix[static_cast<size_t>(row) + static_cast<size_t>(col) * rows];

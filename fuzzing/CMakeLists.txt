@@ -14,3 +14,5 @@ create_fuzzer(indel_distance)
 create_fuzzer(indel_editops)
 
 create_fuzzer(osa_distance)
+
+create_fuzzer(damerau_levenshtein_distance)

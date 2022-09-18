@@ -28,9 +28,9 @@ Matrix<int64_t> levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt2 fir
     Matrix<int64_t> matrix(static_cast<size_t>(len1) + 1, static_cast<size_t>(len2) + 1);
 
     for (ptrdiff_t i = 0; i <= len1; ++i)
-        matrix(static_cast<size_t>(i), 0) = i * weights.delete_cost;
+        matrix(i, 0) = i * weights.delete_cost;
     for (ptrdiff_t i = 0; i <= len2; ++i)
-        matrix(0, static_cast<size_t>(i)) = i * weights.insert_cost;
+        matrix(0, i) = i * weights.insert_cost;
 
     for (ptrdiff_t pos1 = 0; pos1 < len1; ++pos1) {
         for (ptrdiff_t pos2 = 0; pos2 < len2; ++pos2) {
