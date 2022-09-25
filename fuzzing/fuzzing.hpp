@@ -1,10 +1,10 @@
 #pragma once
-#include <string>
 #include <iostream>
 #include <rapidfuzz/distance/Levenshtein.hpp>
+#include <string>
 
 static inline bool extract_strings(const uint8_t* data, size_t size, std::basic_string<uint8_t>& s1,
-                     std::basic_string<uint8_t>& s2)
+                                   std::basic_string<uint8_t>& s2)
 {
     if (size <= sizeof(uint32_t)) {
         return false;
@@ -22,17 +22,18 @@ static inline bool extract_strings(const uint8_t* data, size_t size, std::basic_
     return true;
 }
 
-template<typename T>
+template <typename T>
 static inline T pow(T x, unsigned int p)
 {
-  if (p == 0) return 1;
-  if (p == 1) return x;
-  
-  T tmp = pow(x, p/2);
-  if (p%2 == 0) return tmp * tmp;
-  else return x * tmp * tmp;
-}
+    if (p == 0) return 1;
+    if (p == 1) return x;
 
+    T tmp = pow(x, p / 2);
+    if (p % 2 == 0)
+        return tmp * tmp;
+    else
+        return x * tmp * tmp;
+}
 
 template <typename T>
 std::basic_string<T> str_multiply(std::basic_string<T> a, size_t b)

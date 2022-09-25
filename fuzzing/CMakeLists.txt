@@ -7,7 +7,7 @@ function(create_fuzzer fuzzer)
     target_link_libraries(fuzz_${fuzzer} PRIVATE -fsanitize=fuzzer,address)
 endfunction(create_fuzzer)
 
-create_fuzzer(lcs_distance)
+create_fuzzer(lcs_similarity)
 
 create_fuzzer(levenshtein_distance)
 create_fuzzer(levenshtein_editops)

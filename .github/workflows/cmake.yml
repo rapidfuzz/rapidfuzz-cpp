@@ -29,6 +29,7 @@ jobs:
     - name: Fuzz Test
       working-directory: build
       run: |
+          fuzzing/fuzz_lcs_similarity -max_total_time=30
           fuzzing/fuzz_levenshtein_distance -max_total_time=30
           fuzzing/fuzz_levenshtein_editops -max_total_time=30
           fuzzing/fuzz_indel_distance -max_total_time=30
