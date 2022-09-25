@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-26 00:10:16.751786
+//  Generated: 2022-09-26 00:17:26.220954
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4196,13 +4196,16 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        switch (MaxLen) {
-        case 8: return native_simd<uint8_t>::size();
-        case 16: return native_simd<uint16_t>::size();
-        case 32: return native_simd<uint32_t>::size();
-        case 64: return native_simd<uint64_t>::size();
-        }
-        assert(false);
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
     }
 
     constexpr static size_t find_block_count(size_t count)
@@ -5991,13 +5994,16 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        switch (MaxLen) {
-        case 8: return native_simd<uint8_t>::size();
-        case 16: return native_simd<uint16_t>::size();
-        case 32: return native_simd<uint32_t>::size();
-        case 64: return native_simd<uint64_t>::size();
-        }
-        assert(false);
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
     }
 
     constexpr static size_t find_block_count(size_t count)

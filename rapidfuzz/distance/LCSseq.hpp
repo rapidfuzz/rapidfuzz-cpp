@@ -87,13 +87,16 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        switch (MaxLen) {
-        case 8: return native_simd<uint8_t>::size();
-        case 16: return native_simd<uint16_t>::size();
-        case 32: return native_simd<uint32_t>::size();
-        case 64: return native_simd<uint64_t>::size();
-        }
-        assert(false);
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
     }
 
     constexpr static size_t find_block_count(size_t count)
