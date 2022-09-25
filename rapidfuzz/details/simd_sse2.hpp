@@ -305,7 +305,7 @@ inline __m128i hadd_impl<uint8_t>(__m128i x) noexcept
 template <>
 inline __m128i hadd_impl<uint16_t>(__m128i x) noexcept
 {
-    static const __m128i mask = {0x001f001f001f001fULL, 0x001f001f001f001fULL};
+    const __m128i mask = _mm_set1_epi16(0x001f);
     __m128i y = _mm_srli_si128(x, 1);
     x = _mm_add_epi16(x, y);
     return _mm_and_si128(x, mask);
@@ -314,7 +314,8 @@ inline __m128i hadd_impl<uint16_t>(__m128i x) noexcept
 template <>
 inline __m128i hadd_impl<uint32_t>(__m128i x) noexcept
 {
-    static const __m128i mask = {0x0000003f0000003fULL, 0x0000003f0000003fULL};
+    const __m128i mask = _mm_set1_epi32(0x0000003f);
+    x = hadd_impl<uint16_t>(x);
     __m128i y = _mm_srli_si128(x, 2);
     x = _mm_add_epi32(x, y);
     return _mm_and_si128(x, mask);
@@ -329,9 +330,9 @@ inline __m128i hadd_impl<uint64_t>(__m128i x) noexcept
 template <typename T>
 native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 {
-    static const __m128i m1 = {0x5555555555555555ULL, 0x5555555555555555ULL};
-    static const __m128i m2 = {0x3333333333333333ULL, 0x3333333333333333ULL};
-    static const __m128i m3 = {0x0f0f0f0f0f0f0f0fULL, 0x0f0f0f0f0f0f0f0fULL};
+    const __m128i m1 = _mm_set1_epi8(0x55);
+    const __m128i m2 = _mm_set1_epi8(0x33);
+    const __m128i m3 = _mm_set1_epi8(0x0F);
 
     /* Note: if we returned x here it would be like _mm_popcnt_epi1(x) */
     __m128i y;

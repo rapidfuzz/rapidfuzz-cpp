@@ -316,8 +316,7 @@ inline __m256i hadd_impl<uint8_t>(__m256i x) noexcept
 template <>
 inline __m256i hadd_impl<uint16_t>(__m256i x) noexcept
 {
-    static const __m256i mask = {0x001f001f001f001fULL, 0x001f001f001f001fULL, 0x001f001f001f001fULL,
-                                 0x001f001f001f001fULL};
+    const __m256i mask = _mm256_set1_epi16(0x001f);
     __m256i y = _mm256_srli_si256(x, 1);
     x = _mm256_add_epi16(x, y);
     return _mm256_and_si256(x, mask);
@@ -326,8 +325,8 @@ inline __m256i hadd_impl<uint16_t>(__m256i x) noexcept
 template <>
 inline __m256i hadd_impl<uint32_t>(__m256i x) noexcept
 {
-    static const __m256i mask = {0x0000003f0000003fULL, 0x0000003f0000003fULL, 0x0000003f0000003fULL,
-                                 0x0000003f0000003fULL};
+    const __m256i mask = _mm256_set1_epi32(0x0000003F);
+    x = hadd_impl<uint16_t>(x);
     __m256i y = _mm256_srli_si256(x, 2);
     x = _mm256_add_epi32(x, y);
     return _mm256_and_si256(x, mask);
