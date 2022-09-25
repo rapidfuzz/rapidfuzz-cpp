@@ -1,9 +1,19 @@
-#include <rapidfuzz/distance/LCSseq.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <rapidfuzz/distance/LCSseq.hpp>
 #include <string>
 
 #include <rapidfuzz/distance/Indel.hpp>
+
+template <typename T>
+std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
+{
+    std::basic_string<T> output;
+    while (b--)
+        output += a;
+
+    return output;
+}
 
 template <typename Sentence1, typename Sentence2>
 int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
@@ -14,6 +24,34 @@ int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
     rapidfuzz::CachedLCSseq scorer(s1);
     int64_t res3 = scorer.distance(s2, max);
     int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
+#ifdef RAPIDFUZZ_SIMD
+    if (s1.size() <= 64) {
+        std::vector<int64_t> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiLCSseq<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiLCSseq<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiLCSseq<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else {
+            rapidfuzz::experimental::MultiLCSseq<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+
+        REQUIRE(res1 == results[0]);
+    }
+#endif
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
@@ -28,6 +66,34 @@ int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t max
     rapidfuzz::CachedLCSseq scorer(s1);
     int64_t res3 = scorer.similarity(s2, max);
     int64_t res4 = scorer.similarity(s2.begin(), s2.end(), max);
+#ifdef RAPIDFUZZ_SIMD
+    if (s1.size() <= 64) {
+        std::vector<int64_t> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiLCSseq<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiLCSseq<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiLCSseq<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+        else {
+            rapidfuzz::experimental::MultiLCSseq<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+
+        REQUIRE(res1 == results[0]);
+    }
+#endif
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
@@ -89,6 +155,10 @@ TEST_CASE("LCSseq")
     {
         std::string a = "South Korea";
         std::string b = "North Korea";
+        REQUIRE(lcs_seq_similarity(a, b) == 9);
+        REQUIRE(lcs_seq_similarity(a, b, 9) == 9);
+        REQUIRE(lcs_seq_similarity(a, b, 10) == 0);
+
         REQUIRE(lcs_seq_distance(a, b) == 2);
         REQUIRE(lcs_seq_distance(a, b, 4) == 2);
         REQUIRE(lcs_seq_distance(a, b, 3) == 2);
@@ -98,6 +168,10 @@ TEST_CASE("LCSseq")
 
         a = "aabc";
         b = "cccd";
+        REQUIRE(lcs_seq_similarity(a, b) == 1);
+        REQUIRE(lcs_seq_similarity(a, b, 1) == 1);
+        REQUIRE(lcs_seq_similarity(a, b, 2) == 0);
+
         REQUIRE(lcs_seq_distance(a, b) == 3);
         REQUIRE(lcs_seq_distance(a, b, 4) == 3);
         REQUIRE(lcs_seq_distance(a, b, 3) == 3);
@@ -114,3 +188,42 @@ TEST_CASE("LCSseq")
         REQUIRE(1 == rapidfuzz::CachedLCSseq<char>(a).similarity(b));
     }
 }
+
+#ifdef RAPIDFUZZ_SIMD
+TEST_CASE("SIMD wraparound")
+{
+    rapidfuzz::experimental::MultiLCSseq<8> scorer(4);
+    scorer.insert(std::string("a"));
+    scorer.insert(std::string("b"));
+    scorer.insert(std::string("aa"));
+    scorer.insert(std::string("bb"));
+    std::vector<int64_t> results(scorer.result_count());
+
+    {
+        std::string s2 = str_multiply(std::string("b"), 256);
+        scorer.distance(&results[0], results.size(), s2);
+        REQUIRE(results[0] == 256);
+        REQUIRE(results[1] == 255);
+        REQUIRE(results[2] == 256);
+        REQUIRE(results[3] == 254);
+    }
+
+    {
+        std::string s2 = str_multiply(std::string("b"), 300);
+        scorer.distance(&results[0], results.size(), s2);
+        REQUIRE(results[0] == 300);
+        REQUIRE(results[1] == 299);
+        REQUIRE(results[2] == 300);
+        REQUIRE(results[3] == 298);
+    }
+
+    {
+        std::string s2 = str_multiply(std::string("b"), 512);
+        scorer.distance(&results[0], results.size(), s2);
+        REQUIRE(results[0] == 512);
+        REQUIRE(results[1] == 511);
+        REQUIRE(results[2] == 512);
+        REQUIRE(results[3] == 510);
+    }
+}
+#endif

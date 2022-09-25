@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-18 16:12:25.343097
+//  Generated: 2022-09-26 00:17:26.220954
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1350,6 +1350,15 @@ template <typename U>
 constexpr uint64_t shr64(uint64_t a, U shift)
 {
     return (shift < 64) ? a >> shift : 0;
+}
+
+/*
+ * shift left without undefined behavior for shifts > bit width
+ */
+template <typename U>
+constexpr uint64_t shl64(uint64_t a, U shift)
+{
+    return (shift < 64) ? a << shift : 0;
 }
 
 constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
@@ -2742,6 +2751,953 @@ private:
 
 #include <limits>
 
+#ifndef RAPIDFUZZ_EXCLUDE_SIMD
+#    if __AVX2__
+#        define RAPIDFUZZ_SIMD
+#        define RAPIDFUZZ_AVX2
+
+#        include <array>
+#        include <immintrin.h>
+#        include <ostream>
+#        include <stdint.h>
+
+namespace rapidfuzz {
+namespace detail {
+namespace simd_avx2 {
+
+template <typename T>
+class native_simd;
+
+template <>
+class native_simd<uint64_t> {
+public:
+    using value_type = uint64_t;
+
+    static const int _size = 4;
+    __m256i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m256i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint64_t a) noexcept
+    {
+        xmm = _mm256_set1_epi64x(static_cast<int64_t>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m256i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint64_t* p) const noexcept
+    {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm256_add_epi64(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm256_add_epi64(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm256_sub_epi64(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm256_sub_epi64(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint32_t> {
+public:
+    using value_type = uint32_t;
+
+    static const int _size = 8;
+    __m256i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m256i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint32_t a) noexcept
+    {
+        xmm = _mm256_set1_epi32(static_cast<int>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m256i() const
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint32_t* p) const noexcept
+    {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm256_add_epi32(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm256_add_epi32(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm256_sub_epi32(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm256_sub_epi32(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint16_t> {
+public:
+    using value_type = uint16_t;
+
+    static const int _size = 16;
+    __m256i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m256i val) : xmm(val)
+    {}
+
+    native_simd(uint16_t a) noexcept
+    {
+        xmm = _mm256_set1_epi16(static_cast<short>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m256i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint16_t* p) const noexcept
+    {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm256_add_epi16(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm256_add_epi16(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm256_sub_epi16(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm256_sub_epi16(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint8_t> {
+public:
+    using value_type = uint8_t;
+
+    static const int _size = 32;
+    __m256i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m256i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint8_t a) noexcept
+    {
+        xmm = _mm256_set1_epi8(static_cast<char>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m256i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm256_set_epi64x(static_cast<int64_t>(p[3]), static_cast<int64_t>(p[2]),
+                                static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint8_t* p) const noexcept
+    {
+        _mm256_store_si256(reinterpret_cast<__m256i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm256_add_epi8(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm256_add_epi8(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm256_sub_epi8(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm256_sub_epi8(xmm, b);
+        return *this;
+    }
+};
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
+}
+
+template <typename T>
+__m256i hadd_impl(__m256i x) noexcept;
+
+template <>
+inline __m256i hadd_impl<uint8_t>(__m256i x) noexcept
+{
+    return x;
+}
+
+template <>
+inline __m256i hadd_impl<uint16_t>(__m256i x) noexcept
+{
+    const __m256i mask = _mm256_set1_epi16(0x001f);
+    __m256i y = _mm256_srli_si256(x, 1);
+    x = _mm256_add_epi16(x, y);
+    return _mm256_and_si256(x, mask);
+}
+
+template <>
+inline __m256i hadd_impl<uint32_t>(__m256i x) noexcept
+{
+    const __m256i mask = _mm256_set1_epi32(0x0000003F);
+    x = hadd_impl<uint16_t>(x);
+    __m256i y = _mm256_srli_si256(x, 2);
+    x = _mm256_add_epi32(x, y);
+    return _mm256_and_si256(x, mask);
+}
+
+template <>
+inline __m256i hadd_impl<uint64_t>(__m256i x) noexcept
+{
+    return _mm256_sad_epu8(x, _mm256_setzero_si256());
+}
+
+/* based on the paper `Faster Population Counts Using AVX2 Instructions` */
+template <typename T>
+native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
+{
+    __m256i lookup = _mm256_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1, 2, 2, 3,
+                                      1, 2, 2, 3, 2, 3, 3, 4);
+    const __m256i low_mask = _mm256_set1_epi8(0x0F);
+    __m256i lo = _mm256_and_si256(v, low_mask);
+    __m256i hi = _mm256_and_si256(_mm256_srli_epi32(v, 4), low_mask);
+    __m256i popcnt1 = _mm256_shuffle_epi8(lookup, lo);
+    __m256i popcnt2 = _mm256_shuffle_epi8(lookup, hi);
+    __m256i total = _mm256_add_epi8(popcnt1, popcnt2);
+    return hadd_impl<T>(total);
+}
+
+template <typename T>
+std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    popcount_impl(a).store(&res[0]);
+    return res;
+}
+
+// function andnot: a & ~ b
+template <typename T>
+native_simd<T> andnot(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm256_andnot_si256(b, a);
+}
+
+static inline native_simd<uint8_t> operator==(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi8(a, b);
+}
+
+static inline native_simd<uint16_t> operator==(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator==(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
+{
+    return _mm256_and_si256(_mm256_slli_epi16(a, b),
+                            _mm256_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+}
+
+static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm256_slli_epi64(a, b);
+}
+
+template <typename T>
+native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_and_si256(a, b);
+}
+
+template <typename T>
+native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    a = a & b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_or_si256(a, b);
+}
+
+template <typename T>
+native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    a = a | b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_xor_si256(a, b);
+}
+
+template <typename T>
+native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    a = a ^ b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator~(const native_simd<T>& a) noexcept
+{
+    return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
+}
+
+} // namespace simd_avx2
+} // namespace detail
+} // namespace rapidfuzz
+
+#    elif (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE2__)
+#        define RAPIDFUZZ_SIMD
+#        define RAPIDFUZZ_SSE2
+
+#        include <array>
+#        include <emmintrin.h>
+#        include <ostream>
+#        include <stdint.h>
+#        include <tmmintrin.h>
+
+namespace rapidfuzz {
+namespace detail {
+namespace simd_sse2 {
+
+template <typename T>
+class native_simd;
+
+template <>
+class native_simd<uint64_t> {
+public:
+    static const int _size = 2;
+    __m128i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m128i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint64_t a) noexcept
+    {
+        xmm = _mm_set1_epi64x(static_cast<int64_t>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m128i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint64_t* p) const noexcept
+    {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm_add_epi64(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm_add_epi64(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm_sub_epi64(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm_sub_epi64(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint32_t> {
+public:
+    static const int _size = 4;
+    __m128i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m128i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint32_t a) noexcept
+    {
+        xmm = _mm_set1_epi32(static_cast<int>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m128i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint32_t* p) const noexcept
+    {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm_add_epi32(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm_add_epi32(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm_sub_epi32(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm_sub_epi32(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint16_t> {
+public:
+    static const int _size = 8;
+    __m128i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m128i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint16_t a) noexcept
+    {
+        xmm = _mm_set1_epi16(static_cast<short>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m128i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint16_t* p) const noexcept
+    {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm_add_epi16(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm_add_epi16(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm_sub_epi16(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm_sub_epi16(xmm, b);
+        return *this;
+    }
+};
+
+template <>
+class native_simd<uint8_t> {
+public:
+    static const int _size = 16;
+    __m128i xmm;
+
+    native_simd() noexcept
+    {}
+
+    native_simd(__m128i val) noexcept : xmm(val)
+    {}
+
+    native_simd(uint8_t a) noexcept
+    {
+        xmm = _mm_set1_epi8(static_cast<char>(a));
+    }
+
+    native_simd(const uint64_t* p) noexcept
+    {
+        load(p);
+    }
+
+    operator __m128i() const noexcept
+    {
+        return xmm;
+    }
+
+    constexpr static int size() noexcept
+    {
+        return _size;
+    }
+
+    native_simd load(const uint64_t* p) noexcept
+    {
+        xmm = _mm_set_epi64x(static_cast<int64_t>(p[1]), static_cast<int64_t>(p[0]));
+        return *this;
+    }
+
+    void store(uint8_t* p) const noexcept
+    {
+        _mm_store_si128(reinterpret_cast<__m128i*>(p), xmm);
+    }
+
+    native_simd operator+(const native_simd b) const noexcept
+    {
+        return _mm_add_epi8(xmm, b);
+    }
+
+    native_simd& operator+=(const native_simd b) noexcept
+    {
+        xmm = _mm_add_epi8(xmm, b);
+        return *this;
+    }
+
+    native_simd operator-(const native_simd b) const noexcept
+    {
+        return _mm_sub_epi8(xmm, b);
+    }
+
+    native_simd& operator-=(const native_simd b) noexcept
+    {
+        xmm = _mm_sub_epi8(xmm, b);
+        return *this;
+    }
+};
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
+}
+
+template <typename T>
+__m128i hadd_impl(__m128i x) noexcept;
+
+template <>
+inline __m128i hadd_impl<uint8_t>(__m128i x) noexcept
+{
+    return x;
+}
+
+template <>
+inline __m128i hadd_impl<uint16_t>(__m128i x) noexcept
+{
+    const __m128i mask = _mm_set1_epi16(0x001f);
+    __m128i y = _mm_srli_si128(x, 1);
+    x = _mm_add_epi16(x, y);
+    return _mm_and_si128(x, mask);
+}
+
+template <>
+inline __m128i hadd_impl<uint32_t>(__m128i x) noexcept
+{
+    const __m128i mask = _mm_set1_epi32(0x0000003f);
+    x = hadd_impl<uint16_t>(x);
+    __m128i y = _mm_srli_si128(x, 2);
+    x = _mm_add_epi32(x, y);
+    return _mm_and_si128(x, mask);
+}
+
+template <>
+inline __m128i hadd_impl<uint64_t>(__m128i x) noexcept
+{
+    return _mm_sad_epu8(x, _mm_setzero_si128());
+}
+
+template <typename T>
+native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
+{
+    const __m128i m1 = _mm_set1_epi8(0x55);
+    const __m128i m2 = _mm_set1_epi8(0x33);
+    const __m128i m3 = _mm_set1_epi8(0x0F);
+
+    /* Note: if we returned x here it would be like _mm_popcnt_epi1(x) */
+    __m128i y;
+    __m128i x = v;
+    /* add even and odd bits*/
+    y = _mm_srli_epi64(x, 1); // put even bits in odd place
+    y = _mm_and_si128(y, m1); // mask out the even bits (0x55)
+    x = _mm_subs_epu8(x, y);  // shortcut to mask even bits and add
+    /* if we just returned x here it would be like popcnt_epi2(x) */
+    /* now add the half nibbles */
+    y = _mm_srli_epi64(x, 2); // move half nibbles in place to add
+    y = _mm_and_si128(y, m2); // mask off the extra half nibbles (0x0f)
+    x = _mm_and_si128(x, m2); // ditto
+    x = _mm_adds_epu8(x, y);  // totals are a maximum of 5 bits (0x1f)
+    /* if we just returned x here it would be like popcnt_epi4(x) */
+    /* now add the nibbles */
+    y = _mm_srli_epi64(x, 4); // move nibbles in place to add
+    x = _mm_adds_epu8(x, y);  // totals are a maximum of 6 bits (0x3f)
+    x = _mm_and_si128(x, m3); // mask off the extra bits
+
+    /* todo use when sse3 available
+    __m128i lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+    const __m128i low_mask = _mm_set1_epi8(0x0F);
+    __m128i lo = _mm_and_si128(v, low_mask);
+    __m128i hi = _mm_and_si256(_mm_srli_epi32(v, 4), low_mask);
+    __m128i popcnt1 = _mm_shuffle_epi8(lookup, lo);
+    __m128i popcnt2 = _mm_shuffle_epi8(lookup, hi);
+    __m128i total = _mm_add_epi8(popcnt1, popcnt2);*/
+
+    return hadd_impl<T>(x);
+}
+
+template <typename T>
+std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
+{
+    alignas(16) std::array<T, native_simd<T>::size()> res;
+    popcount_impl(a).store(&res[0]);
+    return res;
+}
+
+// function andnot: a & ~ b
+template <typename T>
+native_simd<T> andnot(const native_simd<T>& a, const native_simd<T>& b)
+{
+    return _mm_andnot_si128(b, a);
+}
+
+static inline native_simd<uint8_t> operator==(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm_cmpeq_epi8(a, b);
+}
+
+static inline native_simd<uint16_t> operator==(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm_cmpeq_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator==(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm_cmpeq_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    // no 64 compare instruction. Do two 32 bit compares
+    __m128i com32 = _mm_cmpeq_epi32(a, b);           // 32 bit compares
+    __m128i com32s = _mm_shuffle_epi32(com32, 0xB1); // swap low and high dwords
+    __m128i test = _mm_and_si128(com32, com32s);     // low & high
+    __m128i teste = _mm_srai_epi32(test, 31);        // extend sign bit to 32 bits
+    __m128i testee = _mm_shuffle_epi32(teste, 0xF5); // extend sign bit to 64 bits
+    return testee;
+}
+
+static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
+{
+    return _mm_and_si128(_mm_slli_epi16(a, b), _mm_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+}
+
+static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm_slli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm_slli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm_slli_epi64(a, b);
+}
+
+template <typename T>
+native_simd<T> operator&(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm_and_si128(a, b);
+}
+
+template <typename T>
+native_simd<T> operator&=(native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    a = a & b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator|(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm_or_si128(a, b);
+}
+
+template <typename T>
+native_simd<T> operator|=(native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    a = a | b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator^(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm_xor_si128(a, b);
+}
+
+template <typename T>
+native_simd<T> operator^=(native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    a = a ^ b;
+    return a;
+}
+
+template <typename T>
+native_simd<T> operator~(const native_simd<T>& a) noexcept
+{
+    return _mm_xor_si128(a, _mm_set1_epi32(-1));
+}
+
+} // namespace simd_sse2
+} // namespace detail
+} // namespace rapidfuzz
+
+#    endif
+#endif
+
 #include <algorithm>
 #include <array>
 
@@ -2853,6 +3809,44 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
 
 template <bool RecordMatrix>
 struct LCSseqResult;
+
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt>
+void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Range<InputIt> s2,
+              int64_t score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+    auto score_iter = scores.begin();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        native_simd<VecType> S(static_cast<VecType>(-1));
+
+        for (const auto& ch : s2) {
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+
+            native_simd<VecType> Matches(stored.data());
+            native_simd<VecType> u = S & Matches;
+            S = (S + u) | (S - u);
+        }
+
+        S = ~S;
+
+        auto counts = popcount(S);
+        unroll<int, counts.size()>([&](auto i) {
+            *score_iter =
+                (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
+            score_iter++;
+        });
+    }
+}
+#endif
 
 template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
 auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t score_cutoff = 0)
@@ -2968,7 +3962,7 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
 
-    return lcs_sim;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -2998,7 +3992,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
             lcs_sim += longest_common_subsequence(s1, s2, score_cutoff - lcs_sim);
     }
 
-    return lcs_sim;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 /**
@@ -3189,6 +4183,192 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
     return detail::lcs_seq_editops(detail::Range(s1), detail::Range(s2));
 }
+
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiLCSseq {
+private:
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+public:
+    MultiLCSseq(size_t count) : input_count(count), pos(0), PM(find_block_count(count) * 64)
+    {
+        str_lens.resize(result_count());
+    }
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
+        str_lens[pos] = static_cast<size_t>(len);
+
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+    template <typename InputIt2>
+    void distance(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        distance(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void distance(int64_t* scores, size_t score_count, const Sentence2& s2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        detail::Range s2_(s2);
+        similarity(scores, score_count, s2_);
+        (void)score_cutoff;
+
+        for (size_t i = 0; i < input_count; ++i) {
+            int64_t maximum = std::max(static_cast<int64_t>(str_lens[i]), static_cast<int64_t>(s2_.size()));
+            int64_t sim = maximum - scores[i];
+            scores[i] = (sim <= score_cutoff) ? sim : score_cutoff + 1;
+        }
+    }
+
+    template <typename InputIt2>
+    void similarity(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    int64_t score_cutoff = 0) const
+    {
+        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void similarity(int64_t* scores, size_t score_count, const Sentence2& s2, int64_t score_cutoff = 0) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        detail::Range scores_(scores, scores + score_count);
+        detail::Range s2_(s2);
+        if constexpr (MaxLen == 8)
+            detail::lcs_simd<uint8_t>(scores_, PM, s2_, score_cutoff);
+        else if constexpr (MaxLen == 16)
+            detail::lcs_simd<uint16_t>(scores_, PM, s2_, score_cutoff);
+        else if constexpr (MaxLen == 32)
+            detail::lcs_simd<uint32_t>(scores_, PM, s2_, score_cutoff);
+        else if constexpr (MaxLen == 64)
+            detail::lcs_simd<uint64_t>(scores_, PM, s2_, score_cutoff);
+    }
+
+    template <typename InputIt2>
+    void normalized_distance(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                             double score_cutoff = 1.0) const
+    {
+        normalized_distance(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void normalized_distance(double* scores, size_t score_count, const Sentence2& s2,
+                             double score_cutoff = 1.0) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        int64_t* scores_i64 = nullptr;
+        /* reinterpretation only works when the types have the same size */
+        if constexpr (sizeof(double) == sizeof(int64_t))
+            scores_i64 = reinterpret_cast<int64_t*>(scores);
+        else
+            scores_i64 = new int64_t[result_count()];
+
+        detail::Range s2_(s2);
+        distance(scores_i64, result_count(), s2_);
+
+        for (size_t i = 0; i < input_count; ++i) {
+            int64_t maximum = std::max(static_cast<int64_t>(str_lens[i]), static_cast<int64_t>(s2_.size()));
+            double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
+            scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
+        }
+
+        if constexpr (sizeof(double) != sizeof(int64_t)) delete[] scores_i64;
+    }
+
+    template <typename InputIt2>
+    void normalized_similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff = 0.0) const
+    {
+        normalized_similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void normalized_similarity(double* scores, size_t score_count, const Sentence2& s2,
+                               double score_cutoff = 0.0) const
+    {
+        normalized_distance(scores, score_count, s2);
+
+        for (size_t i = 0; i < input_count; ++i) {
+            double norm_sim = 1.0 - scores[i];
+            scores[i] = (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+        }
+    }
+
+private:
+    size_t input_count;
+    size_t pos;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+};
+} /* namespace experimental */
+#endif
 
 template <typename CharT1>
 struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
@@ -3471,12 +4651,8 @@ int64_t generalized_levenshtein_wagner_fischer(Range<InputIt1> s1, Range<InputIt
  * @brief calculates the maximum possible Levenshtein distance based on
  * string lengths and weights
  */
-template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_maximum(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights)
+static inline int64_t levenshtein_maximum(ptrdiff_t len1, ptrdiff_t len2, LevenshteinWeightTable weights)
 {
-    auto len1 = s1.size();
-    auto len2 = s2.size();
-
     int64_t max_dist = len1 * weights.delete_cost + len2 * weights.insert_cost;
 
     if (len1 >= len2)
@@ -3615,6 +4791,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
                             int64_t max = std::numeric_limits<int64_t>::max())
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
+    assert(s1.size() != 0);
+
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
@@ -3669,11 +4847,104 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     return res;
 }
 
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt>
+static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
+                                               const detail::BlockPatternMatchVector& block,
+                                               const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                                               int64_t score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+    auto score_iter = scores.begin();
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        /* VP is set to 1^m */
+        native_simd<VecType> VP(static_cast<VecType>(-1));
+        native_simd<VecType> VN(VecType(0));
+
+        alignas(32) std::array<VecType, vec_width> currDist_;
+        unroll<int, vec_width>([&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[cur_vec + i]); });
+        native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
+        /* mask used when computing D[m,j] in the paper 10^(m-1) */
+        alignas(32) std::array<VecType, vec_width> mask_;
+        unroll<int, vec_width>([&](auto i) {
+            if (s1_lengths[cur_vec + i] == 0)
+                mask_[i] = 0;
+            else
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1));
+        });
+        native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
+
+        for (const auto& ch : s2) {
+            /* Step 1: Computing D0 */
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+
+            native_simd<VecType> X(stored.data());
+            auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
+
+            /* Step 2: Computing HP and HN */
+            auto HP = VN | ~(D0 | VP);
+            auto HN = D0 & VP;
+
+            /* Step 3: Computing the value D[m,j] */
+            currDist += andnot(one, (HP & mask) == zero);
+            currDist -= andnot(one, (HN & mask) == zero);
+
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | one;
+            HN = (HN << 1);
+
+            VP = HN | ~(D0 | HP);
+            VN = HP & D0;
+        }
+
+        alignas(32) std::array<VecType, vec_width> distances;
+        currDist.store(distances.data());
+
+        unroll<int, vec_width>([&](auto i) {
+            int64_t score = 0;
+            /* strings of length 0 are not handled correctly */
+            if (s1_lengths[i] == 0) {
+                score = s2.size();
+            }
+            /* calculate score under consideration of wraparounds in parallel counter */
+            else {
+                if constexpr (!std::is_same_v<VecType, uint64_t>) {
+                    ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
+                    int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
+
+                    score = (min_dist / wraparound_score) * wraparound_score;
+                    VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
+
+                    if (distances[i] < remainder) score += wraparound_score;
+                }
+
+                score += static_cast<int64_t>(distances[i]);
+            }
+
+            *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;
+            score_iter++;
+        });
+    }
+}
+#endif
+
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Range<InputIt1> s1,
                                           Range<InputIt2> s2, int64_t max)
 {
-    /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
+    /* VP is set to 1^m. */
     uint64_t VP = ~UINT64_C(0) << (64 - max - 1);
     uint64_t VN = 0;
 
@@ -4418,7 +5689,7 @@ class Levenshtein : public DistanceBase<Levenshtein, LevenshteinWeightTable> {
     template <typename InputIt1, typename InputIt2>
     static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights)
     {
-        return levenshtein_maximum(s1, s2, weights);
+        return levenshtein_maximum(s1.size(), s2.size(), weights);
     }
 
     template <typename InputIt1, typename InputIt2>
@@ -4711,6 +5982,194 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
     return detail::levenshtein_editops(detail::Range(s1), detail::Range(s2), score_hint);
 }
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiLevenshtein {
+private:
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+public:
+    MultiLevenshtein(size_t count, LevenshteinWeightTable aWeights = {1, 1, 1})
+        : input_count(count), pos(0), PM(find_block_count(count) * 64), weights(aWeights)
+    {
+        str_lens.resize(result_count());
+        if (weights.delete_cost != 1 || weights.insert_cost != 1 || weights.replace_cost > 2)
+            throw std::invalid_argument("unsupported weights");
+    }
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
+        str_lens[pos] = static_cast<size_t>(len);
+
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+    template <typename InputIt2>
+    void distance(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        distance(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void distance(int64_t* scores, size_t score_count, const Sentence2& s2,
+                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        detail::Range s2_(s2);
+        if constexpr (MaxLen == 8)
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2_, score_cutoff);
+        else if constexpr (MaxLen == 16)
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2_, score_cutoff);
+        else if constexpr (MaxLen == 32)
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2_, score_cutoff);
+        else if constexpr (MaxLen == 64)
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2_, score_cutoff);
+    }
+
+    template <typename InputIt2>
+    void similarity(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    int64_t score_cutoff = 0) const
+    {
+        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void similarity(int64_t* scores, size_t score_count, const Sentence2& s2, int64_t score_cutoff = 0) const
+    {
+        detail::Range s2_(s2);
+        distance(scores, score_count, s2_);
+
+        for (size_t i = 0; i < input_count; ++i) {
+            int64_t maximum = detail::levenshtein_maximum(str_lens[i], s2_.size(), weights);
+            int64_t sim = maximum - scores[i];
+            scores[i] = (sim >= score_cutoff) ? sim : 0;
+        }
+    }
+
+    template <typename InputIt2>
+    void normalized_distance(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                             double score_cutoff = 1.0) const
+    {
+        normalized_distance(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void normalized_distance(double* scores, size_t score_count, const Sentence2& s2,
+                             double score_cutoff = 1.0) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        // reinterpretation only works when the types have the same size
+        int64_t* scores_i64 = nullptr;
+        if constexpr (sizeof(double) == sizeof(int64_t))
+            scores_i64 = reinterpret_cast<int64_t*>(scores);
+        else
+            scores_i64 = new int64_t[result_count()];
+
+        detail::Range s2_(s2);
+        distance(scores_i64, result_count(), s2_);
+
+        for (size_t i = 0; i < input_count; ++i) {
+            int64_t maximum = detail::levenshtein_maximum(str_lens[i], s2_.size(), weights);
+            double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
+            scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
+        }
+
+        if constexpr (sizeof(double) != sizeof(int64_t)) delete[] scores_i64;
+    }
+
+    template <typename InputIt2>
+    void normalized_similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                               double score_cutoff = 0.0) const
+    {
+        normalized_similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void normalized_similarity(double* scores, size_t score_count, const Sentence2& s2,
+                               double score_cutoff = 0.0) const
+    {
+        normalized_distance(scores, score_count, s2);
+
+        for (size_t i = 0; i < input_count; ++i) {
+            double norm_sim = 1.0 - scores[i];
+            scores[i] = (norm_sim >= score_cutoff) ? norm_sim : 0.0;
+        }
+    }
+
+private:
+    size_t input_count;
+    size_t pos;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+    LevenshteinWeightTable weights;
+};
+} /* namespace experimental */
+#endif
+
 template <typename CharT1>
 struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>> {
     template <typename Sentence1>
@@ -4730,7 +6189,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return detail::levenshtein_maximum(detail::Range(s1), s2, weights);
+        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), s2.size(), weights);
     }
 
     template <typename InputIt2>

@@ -25,6 +25,15 @@ constexpr uint64_t shr64(uint64_t a, U shift)
     return (shift < 64) ? a >> shift : 0;
 }
 
+/*
+ * shift left without undefined behavior for shifts > bit width
+ */
+template <typename U>
+constexpr uint64_t shl64(uint64_t a, U shift)
+{
+    return (shift < 64) ? a << shift : 0;
+}
+
 constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */

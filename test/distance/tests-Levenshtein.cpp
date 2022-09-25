@@ -1,9 +1,8 @@
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/types.hpp>
 #include <rapidfuzz/distance/Levenshtein.hpp>
-#include <catch2/catch_approx.hpp>
-#include <catch2/catch_test_macros.hpp>
-#include <rapidfuzz/details/types.hpp>
 #include <string>
 
 #include "examples/ocr.hpp"
@@ -29,6 +28,35 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
     rapidfuzz::CachedLevenshtein scorer(s1, weights);
     int64_t res3 = scorer.distance(s2, max);
     int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
+#ifdef RAPIDFUZZ_SIMD
+    if (weights.delete_cost == 1 && weights.insert_cost == 1 && weights.replace_cost == 1 && s1.size() <= 64)
+    {
+        std::vector<int64_t> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiLevenshtein<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiLevenshtein<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiLevenshtein<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else {
+            rapidfuzz::experimental::MultiLevenshtein<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+
+        REQUIRE(res1 == results[0]);
+    }
+#endif
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
@@ -60,12 +88,20 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
 
 TEST_CASE("Levenshtein")
 {
+    std::string empty = "";
     std::string test = "aaaa";
     std::wstring no_suffix = L"aaa";
     std::string no_suffix2 = "aaab";
     std::string swapped1 = "abaa";
     std::string swapped2 = "baaa";
     std::string replace_all = "bbbb";
+
+    SECTION("levenshtein calculates empty sequence")
+    {
+        REQUIRE(levenshtein_distance(empty, empty) == 0);
+        REQUIRE(levenshtein_distance(test, empty) == 4);
+        REQUIRE(levenshtein_distance(empty, test) == 4);
+    }
 
     SECTION("levenshtein calculates correct distances")
     {
@@ -400,3 +436,42 @@ TEST_CASE("Levenshtein large band")
         REQUIRE(ocr_example2 == rapidfuzz::editops_apply<uint8_t>(ops1, ocr_example1, ocr_example2));
     }
 }
+
+#ifdef RAPIDFUZZ_SIMD
+TEST_CASE("SIMD wraparound")
+{
+    rapidfuzz::experimental::MultiLevenshtein<8> scorer(4);
+    scorer.insert(std::string("a"));
+    scorer.insert(std::string("b"));
+    scorer.insert(std::string("aa"));
+    scorer.insert(std::string("bb"));
+    std::vector<int64_t> results(scorer.result_count());
+
+    {
+        std::string s2 = str_multiply(std::string("b"), 256);
+        scorer.distance(&results[0], results.size(), s2);
+        REQUIRE(results[0] == 256);
+        REQUIRE(results[1] == 255);
+        REQUIRE(results[2] == 256);
+        REQUIRE(results[3] == 254);
+    }
+
+    {
+        std::string s2 = str_multiply(std::string("b"), 300);
+        scorer.distance(&results[0], results.size(), s2);
+        REQUIRE(results[0] == 300);
+        REQUIRE(results[1] == 299);
+        REQUIRE(results[2] == 300);
+        REQUIRE(results[3] == 298);
+    }
+
+    {
+        std::string s2 = str_multiply(std::string("b"), 512);
+        scorer.distance(&results[0], results.size(), s2);
+        REQUIRE(results[0] == 512);
+        REQUIRE(results[1] == 511);
+        REQUIRE(results[2] == 512);
+        REQUIRE(results[3] == 510);
+    }
+}
+#endif
