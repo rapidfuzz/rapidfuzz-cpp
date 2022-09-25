@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-25 22:18:54.350125
+//  Generated: 2022-09-25 23:00:44.328298
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4912,20 +4912,22 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
         currDist.store(distances.data());
 
         unroll<int, vec_width>([&](auto i) {
-            int64_t score;
+            int64_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[i] == 0) {
                 score = s2.size();
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
-                int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
+                if constexpr (!std::is_same_v<VecType, uint64_t>) {
+                    ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
+                    int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
 
-                score = (min_dist / wraparound_score) * wraparound_score;
-                VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
+                    score = (min_dist / wraparound_score) * wraparound_score;
+                    VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
 
-                if (distances[i] < remainder) score += wraparound_score;
+                    if (distances[i] < remainder) score += wraparound_score;
+                }
 
                 score += distances[i];
             }

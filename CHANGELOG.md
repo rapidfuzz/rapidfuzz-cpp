@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.8.0] -
+#### Fixed
+- fixed incorrect score_cutoff handling in `lcs_seq_distance`
+
 ### [1.7.0] - 2022-09-18
 #### Added
 - add editops to hamming distance

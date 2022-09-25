@@ -13,6 +13,8 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
 {
 #ifdef RAPIDFUZZ_SIMD
     size_t count = s1.size() / MaxLen + ((s1.size() % MaxLen) != 0);
+    if (count == 0) return;
+
     rapidfuzz::experimental::MultiLevenshtein<MaxLen> scorer(count);
 
     std::vector<std::basic_string<uint8_t>> strings;
@@ -38,9 +40,9 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
         if (reference_score != simd_results[i]) {
             print_seq("s1: ", s1);
             print_seq("s2: ", s2);
-            throw std::logic_error(std::string("levenshtein distance using simd failed (score_cutoff = ") +
-                                   std::string(", reference_score = ") + std::to_string(reference_score) +
-                                   std::string(", score = ") + std::to_string(simd_results[i]) + ")");
+            throw std::logic_error(std::string("levenshtein distance using simd failed (reference_score = ") +
+                                   std::to_string(reference_score) + std::string(", score = ") +
+                                   std::to_string(simd_results[i]) + ")");
         }
     }
 #else
