@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-25 23:03:37.525680
+//  Generated: 2022-09-25 23:51:14.142307
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3045,39 +3045,51 @@ public:
 };
 
 template <typename T>
-__m256i hadd_impl(const __m256i& v) noexcept;
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
+}
+
+template <typename T>
+__m256i hadd_impl(__m256i x) noexcept;
 
 template <>
-inline __m256i hadd_impl<uint8_t>(const __m256i& v) noexcept
+inline __m256i hadd_impl<uint8_t>(__m256i x) noexcept
 {
-    return v;
+    return x;
 }
 
 template <>
-inline __m256i hadd_impl<uint16_t>(const __m256i& v) noexcept
+inline __m256i hadd_impl<uint16_t>(__m256i x) noexcept
 {
-    static const __m256i mask = {0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
-                                 0x00ff00ff00ff00ffULL};
-    __m256i hi = _mm256_srli_si256(v, 1);
-    __m256i lo = _mm256_and_si256(v, mask);
-    return _mm256_add_epi16(lo, hi);
+    static const __m256i mask = {0x001f001f001f001fULL, 0x001f001f001f001fULL, 0x001f001f001f001fULL,
+                                 0x001f001f001f001fULL};
+    __m256i y = _mm256_srli_si256(x, 1);
+    x = _mm256_add_epi16(x, y);
+    return _mm256_and_si256(x, mask);
 }
 
 template <>
-inline __m256i hadd_impl<uint32_t>(const __m256i& v) noexcept
+inline __m256i hadd_impl<uint32_t>(__m256i x) noexcept
 {
-    static const __m256i mask = {0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL,
-                                 0x0000ffff0000ffffULL};
-    __m256i x = hadd_impl<uint16_t>(v);
-    __m256i hi = _mm256_srli_si256(x, 2);
-    __m256i lo = _mm256_and_si256(x, mask);
-    return _mm256_and_si256(lo, hi);
+    static const __m256i mask = {0x0000003f0000003fULL, 0x0000003f0000003fULL, 0x0000003f0000003fULL,
+                                 0x0000003f0000003fULL};
+    __m256i y = _mm256_srli_si256(x, 2);
+    x = _mm256_add_epi32(x, y);
+    return _mm256_and_si256(x, mask);
 }
 
 template <>
-inline __m256i hadd_impl<uint64_t>(const __m256i& v) noexcept
+inline __m256i hadd_impl<uint64_t>(__m256i x) noexcept
 {
-    return _mm256_sad_epu8(v, _mm256_setzero_si256());
+    return _mm256_sad_epu8(x, _mm256_setzero_si256());
 }
 
 /* based on the paper `Faster Population Counts Using AVX2 Instructions` */
@@ -3101,19 +3113,6 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     alignas(32) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
-{
-    alignas(32) std::array<T, native_simd<T>::size()> res;
-    a.store(&res[0]);
-
-    for (size_t i = res.size() - 1; i != 0; i--)
-        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
-
-    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
-    return os;
 }
 
 // function andnot: a & ~ b
@@ -3499,37 +3498,49 @@ public:
 };
 
 template <typename T>
-__m128i hadd_impl(const __m128i& v) noexcept;
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
+}
+
+template <typename T>
+__m128i hadd_impl(__m128i x) noexcept;
 
 template <>
-inline __m128i hadd_impl<uint8_t>(const __m128i& v) noexcept
+inline __m128i hadd_impl<uint8_t>(__m128i x) noexcept
 {
-    return v;
+    return x;
 }
 
 template <>
-inline __m128i hadd_impl<uint16_t>(const __m128i& v) noexcept
+inline __m128i hadd_impl<uint16_t>(__m128i x) noexcept
 {
-    static const __m128i mask = {0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL};
-    __m128i hi = _mm_srli_si128(v, 1);
-    __m128i lo = _mm_and_si128(v, mask);
-    return _mm_add_epi16(lo, hi);
+    static const __m128i mask = {0x001f001f001f001fULL, 0x001f001f001f001fULL};
+    __m128i y = _mm_srli_si128(x, 1);
+    x = _mm_add_epi16(x, y);
+    return _mm_and_si128(x, mask);
 }
 
 template <>
-inline __m128i hadd_impl<uint32_t>(const __m128i& v) noexcept
+inline __m128i hadd_impl<uint32_t>(__m128i x) noexcept
 {
-    static const __m128i mask = {0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL};
-    __m128i x = hadd_impl<uint16_t>(v);
-    __m128i hi = _mm_srli_si128(x, 2);
-    __m128i lo = _mm_and_si128(x, mask);
-    return _mm_and_si128(lo, hi);
+    static const __m128i mask = {0x0000003f0000003fULL, 0x0000003f0000003fULL};
+    __m128i y = _mm_srli_si128(x, 2);
+    x = _mm_add_epi32(x, y);
+    return _mm_and_si128(x, mask);
 }
 
 template <>
-inline __m128i hadd_impl<uint64_t>(const __m128i& v) noexcept
+inline __m128i hadd_impl<uint64_t>(__m128i x) noexcept
 {
-    return _mm_sad_epu8(v, _mm_setzero_si128());
+    return _mm_sad_epu8(x, _mm_setzero_si128());
 }
 
 template <typename T>
@@ -3576,19 +3587,6 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     alignas(16) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
-{
-    alignas(32) std::array<T, native_simd<T>::size()> res;
-    a.store(&res[0]);
-
-    for (size_t i = res.size() - 1; i != 0; i--)
-        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
-
-    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
-    return os;
 }
 
 // function andnot: a & ~ b
