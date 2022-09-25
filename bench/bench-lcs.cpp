@@ -68,6 +68,7 @@ static void BM_LCS_Cached(benchmark::State& state)
                                                    benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
 }
 
+#ifdef RAPIDFUZZ_SIMD
 template <size_t MaxLen>
 static void BM_LCS_SIMD(benchmark::State& state)
 {
@@ -95,6 +96,7 @@ static void BM_LCS_SIMD(benchmark::State& state)
     state.counters["InvRate"] = benchmark::Counter(static_cast<double>(num),
                                                    benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
 }
+#endif
 
 BENCHMARK_TEMPLATE(BM_LCS, 8);
 BENCHMARK_TEMPLATE(BM_LCS, 16);
@@ -106,9 +108,11 @@ BENCHMARK_TEMPLATE(BM_LCS_Cached, 16);
 BENCHMARK_TEMPLATE(BM_LCS_Cached, 32);
 BENCHMARK_TEMPLATE(BM_LCS_Cached, 64);
 
+#ifdef RAPIDFUZZ_SIMD
 BENCHMARK_TEMPLATE(BM_LCS_SIMD, 8);
 BENCHMARK_TEMPLATE(BM_LCS_SIMD, 16);
 BENCHMARK_TEMPLATE(BM_LCS_SIMD, 32);
 BENCHMARK_TEMPLATE(BM_LCS_SIMD, 64);
+#endif
 
 BENCHMARK_MAIN();

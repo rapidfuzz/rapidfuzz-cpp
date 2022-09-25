@@ -152,7 +152,8 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
 
         auto counts = popcount(S);
         unroll<int, counts.size()>([&](auto i) {
-            *score_iter = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
+            *score_iter =
+                (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
             score_iter++;
         });
     }
@@ -273,7 +274,7 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
 
-    return lcs_sim;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -303,7 +304,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
             lcs_sim += longest_common_subsequence(s1, s2, score_cutoff - lcs_sim);
     }
 
-    return lcs_sim;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 /**

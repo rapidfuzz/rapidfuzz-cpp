@@ -349,9 +349,12 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         auto len = std::distance(first1, last1);
-        auto block_pos = (pos * MaxLen) % 64;
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
         auto block = (pos * MaxLen) / 64;
         assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
         str_lens[pos] = static_cast<size_t>(len);
 
         for (; first1 != last1; ++first1) {
@@ -460,7 +463,7 @@ public:
 
 private:
     size_t input_count;
-    ptrdiff_t pos;
+    size_t pos;
     detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
     LevenshteinWeightTable weights;

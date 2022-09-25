@@ -135,10 +135,12 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         auto len = std::distance(first1, last1);
-        auto block_pos = (pos * MaxLen) % 64;
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
         auto block = (pos * MaxLen) / 64;
         assert(len <= MaxLen);
-        assert(pos < str_lens.size());
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
         str_lens[pos] = static_cast<size_t>(len);
 
         for (; first1 != last1; ++first1) {
@@ -161,11 +163,12 @@ public:
     {
         detail::Range s2_(s2);
         similarity(scores, score_count, s2_);
+        (void)score_cutoff;
 
         for (size_t i = 0; i < input_count; ++i) {
-            int64_t maximum = std::max<int64_t>(str_lens[i], s2_.size());
+            int64_t maximum = std::max(static_cast<int64_t>(str_lens[i]), static_cast<int64_t>(s2_.size()));
             int64_t sim = maximum - scores[i];
-            scores[i] = (sim <= score_cutoff) ? sim : 0;
+            scores[i] = (sim <= score_cutoff) ? sim : score_cutoff + 1;
         }
     }
 
@@ -219,7 +222,7 @@ public:
         distance(scores_i64, result_count(), s2_);
 
         for (size_t i = 0; i < input_count; ++i) {
-            int64_t maximum = std::max<int64_t>(str_lens[i], s2_.size());
+            int64_t maximum = std::max(static_cast<int64_t>(str_lens[i]), static_cast<int64_t>(s2_.size()));
             double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
@@ -248,7 +251,7 @@ public:
 
 private:
     size_t input_count;
-    ptrdiff_t pos;
+    size_t pos;
     detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
 };

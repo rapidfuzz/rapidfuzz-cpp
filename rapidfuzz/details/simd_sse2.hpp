@@ -4,6 +4,7 @@
 
 #include <array>
 #include <emmintrin.h>
+#include <ostream>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <stdint.h>
 #include <tmmintrin.h>
@@ -291,20 +292,20 @@ inline __m128i hadd_impl<uint8_t>(const __m128i& v) noexcept
 template <>
 inline __m128i hadd_impl<uint16_t>(const __m128i& v) noexcept
 {
-    __m128i mask = _mm_set_epi16(static_cast<short>(-1), static_cast<short>(0), static_cast<short>(-1),
-                                 static_cast<short>(0), static_cast<short>(-1), static_cast<short>(0),
-                                 static_cast<short>(-1), static_cast<short>(0));
+    static const __m128i mask = {0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL};
+    __m128i hi = _mm_srli_si128(v, 1);
     __m128i lo = _mm_and_si128(v, mask);
-    __m128i hi = _mm_srli_epi16(v, 8);
     return _mm_add_epi16(lo, hi);
-    // todo sse3
-    // return _mm_maddubs_epi16(v, _mm_set1_epi8(1));
 }
 
 template <>
 inline __m128i hadd_impl<uint32_t>(const __m128i& v) noexcept
 {
-    return _mm_madd_epi16(hadd_impl<uint16_t>(v), _mm_set1_epi16(1));
+    static const __m128i mask = {0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL};
+    __m128i x = hadd_impl<uint16_t>(v);
+    __m128i hi = _mm_srli_si128(x, 2);
+    __m128i lo = _mm_and_si128(x, mask);
+    return _mm_and_si128(lo, hi);
 }
 
 template <>
@@ -316,23 +317,28 @@ inline __m128i hadd_impl<uint64_t>(const __m128i& v) noexcept
 template <typename T>
 native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 {
-    __m128i n, x, total;
-    const __m128i popcount_mask1 = _mm_set1_epi8(0x77);
-    const __m128i popcount_mask2 = _mm_set1_epi8(0x0F);
+    static const __m128i m1 = {0x5555555555555555ULL, 0x5555555555555555ULL};
+    static const __m128i m2 = {0x3333333333333333ULL, 0x3333333333333333ULL};
+    static const __m128i m3 = {0x0f0f0f0f0f0f0f0fULL, 0x0f0f0f0f0f0f0f0fULL};
 
-    // Count bits in each 4-bit field.
-    x = v;
-    n = _mm_srli_epi64(x, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    n = _mm_srli_epi64(n, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    n = _mm_srli_epi64(n, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    x = _mm_add_epi8(x, _mm_srli_epi16(x, 4));
-    total = _mm_and_si128(popcount_mask2, x);
+    /* Note: if we returned x here it would be like _mm_popcnt_epi1(x) */
+    __m128i y;
+    __m128i x = v;
+    /* add even and odd bits*/
+    y = _mm_srli_epi64(x, 1); // put even bits in odd place
+    y = _mm_and_si128(y, m1); // mask out the even bits (0x55)
+    x = _mm_subs_epu8(x, y);  // shortcut to mask even bits and add
+    /* if we just returned x here it would be like popcnt_epi2(x) */
+    /* now add the half nibbles */
+    y = _mm_srli_epi64(x, 2); // move half nibbles in place to add
+    y = _mm_and_si128(y, m2); // mask off the extra half nibbles (0x0f)
+    x = _mm_and_si128(x, m2); // ditto
+    x = _mm_adds_epu8(x, y);  // totals are a maximum of 5 bits (0x1f)
+    /* if we just returned x here it would be like popcnt_epi4(x) */
+    /* now add the nibbles */
+    y = _mm_srli_epi64(x, 4); // move nibbles in place to add
+    x = _mm_adds_epu8(x, y);  // totals are a maximum of 6 bits (0x3f)
+    x = _mm_and_si128(x, m3); // mask off the extra bits
 
     /* todo use when sse3 available
     __m128i lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
@@ -343,7 +349,7 @@ native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
     __m128i popcnt2 = _mm_shuffle_epi8(lookup, hi);
     __m128i total = _mm_add_epi8(popcnt1, popcnt2);*/
 
-    return hadd_impl<T>(total);
+    return hadd_impl<T>(x);
 }
 
 template <typename T>
@@ -352,6 +358,19 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     alignas(16) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
 }
 
 // function andnot: a & ~ b

@@ -4,6 +4,7 @@
 
 #include <array>
 #include <immintrin.h>
+#include <ostream>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <stdint.h>
 
@@ -302,13 +303,22 @@ inline __m256i hadd_impl<uint8_t>(const __m256i& v) noexcept
 template <>
 inline __m256i hadd_impl<uint16_t>(const __m256i& v) noexcept
 {
-    return _mm256_maddubs_epi16(v, _mm256_set1_epi8(1));
+    static const __m256i mask = {0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
+                                 0x00ff00ff00ff00ffULL};
+    __m256i hi = _mm256_srli_si256(v, 1);
+    __m256i lo = _mm256_and_si256(v, mask);
+    return _mm256_add_epi16(lo, hi);
 }
 
 template <>
 inline __m256i hadd_impl<uint32_t>(const __m256i& v) noexcept
 {
-    return _mm256_madd_epi16(hadd_impl<uint16_t>(v), _mm256_set1_epi16(1));
+    static const __m256i mask = {0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL,
+                                 0x0000ffff0000ffffULL};
+    __m256i x = hadd_impl<uint16_t>(v);
+    __m256i hi = _mm256_srli_si256(x, 2);
+    __m256i lo = _mm256_and_si256(x, mask);
+    return _mm256_and_si256(lo, hi);
 }
 
 template <>
@@ -317,6 +327,7 @@ inline __m256i hadd_impl<uint64_t>(const __m256i& v) noexcept
     return _mm256_sad_epu8(v, _mm256_setzero_si256());
 }
 
+/* based on the paper `Faster Population Counts Using AVX2 Instructions` */
 template <typename T>
 native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 {
@@ -337,6 +348,19 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     alignas(32) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
 }
 
 // function andnot: a & ~ b

@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-25 17:17:24.609742
+//  Generated: 2022-09-25 22:18:54.350125
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1350,6 +1350,15 @@ template <typename U>
 constexpr uint64_t shr64(uint64_t a, U shift)
 {
     return (shift < 64) ? a >> shift : 0;
+}
+
+/*
+ * shift left without undefined behavior for shifts > bit width
+ */
+template <typename U>
+constexpr uint64_t shl64(uint64_t a, U shift)
+{
+    return (shift < 64) ? a << shift : 0;
 }
 
 constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
@@ -2749,6 +2758,7 @@ private:
 
 #        include <array>
 #        include <immintrin.h>
+#        include <ostream>
 #        include <stdint.h>
 
 namespace rapidfuzz {
@@ -3046,13 +3056,22 @@ inline __m256i hadd_impl<uint8_t>(const __m256i& v) noexcept
 template <>
 inline __m256i hadd_impl<uint16_t>(const __m256i& v) noexcept
 {
-    return _mm256_maddubs_epi16(v, _mm256_set1_epi8(1));
+    static const __m256i mask = {0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
+                                 0x00ff00ff00ff00ffULL};
+    __m256i hi = _mm256_srli_si256(v, 1);
+    __m256i lo = _mm256_and_si256(v, mask);
+    return _mm256_add_epi16(lo, hi);
 }
 
 template <>
 inline __m256i hadd_impl<uint32_t>(const __m256i& v) noexcept
 {
-    return _mm256_madd_epi16(hadd_impl<uint16_t>(v), _mm256_set1_epi16(1));
+    static const __m256i mask = {0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL,
+                                 0x0000ffff0000ffffULL};
+    __m256i x = hadd_impl<uint16_t>(v);
+    __m256i hi = _mm256_srli_si256(x, 2);
+    __m256i lo = _mm256_and_si256(x, mask);
+    return _mm256_and_si256(lo, hi);
 }
 
 template <>
@@ -3061,6 +3080,7 @@ inline __m256i hadd_impl<uint64_t>(const __m256i& v) noexcept
     return _mm256_sad_epu8(v, _mm256_setzero_si256());
 }
 
+/* based on the paper `Faster Population Counts Using AVX2 Instructions` */
 template <typename T>
 native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 {
@@ -3081,6 +3101,19 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     alignas(32) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
 }
 
 // function andnot: a & ~ b
@@ -3190,6 +3223,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
 
 #        include <array>
 #        include <emmintrin.h>
+#        include <ostream>
 #        include <stdint.h>
 #        include <tmmintrin.h>
 
@@ -3476,20 +3510,20 @@ inline __m128i hadd_impl<uint8_t>(const __m128i& v) noexcept
 template <>
 inline __m128i hadd_impl<uint16_t>(const __m128i& v) noexcept
 {
-    __m128i mask = _mm_set_epi16(static_cast<short>(-1), static_cast<short>(0), static_cast<short>(-1),
-                                 static_cast<short>(0), static_cast<short>(-1), static_cast<short>(0),
-                                 static_cast<short>(-1), static_cast<short>(0));
+    static const __m128i mask = {0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL};
+    __m128i hi = _mm_srli_si128(v, 1);
     __m128i lo = _mm_and_si128(v, mask);
-    __m128i hi = _mm_srli_epi16(v, 8);
     return _mm_add_epi16(lo, hi);
-    // todo sse3
-    // return _mm_maddubs_epi16(v, _mm_set1_epi8(1));
 }
 
 template <>
 inline __m128i hadd_impl<uint32_t>(const __m128i& v) noexcept
 {
-    return _mm_madd_epi16(hadd_impl<uint16_t>(v), _mm_set1_epi16(1));
+    static const __m128i mask = {0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL};
+    __m128i x = hadd_impl<uint16_t>(v);
+    __m128i hi = _mm_srli_si128(x, 2);
+    __m128i lo = _mm_and_si128(x, mask);
+    return _mm_and_si128(lo, hi);
 }
 
 template <>
@@ -3501,23 +3535,28 @@ inline __m128i hadd_impl<uint64_t>(const __m128i& v) noexcept
 template <typename T>
 native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 {
-    __m128i n, x, total;
-    const __m128i popcount_mask1 = _mm_set1_epi8(0x77);
-    const __m128i popcount_mask2 = _mm_set1_epi8(0x0F);
+    static const __m128i m1 = {0x5555555555555555ULL, 0x5555555555555555ULL};
+    static const __m128i m2 = {0x3333333333333333ULL, 0x3333333333333333ULL};
+    static const __m128i m3 = {0x0f0f0f0f0f0f0f0fULL, 0x0f0f0f0f0f0f0f0fULL};
 
-    // Count bits in each 4-bit field.
-    x = v;
-    n = _mm_srli_epi64(x, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    n = _mm_srli_epi64(n, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    n = _mm_srli_epi64(n, 1);
-    n = _mm_and_si128(popcount_mask1, n);
-    x = _mm_sub_epi8(x, n);
-    x = _mm_add_epi8(x, _mm_srli_epi16(x, 4));
-    total = _mm_and_si128(popcount_mask2, x);
+    /* Note: if we returned x here it would be like _mm_popcnt_epi1(x) */
+    __m128i y;
+    __m128i x = v;
+    /* add even and odd bits*/
+    y = _mm_srli_epi64(x, 1); // put even bits in odd place
+    y = _mm_and_si128(y, m1); // mask out the even bits (0x55)
+    x = _mm_subs_epu8(x, y);  // shortcut to mask even bits and add
+    /* if we just returned x here it would be like popcnt_epi2(x) */
+    /* now add the half nibbles */
+    y = _mm_srli_epi64(x, 2); // move half nibbles in place to add
+    y = _mm_and_si128(y, m2); // mask off the extra half nibbles (0x0f)
+    x = _mm_and_si128(x, m2); // ditto
+    x = _mm_adds_epu8(x, y);  // totals are a maximum of 5 bits (0x1f)
+    /* if we just returned x here it would be like popcnt_epi4(x) */
+    /* now add the nibbles */
+    y = _mm_srli_epi64(x, 4); // move nibbles in place to add
+    x = _mm_adds_epu8(x, y);  // totals are a maximum of 6 bits (0x3f)
+    x = _mm_and_si128(x, m3); // mask off the extra bits
 
     /* todo use when sse3 available
     __m128i lookup = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
@@ -3528,7 +3567,7 @@ native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
     __m128i popcnt2 = _mm_shuffle_epi8(lookup, hi);
     __m128i total = _mm_add_epi8(popcnt1, popcnt2);*/
 
-    return hadd_impl<T>(total);
+    return hadd_impl<T>(x);
 }
 
 template <typename T>
@@ -3537,6 +3576,19 @@ std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
     alignas(16) std::array<T, native_simd<T>::size()> res;
     popcount_impl(a).store(&res[0]);
     return res;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
+{
+    alignas(32) std::array<T, native_simd<T>::size()> res;
+    a.store(&res[0]);
+
+    for (size_t i = res.size() - 1; i != 0; i--)
+        os << std::bitset<std::numeric_limits<T>::digits>(res[i]) << "|";
+
+    os << std::bitset<std::numeric_limits<T>::digits>(res[0]);
+    return os;
 }
 
 // function andnot: a & ~ b
@@ -3790,7 +3842,8 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
 
         auto counts = popcount(S);
         unroll<int, counts.size()>([&](auto i) {
-            *score_iter = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
+            *score_iter =
+                (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
             score_iter++;
         });
     }
@@ -3911,7 +3964,7 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
     int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
     if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
 
-    return lcs_sim;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3941,7 +3994,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score
             lcs_sim += longest_common_subsequence(s1, s2, score_cutoff - lcs_sim);
     }
 
-    return lcs_sim;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 /**
@@ -4193,10 +4246,12 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         auto len = std::distance(first1, last1);
-        auto block_pos = (pos * MaxLen) % 64;
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
         auto block = (pos * MaxLen) / 64;
         assert(len <= MaxLen);
-        assert(pos < str_lens.size());
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
         str_lens[pos] = static_cast<size_t>(len);
 
         for (; first1 != last1; ++first1) {
@@ -4219,11 +4274,12 @@ public:
     {
         detail::Range s2_(s2);
         similarity(scores, score_count, s2_);
+        (void)score_cutoff;
 
         for (size_t i = 0; i < input_count; ++i) {
-            int64_t maximum = std::max<int64_t>(str_lens[i], s2_.size());
+            int64_t maximum = std::max(static_cast<int64_t>(str_lens[i]), static_cast<int64_t>(s2_.size()));
             int64_t sim = maximum - scores[i];
-            scores[i] = (sim <= score_cutoff) ? sim : 0;
+            scores[i] = (sim <= score_cutoff) ? sim : score_cutoff + 1;
         }
     }
 
@@ -4277,7 +4333,7 @@ public:
         distance(scores_i64, result_count(), s2_);
 
         for (size_t i = 0; i < input_count; ++i) {
-            int64_t maximum = std::max<int64_t>(str_lens[i], s2_.size());
+            int64_t maximum = std::max(static_cast<int64_t>(str_lens[i]), static_cast<int64_t>(s2_.size()));
             double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
@@ -4306,7 +4362,7 @@ public:
 
 private:
     size_t input_count;
-    ptrdiff_t pos;
+    size_t pos;
     detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
 };
@@ -4734,6 +4790,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
                             int64_t max = std::numeric_limits<int64_t>::max())
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
+    assert(s1.size() != 0);
+
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
@@ -4818,8 +4876,12 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(32) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>(
-            [&](auto i) { mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1)); });
+        unroll<int, vec_width>([&](auto i) {
+            if (s1_lengths[cur_vec + i] == 0)
+                mask_[i] = 0;
+            else
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1));
+        });
         native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
 
         for (const auto& ch : s2) {
@@ -4848,9 +4910,27 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
 
         alignas(32) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
+
         unroll<int, vec_width>([&](auto i) {
-            *score_iter =
-                (static_cast<int64_t>(distances[i]) <= score_cutoff) ? distances[i] : score_cutoff + 1;
+            int64_t score;
+            /* strings of length 0 are not handled correctly */
+            if (s1_lengths[i] == 0) {
+                score = s2.size();
+            }
+            /* calculate score under consideration of wraparounds in parallel counter */
+            else {
+                ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
+                int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
+
+                score = (min_dist / wraparound_score) * wraparound_score;
+                VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
+
+                if (distances[i] < remainder) score += wraparound_score;
+
+                score += distances[i];
+            }
+
+            *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;
             score_iter++;
         });
     }
@@ -5962,9 +6042,12 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         auto len = std::distance(first1, last1);
-        auto block_pos = (pos * MaxLen) % 64;
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
         auto block = (pos * MaxLen) / 64;
         assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
         str_lens[pos] = static_cast<size_t>(len);
 
         for (; first1 != last1; ++first1) {
@@ -6073,7 +6156,7 @@ public:
 
 private:
     size_t input_count;
-    ptrdiff_t pos;
+    size_t pos;
     detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
     LevenshteinWeightTable weights;

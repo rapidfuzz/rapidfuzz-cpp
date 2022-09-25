@@ -228,6 +228,8 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
                             int64_t max = std::numeric_limits<int64_t>::max())
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
+    assert(s1.size() != 0);
+
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
     uint64_t VN = 0;
@@ -312,8 +314,12 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(32) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>(
-            [&](auto i) { mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1)); });
+        unroll<int, vec_width>([&](auto i) {
+            if (s1_lengths[cur_vec + i] == 0)
+                mask_[i] = 0;
+            else
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1));
+        });
         native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
 
         for (const auto& ch : s2) {
@@ -342,9 +348,27 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
 
         alignas(32) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
+
         unroll<int, vec_width>([&](auto i) {
-            *score_iter =
-                (static_cast<int64_t>(distances[i]) <= score_cutoff) ? distances[i] : score_cutoff + 1;
+            int64_t score;
+            /* strings of length 0 are not handled correctly */
+            if (s1_lengths[i] == 0) {
+                score = s2.size();
+            }
+            /* calculate score under consideration of wraparounds in parallel counter */
+            else {
+                ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
+                int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
+
+                score = (min_dist / wraparound_score) * wraparound_score;
+                VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
+
+                if (distances[i] < remainder) score += wraparound_score;
+
+                score += distances[i];
+            }
+
+            *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;
             score_iter++;
         });
     }
