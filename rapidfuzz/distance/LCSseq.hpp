@@ -159,7 +159,7 @@ public:
     void distance(int64_t* scores, size_t score_count, const Sentence2& s2,
                   int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
-        auto s2_ = detail::Range(s2);
+        detail::Range s2_(s2);
         similarity(scores, score_count, s2_);
 
         for (size_t i = 0; i < input_count; ++i) {
@@ -182,19 +182,16 @@ public:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        auto s2_ = detail::Range(s2);
+        detail::Range scores_(scores, scores + score_count);
+        detail::Range s2_(s2);
         if constexpr (MaxLen == 8)
-            detail::lcs_simd<uint8_t>(detail::Range(scores, scores + score_count), PM, detail::Range(s2),
-                                      score_cutoff);
+            detail::lcs_simd<uint8_t>(scores_, PM, s2_, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::lcs_simd<uint16_t>(detail::Range(scores, scores + score_count), PM, detail::Range(s2),
-                                       score_cutoff);
+            detail::lcs_simd<uint16_t>(scores_, PM, s2_, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::lcs_simd<uint32_t>(detail::Range(scores, scores + score_count), PM, detail::Range(s2),
-                                       score_cutoff);
+            detail::lcs_simd<uint32_t>(scores_, PM, s2_, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::lcs_simd<uint64_t>(detail::Range(scores, scores + score_count), PM, detail::Range(s2),
-                                       score_cutoff);
+            detail::lcs_simd<uint64_t>(scores_, PM, s2_, score_cutoff);
     }
 
     template <typename InputIt2>
