@@ -7,6 +7,7 @@
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/distance.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
+#include <rapidfuzz/details/simd.hpp>
 
 #include <algorithm>
 #include <array>
@@ -120,6 +121,43 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
 
 template <bool RecordMatrix>
 struct LCSseqResult;
+
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt>
+void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Range<InputIt> s2,
+              int64_t score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+    auto score_iter = scores.begin();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        native_simd<VecType> S(static_cast<VecType>(-1));
+
+        for (const auto& ch : s2) {
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+
+            native_simd<VecType> Matches(stored.data());
+            native_simd<VecType> u = S & Matches;
+            S = (S + u) | (S - u);
+        }
+
+        S = ~S;
+
+        auto counts = popcount(S);
+        unroll<int, counts.size()>([&](auto i) {
+            *score_iter = (static_cast<int64_t>(counts[i]) >= score_cutoff) ? counts[i] : 0;
+            score_iter++;
+        });
+    }
+}
+#endif
 
 template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
 auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t score_cutoff = 0)

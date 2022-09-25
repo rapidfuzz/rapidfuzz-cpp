@@ -3,9 +3,11 @@ function(create_fuzzer fuzzer)
     target_compile_features(fuzz_${fuzzer} PUBLIC cxx_std_17)
     target_link_libraries(fuzz_${fuzzer} PRIVATE rapidfuzz::rapidfuzz)
 
-    target_compile_options(fuzz_${fuzzer} PRIVATE -g -O1 -fsanitize=fuzzer,address)
+    target_compile_options(fuzz_${fuzzer} PRIVATE -g -O1 -fsanitize=fuzzer,address -march=native)
     target_link_libraries(fuzz_${fuzzer} PRIVATE -fsanitize=fuzzer,address)
 endfunction(create_fuzzer)
+
+create_fuzzer(lcs_distance)
 
 create_fuzzer(levenshtein_distance)
 create_fuzzer(levenshtein_editops)

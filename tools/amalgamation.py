@@ -49,7 +49,7 @@ def formatted_file_header():
 # processed again)
 concatenated_headers = set()
 
-internal_include_parser = re.compile(r'\s*#include <(rapidfuzz/.*)>.*')
+internal_include_parser = re.compile(r'\s*# *include <(rapidfuzz/.*)>.*')
 
 def concatenate_file(out, filename: str) -> int:
     # Gathers statistics on how many headers were expanded
