@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-25 23:00:44.328298
+//  Generated: 2022-09-25 23:03:37.525680
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4929,7 +4929,7 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
                     if (distances[i] < remainder) score += wraparound_score;
                 }
 
-                score += distances[i];
+                score += static_cast<int64_t>(distances[i]);
             }
 
             *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;

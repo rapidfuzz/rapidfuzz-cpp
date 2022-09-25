@@ -367,7 +367,7 @@ static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
                     if (distances[i] < remainder) score += wraparound_score;
                 }
 
-                score += distances[i];
+                score += static_cast<int64_t>(distances[i]);
             }
 
             *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;
