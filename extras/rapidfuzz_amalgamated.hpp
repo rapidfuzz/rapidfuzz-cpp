@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-09-26 00:17:26.220954
+//  Generated: 2022-09-26 02:53:39.868506
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2751,10 +2751,13 @@ private:
 
 #include <limits>
 
+/* RAPIDFUZZ_LTO_HACK is used to differentiate functions between different
+ * translation units to avoid warnings when using lto */
 #ifndef RAPIDFUZZ_EXCLUDE_SIMD
 #    if __AVX2__
 #        define RAPIDFUZZ_SIMD
 #        define RAPIDFUZZ_AVX2
+#        define RAPIDFUZZ_LTO_HACK 0
 
 #        include <array>
 #        include <immintrin.h>
@@ -3218,6 +3221,7 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
 #    elif (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE2__)
 #        define RAPIDFUZZ_SIMD
 #        define RAPIDFUZZ_SSE2
+#        define RAPIDFUZZ_LTO_HACK 1
 
 #        include <array>
 #        include <emmintrin.h>
@@ -3811,7 +3815,7 @@ template <bool RecordMatrix>
 struct LCSseqResult;
 
 #ifdef RAPIDFUZZ_SIMD
-template <typename VecType, typename InputIt>
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Range<InputIt> s2,
               int64_t score_cutoff) noexcept
 {
@@ -4848,7 +4852,7 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
 }
 
 #ifdef RAPIDFUZZ_SIMD
-template <typename VecType, typename InputIt>
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
                                                const detail::BlockPatternMatchVector& block,
                                                const std::vector<size_t>& s1_lengths, Range<InputIt> s2,

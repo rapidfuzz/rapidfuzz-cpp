@@ -123,7 +123,7 @@ template <bool RecordMatrix>
 struct LCSseqResult;
 
 #ifdef RAPIDFUZZ_SIMD
-template <typename VecType, typename InputIt>
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Range<InputIt> s2,
               int64_t score_cutoff) noexcept
 {
