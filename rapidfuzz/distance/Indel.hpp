@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <rapidfuzz/distance/Indel_impl.hpp>
+#include <rapidfuzz/distance/LCSseq.hpp>
 
 namespace rapidfuzz {
 
@@ -73,6 +74,76 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2)
     return lcs_seq_editops(s1, s2);
 }
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiIndel : public detail::MultiDistanceBase<MultiIndel<MaxLen>> {
+private:
+    friend detail::MultiDistanceBase<MultiIndel<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiIndel<MaxLen>>;
+
+public:
+    MultiIndel(size_t count) : input_count(count), scorer(count)
+    {}
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(first1, last1);
+    }
+
+private:
+    template <typename InputIt2>
+    void _distance(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
+                   int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        scorer.similarity(scores, score_count, s2);
+
+        for (size_t i = 0; i < get_input_count(); ++i) {
+            int64_t maximum_ = maximum(i, s2);
+            int64_t dist = maximum_ - 2 * scores[i];
+            scores[i] = (dist <= score_cutoff) ? dist : score_cutoff + 1;
+        }
+    }
+
+    template <typename InputIt2>
+    int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
+    {
+        // todo
+        return s1_idx /*static_cast<int64_t>(str_lens[s1_idx])*/ + s2.size();
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return input_count;
+    }
+
+    size_t input_count;
+    MultiLCSseq<MaxLen> scorer;
+};
+} /* namespace experimental */
+#endif
+
 template <typename CharT1>
 struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     template <typename Sentence1>
@@ -80,7 +151,7 @@ struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     {}
 
     template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedIndel(InputIt1 first1, InputIt1 last1) : s1_len(std::distance(first1, last1)), scorer(first1, last1)
     {}
 
 private:
@@ -90,17 +161,21 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return static_cast<int64_t>(s1.size()) + s2.size();
+        return s1_len + s2.size();
     }
 
     template <typename InputIt2>
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::indel_distance(PM, detail::Range(s1), s2, score_cutoff);
+        int64_t maximum_ = maximum(s2);
+        int64_t lcs_cutoff = std::max<int64_t>(0, maximum_ / 2 - score_cutoff);
+        int64_t lcs_sim = scorer.similarity(s2, lcs_cutoff);
+        int64_t dist = maximum_ - 2 * lcs_sim;
+        return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 
-    std::basic_string<CharT1> s1;
-    detail::BlockPatternMatchVector PM;
+    int64_t s1_len;
+    CachedLCSseq<CharT1> scorer;
 };
 
 template <typename Sentence1>

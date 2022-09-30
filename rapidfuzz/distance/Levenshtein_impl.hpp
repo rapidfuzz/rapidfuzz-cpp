@@ -286,10 +286,9 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-static inline void levenshtein_hyrroe2003_simd(Range<int64_t*> scores,
-                                               const detail::BlockPatternMatchVector& block,
-                                               const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
-                                               int64_t score_cutoff) noexcept
+void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
+                                 const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                                 int64_t score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;

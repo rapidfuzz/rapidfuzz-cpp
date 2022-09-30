@@ -289,8 +289,11 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
 template <int MaxLen>
-struct MultiLevenshtein {
+struct MultiLevenshtein : public detail::MultiDistanceBase<MultiLevenshtein<MaxLen>> {
 private:
+    friend detail::MultiDistanceBase<MultiLevenshtein<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiLevenshtein<MaxLen>>;
+
     constexpr static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
@@ -367,104 +370,35 @@ public:
         pos++;
     }
 
-    template <typename InputIt2>
-    void distance(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
-    {
-        distance(scores, score_count, detail::Range(first2, last2), score_cutoff);
-    }
-
-    template <typename Sentence2>
-    void distance(int64_t* scores, size_t score_count, const Sentence2& s2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
-    {
-        if (score_count < result_count())
-            throw std::invalid_argument("scores has to have >= result_count() elements");
-
-        detail::Range s2_(s2);
-        if constexpr (MaxLen == 8)
-            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2_, score_cutoff);
-        else if constexpr (MaxLen == 16)
-            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2_, score_cutoff);
-        else if constexpr (MaxLen == 32)
-            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2_, score_cutoff);
-        else if constexpr (MaxLen == 64)
-            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2_, score_cutoff);
-    }
-
-    template <typename InputIt2>
-    void similarity(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                    int64_t score_cutoff = 0) const
-    {
-        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
-    }
-
-    template <typename Sentence2>
-    void similarity(int64_t* scores, size_t score_count, const Sentence2& s2, int64_t score_cutoff = 0) const
-    {
-        detail::Range s2_(s2);
-        distance(scores, score_count, s2_);
-
-        for (size_t i = 0; i < input_count; ++i) {
-            int64_t maximum = detail::levenshtein_maximum(str_lens[i], s2_.size(), weights);
-            int64_t sim = maximum - scores[i];
-            scores[i] = (sim >= score_cutoff) ? sim : 0;
-        }
-    }
-
-    template <typename InputIt2>
-    void normalized_distance(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                             double score_cutoff = 1.0) const
-    {
-        normalized_distance(scores, score_count, detail::Range(first2, last2), score_cutoff);
-    }
-
-    template <typename Sentence2>
-    void normalized_distance(double* scores, size_t score_count, const Sentence2& s2,
-                             double score_cutoff = 1.0) const
-    {
-        if (score_count < result_count())
-            throw std::invalid_argument("scores has to have >= result_count() elements");
-
-        // reinterpretation only works when the types have the same size
-        int64_t* scores_i64 = nullptr;
-        if constexpr (sizeof(double) == sizeof(int64_t))
-            scores_i64 = reinterpret_cast<int64_t*>(scores);
-        else
-            scores_i64 = new int64_t[result_count()];
-
-        detail::Range s2_(s2);
-        distance(scores_i64, result_count(), s2_);
-
-        for (size_t i = 0; i < input_count; ++i) {
-            int64_t maximum = detail::levenshtein_maximum(str_lens[i], s2_.size(), weights);
-            double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
-            scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
-        }
-
-        if constexpr (sizeof(double) != sizeof(int64_t)) delete[] scores_i64;
-    }
-
-    template <typename InputIt2>
-    void normalized_similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                               double score_cutoff = 0.0) const
-    {
-        normalized_similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
-    }
-
-    template <typename Sentence2>
-    void normalized_similarity(double* scores, size_t score_count, const Sentence2& s2,
-                               double score_cutoff = 0.0) const
-    {
-        normalized_distance(scores, score_count, s2);
-
-        for (size_t i = 0; i < input_count; ++i) {
-            double norm_sim = 1.0 - scores[i];
-            scores[i] = (norm_sim >= score_cutoff) ? norm_sim : 0.0;
-        }
-    }
-
 private:
+    template <typename InputIt2>
+    void _distance(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
+                   int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        if constexpr (MaxLen == 8)
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 16)
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 32)
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 64)
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+    }
+
+    template <typename InputIt2>
+    int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
+    {
+        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size(), weights);
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return input_count;
+    }
+
     size_t input_count;
     size_t pos;
     detail::BlockPatternMatchVector PM;

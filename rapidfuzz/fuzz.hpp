@@ -48,6 +48,54 @@ double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, d
 template <typename Sentence1, typename Sentence2>
 double ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiRatio {
+public:
+    MultiRatio(size_t count) : input_count(count), scorer(count)
+    {}
+
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(first1, last1);
+    }
+
+    template <typename InputIt2>
+    void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    double score_cutoff = 0.0) const
+    {
+        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
+    {
+        scorer.normalized_distance(scores, score_count, s2, score_cutoff / 100.0);
+
+        for (size_t i = 0; i < input_count; ++i)
+            scores[i] *= 100.0;
+    }
+
+private:
+    size_t input_count;
+    rapidfuzz::experimental::MultiIndel<MaxLen> scorer;
+};
+} /* namespace experimental */
+#endif
+
 // TODO documentation
 template <typename CharT1>
 struct CachedRatio {
