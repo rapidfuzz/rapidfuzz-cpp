@@ -145,8 +145,8 @@ int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> 
     return (currDist <= max) ? currDist : max + 1;
 }
 
-class OSA : public DistanceBase<OSA> {
-    friend DistanceBase<OSA>;
+class OSA : public DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<OSA>;
 
     template <typename InputIt1, typename InputIt2>

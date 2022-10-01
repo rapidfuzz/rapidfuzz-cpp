@@ -111,7 +111,8 @@ double osa_normalized_similarity(const Sentence1& s1, const Sentence2& s2, doubl
 }
 
 template <typename CharT1>
-struct CachedOSA : public detail::CachedDistanceBase<CachedOSA<CharT1>> {
+struct CachedOSA
+    : public detail::CachedDistanceBase<CachedOSA<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedOSA(const Sentence1& s1_) : CachedOSA(detail::to_begin(s1_), detail::to_end(s1_))
     {}
@@ -121,7 +122,7 @@ struct CachedOSA : public detail::CachedDistanceBase<CachedOSA<CharT1>> {
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedOSA<CharT1>>;
+    friend detail::CachedDistanceBase<CachedOSA<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedOSA<CharT1>>;
 
     template <typename InputIt2>

@@ -42,8 +42,8 @@ double indel_normalized_similarity(const BlockPatternMatchVector& block, Range<I
     return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
 }
 
-class Indel : public DistanceBase<Indel> {
-    friend DistanceBase<Indel>;
+class Indel : public DistanceBase<Indel, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<Indel, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<Indel>;
 
     template <typename InputIt1, typename InputIt2>

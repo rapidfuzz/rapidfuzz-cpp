@@ -407,8 +407,8 @@ Editops lcs_seq_editops(Range<InputIt1> s1, Range<InputIt2> s2)
     return recover_alignment(s1, s2, lcs_matrix(s1, s2), affix);
 }
 
-class LCSseq : public SimilarityBase<LCSseq> {
-    friend SimilarityBase<LCSseq>;
+class LCSseq : public SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<LCSseq>;
 
     template <typename InputIt1, typename InputIt2>

@@ -77,9 +77,10 @@ Editops indel_editops(const Sentence1& s1, const Sentence2& s2)
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
 template <int MaxLen>
-struct MultiIndel : public detail::MultiDistanceBase<MultiIndel<MaxLen>> {
+struct MultiIndel
+    : public detail::MultiDistanceBase<MultiIndel<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
 private:
-    friend detail::MultiDistanceBase<MultiIndel<MaxLen>>;
+    friend detail::MultiDistanceBase<MultiIndel<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiIndel<MaxLen>>;
 
 public:
@@ -145,7 +146,8 @@ private:
 #endif
 
 template <typename CharT1>
-struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
+struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>, int64_t, 0,
+                                                       std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
     {}
@@ -155,7 +157,7 @@ struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>> {
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedIndel<CharT1>>;
+    friend detail::CachedDistanceBase<CachedIndel<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedIndel<CharT1>>;
 
     template <typename InputIt2>

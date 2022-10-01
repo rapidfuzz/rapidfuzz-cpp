@@ -289,9 +289,11 @@ Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
 template <int MaxLen>
-struct MultiLevenshtein : public detail::MultiDistanceBase<MultiLevenshtein<MaxLen>> {
+struct MultiLevenshtein : public detail::MultiDistanceBase<MultiLevenshtein<MaxLen>, int64_t, 0,
+                                                           std::numeric_limits<int64_t>::max()> {
 private:
-    friend detail::MultiDistanceBase<MultiLevenshtein<MaxLen>>;
+    friend detail::MultiDistanceBase<MultiLevenshtein<MaxLen>, int64_t, 0,
+                                     std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiLevenshtein<MaxLen>>;
 
     constexpr static size_t get_vec_size()
@@ -409,7 +411,8 @@ private:
 #endif
 
 template <typename CharT1>
-struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>> {
+struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>, int64_t, 0,
+                                                             std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
         : CachedLevenshtein(detail::to_begin(s1_), detail::to_end(s1_), aWeights)
@@ -421,7 +424,8 @@ struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<C
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedLevenshtein<CharT1>>;
+    friend detail::CachedDistanceBase<CachedLevenshtein<CharT1>, int64_t, 0,
+                                      std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedLevenshtein<CharT1>>;
 
     template <typename InputIt2>
