@@ -115,8 +115,9 @@ int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
         return damerau_levenshtein_distance_zhao<int64_t>(s1, s2, max);
 }
 
-class DamerauLevenshtein : public DistanceBase<DamerauLevenshtein> {
-    friend DistanceBase<DamerauLevenshtein>;
+class DamerauLevenshtein
+    : public DistanceBase<DamerauLevenshtein, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<DamerauLevenshtein, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<DamerauLevenshtein>;
 
     template <typename InputIt1, typename InputIt2>

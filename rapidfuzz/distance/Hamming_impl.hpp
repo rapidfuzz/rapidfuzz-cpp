@@ -8,8 +8,8 @@
 
 namespace rapidfuzz::detail {
 
-class Hamming : public DistanceBase<Hamming> {
-    friend DistanceBase<Hamming>;
+class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<Hamming>;
 
     template <typename InputIt1, typename InputIt2>

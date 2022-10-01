@@ -7,12 +7,14 @@
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/simd.hpp>
+#include <type_traits>
 
 namespace rapidfuzz::detail {
 
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
-    template <typename InputIt1, typename InputIt2>
+    template <typename InputIt1, typename InputIt2,
+              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff)
     {
@@ -27,7 +29,8 @@ struct NormalizedMetricBase {
         return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
-    template <typename InputIt1, typename InputIt2>
+    template <typename InputIt1, typename InputIt2,
+              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff)
     {
@@ -48,10 +51,10 @@ protected:
                                        double score_cutoff)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        int64_t cutoff_distance =
-            static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        int64_t dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance);
-        double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
+        auto cutoff_distance =
+            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+        auto dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance);
+        double norm_dist = (maximum != 0) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
     }
 
@@ -69,44 +72,48 @@ protected:
     friend T;
 };
 
-template <typename T, typename... Args>
+template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct DistanceBase : public NormalizedMetricBase<T, Args...> {
-    template <typename InputIt1, typename InputIt2>
-    static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                            int64_t score_cutoff)
+    template <typename InputIt1, typename InputIt2,
+              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+    static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
+                            ResType score_cutoff)
     {
         return T::_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
                             score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static int64_t distance(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
+    static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
     {
         return T::_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
-    template <typename InputIt1, typename InputIt2>
-    static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                              int64_t score_cutoff)
+    template <typename InputIt1, typename InputIt2,
+              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+    static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
+                              ResType score_cutoff)
     {
         return _similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
                            score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
+    static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
     {
         return _similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
 protected:
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, int64_t score_cutoff)
+    static ResType _similarity(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        int64_t cutoff_distance = maximum - score_cutoff;
-        int64_t dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance);
-        int64_t sim = maximum - dist;
+        if (score_cutoff > maximum) return 0;
+
+        ResType cutoff_distance = maximum - score_cutoff;
+        ResType dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance);
+        ResType sim = maximum - dist;
         return (sim >= score_cutoff) ? sim : 0;
     }
 
@@ -114,45 +121,52 @@ protected:
     friend T;
 };
 
-template <typename T, typename... Args>
+template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
-    template <typename InputIt1, typename InputIt2>
-    static int64_t distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                            int64_t score_cutoff)
+    template <typename InputIt1, typename InputIt2,
+              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+    static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
+                            ResType score_cutoff)
     {
         return _distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
                          score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static int64_t distance(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
+    static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
     {
         return _distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
-    template <typename InputIt1, typename InputIt2>
-    static int64_t similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                              int64_t score_cutoff)
+    template <typename InputIt1, typename InputIt2,
+              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+    static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
+                              ResType score_cutoff)
     {
         return T::_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
                               score_cutoff);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static int64_t similarity(const Sentence1& s1, const Sentence2& s2, Args... args, int64_t score_cutoff)
+    static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
     {
         return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
     }
 
 protected:
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, int64_t score_cutoff)
+    static ResType _distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
-        int64_t sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity);
-        int64_t dist = maximum - sim;
-        return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+        ResType cutoff_similarity =
+            (maximum >= score_cutoff) ? maximum - score_cutoff : static_cast<ResType>(WorstSimilarity);
+        ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity);
+        ResType dist = maximum - sim;
+
+        if constexpr (std::is_floating_point_v<ResType>)
+            return (dist <= score_cutoff) ? dist : 1.0;
+        else
+            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 
     SimilarityBase(){};
@@ -191,10 +205,10 @@ protected:
     {
         const T& derived = static_cast<const T&>(*this);
         auto maximum = derived.maximum(s2);
-        int64_t cutoff_distance =
-            static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        int64_t dist = derived._distance(s2, cutoff_distance);
-        double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
+        auto cutoff_distance =
+            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
+        double dist = static_cast<double>(derived._distance(s2, cutoff_distance));
+        double norm_dist = (maximum != 0) ? dist / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
     }
 
@@ -211,44 +225,48 @@ protected:
     friend T;
 };
 
-template <typename T>
+template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance>
 struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
     template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    ResType distance(InputIt2 first2, InputIt2 last2,
+                     ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
         return derived._distance(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
         return derived._distance(Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
+    ResType similarity(InputIt2 first2, InputIt2 last2,
+                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         return _similarity(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
+    ResType similarity(const Sentence2& s2,
+                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         return _similarity(Range(s2), score_cutoff);
     }
 
 protected:
     template <typename InputIt2>
-    int64_t _similarity(Range<InputIt2> s2, int64_t score_cutoff) const
+    ResType _similarity(Range<InputIt2> s2, ResType score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
-        auto maximum = derived.maximum(s2);
-        int64_t cutoff_distance = maximum - score_cutoff;
-        int64_t dist = derived._distance(s2, cutoff_distance);
-        int64_t sim = maximum - dist;
+        ResType maximum = derived.maximum(s2);
+        if (score_cutoff > maximum) return 0;
+
+        ResType cutoff_distance = maximum - score_cutoff;
+        ResType dist = derived._distance(s2, cutoff_distance);
+        ResType sim = maximum - dist;
         return (sim >= score_cutoff) ? sim : 0;
     }
 
@@ -256,30 +274,32 @@ protected:
     friend T;
 };
 
-template <typename T>
+template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance>
 struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
     template <typename InputIt2>
-    int64_t distance(InputIt2 first2, InputIt2 last2,
-                     int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    ResType distance(InputIt2 first2, InputIt2 last2,
+                     ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         return _distance(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    int64_t distance(const Sentence2& s2, int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         return _distance(Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
-    int64_t similarity(InputIt2 first2, InputIt2 last2, int64_t score_cutoff = 0) const
+    ResType similarity(InputIt2 first2, InputIt2 last2,
+                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
         return derived._similarity(Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    int64_t similarity(const Sentence2& s2, int64_t score_cutoff = 0) const
+    ResType similarity(const Sentence2& s2,
+                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
         return derived._similarity(Range(s2), score_cutoff);
@@ -287,14 +307,18 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
 
 protected:
     template <typename InputIt2>
-    int64_t _distance(Range<InputIt2> s2, int64_t score_cutoff) const
+    ResType _distance(Range<InputIt2> s2, ResType score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
-        auto maximum = derived.maximum(s2);
-        int64_t cutoff_similarity = std::max<int64_t>(0, maximum - score_cutoff);
-        int64_t sim = derived._similarity(s2, cutoff_similarity);
-        int64_t dist = maximum - sim;
-        return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+        ResType maximum = derived.maximum(s2);
+        ResType cutoff_similarity = (maximum > score_cutoff) ? maximum - score_cutoff : 0;
+        ResType sim = derived._similarity(s2, cutoff_similarity);
+        ResType dist = maximum - sim;
+
+        if constexpr (std::is_floating_point_v<ResType>)
+            return (dist <= score_cutoff) ? dist : 1.0;
+        else
+            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 
     CachedSimilarityBase(){};
@@ -376,47 +400,48 @@ protected:
     friend T;
 };
 
-template <typename T>
+template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance>
 struct MultiDistanceBase : public MultiNormalizedMetricBase<T> {
     template <typename InputIt2>
-    void distance(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    void distance(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                  ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._distance(scores, score_count, Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    void distance(int64_t* scores, size_t score_count, const Sentence2& s2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    void distance(ResType* scores, size_t score_count, const Sentence2& s2,
+                  ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._distance(scores, score_count, Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
-    void similarity(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                    int64_t score_cutoff = 0) const
+    void similarity(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         _similarity(scores, score_count, Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    void similarity(int64_t* scores, size_t score_count, const Sentence2& s2, int64_t score_cutoff = 0) const
+    void similarity(ResType* scores, size_t score_count, const Sentence2& s2,
+                    ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         _similarity(scores, score_count, Range(s2), score_cutoff);
     }
 
 protected:
     template <typename InputIt2>
-    void _similarity(int64_t* scores, size_t score_count, Range<InputIt2> s2, int64_t score_cutoff) const
+    void _similarity(ResType* scores, size_t score_count, Range<InputIt2> s2, ResType score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._distance(scores, score_count, s2);
 
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
-            int64_t maximum = derived.maximum(i, s2);
-            int64_t sim = maximum - scores[i];
+            ResType maximum = derived.maximum(i, s2);
+            ResType sim = maximum - scores[i];
             scores[i] = (sim >= score_cutoff) ? sim : 0;
         }
     }
@@ -425,32 +450,33 @@ protected:
     friend T;
 };
 
-template <typename T>
+template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance>
 struct MultiSimilarityBase : public MultiNormalizedMetricBase<T> {
     template <typename InputIt2>
-    void distance(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    void distance(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                  ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         _distance(scores, score_count, Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    void distance(int64_t* scores, size_t score_count, const Sentence2& s2,
-                  int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    void distance(ResType* scores, size_t score_count, const Sentence2& s2,
+                  ResType score_cutoff = WorstDistance) const
     {
         _distance(scores, score_count, Range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
-    void similarity(int64_t* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
-                    int64_t score_cutoff = 0) const
+    void similarity(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._similarity(scores, score_count, Range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
-    void similarity(int64_t* scores, size_t score_count, const Sentence2& s2, int64_t score_cutoff = 0) const
+    void similarity(ResType* scores, size_t score_count, const Sentence2& s2,
+                    ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._similarity(scores, score_count, Range(s2), score_cutoff);
@@ -458,15 +484,19 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T> {
 
 protected:
     template <typename InputIt2>
-    void _distance(int64_t* scores, size_t score_count, Range<InputIt2> s2, int64_t score_cutoff) const
+    void _distance(ResType* scores, size_t score_count, Range<InputIt2> s2, ResType score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._similarity(scores, score_count, s2);
 
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
-            int64_t maximum = derived.maximum(i, s2);
-            int64_t sim = maximum - scores[i];
-            scores[i] = (sim <= score_cutoff) ? sim : score_cutoff + 1;
+            ResType maximum = derived.maximum(i, s2);
+            ResType dist = maximum - scores[i];
+
+            if constexpr (std::is_floating_point_v<ResType>)
+                scores[i] = (dist <= score_cutoff) ? dist : 1.0;
+            else
+                scores[i] = (dist <= score_cutoff) ? dist : score_cutoff + 1;
         }
     }
 

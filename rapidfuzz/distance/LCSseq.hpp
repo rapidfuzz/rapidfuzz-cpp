@@ -78,9 +78,10 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
 template <int MaxLen>
-struct MultiLCSseq : public detail::MultiSimilarityBase<MultiLCSseq<MaxLen>> {
+struct MultiLCSseq : public detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, int64_t, 0,
+                                                        std::numeric_limits<int64_t>::max()> {
 private:
-    friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>>;
+    friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>>;
 
     constexpr static size_t get_vec_size()
@@ -195,7 +196,8 @@ private:
 #endif
 
 template <typename CharT1>
-struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
+struct CachedLCSseq
+    : detail::CachedSimilarityBase<CachedLCSseq<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
     {}
@@ -205,7 +207,8 @@ struct CachedLCSseq : detail::CachedSimilarityBase<CachedLCSseq<CharT1>> {
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>>;
+    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>, int64_t, 0,
+                                        std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedLCSseq<CharT1>>;
 
     template <typename InputIt2>

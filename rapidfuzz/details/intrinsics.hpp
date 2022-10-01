@@ -16,6 +16,22 @@
 
 namespace rapidfuzz::detail {
 
+template <typename T>
+T bit_mask_lsb(int n)
+{
+    T mask = static_cast<T>(-1);
+    if (n < static_cast<int>(sizeof(T) * 8)) {
+        mask += static_cast<T>(1) << n;
+    }
+    return mask;
+}
+
+template <typename T>
+bool bittest(T a, int bit)
+{
+    return (a >> bit) & 1;
+}
+
 /*
  * shift right without undefined behavior for shifts > bit width
  */

@@ -1118,8 +1118,9 @@ Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
     return editops;
 }
 
-class Levenshtein : public DistanceBase<Levenshtein, LevenshteinWeightTable> {
-    friend DistanceBase<Levenshtein, LevenshteinWeightTable>;
+class Levenshtein : public DistanceBase<Levenshtein, int64_t, 0, std::numeric_limits<int64_t>::max(),
+                                        LevenshteinWeightTable> {
+    friend DistanceBase<Levenshtein, int64_t, 0, std::numeric_limits<int64_t>::max(), LevenshteinWeightTable>;
     friend NormalizedMetricBase<Levenshtein, LevenshteinWeightTable>;
 
     template <typename InputIt1, typename InputIt2>

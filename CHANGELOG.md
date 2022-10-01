@@ -3,6 +3,10 @@
 ### [1.8.0] -
 #### Fixed
 - fixed incorrect score_cutoff handling in `lcs_seq_distance`
+  
+#### Added
+- added experimental simd support for `ratio`/`Levenshtein`/`LCSseq`/`Indel`
+- add Jaro and JaroWinkler
 
 ### [1.7.0] - 2022-09-18
 #### Added

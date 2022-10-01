@@ -109,7 +109,8 @@ double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sent
 }
 
 template <typename CharT1>
-struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>> {
+struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, int64_t,
+                                                                    0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedDamerauLevenshtein(const Sentence1& s1_)
         : CachedDamerauLevenshtein(detail::to_begin(s1_), detail::to_end(s1_))
@@ -120,7 +121,8 @@ struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamera
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>>;
+    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, int64_t, 0,
+                                      std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
 
     template <typename InputIt2>
