@@ -324,7 +324,7 @@ private:
 
 public:
     MultiLevenshtein(size_t count, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : input_count(count), pos(0), PM(find_block_count(count) * 64), weights(aWeights)
+        : input_count(count), PM(find_block_count(count) * 64), weights(aWeights)
     {
         str_lens.resize(result_count());
         if (weights.delete_cost != 1 || weights.insert_cost != 1 || weights.replace_cost > 2)
@@ -364,7 +364,6 @@ public:
         if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
 
         str_lens[pos] = static_cast<size_t>(len);
-
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
@@ -402,7 +401,7 @@ private:
     }
 
     size_t input_count;
-    size_t pos;
+    size_t pos = 0;
     detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
     LevenshteinWeightTable weights;

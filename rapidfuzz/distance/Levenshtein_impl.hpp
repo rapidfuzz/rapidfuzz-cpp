@@ -295,13 +295,13 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 #    else
     using namespace simd_sse2;
 #    endif
-    auto score_iter = scores.begin();
     static constexpr size_t vec_width = native_simd<VecType>::size();
     static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));
     native_simd<VecType> one(1);
+    size_t result_index = 0;
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
         /* VP is set to 1^m */
@@ -309,15 +309,16 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
         native_simd<VecType> VN(VecType(0));
 
         alignas(32) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>([&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[cur_vec + i]); });
+        unroll<int, vec_width>(
+            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(32) std::array<VecType, vec_width> mask_;
         unroll<int, vec_width>([&](auto i) {
-            if (s1_lengths[cur_vec + i] == 0)
+            if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
-                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1));
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[result_index + i] - 1));
         });
         native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
 
@@ -351,13 +352,14 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
         unroll<int, vec_width>([&](auto i) {
             int64_t score = 0;
             /* strings of length 0 are not handled correctly */
-            if (s1_lengths[i] == 0) {
+            if (s1_lengths[result_index] == 0) {
                 score = s2.size();
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
                 if constexpr (!std::is_same_v<VecType, uint64_t>) {
-                    ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
+                    ptrdiff_t min_dist =
+                        std::abs(static_cast<ptrdiff_t>(s1_lengths[result_index]) - s2.size());
                     int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
 
                     score = (min_dist / wraparound_score) * wraparound_score;
@@ -368,9 +370,8 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 
                 score += static_cast<int64_t>(distances[i]);
             }
-
-            *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;
-            score_iter++;
+            scores[static_cast<int64_t>(result_index)] = (score <= score_cutoff) ? score : score_cutoff + 1;
+            result_index++;
         });
     }
 }

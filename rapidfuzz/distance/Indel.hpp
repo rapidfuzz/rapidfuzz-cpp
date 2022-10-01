@@ -84,8 +84,9 @@ private:
     friend detail::MultiNormalizedMetricBase<MultiIndel<MaxLen>>;
 
 public:
-    MultiIndel(size_t count) : input_count(count), scorer(count)
-    {}
+    MultiIndel(size_t count) : scorer(count)
+    {
+    }
 
     /**
      * @brief get minimum size required for result vectors passed into
@@ -111,6 +112,7 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         scorer.insert(first1, last1);
+        str_lens.push_back(static_cast<size_t>(std::distance(first1, last1)));
     }
 
 private:
@@ -130,16 +132,15 @@ private:
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
     {
-        // todo
-        return s1_idx /*static_cast<int64_t>(str_lens[s1_idx])*/ + s2.size();
+        return static_cast<int64_t>(str_lens[s1_idx]) + s2.size();
     }
 
     size_t get_input_count() const noexcept
     {
-        return input_count;
+        return str_lens.size();
     }
 
-    size_t input_count;
+    std::vector<size_t> str_lens;
     MultiLCSseq<MaxLen> scorer;
 };
 } /* namespace experimental */

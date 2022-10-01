@@ -1,7 +1,7 @@
 include(FetchContent)
 FetchContent_Declare(googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.10.x)
+        GIT_TAG v1.12.x)
 
 FetchContent_Declare(googlebenchmark
         GIT_REPOSITORY https://github.com/google/benchmark.git
@@ -22,3 +22,4 @@ endfunction()
 rapidfuzz_add_benchmark(lcs bench-lcs.cpp)
 rapidfuzz_add_benchmark(fuzz bench-fuzz.cpp)
 rapidfuzz_add_benchmark(levenshtein bench-levenshtein.cpp)
+rapidfuzz_add_benchmark(jarowinkler bench-jarowinkler.cpp)

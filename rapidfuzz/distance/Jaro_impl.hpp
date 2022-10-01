@@ -112,7 +112,7 @@ FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]]
     uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
 
     int64_t j = 0;
-    for (; j < std::min(static_cast<int64_t>(Bound), T.size()); ++j) {
+    for (; j < std::min(static_cast<int64_t>(Bound), static_cast<int64_t>(T.size())); ++j) {
         uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
@@ -162,6 +162,37 @@ void flag_similar_characters_step(const BlockPatternMatchVector& PM, CharT T_j,
         word++;
     }
 
+    /* unroll for better performance on long sequences when access is fast */
+    if (T_j >= 0 && T_j < 256) {
+        for (; word + 3 < last_word - 1; word += 4) {
+            uint64_t PM_j[4];
+            unroll<int, 4>([&](auto i) {
+                PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
+            });
+
+            if (PM_j[0]) {
+                flagged.P_flag[word] |= blsi(PM_j[0]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[1]) {
+                flagged.P_flag[word + 1] |= blsi(PM_j[1]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[2]) {
+                flagged.P_flag[word + 2] |= blsi(PM_j[2]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[3]) {
+                flagged.P_flag[word + 3] |= blsi(PM_j[3]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+        }
+    }
+
     for (; word < last_word - 1; ++word) {
         uint64_t PM_j = PM.get(word, T_j) & (~flagged.P_flag[word]);
 
@@ -194,7 +225,7 @@ static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPat
     flagged.P_flag.resize(static_cast<size_t>(ceil_div(P.size(), 64)));
 
     SearchBoundMask BoundMask;
-    size_t start_range = static_cast<size_t>(std::min(Bound + 1, P.size()));
+    size_t start_range = static_cast<size_t>(std::min(Bound + 1, static_cast<int64_t>(P.size())));
     BoundMask.words = 1 + start_range / 64;
     BoundMask.empty_words = 0;
     BoundMask.last_mask = (1ull << (start_range % 64)) - 1;

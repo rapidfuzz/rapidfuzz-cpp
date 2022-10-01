@@ -646,6 +646,64 @@ double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
 template <typename Sentence1, typename Sentence2>
 double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiQRatio {
+public:
+    MultiQRatio(size_t count) : scorer(count)
+    {}
+
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(first1, last1);
+        str_lens.push_back(static_cast<size_t>(std::distance(first1, last1)));
+    }
+
+    template <typename InputIt2>
+    void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    double score_cutoff = 0.0) const
+    {
+        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
+    {
+        if (rapidfuzz::detail::Range(s2).empty())
+        {
+            for (size_t i = 0; i < str_lens.size(); ++i)
+                scores[i] = 0;
+
+            return;
+        }
+
+        scorer.similarity(scores, score_count, s2, score_cutoff);
+
+        for (size_t i = 0; i < str_lens.size(); ++i)
+            if (str_lens[i] == 0)
+                scores[i] = 0;
+    }
+
+private:
+    std::vector<size_t> str_lens;
+    MultiRatio<MaxLen> scorer;
+};
+} /* namespace experimental */
+#endif
+
 template <typename CharT1>
 struct CachedQRatio {
     template <typename InputIt1>

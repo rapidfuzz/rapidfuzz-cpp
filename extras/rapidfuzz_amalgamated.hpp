@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-02 00:41:29.307515
+//  Generated: 2022-10-02 07:06:43.607111
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -4702,7 +4702,7 @@ private:
     friend detail::MultiNormalizedMetricBase<MultiIndel<MaxLen>>;
 
 public:
-    MultiIndel(size_t count) : input_count(count), scorer(count)
+    MultiIndel(size_t count) : scorer(count)
     {}
 
     /**
@@ -4729,6 +4729,7 @@ public:
     void insert(InputIt1 first1, InputIt1 last1)
     {
         scorer.insert(first1, last1);
+        str_lens.push_back(static_cast<size_t>(std::distance(first1, last1)));
     }
 
 private:
@@ -4748,16 +4749,15 @@ private:
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
     {
-        // todo
-        return s1_idx /*static_cast<int64_t>(str_lens[s1_idx])*/ + s2.size();
+        return static_cast<int64_t>(str_lens[s1_idx]) + s2.size();
     }
 
     size_t get_input_count() const noexcept
     {
-        return input_count;
+        return str_lens.size();
     }
 
-    size_t input_count;
+    std::vector<size_t> str_lens;
     MultiLCSseq<MaxLen> scorer;
 };
 } /* namespace experimental */
@@ -5094,13 +5094,13 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 #    else
     using namespace simd_sse2;
 #    endif
-    auto score_iter = scores.begin();
     static constexpr size_t vec_width = native_simd<VecType>::size();
     static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));
     native_simd<VecType> one(1);
+    size_t result_index = 0;
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
         /* VP is set to 1^m */
@@ -5108,15 +5108,16 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
         native_simd<VecType> VN(VecType(0));
 
         alignas(32) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>([&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[cur_vec + i]); });
+        unroll<int, vec_width>(
+            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(32) std::array<VecType, vec_width> mask_;
         unroll<int, vec_width>([&](auto i) {
-            if (s1_lengths[cur_vec + i] == 0)
+            if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
-                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[cur_vec + i] - 1));
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[result_index + i] - 1));
         });
         native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
 
@@ -5150,13 +5151,14 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
         unroll<int, vec_width>([&](auto i) {
             int64_t score = 0;
             /* strings of length 0 are not handled correctly */
-            if (s1_lengths[i] == 0) {
+            if (s1_lengths[result_index] == 0) {
                 score = s2.size();
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
                 if constexpr (!std::is_same_v<VecType, uint64_t>) {
-                    ptrdiff_t min_dist = std::abs(static_cast<ptrdiff_t>(s1_lengths[i]) - s2.size());
+                    ptrdiff_t min_dist =
+                        std::abs(static_cast<ptrdiff_t>(s1_lengths[result_index]) - s2.size());
                     int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
 
                     score = (min_dist / wraparound_score) * wraparound_score;
@@ -5167,9 +5169,8 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 
                 score += static_cast<int64_t>(distances[i]);
             }
-
-            *score_iter = (score <= score_cutoff) ? score : score_cutoff + 1;
-            score_iter++;
+            scores[static_cast<int64_t>(result_index)] = (score <= score_cutoff) ? score : score_cutoff + 1;
+            result_index++;
         });
     }
 }
@@ -6256,7 +6257,7 @@ private:
 
 public:
     MultiLevenshtein(size_t count, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : input_count(count), pos(0), PM(find_block_count(count) * 64), weights(aWeights)
+        : input_count(count), PM(find_block_count(count) * 64), weights(aWeights)
     {
         str_lens.resize(result_count());
         if (weights.delete_cost != 1 || weights.insert_cost != 1 || weights.replace_cost > 2)
@@ -6296,7 +6297,6 @@ public:
         if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
 
         str_lens[pos] = static_cast<size_t>(len);
-
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
@@ -6334,7 +6334,7 @@ private:
     }
 
     size_t input_count;
-    size_t pos;
+    size_t pos = 0;
     detail::BlockPatternMatchVector PM;
     std::vector<size_t> str_lens;
     LevenshteinWeightTable weights;
@@ -6416,7 +6416,6 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
 #include <cmath>
 #include <numeric>
 
-#include "rapidfuzz/details/common.hpp"
 #include <stdexcept>
 
 namespace rapidfuzz::detail {
@@ -6845,7 +6844,7 @@ FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]]
     uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
 
     int64_t j = 0;
-    for (; j < std::min(static_cast<int64_t>(Bound), T.size()); ++j) {
+    for (; j < std::min(static_cast<int64_t>(Bound), static_cast<int64_t>(T.size())); ++j) {
         uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
@@ -6895,6 +6894,37 @@ void flag_similar_characters_step(const BlockPatternMatchVector& PM, CharT T_j,
         word++;
     }
 
+    /* unroll for better performance on long sequences when access is fast */
+    if (T_j >= 0 && T_j < 256) {
+        for (; word + 3 < last_word - 1; word += 4) {
+            uint64_t PM_j[4];
+            unroll<int, 4>([&](auto i) {
+                PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
+            });
+
+            if (PM_j[0]) {
+                flagged.P_flag[word] |= blsi(PM_j[0]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[1]) {
+                flagged.P_flag[word + 1] |= blsi(PM_j[1]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[2]) {
+                flagged.P_flag[word + 2] |= blsi(PM_j[2]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[3]) {
+                flagged.P_flag[word + 3] |= blsi(PM_j[3]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+        }
+    }
+
     for (; word < last_word - 1; ++word) {
         uint64_t PM_j = PM.get(word, T_j) & (~flagged.P_flag[word]);
 
@@ -6927,7 +6957,7 @@ static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPat
     flagged.P_flag.resize(static_cast<size_t>(ceil_div(P.size(), 64)));
 
     SearchBoundMask BoundMask;
-    size_t start_range = static_cast<size_t>(std::min(Bound + 1, P.size()));
+    size_t start_range = static_cast<size_t>(std::min(Bound + 1, static_cast<int64_t>(P.size())));
     BoundMask.words = 1 + start_range / 64;
     BoundMask.empty_words = 0;
     BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
@@ -8230,6 +8260,62 @@ double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
 
 template <typename Sentence1, typename Sentence2>
 double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiQRatio {
+public:
+    MultiQRatio(size_t count) : scorer(count)
+    {}
+
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(first1, last1);
+        str_lens.push_back(static_cast<size_t>(std::distance(first1, last1)));
+    }
+
+    template <typename InputIt2>
+    void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    double score_cutoff = 0.0) const
+    {
+        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
+    {
+        if (rapidfuzz::detail::Range(s2).empty()) {
+            for (size_t i = 0; i < str_lens.size(); ++i)
+                scores[i] = 0;
+
+            return;
+        }
+
+        scorer.similarity(scores, score_count, s2, score_cutoff);
+
+        for (size_t i = 0; i < str_lens.size(); ++i)
+            if (str_lens[i] == 0) scores[i] = 0;
+    }
+
+private:
+    std::vector<size_t> str_lens;
+    MultiRatio<MaxLen> scorer;
+};
+} /* namespace experimental */
+#endif
 
 template <typename CharT1>
 struct CachedQRatio {

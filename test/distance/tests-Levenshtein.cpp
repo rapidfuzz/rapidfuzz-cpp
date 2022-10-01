@@ -474,4 +474,26 @@ TEST_CASE("SIMD wraparound")
         REQUIRE(results[3] == 510);
     }
 }
+
+TEST_CASE("SIMD")
+{
+    SECTION("multiple sequences")
+    {
+        std::string s2  = "0";
+        size_t count = 256 / 32 + 1;
+        rapidfuzz::experimental::MultiLevenshtein<32> scorer(count);
+        for (size_t i = 0; i < count - 1; ++i)
+            scorer.insert(std::string(""));
+
+        scorer.insert(std::string("00000000000000000"));
+
+        std::vector<int64_t> results(scorer.result_count());
+        scorer.distance(&results[0], results.size(), s2);
+
+        for (size_t i = 0; i < count - 1; ++i)
+            REQUIRE(results[i] == 1);
+
+        REQUIRE(results[count - 1] == 16);
+    }
+}
 #endif

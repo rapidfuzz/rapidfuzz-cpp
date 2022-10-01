@@ -82,12 +82,12 @@ static void BM_LCS_SIMD(benchmark::State& state)
 
     size_t num = 0;
     for (auto _ : state) {
-        rapidfuzz::MultiLCSseq<MaxLen> scorer(seq1.size());
+        rapidfuzz::experimental::MultiLCSseq<MaxLen> scorer(seq1.size());
         for (const auto& str1 : seq1)
             scorer.insert(str1);
 
         for (const auto& str2 : seq2)
-            scorer.similarity(results, str2);
+            scorer.similarity(&results[0], results.size(), str2);
 
         num += seq1.size() * seq2.size();
     }
