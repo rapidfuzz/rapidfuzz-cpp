@@ -1,6 +1,6 @@
 ## Changelog
 
-### [1.8.0] -
+### [1.8.0] - 2022-10-02
 #### Fixed
 - fixed incorrect score_cutoff handling in `lcs_seq_distance`
   
