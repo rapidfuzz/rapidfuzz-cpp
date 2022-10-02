@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-02 11:34:58.778037
+//  Generated: 2022-10-02 12:26:03.961379
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -426,6 +426,17 @@ private:
 
 namespace rapidfuzz::detail {
 
+static inline void assume(bool b)
+{
+#if defined(__clang__)
+    __builtin_assume(b);
+#elif defined(__GNUC__) || defined(__GNUG__)
+    if (!b) __builtin_unreachable();
+#elif defined(_MSC_VER)
+    __assume(b);
+#endif
+}
+
 template <typename CharT>
 CharT* to_begin(CharT* s)
 {
@@ -442,9 +453,10 @@ auto to_begin(T& x)
 template <typename CharT>
 CharT* to_end(CharT* s)
 {
-    while (*s != 0) {
+    assume(s != nullptr);
+    while (*s != 0)
         ++s;
-    }
+
     return s;
 }
 
@@ -1554,17 +1566,6 @@ struct DecomposedSet {
 static inline double NormSim_to_NormDist(double score_cutoff, double imprecision = 0.00001)
 {
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
-}
-
-static inline void assume(bool b)
-{
-#if defined(__clang__)
-    __builtin_assume(b);
-#elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b) __builtin_unreachable();
-#elif defined(_MSC_VER)
-    __assume(b);
-#endif
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -4806,6 +4807,729 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 
 } // namespace rapidfuzz
 
+#include "rapidfuzz/details/Range.hpp"
+#include <limits>
+
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <vector>
+
+namespace rapidfuzz::detail {
+
+struct FlaggedCharsWord {
+    uint64_t P_flag;
+    uint64_t T_flag;
+};
+
+struct FlaggedCharsMultiword {
+    std::vector<uint64_t> P_flag;
+    std::vector<uint64_t> T_flag;
+};
+
+struct SearchBoundMask {
+    size_t words = 0;
+    size_t empty_words = 0;
+    uint64_t last_mask = 0;
+    uint64_t first_mask = 0;
+};
+
+struct TextPosition {
+    TextPosition(int64_t Word_, int64_t WordPos_) : Word(Word_), WordPos(WordPos_)
+    {}
+    int64_t Word;
+    int64_t WordPos;
+};
+
+static inline double jaro_calculate_similarity(int64_t P_len, int64_t T_len, size_t CommonChars,
+                                               size_t Transpositions)
+{
+    Transpositions /= 2;
+    double Sim = 0;
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(P_len);
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(T_len);
+    Sim += (static_cast<double>(CommonChars) - static_cast<double>(Transpositions)) /
+           static_cast<double>(CommonChars);
+    return Sim / 3.0;
+}
+
+/**
+ * @brief filter matches below score_cutoff based on string lengths
+ */
+static inline bool jaro_length_filter(int64_t P_len, int64_t T_len, double score_cutoff)
+{
+    if (!T_len || !P_len) return false;
+
+    double min_len = static_cast<double>(std::min(P_len, T_len));
+    double Sim = min_len / static_cast<double>(P_len) + min_len / static_cast<double>(T_len) + 1.0;
+    Sim /= 3.0;
+    return Sim >= score_cutoff;
+}
+
+/**
+ * @brief filter matches below score_cutoff based on string lengths and common characters
+ */
+static inline bool jaro_common_char_filter(int64_t P_len, int64_t T_len, size_t CommonChars,
+                                           double score_cutoff)
+{
+    if (!CommonChars) return false;
+
+    double Sim = 0;
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(P_len);
+    Sim += static_cast<double>(CommonChars) / static_cast<double>(T_len);
+    Sim += 1.0;
+    Sim /= 3.0;
+    return Sim >= score_cutoff;
+}
+
+static inline size_t count_common_chars(const FlaggedCharsWord& flagged)
+{
+    return static_cast<size_t>(popcount(flagged.P_flag));
+}
+
+static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
+{
+    size_t CommonChars = 0;
+    if (flagged.P_flag.size() < flagged.T_flag.size()) {
+        for (uint64_t flag : flagged.P_flag) {
+            CommonChars += static_cast<size_t>(popcount(flag));
+        }
+    }
+    else {
+        for (uint64_t flag : flagged.T_flag) {
+            CommonChars += static_cast<size_t>(popcount(flag));
+        }
+    }
+    return CommonChars;
+}
+
+template <typename PM_Vec, typename InputIt1, typename InputIt2>
+FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]] Range<InputIt1> P,
+                                              Range<InputIt2> T, int Bound)
+{
+    assert(P.size() <= 64);
+    assert(T.size() <= 64);
+    assert(Bound > P.size() || P.size() - Bound <= T.size());
+
+    FlaggedCharsWord flagged = {0, 0};
+
+    uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
+
+    int64_t j = 0;
+    for (; j < std::min(static_cast<int64_t>(Bound), static_cast<int64_t>(T.size())); ++j) {
+        uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
+
+        flagged.P_flag |= blsi(PM_j);
+        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
+
+        BoundMask = (BoundMask << 1) | 1;
+    }
+
+    for (; j < T.size(); ++j) {
+        uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
+
+        flagged.P_flag |= blsi(PM_j);
+        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
+
+        BoundMask <<= 1;
+    }
+
+    return flagged;
+}
+
+template <typename CharT>
+void flag_similar_characters_step(const BlockPatternMatchVector& PM, CharT T_j,
+                                  FlaggedCharsMultiword& flagged, size_t j, SearchBoundMask BoundMask)
+{
+    size_t j_word = j / 64;
+    size_t j_pos = j % 64;
+    size_t word = BoundMask.empty_words;
+    size_t last_word = word + BoundMask.words;
+
+    if (BoundMask.words == 1) {
+        uint64_t PM_j =
+            PM.get(word, T_j) & BoundMask.last_mask & BoundMask.first_mask & (~flagged.P_flag[word]);
+
+        flagged.P_flag[word] |= blsi(PM_j);
+        flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
+        return;
+    }
+
+    if (BoundMask.first_mask) {
+        uint64_t PM_j = PM.get(word, T_j) & BoundMask.first_mask & (~flagged.P_flag[word]);
+
+        if (PM_j) {
+            flagged.P_flag[word] |= blsi(PM_j);
+            flagged.T_flag[j_word] |= 1ull << j_pos;
+            return;
+        }
+        word++;
+    }
+
+    /* unroll for better performance on long sequences when access is fast */
+    if (T_j >= 0 && T_j < 256) {
+        for (; word + 3 < last_word - 1; word += 4) {
+            uint64_t PM_j[4];
+            unroll<int, 4>([&](auto i) {
+                PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
+            });
+
+            if (PM_j[0]) {
+                flagged.P_flag[word] |= blsi(PM_j[0]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[1]) {
+                flagged.P_flag[word + 1] |= blsi(PM_j[1]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[2]) {
+                flagged.P_flag[word + 2] |= blsi(PM_j[2]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+            if (PM_j[3]) {
+                flagged.P_flag[word + 3] |= blsi(PM_j[3]);
+                flagged.T_flag[j_word] |= 1ull << j_pos;
+                return;
+            }
+        }
+    }
+
+    for (; word < last_word - 1; ++word) {
+        uint64_t PM_j = PM.get(word, T_j) & (~flagged.P_flag[word]);
+
+        if (PM_j) {
+            flagged.P_flag[word] |= blsi(PM_j);
+            flagged.T_flag[j_word] |= 1ull << j_pos;
+            return;
+        }
+    }
+
+    if (BoundMask.last_mask) {
+        uint64_t PM_j = PM.get(word, T_j) & BoundMask.last_mask & (~flagged.P_flag[word]);
+
+        flagged.P_flag[word] |= blsi(PM_j);
+        flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
+    }
+}
+
+template <typename InputIt1, typename InputIt2>
+static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPatternMatchVector& PM,
+                                                                  Range<InputIt1> P, Range<InputIt2> T,
+                                                                  int64_t Bound)
+{
+    assert(P.size() > 64 || T.size() > 64);
+    assert(Bound > P.size() || P.size() - Bound <= T.size());
+    assert(Bound >= 31);
+
+    FlaggedCharsMultiword flagged;
+    flagged.T_flag.resize(static_cast<size_t>(ceil_div(T.size(), 64)));
+    flagged.P_flag.resize(static_cast<size_t>(ceil_div(P.size(), 64)));
+
+    SearchBoundMask BoundMask;
+    size_t start_range = static_cast<size_t>(std::min(Bound + 1, static_cast<int64_t>(P.size())));
+    BoundMask.words = 1 + start_range / 64;
+    BoundMask.empty_words = 0;
+    BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
+    BoundMask.first_mask = ~UINT64_C(0);
+
+    for (int64_t j = 0; j < T.size(); ++j) {
+        flag_similar_characters_step(PM, T[j], flagged, static_cast<size_t>(j), BoundMask);
+
+        if (j + Bound + 1 < P.size()) {
+            BoundMask.last_mask = (BoundMask.last_mask << 1) | 1;
+            if (j + Bound + 2 < P.size() && BoundMask.last_mask == ~UINT64_C(0)) {
+                BoundMask.last_mask = 0;
+                BoundMask.words++;
+            }
+        }
+
+        if (j >= Bound) {
+            BoundMask.first_mask <<= 1;
+            if (BoundMask.first_mask == 0) {
+                BoundMask.first_mask = ~UINT64_C(0);
+                BoundMask.words--;
+                BoundMask.empty_words++;
+            }
+        }
+    }
+
+    return flagged;
+}
+
+template <typename PM_Vec, typename InputIt1>
+static inline size_t count_transpositions_word(const PM_Vec& PM, Range<InputIt1> T,
+                                               const FlaggedCharsWord& flagged)
+{
+    uint64_t P_flag = flagged.P_flag;
+    uint64_t T_flag = flagged.T_flag;
+    size_t Transpositions = 0;
+    while (T_flag) {
+        uint64_t PatternFlagMask = blsi(P_flag);
+
+        Transpositions += !(PM.get(0, T[countr_zero(T_flag)]) & PatternFlagMask);
+
+        T_flag = blsr(T_flag);
+        P_flag ^= PatternFlagMask;
+    }
+
+    return Transpositions;
+}
+
+template <typename InputIt1>
+static inline size_t count_transpositions_block(const BlockPatternMatchVector& PM, Range<InputIt1> T,
+                                                const FlaggedCharsMultiword& flagged, size_t FlaggedChars)
+{
+    size_t TextWord = 0;
+    size_t PatternWord = 0;
+    uint64_t T_flag = flagged.T_flag[TextWord];
+    uint64_t P_flag = flagged.P_flag[PatternWord];
+
+    auto T_first = T.begin();
+    size_t Transpositions = 0;
+    while (FlaggedChars) {
+        while (!T_flag) {
+            TextWord++;
+            T_first += 64;
+            T_flag = flagged.T_flag[TextWord];
+        }
+
+        while (T_flag) {
+            while (!P_flag) {
+                PatternWord++;
+                P_flag = flagged.P_flag[PatternWord];
+            }
+
+            uint64_t PatternFlagMask = blsi(P_flag);
+
+            Transpositions += !(PM.get(PatternWord, T_first[countr_zero(T_flag)]) & PatternFlagMask);
+
+            T_flag = blsr(T_flag);
+            P_flag ^= PatternFlagMask;
+
+            FlaggedChars--;
+        }
+    }
+
+    return Transpositions;
+}
+
+/**
+ * @brief find bounds and skip out of bound parts of the sequences
+ *
+ */
+template <typename InputIt1, typename InputIt2>
+int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
+{
+    int64_t P_len = P.size();
+    int64_t T_len = T.size();
+
+    /* since jaro uses a sliding window some parts of T/P might never be in
+     * range an can be removed ahead of time
+     */
+    int64_t Bound = 0;
+    if (T_len > P_len) {
+        Bound = T_len / 2 - 1;
+        if (T_len > P_len + Bound) T.remove_suffix(T_len - (P_len + Bound));
+    }
+    else {
+        Bound = P_len / 2 - 1;
+        if (P_len > T_len + Bound) P.remove_suffix(P_len - (T_len + Bound));
+    }
+    return Bound;
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff)
+{
+    int64_t P_len = P.size();
+    int64_t T_len = T.size();
+
+    /* filter out based on the length difference between the two strings */
+    if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
+
+    if (P_len == 1 && T_len == 1) return static_cast<double>(P[0] == T[0]);
+
+    int64_t Bound = jaro_bounds(P, T);
+
+    /* common prefix never includes Transpositions */
+    size_t CommonChars = remove_common_prefix(P, T);
+    size_t Transpositions = 0;
+
+    if (P.empty() || T.empty()) {
+        /* already has correct number of common chars and transpositions */
+    }
+    else if (P.size() <= 64 && T.size() <= 64) {
+        PatternMatchVector PM(P);
+        auto flagged = flag_similar_characters_word(PM, P, T, static_cast<int>(Bound));
+        CommonChars += count_common_chars(flagged);
+
+        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
+
+        Transpositions = count_transpositions_word(PM, T, flagged);
+    }
+    else {
+        BlockPatternMatchVector PM(P);
+        auto flagged = flag_similar_characters_block(PM, P, T, Bound);
+        size_t FlaggedChars = count_common_chars(flagged);
+        CommonChars += FlaggedChars;
+
+        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
+
+        Transpositions = count_transpositions_block(PM, T, flagged, FlaggedChars);
+    }
+
+    double Sim = jaro_calculate_similarity(P_len, T_len, CommonChars, Transpositions);
+    return (Sim >= score_cutoff) ? Sim : 0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
+                       double score_cutoff)
+{
+    int64_t P_len = P.size();
+    int64_t T_len = T.size();
+
+    /* filter out based on the length difference between the two strings */
+    if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
+
+    if (P_len == 1 && T_len == 1) return static_cast<double>(P[0] == T[0]);
+
+    int64_t Bound = jaro_bounds(P, T);
+
+    /* common prefix never includes Transpositions */
+    size_t CommonChars = 0;
+    size_t Transpositions = 0;
+
+    if (P.empty() || T.empty()) {
+        /* already has correct number of common chars and transpositions */
+    }
+    else if (P.size() <= 64 && T.size() <= 64) {
+        auto flagged = flag_similar_characters_word(PM, P, T, static_cast<int>(Bound));
+        CommonChars += count_common_chars(flagged);
+
+        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
+
+        Transpositions = count_transpositions_word(PM, T, flagged);
+    }
+    else {
+        auto flagged = flag_similar_characters_block(PM, P, T, Bound);
+        size_t FlaggedChars = count_common_chars(flagged);
+        CommonChars += FlaggedChars;
+
+        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
+
+        Transpositions = count_transpositions_block(PM, T, flagged, FlaggedChars);
+    }
+
+    double Sim = jaro_calculate_similarity(P_len, T_len, CommonChars, Transpositions);
+    return (Sim >= score_cutoff) ? Sim : 0;
+}
+
+class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
+    friend SimilarityBase<Jaro, double, 0, 1>;
+    friend NormalizedMetricBase<Jaro>;
+
+    template <typename InputIt1, typename InputIt2>
+    static double maximum(Range<InputIt1>, Range<InputIt2>) noexcept
+    {
+        return 1.0;
+    }
+
+    template <typename InputIt1, typename InputIt2>
+    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+    {
+        return jaro_similarity(s1, s2, score_cutoff);
+    }
+};
+
+} // namespace rapidfuzz::detail
+
+namespace rapidfuzz {
+
+template <typename InputIt1, typename InputIt2>
+double jaro_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                     double score_cutoff = 1.0)
+{
+    return detail::Jaro::distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    return detail::Jaro::distance(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                       double score_cutoff = 0.0)
+{
+    return detail::Jaro::similarity(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    return detail::Jaro::similarity(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                double score_cutoff = 1.0)
+{
+    return detail::Jaro::normalized_distance(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    return detail::Jaro::normalized_distance(s1, s2, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                  double score_cutoff = 0.0)
+{
+    return detail::Jaro::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    return detail::Jaro::normalized_similarity(s1, s2, score_cutoff);
+}
+
+template <typename CharT1>
+struct CachedJaro : public detail::CachedSimilarityBase<CachedJaro<CharT1>, double, 0, 1> {
+    template <typename Sentence1>
+    explicit CachedJaro(const Sentence1& s1_) : CachedJaro(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
+
+    template <typename InputIt1>
+    CachedJaro(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    {}
+
+private:
+    friend detail::CachedSimilarityBase<CachedJaro<CharT1>, double, 0, 1>;
+    friend detail::CachedNormalizedMetricBase<CachedJaro<CharT1>>;
+
+    template <typename InputIt2>
+    double maximum(detail::Range<InputIt2>) const
+    {
+        return 1.0;
+    }
+
+    template <typename InputIt2>
+    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
+    {
+        return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
+    }
+
+    std::basic_string<CharT1> s1;
+    detail::BlockPatternMatchVector PM;
+};
+
+template <typename Sentence1>
+explicit CachedJaro(const Sentence1& s1_) -> CachedJaro<char_type<Sentence1>>;
+
+template <typename InputIt1>
+CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>>;
+
+} // namespace rapidfuzz
+
+#include "rapidfuzz/details/Range.hpp"
+#include <limits>
+
+namespace rapidfuzz::detail {
+
+template <typename InputIt1, typename InputIt2>
+double jaro_winkler_similarity(Range<InputIt1> P, Range<InputIt2> T, double prefix_weight,
+                               double score_cutoff)
+{
+    int64_t P_len = P.size();
+    int64_t T_len = T.size();
+    int64_t min_len = std::min(P_len, T_len);
+    int64_t prefix = 0;
+    int64_t max_prefix = std::min<int64_t>(min_len, 4);
+
+    for (; prefix < max_prefix; ++prefix)
+        if (T[prefix] != P[prefix]) break;
+
+    double jaro_score_cutoff = score_cutoff;
+    if (jaro_score_cutoff > 0.7) {
+        double prefix_sim = static_cast<double>(prefix) * prefix_weight;
+
+        if (prefix_sim >= 1.0)
+            jaro_score_cutoff = 0.7;
+        else
+            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
+    }
+
+    double Sim = jaro_similarity(P, T, jaro_score_cutoff);
+    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+
+    return (Sim >= score_cutoff) ? Sim : 0;
+}
+
+template <typename InputIt1, typename InputIt2>
+double jaro_winkler_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
+                               double prefix_weight, double score_cutoff)
+{
+    int64_t P_len = P.size();
+    int64_t T_len = T.size();
+    int64_t min_len = std::min(P_len, T_len);
+    int64_t prefix = 0;
+    int64_t max_prefix = std::min<int64_t>(min_len, 4);
+
+    for (; prefix < max_prefix; ++prefix)
+        if (T[prefix] != P[prefix]) break;
+
+    double jaro_score_cutoff = score_cutoff;
+    if (jaro_score_cutoff > 0.7) {
+        double prefix_sim = static_cast<double>(prefix) * prefix_weight;
+
+        if (prefix_sim >= 1.0)
+            jaro_score_cutoff = 0.7;
+        else
+            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
+    }
+
+    double Sim = jaro_similarity(PM, P, T, jaro_score_cutoff);
+    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+
+    return (Sim >= score_cutoff) ? Sim : 0;
+}
+
+class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
+    friend SimilarityBase<JaroWinkler, double, 0, 1, double>;
+    friend NormalizedMetricBase<JaroWinkler, double>;
+
+    template <typename InputIt1, typename InputIt2>
+    static double maximum(Range<InputIt1>, Range<InputIt2>, double) noexcept
+    {
+        return 1.0;
+    }
+
+    template <typename InputIt1, typename InputIt2>
+    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double prefix_weight,
+                              double score_cutoff)
+    {
+        return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);
+    }
+};
+
+} // namespace rapidfuzz::detail
+
+namespace rapidfuzz {
+
+template <typename InputIt1, typename InputIt2,
+          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                             double prefix_weight = 0.1, double score_cutoff = 1.0)
+{
+    return detail::JaroWinkler::distance(first1, last1, first2, last2, prefix_weight, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
+                             double score_cutoff = 1.0)
+{
+    return detail::JaroWinkler::distance(s1, s2, prefix_weight, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2,
+          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                               double prefix_weight = 0.1, double score_cutoff = 0.0)
+{
+    return detail::JaroWinkler::similarity(first1, last1, first2, last2, prefix_weight, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
+                               double score_cutoff = 0.0)
+{
+    return detail::JaroWinkler::similarity(s1, s2, prefix_weight, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2,
+          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                        double prefix_weight = 0.1, double score_cutoff = 1.0)
+{
+    return detail::JaroWinkler::normalized_distance(first1, last1, first2, last2, prefix_weight,
+                                                    score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
+                                        double score_cutoff = 1.0)
+{
+    return detail::JaroWinkler::normalized_distance(s1, s2, prefix_weight, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2,
+          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                          double prefix_weight = 0.1, double score_cutoff = 0.0)
+{
+    return detail::JaroWinkler::normalized_similarity(first1, last1, first2, last2, prefix_weight,
+                                                      score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
+                                          double prefix_weight = 0.1, double score_cutoff = 0.0)
+{
+    return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff);
+}
+
+template <typename CharT1>
+struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler<CharT1>, double, 0, 1> {
+    template <typename Sentence1>
+    explicit CachedJaroWinkler(const Sentence1& s1_, double _prefix_weight = 0.1)
+        : CachedJaroWinkler(detail::to_begin(s1_), detail::to_end(s1_), _prefix_weight)
+    {}
+
+    template <typename InputIt1>
+    CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
+        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::Range(first1, last1))
+    {}
+
+private:
+    friend detail::CachedSimilarityBase<CachedJaroWinkler<CharT1>, double, 0, 1>;
+    friend detail::CachedNormalizedMetricBase<CachedJaroWinkler<CharT1>>;
+
+    template <typename InputIt2>
+    double maximum(detail::Range<InputIt2>) const
+    {
+        return 1.0;
+    }
+
+    template <typename InputIt2>
+    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
+    {
+        return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);
+    }
+
+    double prefix_weight;
+    std::basic_string<CharT1> s1;
+    detail::BlockPatternMatchVector PM;
+};
+
+template <typename Sentence1>
+explicit CachedJaroWinkler(const Sentence1& s1_, double _prefix_weight = 0.1)
+    -> CachedJaroWinkler<char_type<Sentence1>>;
+
+template <typename InputIt1>
+CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
+    -> CachedJaroWinkler<iter_value_t<InputIt1>>;
+
+} // namespace rapidfuzz
+
 #include <limits>
 
 #include <cmath>
@@ -6480,6 +7204,104 @@ int64_t osa_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
     return (currDist <= max) ? currDist : max + 1;
 }
 
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
+                         const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                         int64_t score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+    size_t result_index = 0;
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        /* VP is set to 1^m */
+        native_simd<VecType> VP(static_cast<VecType>(-1));
+        native_simd<VecType> VN(VecType(0));
+        native_simd<VecType> D0(VecType(0));
+        native_simd<VecType> PM_j_old(VecType(0));
+
+        alignas(32) std::array<VecType, vec_width> currDist_;
+        unroll<int, vec_width>(
+            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+        native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
+        /* mask used when computing D[m,j] in the paper 10^(m-1) */
+        alignas(32) std::array<VecType, vec_width> mask_;
+        unroll<int, vec_width>([&](auto i) {
+            if (s1_lengths[result_index + i] == 0)
+                mask_[i] = 0;
+            else
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[result_index + i] - 1));
+        });
+        native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
+
+        for (const auto& ch : s2) {
+            /* Step 1: Computing D0 */
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+
+            native_simd<VecType> PM_j(stored.data());
+            auto TR = (andnot(PM_j, D0) << 1) & PM_j_old;
+            D0 = (((PM_j & VP) + VP) ^ VP) | PM_j | VN;
+            D0 = D0 | TR;
+
+            /* Step 2: Computing HP and HN */
+            auto HP = VN | ~(D0 | VP);
+            auto HN = D0 & VP;
+
+            /* Step 3: Computing the value D[m,j] */
+            currDist += andnot(one, (HP & mask) == zero);
+            currDist -= andnot(one, (HN & mask) == zero);
+
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | one;
+            HN = (HN << 1);
+
+            VP = HN | ~(D0 | HP);
+            VN = HP & D0;
+            PM_j_old = PM_j;
+        }
+
+        alignas(32) std::array<VecType, vec_width> distances;
+        currDist.store(distances.data());
+
+        unroll<int, vec_width>([&](auto i) {
+            int64_t score = 0;
+            /* strings of length 0 are not handled correctly */
+            if (s1_lengths[result_index] == 0) {
+                score = s2.size();
+            }
+            /* calculate score under consideration of wraparounds in parallel counter */
+            else {
+                if constexpr (!std::is_same_v<VecType, uint64_t>) {
+                    ptrdiff_t min_dist =
+                        std::abs(static_cast<ptrdiff_t>(s1_lengths[result_index]) - s2.size());
+                    int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
+
+                    score = (min_dist / wraparound_score) * wraparound_score;
+                    VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
+
+                    if (distances[i] < remainder) score += wraparound_score;
+                }
+
+                score += static_cast<int64_t>(distances[i]);
+            }
+            scores[static_cast<int64_t>(result_index)] = (score <= score_cutoff) ? score : score_cutoff + 1;
+            result_index++;
+        });
+    }
+}
+#endif
+
 template <typename InputIt1, typename InputIt2>
 int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
                              int64_t max = std::numeric_limits<int64_t>::max())
@@ -6684,6 +7506,124 @@ double osa_normalized_similarity(const Sentence1& s1, const Sentence2& s2, doubl
     return detail::OSA::normalized_similarity(s1, s2, score_cutoff);
 }
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiOSA
+    : public detail::MultiDistanceBase<MultiOSA<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+private:
+    friend detail::MultiDistanceBase<MultiOSA<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    friend detail::MultiNormalizedMetricBase<MultiOSA<MaxLen>>;
+
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+public:
+    MultiOSA(size_t count) : input_count(count), PM(find_block_count(count) * 64)
+    {
+        str_lens.resize(result_count());
+    }
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
+        str_lens[pos] = static_cast<size_t>(len);
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+private:
+    template <typename InputIt2>
+    void _distance(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
+                   int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        if constexpr (MaxLen == 8)
+            detail::osa_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 16)
+            detail::osa_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 32)
+            detail::osa_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 64)
+            detail::osa_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+    }
+
+    template <typename InputIt2>
+    int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
+    {
+        return std::max(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size());
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return input_count;
+    }
+
+    size_t input_count;
+    size_t pos = 0;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+};
+} /* namespace experimental */
+#endif
+
 template <typename CharT1>
 struct CachedOSA
     : public detail::CachedDistanceBase<CachedOSA<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
@@ -6731,729 +7671,6 @@ CachedOSA(const Sentence1& s1_) -> CachedOSA<char_type<Sentence1>>;
 template <typename InputIt1>
 CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
 /**@}*/
-
-} // namespace rapidfuzz
-
-#include "rapidfuzz/details/Range.hpp"
-#include <limits>
-
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <limits>
-#include <vector>
-
-namespace rapidfuzz::detail {
-
-struct FlaggedCharsWord {
-    uint64_t P_flag;
-    uint64_t T_flag;
-};
-
-struct FlaggedCharsMultiword {
-    std::vector<uint64_t> P_flag;
-    std::vector<uint64_t> T_flag;
-};
-
-struct SearchBoundMask {
-    size_t words = 0;
-    size_t empty_words = 0;
-    uint64_t last_mask = 0;
-    uint64_t first_mask = 0;
-};
-
-struct TextPosition {
-    TextPosition(int64_t Word_, int64_t WordPos_) : Word(Word_), WordPos(WordPos_)
-    {}
-    int64_t Word;
-    int64_t WordPos;
-};
-
-static inline double jaro_calculate_similarity(int64_t P_len, int64_t T_len, size_t CommonChars,
-                                               size_t Transpositions)
-{
-    Transpositions /= 2;
-    double Sim = 0;
-    Sim += static_cast<double>(CommonChars) / static_cast<double>(P_len);
-    Sim += static_cast<double>(CommonChars) / static_cast<double>(T_len);
-    Sim += (static_cast<double>(CommonChars) - static_cast<double>(Transpositions)) /
-           static_cast<double>(CommonChars);
-    return Sim / 3.0;
-}
-
-/**
- * @brief filter matches below score_cutoff based on string lengths
- */
-static inline bool jaro_length_filter(int64_t P_len, int64_t T_len, double score_cutoff)
-{
-    if (!T_len || !P_len) return false;
-
-    double min_len = static_cast<double>(std::min(P_len, T_len));
-    double Sim = min_len / static_cast<double>(P_len) + min_len / static_cast<double>(T_len) + 1.0;
-    Sim /= 3.0;
-    return Sim >= score_cutoff;
-}
-
-/**
- * @brief filter matches below score_cutoff based on string lengths and common characters
- */
-static inline bool jaro_common_char_filter(int64_t P_len, int64_t T_len, size_t CommonChars,
-                                           double score_cutoff)
-{
-    if (!CommonChars) return false;
-
-    double Sim = 0;
-    Sim += static_cast<double>(CommonChars) / static_cast<double>(P_len);
-    Sim += static_cast<double>(CommonChars) / static_cast<double>(T_len);
-    Sim += 1.0;
-    Sim /= 3.0;
-    return Sim >= score_cutoff;
-}
-
-static inline size_t count_common_chars(const FlaggedCharsWord& flagged)
-{
-    return static_cast<size_t>(popcount(flagged.P_flag));
-}
-
-static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
-{
-    size_t CommonChars = 0;
-    if (flagged.P_flag.size() < flagged.T_flag.size()) {
-        for (uint64_t flag : flagged.P_flag) {
-            CommonChars += static_cast<size_t>(popcount(flag));
-        }
-    }
-    else {
-        for (uint64_t flag : flagged.T_flag) {
-            CommonChars += static_cast<size_t>(popcount(flag));
-        }
-    }
-    return CommonChars;
-}
-
-template <typename PM_Vec, typename InputIt1, typename InputIt2>
-FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]] Range<InputIt1> P,
-                                              Range<InputIt2> T, int Bound)
-{
-    assert(P.size() <= 64);
-    assert(T.size() <= 64);
-    assert(Bound > P.size() || P.size() - Bound <= T.size());
-
-    FlaggedCharsWord flagged = {0, 0};
-
-    uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
-
-    int64_t j = 0;
-    for (; j < std::min(static_cast<int64_t>(Bound), static_cast<int64_t>(T.size())); ++j) {
-        uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
-
-        flagged.P_flag |= blsi(PM_j);
-        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
-
-        BoundMask = (BoundMask << 1) | 1;
-    }
-
-    for (; j < T.size(); ++j) {
-        uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
-
-        flagged.P_flag |= blsi(PM_j);
-        flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
-
-        BoundMask <<= 1;
-    }
-
-    return flagged;
-}
-
-template <typename CharT>
-void flag_similar_characters_step(const BlockPatternMatchVector& PM, CharT T_j,
-                                  FlaggedCharsMultiword& flagged, size_t j, SearchBoundMask BoundMask)
-{
-    size_t j_word = j / 64;
-    size_t j_pos = j % 64;
-    size_t word = BoundMask.empty_words;
-    size_t last_word = word + BoundMask.words;
-
-    if (BoundMask.words == 1) {
-        uint64_t PM_j =
-            PM.get(word, T_j) & BoundMask.last_mask & BoundMask.first_mask & (~flagged.P_flag[word]);
-
-        flagged.P_flag[word] |= blsi(PM_j);
-        flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
-        return;
-    }
-
-    if (BoundMask.first_mask) {
-        uint64_t PM_j = PM.get(word, T_j) & BoundMask.first_mask & (~flagged.P_flag[word]);
-
-        if (PM_j) {
-            flagged.P_flag[word] |= blsi(PM_j);
-            flagged.T_flag[j_word] |= 1ull << j_pos;
-            return;
-        }
-        word++;
-    }
-
-    /* unroll for better performance on long sequences when access is fast */
-    if (T_j >= 0 && T_j < 256) {
-        for (; word + 3 < last_word - 1; word += 4) {
-            uint64_t PM_j[4];
-            unroll<int, 4>([&](auto i) {
-                PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
-            });
-
-            if (PM_j[0]) {
-                flagged.P_flag[word] |= blsi(PM_j[0]);
-                flagged.T_flag[j_word] |= 1ull << j_pos;
-                return;
-            }
-            if (PM_j[1]) {
-                flagged.P_flag[word + 1] |= blsi(PM_j[1]);
-                flagged.T_flag[j_word] |= 1ull << j_pos;
-                return;
-            }
-            if (PM_j[2]) {
-                flagged.P_flag[word + 2] |= blsi(PM_j[2]);
-                flagged.T_flag[j_word] |= 1ull << j_pos;
-                return;
-            }
-            if (PM_j[3]) {
-                flagged.P_flag[word + 3] |= blsi(PM_j[3]);
-                flagged.T_flag[j_word] |= 1ull << j_pos;
-                return;
-            }
-        }
-    }
-
-    for (; word < last_word - 1; ++word) {
-        uint64_t PM_j = PM.get(word, T_j) & (~flagged.P_flag[word]);
-
-        if (PM_j) {
-            flagged.P_flag[word] |= blsi(PM_j);
-            flagged.T_flag[j_word] |= 1ull << j_pos;
-            return;
-        }
-    }
-
-    if (BoundMask.last_mask) {
-        uint64_t PM_j = PM.get(word, T_j) & BoundMask.last_mask & (~flagged.P_flag[word]);
-
-        flagged.P_flag[word] |= blsi(PM_j);
-        flagged.T_flag[j_word] |= static_cast<uint64_t>(PM_j != 0) << j_pos;
-    }
-}
-
-template <typename InputIt1, typename InputIt2>
-static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPatternMatchVector& PM,
-                                                                  Range<InputIt1> P, Range<InputIt2> T,
-                                                                  int64_t Bound)
-{
-    assert(P.size() > 64 || T.size() > 64);
-    assert(Bound > P.size() || P.size() - Bound <= T.size());
-    assert(Bound >= 31);
-
-    FlaggedCharsMultiword flagged;
-    flagged.T_flag.resize(static_cast<size_t>(ceil_div(T.size(), 64)));
-    flagged.P_flag.resize(static_cast<size_t>(ceil_div(P.size(), 64)));
-
-    SearchBoundMask BoundMask;
-    size_t start_range = static_cast<size_t>(std::min(Bound + 1, static_cast<int64_t>(P.size())));
-    BoundMask.words = 1 + start_range / 64;
-    BoundMask.empty_words = 0;
-    BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
-    BoundMask.first_mask = ~UINT64_C(0);
-
-    for (int64_t j = 0; j < T.size(); ++j) {
-        flag_similar_characters_step(PM, T[j], flagged, static_cast<size_t>(j), BoundMask);
-
-        if (j + Bound + 1 < P.size()) {
-            BoundMask.last_mask = (BoundMask.last_mask << 1) | 1;
-            if (j + Bound + 2 < P.size() && BoundMask.last_mask == ~UINT64_C(0)) {
-                BoundMask.last_mask = 0;
-                BoundMask.words++;
-            }
-        }
-
-        if (j >= Bound) {
-            BoundMask.first_mask <<= 1;
-            if (BoundMask.first_mask == 0) {
-                BoundMask.first_mask = ~UINT64_C(0);
-                BoundMask.words--;
-                BoundMask.empty_words++;
-            }
-        }
-    }
-
-    return flagged;
-}
-
-template <typename PM_Vec, typename InputIt1>
-static inline size_t count_transpositions_word(const PM_Vec& PM, Range<InputIt1> T,
-                                               const FlaggedCharsWord& flagged)
-{
-    uint64_t P_flag = flagged.P_flag;
-    uint64_t T_flag = flagged.T_flag;
-    size_t Transpositions = 0;
-    while (T_flag) {
-        uint64_t PatternFlagMask = blsi(P_flag);
-
-        Transpositions += !(PM.get(0, T[countr_zero(T_flag)]) & PatternFlagMask);
-
-        T_flag = blsr(T_flag);
-        P_flag ^= PatternFlagMask;
-    }
-
-    return Transpositions;
-}
-
-template <typename InputIt1>
-static inline size_t count_transpositions_block(const BlockPatternMatchVector& PM, Range<InputIt1> T,
-                                                const FlaggedCharsMultiword& flagged, size_t FlaggedChars)
-{
-    size_t TextWord = 0;
-    size_t PatternWord = 0;
-    uint64_t T_flag = flagged.T_flag[TextWord];
-    uint64_t P_flag = flagged.P_flag[PatternWord];
-
-    auto T_first = T.begin();
-    size_t Transpositions = 0;
-    while (FlaggedChars) {
-        while (!T_flag) {
-            TextWord++;
-            T_first += 64;
-            T_flag = flagged.T_flag[TextWord];
-        }
-
-        while (T_flag) {
-            while (!P_flag) {
-                PatternWord++;
-                P_flag = flagged.P_flag[PatternWord];
-            }
-
-            uint64_t PatternFlagMask = blsi(P_flag);
-
-            Transpositions += !(PM.get(PatternWord, T_first[countr_zero(T_flag)]) & PatternFlagMask);
-
-            T_flag = blsr(T_flag);
-            P_flag ^= PatternFlagMask;
-
-            FlaggedChars--;
-        }
-    }
-
-    return Transpositions;
-}
-
-/**
- * @brief find bounds and skip out of bound parts of the sequences
- *
- */
-template <typename InputIt1, typename InputIt2>
-int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
-{
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-
-    /* since jaro uses a sliding window some parts of T/P might never be in
-     * range an can be removed ahead of time
-     */
-    int64_t Bound = 0;
-    if (T_len > P_len) {
-        Bound = T_len / 2 - 1;
-        if (T_len > P_len + Bound) T.remove_suffix(T_len - (P_len + Bound));
-    }
-    else {
-        Bound = P_len / 2 - 1;
-        if (P_len > T_len + Bound) P.remove_suffix(P_len - (T_len + Bound));
-    }
-    return Bound;
-}
-
-template <typename InputIt1, typename InputIt2>
-double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff)
-{
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-
-    /* filter out based on the length difference between the two strings */
-    if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
-
-    if (P_len == 1 && T_len == 1) return static_cast<double>(P[0] == T[0]);
-
-    int64_t Bound = jaro_bounds(P, T);
-
-    /* common prefix never includes Transpositions */
-    size_t CommonChars = remove_common_prefix(P, T);
-    size_t Transpositions = 0;
-
-    if (P.empty() || T.empty()) {
-        /* already has correct number of common chars and transpositions */
-    }
-    else if (P.size() <= 64 && T.size() <= 64) {
-        PatternMatchVector PM(P);
-        auto flagged = flag_similar_characters_word(PM, P, T, static_cast<int>(Bound));
-        CommonChars += count_common_chars(flagged);
-
-        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
-
-        Transpositions = count_transpositions_word(PM, T, flagged);
-    }
-    else {
-        BlockPatternMatchVector PM(P);
-        auto flagged = flag_similar_characters_block(PM, P, T, Bound);
-        size_t FlaggedChars = count_common_chars(flagged);
-        CommonChars += FlaggedChars;
-
-        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
-
-        Transpositions = count_transpositions_block(PM, T, flagged, FlaggedChars);
-    }
-
-    double Sim = jaro_calculate_similarity(P_len, T_len, CommonChars, Transpositions);
-    return (Sim >= score_cutoff) ? Sim : 0;
-}
-
-template <typename InputIt1, typename InputIt2>
-double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
-                       double score_cutoff)
-{
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-
-    /* filter out based on the length difference between the two strings */
-    if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
-
-    if (P_len == 1 && T_len == 1) return static_cast<double>(P[0] == T[0]);
-
-    int64_t Bound = jaro_bounds(P, T);
-
-    /* common prefix never includes Transpositions */
-    size_t CommonChars = 0;
-    size_t Transpositions = 0;
-
-    if (P.empty() || T.empty()) {
-        /* already has correct number of common chars and transpositions */
-    }
-    else if (P.size() <= 64 && T.size() <= 64) {
-        auto flagged = flag_similar_characters_word(PM, P, T, static_cast<int>(Bound));
-        CommonChars += count_common_chars(flagged);
-
-        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
-
-        Transpositions = count_transpositions_word(PM, T, flagged);
-    }
-    else {
-        auto flagged = flag_similar_characters_block(PM, P, T, Bound);
-        size_t FlaggedChars = count_common_chars(flagged);
-        CommonChars += FlaggedChars;
-
-        if (!jaro_common_char_filter(P_len, T_len, CommonChars, score_cutoff)) return 0.0;
-
-        Transpositions = count_transpositions_block(PM, T, flagged, FlaggedChars);
-    }
-
-    double Sim = jaro_calculate_similarity(P_len, T_len, CommonChars, Transpositions);
-    return (Sim >= score_cutoff) ? Sim : 0;
-}
-
-class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
-    friend SimilarityBase<Jaro, double, 0, 1>;
-    friend NormalizedMetricBase<Jaro>;
-
-    template <typename InputIt1, typename InputIt2>
-    static double maximum(Range<InputIt1>, Range<InputIt2>) noexcept
-    {
-        return 1.0;
-    }
-
-    template <typename InputIt1, typename InputIt2>
-    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
-    {
-        return jaro_similarity(s1, s2, score_cutoff);
-    }
-};
-
-} // namespace rapidfuzz::detail
-
-namespace rapidfuzz {
-
-template <typename InputIt1, typename InputIt2>
-double jaro_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                     double score_cutoff = 1.0)
-{
-    return detail::Jaro::distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
-{
-    return detail::Jaro::distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double jaro_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                       double score_cutoff = 0.0)
-{
-    return detail::Jaro::similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
-{
-    return detail::Jaro::similarity(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double jaro_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                double score_cutoff = 1.0)
-{
-    return detail::Jaro::normalized_distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
-{
-    return detail::Jaro::normalized_distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double jaro_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                  double score_cutoff = 0.0)
-{
-    return detail::Jaro::normalized_similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
-{
-    return detail::Jaro::normalized_similarity(s1, s2, score_cutoff);
-}
-
-template <typename CharT1>
-struct CachedJaro : public detail::CachedSimilarityBase<CachedJaro<CharT1>, double, 0, 1> {
-    template <typename Sentence1>
-    explicit CachedJaro(const Sentence1& s1_) : CachedJaro(detail::to_begin(s1_), detail::to_end(s1_))
-    {}
-
-    template <typename InputIt1>
-    CachedJaro(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
-    {}
-
-private:
-    friend detail::CachedSimilarityBase<CachedJaro<CharT1>, double, 0, 1>;
-    friend detail::CachedNormalizedMetricBase<CachedJaro<CharT1>>;
-
-    template <typename InputIt2>
-    double maximum(detail::Range<InputIt2>) const
-    {
-        return 1.0;
-    }
-
-    template <typename InputIt2>
-    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
-    {
-        return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
-    }
-
-    std::basic_string<CharT1> s1;
-    detail::BlockPatternMatchVector PM;
-};
-
-template <typename Sentence1>
-explicit CachedJaro(const Sentence1& s1_) -> CachedJaro<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>>;
-
-} // namespace rapidfuzz
-
-#include "rapidfuzz/details/Range.hpp"
-#include <limits>
-
-namespace rapidfuzz::detail {
-
-template <typename InputIt1, typename InputIt2>
-double jaro_winkler_similarity(Range<InputIt1> P, Range<InputIt2> T, double prefix_weight,
-                               double score_cutoff)
-{
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-    int64_t min_len = std::min(P_len, T_len);
-    int64_t prefix = 0;
-    int64_t max_prefix = std::min<int64_t>(min_len, 4);
-
-    for (; prefix < max_prefix; ++prefix)
-        if (T[prefix] != P[prefix]) break;
-
-    double jaro_score_cutoff = score_cutoff;
-    if (jaro_score_cutoff > 0.7) {
-        double prefix_sim = static_cast<double>(prefix) * prefix_weight;
-
-        if (prefix_sim >= 1.0)
-            jaro_score_cutoff = 0.7;
-        else
-            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
-    }
-
-    double Sim = jaro_similarity(P, T, jaro_score_cutoff);
-    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
-
-    return (Sim >= score_cutoff) ? Sim : 0;
-}
-
-template <typename InputIt1, typename InputIt2>
-double jaro_winkler_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
-                               double prefix_weight, double score_cutoff)
-{
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-    int64_t min_len = std::min(P_len, T_len);
-    int64_t prefix = 0;
-    int64_t max_prefix = std::min<int64_t>(min_len, 4);
-
-    for (; prefix < max_prefix; ++prefix)
-        if (T[prefix] != P[prefix]) break;
-
-    double jaro_score_cutoff = score_cutoff;
-    if (jaro_score_cutoff > 0.7) {
-        double prefix_sim = static_cast<double>(prefix) * prefix_weight;
-
-        if (prefix_sim >= 1.0)
-            jaro_score_cutoff = 0.7;
-        else
-            jaro_score_cutoff = std::max(0.7, (prefix_sim - jaro_score_cutoff) / (prefix_sim - 1.0));
-    }
-
-    double Sim = jaro_similarity(PM, P, T, jaro_score_cutoff);
-    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
-
-    return (Sim >= score_cutoff) ? Sim : 0;
-}
-
-class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
-    friend SimilarityBase<JaroWinkler, double, 0, 1, double>;
-    friend NormalizedMetricBase<JaroWinkler, double>;
-
-    template <typename InputIt1, typename InputIt2>
-    static double maximum(Range<InputIt1>, Range<InputIt2>, double) noexcept
-    {
-        return 1.0;
-    }
-
-    template <typename InputIt1, typename InputIt2>
-    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double prefix_weight,
-                              double score_cutoff)
-    {
-        return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);
-    }
-};
-
-} // namespace rapidfuzz::detail
-
-namespace rapidfuzz {
-
-template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
-double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                             double prefix_weight = 0.1, double score_cutoff = 1.0)
-{
-    return detail::JaroWinkler::distance(first1, last1, first2, last2, prefix_weight, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
-                             double score_cutoff = 1.0)
-{
-    return detail::JaroWinkler::distance(s1, s2, prefix_weight, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
-double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               double prefix_weight = 0.1, double score_cutoff = 0.0)
-{
-    return detail::JaroWinkler::similarity(first1, last1, first2, last2, prefix_weight, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
-                               double score_cutoff = 0.0)
-{
-    return detail::JaroWinkler::similarity(s1, s2, prefix_weight, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
-double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                        double prefix_weight = 0.1, double score_cutoff = 1.0)
-{
-    return detail::JaroWinkler::normalized_distance(first1, last1, first2, last2, prefix_weight,
-                                                    score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
-                                        double score_cutoff = 1.0)
-{
-    return detail::JaroWinkler::normalized_distance(s1, s2, prefix_weight, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
-double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                          double prefix_weight = 0.1, double score_cutoff = 0.0)
-{
-    return detail::JaroWinkler::normalized_similarity(first1, last1, first2, last2, prefix_weight,
-                                                      score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double jaro_winkler_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
-                                          double prefix_weight = 0.1, double score_cutoff = 0.0)
-{
-    return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff);
-}
-
-template <typename CharT1>
-struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler<CharT1>, double, 0, 1> {
-    template <typename Sentence1>
-    explicit CachedJaroWinkler(const Sentence1& s1_, double _prefix_weight = 0.1)
-        : CachedJaroWinkler(detail::to_begin(s1_), detail::to_end(s1_), _prefix_weight)
-    {}
-
-    template <typename InputIt1>
-    CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
-        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::Range(first1, last1))
-    {}
-
-private:
-    friend detail::CachedSimilarityBase<CachedJaroWinkler<CharT1>, double, 0, 1>;
-    friend detail::CachedNormalizedMetricBase<CachedJaroWinkler<CharT1>>;
-
-    template <typename InputIt2>
-    double maximum(detail::Range<InputIt2>) const
-    {
-        return 1.0;
-    }
-
-    template <typename InputIt2>
-    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
-    {
-        return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);
-    }
-
-    double prefix_weight;
-    std::basic_string<CharT1> s1;
-    detail::BlockPatternMatchVector PM;
-};
-
-template <typename Sentence1>
-explicit CachedJaroWinkler(const Sentence1& s1_, double _prefix_weight = 0.1)
-    -> CachedJaroWinkler<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
-    -> CachedJaroWinkler<iter_value_t<InputIt1>>;
 
 } // namespace rapidfuzz
 
@@ -8341,7 +8558,8 @@ public:
     template <typename Sentence2>
     void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
     {
-        if (rapidfuzz::detail::Range(s2).empty()) {
+        rapidfuzz::detail::Range s2_(s2);
+        if (s2_.empty()) {
             for (size_t i = 0; i < str_lens.size(); ++i)
                 scores[i] = 0;
 

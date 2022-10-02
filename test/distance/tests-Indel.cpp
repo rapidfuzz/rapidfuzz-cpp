@@ -14,6 +14,34 @@ int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
     rapidfuzz::CachedIndel scorer(s1);
     int64_t res3 = scorer.distance(s2, max);
     int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
+#ifdef RAPIDFUZZ_SIMD
+    if (s1.size() <= 64) {
+        std::vector<int64_t> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiIndel<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiIndel<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiIndel<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+        else {
+            rapidfuzz::experimental::MultiIndel<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.distance(&results[0], results.size(), s2, max);
+        }
+
+        REQUIRE(res1 == results[0]);
+    }
+#endif
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
@@ -28,6 +56,34 @@ int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t max =
     rapidfuzz::CachedIndel scorer(s1);
     int64_t res3 = scorer.similarity(s2, max);
     int64_t res4 = scorer.similarity(s2.begin(), s2.end(), max);
+#ifdef RAPIDFUZZ_SIMD
+    if (s1.size() <= 64) {
+        std::vector<int64_t> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiIndel<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiIndel<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiIndel<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+        else {
+            rapidfuzz::experimental::MultiIndel<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.similarity(&results[0], results.size(), s2, max);
+        }
+
+        REQUIRE(res1 == results[0]);
+    }
+#endif
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
@@ -43,6 +99,34 @@ double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, doubl
     rapidfuzz::CachedIndel scorer(s1);
     double res3 = scorer.normalized_distance(s2, score_cutoff);
     double res4 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
+#ifdef RAPIDFUZZ_SIMD
+    if (s1.size() <= 64) {
+        std::vector<double> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiIndel<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_distance(&results[0], results.size(), s2, score_cutoff);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiIndel<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_distance(&results[0], results.size(), s2, score_cutoff);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiIndel<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_distance(&results[0], results.size(), s2, score_cutoff);
+        }
+        else {
+            rapidfuzz::experimental::MultiIndel<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_distance(&results[0], results.size(), s2, score_cutoff);
+        }
+
+        REQUIRE(res1 == Catch::Approx(results[0]).epsilon(0.0001));
+    }
+#endif
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
@@ -58,6 +142,34 @@ double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, dou
     rapidfuzz::CachedIndel scorer(s1);
     double res3 = scorer.normalized_similarity(s2, score_cutoff);
     double res4 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
+#ifdef RAPIDFUZZ_SIMD
+    if (s1.size() <= 64) {
+        std::vector<double> results(256 / 8);
+
+        if (s1.size() <= 8) {
+            rapidfuzz::experimental::MultiIndel<8> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_similarity(&results[0], results.size(), s2, score_cutoff);
+        }
+        else if (s1.size() <= 16) {
+            rapidfuzz::experimental::MultiIndel<16> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_similarity(&results[0], results.size(), s2, score_cutoff);
+        }
+        else if (s1.size() <= 32) {
+            rapidfuzz::experimental::MultiIndel<32> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_similarity(&results[0], results.size(), s2, score_cutoff);
+        }
+        else {
+            rapidfuzz::experimental::MultiIndel<64> simd_scorer(1);
+            simd_scorer.insert(s1);
+            simd_scorer.normalized_similarity(&results[0], results.size(), s2, score_cutoff);
+        }
+
+        REQUIRE(res1 == Catch::Approx(results[0]).epsilon(0.0001));
+    }
+#endif
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));

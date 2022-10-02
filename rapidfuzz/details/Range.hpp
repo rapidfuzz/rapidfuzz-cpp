@@ -11,6 +11,17 @@
 
 namespace rapidfuzz::detail {
 
+static inline void assume(bool b)
+{
+#if defined(__clang__)
+    __builtin_assume(b);
+#elif defined(__GNUC__) || defined(__GNUG__)
+    if (!b) __builtin_unreachable();
+#elif defined(_MSC_VER)
+    __assume(b);
+#endif
+}
+
 template <typename CharT>
 CharT* to_begin(CharT* s)
 {
@@ -27,9 +38,10 @@ auto to_begin(T& x)
 template <typename CharT>
 CharT* to_end(CharT* s)
 {
-    while (*s != 0) {
+    assume(s != nullptr);
+    while (*s != 0)
         ++s;
-    }
+
     return s;
 }
 

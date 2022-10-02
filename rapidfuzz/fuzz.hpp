@@ -726,7 +726,8 @@ public:
     template <typename Sentence2>
     void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
     {
-        if (rapidfuzz::detail::Range(s2).empty()) {
+        rapidfuzz::detail::Range s2_(s2);
+        if (s2_.empty()) {
             for (size_t i = 0; i < str_lens.size(); ++i)
                 scores[i] = 0;
 
