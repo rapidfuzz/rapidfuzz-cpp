@@ -85,8 +85,7 @@ private:
 
 public:
     MultiIndel(size_t count) : scorer(count)
-    {
-    }
+    {}
 
     /**
      * @brief get minimum size required for result vectors passed into

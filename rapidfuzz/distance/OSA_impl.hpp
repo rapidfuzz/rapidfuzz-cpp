@@ -7,6 +7,7 @@
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/distance.hpp>
+#include <rapidfuzz/details/simd.hpp>
 #include <stdexcept>
 
 namespace rapidfuzz::detail {
@@ -70,6 +71,104 @@ int64_t osa_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
 
     return (currDist <= max) ? currDist : max + 1;
 }
+
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
+                         const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                         int64_t score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+    size_t result_index = 0;
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        /* VP is set to 1^m */
+        native_simd<VecType> VP(static_cast<VecType>(-1));
+        native_simd<VecType> VN(VecType(0));
+        native_simd<VecType> D0(VecType(0));
+        native_simd<VecType> PM_j_old(VecType(0));
+
+        alignas(32) std::array<VecType, vec_width> currDist_;
+        unroll<int, vec_width>(
+            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+        native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
+        /* mask used when computing D[m,j] in the paper 10^(m-1) */
+        alignas(32) std::array<VecType, vec_width> mask_;
+        unroll<int, vec_width>([&](auto i) {
+            if (s1_lengths[result_index + i] == 0)
+                mask_[i] = 0;
+            else
+                mask_[i] = static_cast<VecType>(UINT64_C(1) << (s1_lengths[result_index + i] - 1));
+        });
+        native_simd<VecType> mask(reinterpret_cast<uint64_t*>(mask_.data()));
+
+        for (const auto& ch : s2) {
+            /* Step 1: Computing D0 */
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+
+            native_simd<VecType> PM_j(stored.data());
+            auto TR = (andnot(PM_j, D0) << 1) & PM_j_old;
+            D0 = (((PM_j & VP) + VP) ^ VP) | PM_j | VN;
+            D0 = D0 | TR;
+
+            /* Step 2: Computing HP and HN */
+            auto HP = VN | ~(D0 | VP);
+            auto HN = D0 & VP;
+
+            /* Step 3: Computing the value D[m,j] */
+            currDist += andnot(one, (HP & mask) == zero);
+            currDist -= andnot(one, (HN & mask) == zero);
+
+            /* Step 4: Computing Vp and VN */
+            HP = (HP << 1) | one;
+            HN = (HN << 1);
+
+            VP = HN | ~(D0 | HP);
+            VN = HP & D0;
+            PM_j_old = PM_j;
+        }
+
+        alignas(32) std::array<VecType, vec_width> distances;
+        currDist.store(distances.data());
+
+        unroll<int, vec_width>([&](auto i) {
+            int64_t score = 0;
+            /* strings of length 0 are not handled correctly */
+            if (s1_lengths[result_index] == 0) {
+                score = s2.size();
+            }
+            /* calculate score under consideration of wraparounds in parallel counter */
+            else {
+                if constexpr (!std::is_same_v<VecType, uint64_t>) {
+                    ptrdiff_t min_dist =
+                        std::abs(static_cast<ptrdiff_t>(s1_lengths[result_index]) - s2.size());
+                    int64_t wraparound_score = static_cast<int64_t>(std::numeric_limits<VecType>::max()) + 1;
+
+                    score = (min_dist / wraparound_score) * wraparound_score;
+                    VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
+
+                    if (distances[i] < remainder) score += wraparound_score;
+                }
+
+                score += static_cast<int64_t>(distances[i]);
+            }
+            scores[static_cast<int64_t>(result_index)] = (score <= score_cutoff) ? score : score_cutoff + 1;
+            result_index++;
+        });
+    }
+}
+#endif
 
 template <typename InputIt1, typename InputIt2>
 int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,

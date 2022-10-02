@@ -110,6 +110,124 @@ double osa_normalized_similarity(const Sentence1& s1, const Sentence2& s2, doubl
     return detail::OSA::normalized_similarity(s1, s2, score_cutoff);
 }
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiOSA
+    : public detail::MultiDistanceBase<MultiOSA<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+private:
+    friend detail::MultiDistanceBase<MultiOSA<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    friend detail::MultiNormalizedMetricBase<MultiOSA<MaxLen>>;
+
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+public:
+    MultiOSA(size_t count) : input_count(count), PM(find_block_count(count) * 64)
+    {
+        str_lens.resize(result_count());
+    }
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
+        str_lens[pos] = static_cast<size_t>(len);
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+private:
+    template <typename InputIt2>
+    void _distance(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
+                   int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        if constexpr (MaxLen == 8)
+            detail::osa_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 16)
+            detail::osa_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 32)
+            detail::osa_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 64)
+            detail::osa_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+    }
+
+    template <typename InputIt2>
+    int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
+    {
+        return std::max(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size());
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return input_count;
+    }
+
+    size_t input_count;
+    size_t pos = 0;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+};
+} /* namespace experimental */
+#endif
+
 template <typename CharT1>
 struct CachedOSA
     : public detail::CachedDistanceBase<CachedOSA<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
