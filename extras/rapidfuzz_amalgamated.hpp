@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-02 07:06:43.607111
+//  Generated: 2022-10-02 11:34:58.778037
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -7698,7 +7698,7 @@ public:
     template <typename Sentence2>
     void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
     {
-        scorer.normalized_distance(scores, score_count, s2, score_cutoff / 100.0);
+        scorer.normalized_similarity(scores, score_count, s2, score_cutoff / 100.0);
 
         for (size_t i = 0; i < input_count; ++i)
             scores[i] *= 100.0;
@@ -7842,6 +7842,50 @@ double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputI
 
 template <typename Sentence1, typename Sentence2>
 double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiTokenSortRatio {
+public:
+    MultiTokenSortRatio(size_t count) : scorer(count)
+    {}
+
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(detail::sorted_split(first1, last1).join());
+    }
+
+    template <typename InputIt2>
+    void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
+                    double score_cutoff = 0.0) const
+    {
+        scorer.similarity(scores, score_count, detail::sorted_split(first2, last2).join(), score_cutoff);
+    }
+
+    template <typename Sentence2>
+    void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
+    {
+        similarity(scores, score_count, detail::to_begin(s2), detail::to_end(s2), score_cutoff);
+    }
+
+private:
+    MultiRatio<MaxLen> scorer;
+};
+} /* namespace experimental */
+#endif
 
 // todo CachedRatio speed for equal strings vs original implementation
 // TODO documentation
