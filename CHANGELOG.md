@@ -1,5 +1,10 @@
 ## Changelog
 
+
+### [1.9.0] - 2022-10-22
+#### Added
+- added `Prefix`/`Postfix` similarity
+
 ### [1.8.0] - 2022-10-02
 #### Fixed
 - fixed incorrect score_cutoff handling in `lcs_seq_distance`

@@ -10,6 +10,8 @@
 #include <rapidfuzz/distance/LCSseq.hpp>
 #include <rapidfuzz/distance/Levenshtein.hpp>
 #include <rapidfuzz/distance/OSA.hpp>
+#include <rapidfuzz/distance/Prefix.hpp>
+#include <rapidfuzz/distance/Postfix.hpp>
 
 namespace rapidfuzz {
 
