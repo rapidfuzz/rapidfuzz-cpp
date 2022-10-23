@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-22 15:47:34.253072
+//  Generated: 2022-10-23 14:46:20.073436
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -7775,7 +7775,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>
@@ -7898,7 +7898,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<int64_t>(s1.size()), s2.size());
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>
