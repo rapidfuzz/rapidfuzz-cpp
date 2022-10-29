@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-29 16:15:30.561646
+//  Generated: 2022-10-29 20:06:52.753132
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -6844,46 +6844,52 @@ namespace rapidfuzz {
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+                             int64_t score_cutoff = std::numeric_limits<int64_t>::max(),
+                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::Levenshtein::distance(first1, last1, first2, last2, weights, score_cutoff, score_cutoff);
+    return detail::Levenshtein::distance(first1, last1, first2, last2, weights, score_cutoff, score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
                              LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+                             int64_t score_cutoff = std::numeric_limits<int64_t>::max(),
+                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::Levenshtein::distance(s1, s2, weights, score_cutoff, score_cutoff);
+    return detail::Levenshtein::distance(s1, s2, weights, score_cutoff, score_hint);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0)
+                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0,
+                               int64_t score_hint = 0)
 {
-    return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff, score_cutoff);
+    return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff, score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0)
+                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0,
+                               int64_t score_hint = 0)
 {
-    return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff, score_cutoff);
+    return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff, score_hint);
 }
 
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0)
+                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0,
+                                       double score_hint = 1.0)
 {
     return detail::Levenshtein::normalized_distance(first1, last1, first2, last2, weights, score_cutoff,
-                                                    score_cutoff);
+                                                    score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0)
+                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0,
+                                       double score_hint = 1.0)
 {
-    return detail::Levenshtein::normalized_distance(s1, s2, weights, score_cutoff, score_cutoff);
+    return detail::Levenshtein::normalized_distance(s1, s2, weights, score_cutoff, score_hint);
 }
 
 /**
@@ -6948,18 +6954,18 @@ double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                          LevenshteinWeightTable weights = {1, 1, 1},
-                                         double score_cutoff = 0.0)
+                                         double score_cutoff = 0.0, double score_hint = 0.0)
 {
     return detail::Levenshtein::normalized_similarity(first1, last1, first2, last2, weights, score_cutoff,
-                                                      score_cutoff);
+                                                      score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
                                          LevenshteinWeightTable weights = {1, 1, 1},
-                                         double score_cutoff = 0.0)
+                                         double score_cutoff = 0.0, double score_hint = 0.0)
 {
-    return detail::Levenshtein::normalized_similarity(s1, s2, weights, score_cutoff, score_cutoff);
+    return detail::Levenshtein::normalized_similarity(s1, s2, weights, score_cutoff, score_hint);
 }
 
 /**
