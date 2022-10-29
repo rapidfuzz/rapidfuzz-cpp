@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-29 23:40:55.246676
+//  Generated: 2022-10-30 00:14:59.369071
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -6359,6 +6359,7 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
 {
     /* upper bound */
     score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
+    if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
     if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
@@ -6416,6 +6417,7 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
 
     /* upper bound */
     score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
+    if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
     if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());

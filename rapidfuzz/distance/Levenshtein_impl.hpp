@@ -790,6 +790,7 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
 {
     /* upper bound */
     score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
+    if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
     if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
@@ -847,6 +848,7 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
 
     /* upper bound */
     score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
+    if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
     if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
