@@ -4,6 +4,10 @@
 #### Fixed
 - fix bug in `Levenshtein.editops` leading to crashes when used with `score_hint`
 
+#### Changed
+- add `score_hint` argument to cached implementations
+- add `score_hint` argument to Levenshtein functions
+
 ### [1.9.0] - 2022-10-22
 #### Added
 - added `Prefix`/`Postfix` similarity
