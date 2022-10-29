@@ -53,11 +53,12 @@ class Indel : public DistanceBase<Indel, int64_t, 0, std::numeric_limits<int64_t
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
     {
         int64_t maximum = Indel::maximum(s1, s2);
         int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
-        int64_t lcs_sim = LCSseq::similarity(s1, s2, lcs_cutoff);
+        int64_t lcs_hint = std::max<int64_t>(0, maximum / 2 - score_hint);
+        int64_t lcs_sim = LCSseq::similarity(s1, s2, lcs_cutoff, lcs_hint);
         int64_t dist = maximum - 2 * lcs_sim;
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }

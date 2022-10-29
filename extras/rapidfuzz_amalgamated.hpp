@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-23 14:46:20.073436
+//  Generated: 2022-10-29 16:15:30.561646
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2741,54 +2741,60 @@ struct NormalizedMetricBase {
     template <typename InputIt1, typename InputIt2,
               typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                      Args... args, double score_cutoff)
+                                      Args... args, double score_cutoff, double score_hint)
     {
         return _normalized_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                                    score_cutoff);
+                                    score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
     static double normalized_distance(const Sentence1& s1, const Sentence2& s2, Args... args,
-                                      double score_cutoff)
+                                      double score_cutoff, double score_hint)
     {
-        return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff,
+                                    score_hint);
     }
 
     template <typename InputIt1, typename InputIt2,
               typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                        Args... args, double score_cutoff)
+                                        Args... args, double score_cutoff, double score_hint)
     {
         return _normalized_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                                      score_cutoff);
+                                      score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
     static double normalized_similarity(const Sentence1& s1, const Sentence2& s2, Args... args,
-                                        double score_cutoff)
+                                        double score_cutoff, double score_hint)
     {
-        return _normalized_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return _normalized_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff,
+                                      score_hint);
     }
 
 protected:
     template <typename InputIt1, typename InputIt2>
     static double _normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args,
-                                       double score_cutoff)
+                                       double score_cutoff, double score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
         auto cutoff_distance =
             static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        auto dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance);
+        auto hint_distance =
+            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_hint));
+        auto dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance, hint_distance);
         double norm_dist = (maximum != 0) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
     }
 
     template <typename InputIt1, typename InputIt2>
     static double _normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2, Args... args,
-                                         double score_cutoff)
+                                         double score_cutoff, double score_hint)
     {
         double cutoff_score = NormSim_to_NormDist(score_cutoff);
-        double norm_dist = _normalized_distance(s1, s2, std::forward<Args>(args)..., cutoff_score);
+        double hint_score = NormSim_to_NormDist(score_hint);
+        double norm_dist =
+            _normalized_distance(s1, s2, std::forward<Args>(args)..., cutoff_score, hint_score);
         double norm_sim = 1.0 - norm_dist;
         return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
     }
@@ -2802,42 +2808,46 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
               typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                            ResType score_cutoff)
+                            ResType score_cutoff, ResType score_hint)
     {
         return T::_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                            score_cutoff);
+                            score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
+    static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
+                            ResType score_hint)
     {
-        return T::_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return T::_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
     template <typename InputIt1, typename InputIt2,
               typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                              ResType score_cutoff)
+                              ResType score_cutoff, ResType score_hint)
     {
         return _similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                           score_cutoff);
+                           score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
+    static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
+                              ResType score_hint)
     {
-        return _similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return _similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
 protected:
     template <typename InputIt1, typename InputIt2>
-    static ResType _similarity(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff)
+    static ResType _similarity(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff,
+                               ResType score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
         if (score_cutoff > maximum) return 0;
 
         ResType cutoff_distance = maximum - score_cutoff;
-        ResType dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance);
+        ResType hint_distance = (maximum >= score_hint) ? maximum - score_hint : 0;
+        ResType dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance, hint_distance);
         ResType sim = maximum - dist;
         return (sim >= score_cutoff) ? sim : 0;
     }
@@ -2851,41 +2861,46 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
               typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                            ResType score_cutoff)
+                            ResType score_cutoff, ResType score_hint)
     {
         return _distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                         score_cutoff);
+                         score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
+    static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
+                            ResType score_hint)
     {
-        return _distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return _distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
     template <typename InputIt1, typename InputIt2,
               typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
-                              ResType score_cutoff)
+                              ResType score_cutoff, ResType score_hint)
     {
         return T::_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                              score_cutoff);
+                              score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
-    static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff)
+    static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
+                              ResType score_hint)
     {
-        return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff);
+        return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
 protected:
     template <typename InputIt1, typename InputIt2>
-    static ResType _distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff)
+    static ResType _distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff,
+                             ResType score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
         ResType cutoff_similarity =
             (maximum >= score_cutoff) ? maximum - score_cutoff : static_cast<ResType>(WorstSimilarity);
-        ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity);
+        ResType hint_similarity =
+            (maximum >= score_hint) ? maximum - score_hint : static_cast<ResType>(WorstSimilarity);
+        ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
 
         if constexpr (std::is_floating_point_v<ResType>)
@@ -3345,7 +3360,8 @@ class DamerauLevenshtein
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                             [[maybe_unused]] int64_t score_hint)
     {
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -3381,41 +3397,42 @@ template <typename InputIt1, typename InputIt2>
 int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
                                      int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff);
+    return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                        int64_t score_cutoff = 0)
 {
-    return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
-    return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff);
+    return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double damerau_levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                InputIt2 last2, double score_cutoff = 1.0)
 {
-    return detail::DamerauLevenshtein::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::DamerauLevenshtein::normalized_distance(first1, last1, first2, last2, score_cutoff,
+                                                           score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
                                                double score_cutoff = 1.0)
 {
-    return detail::DamerauLevenshtein::normalized_distance(s1, s2, score_cutoff);
+    return detail::DamerauLevenshtein::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 /**
@@ -3446,14 +3463,15 @@ template <typename InputIt1, typename InputIt2>
 double damerau_levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                  InputIt2 last2, double score_cutoff = 0.0)
 {
-    return detail::DamerauLevenshtein::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::DamerauLevenshtein::normalized_similarity(first1, last1, first2, last2, score_cutoff,
+                                                             score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
                                                  double score_cutoff = 0.0)
 {
-    return detail::DamerauLevenshtein::normalized_similarity(s1, s2, score_cutoff);
+    return detail::DamerauLevenshtein::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
@@ -3515,7 +3533,8 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                             [[maybe_unused]] int64_t score_hint)
     {
         if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
@@ -3573,40 +3592,40 @@ template <typename InputIt1, typename InputIt2>
 int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Hamming::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Hamming::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Hamming::distance(s1, s2, score_cutoff);
+    return detail::Hamming::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            int64_t score_cutoff = 0)
 {
-    return detail::Hamming::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Hamming::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
-    return detail::Hamming::similarity(s1, s2, score_cutoff);
+    return detail::Hamming::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff = 1.0)
 {
-    return detail::Hamming::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Hamming::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Hamming::normalized_distance(s1, s2, score_cutoff);
+    return detail::Hamming::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3651,13 +3670,13 @@ template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      double score_cutoff = 0.0)
 {
-    return detail::Hamming::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Hamming::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Hamming::normalized_similarity(s1, s2, score_cutoff);
+    return detail::Hamming::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
@@ -3684,7 +3703,7 @@ private:
     template <typename InputIt2>
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::Hamming::distance(s1, s2, score_cutoff);
+        return detail::Hamming::distance(s1, s2, score_cutoff, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
@@ -4330,7 +4349,8 @@ class LCSseq : public SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                               [[maybe_unused]] int64_t score_hint)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }
@@ -4348,53 +4368,53 @@ template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::LCSseq::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::LCSseq::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::LCSseq::distance(s1, s2, score_cutoff);
+    return detail::LCSseq::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            int64_t score_cutoff = 0)
 {
-    return detail::LCSseq::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::LCSseq::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
-    return detail::LCSseq::similarity(s1, s2, score_cutoff);
+    return detail::LCSseq::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double lcs_seq_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff = 1.0)
 {
-    return detail::LCSseq::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::LCSseq::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double lcs_seq_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::LCSseq::normalized_distance(s1, s2, score_cutoff);
+    return detail::LCSseq::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double lcs_seq_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      double score_cutoff = 0.0)
 {
-    return detail::LCSseq::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::LCSseq::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::LCSseq::normalized_similarity(s1, s2, score_cutoff);
+    return detail::LCSseq::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -4614,11 +4634,12 @@ class Indel : public DistanceBase<Indel, int64_t, 0, std::numeric_limits<int64_t
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
     {
         int64_t maximum = Indel::maximum(s1, s2);
         int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
-        int64_t lcs_sim = LCSseq::similarity(s1, s2, lcs_cutoff);
+        int64_t lcs_hint = std::max<int64_t>(0, maximum / 2 - score_hint);
+        int64_t lcs_sim = LCSseq::similarity(s1, s2, lcs_cutoff, lcs_hint);
         int64_t dist = maximum - 2 * lcs_sim;
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
@@ -4632,53 +4653,53 @@ template <typename InputIt1, typename InputIt2>
 int64_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Indel::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Indel::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Indel::distance(s1, s2, score_cutoff);
+    return detail::Indel::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff = 0.0)
 {
-    return detail::Indel::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Indel::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0.0)
 {
-    return detail::Indel::similarity(s1, s2, score_cutoff);
+    return detail::Indel::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double indel_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                  double score_cutoff = 1.0)
 {
-    return detail::Indel::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Indel::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Indel::normalized_distance(s1, s2, score_cutoff);
+    return detail::Indel::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double indel_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff = 0.0)
 {
-    return detail::Indel::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Indel::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Indel::normalized_similarity(s1, s2, score_cutoff);
+    return detail::Indel::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -5240,7 +5261,8 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     }
 
     template <typename InputIt1, typename InputIt2>
-    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff,
+                              [[maybe_unused]] double score_hint)
     {
         return jaro_similarity(s1, s2, score_cutoff);
     }
@@ -5254,52 +5276,52 @@ template <typename InputIt1, typename InputIt2>
 double jaro_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                      double score_cutoff = 1.0)
 {
-    return detail::Jaro::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Jaro::distance(s1, s2, score_cutoff);
+    return detail::Jaro::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double jaro_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                        double score_cutoff = 0.0)
 {
-    return detail::Jaro::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Jaro::similarity(s1, s2, score_cutoff);
+    return detail::Jaro::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double jaro_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                 double score_cutoff = 1.0)
 {
-    return detail::Jaro::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Jaro::normalized_distance(s1, s2, score_cutoff);
+    return detail::Jaro::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double jaro_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                   double score_cutoff = 0.0)
 {
-    return detail::Jaro::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Jaro::normalized_similarity(s1, s2, score_cutoff);
+    return detail::Jaro::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
@@ -5415,7 +5437,7 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double prefix_weight,
-                              double score_cutoff)
+                              double score_cutoff, [[maybe_unused]] double score_hint)
     {
         return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);
     }
@@ -5430,14 +5452,15 @@ template <typename InputIt1, typename InputIt2,
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::distance(first1, last1, first2, last2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::distance(first1, last1, first2, last2, prefix_weight, score_cutoff,
+                                         score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
                              double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::distance(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::distance(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2,
@@ -5445,14 +5468,15 @@ template <typename InputIt1, typename InputIt2,
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
-    return detail::JaroWinkler::similarity(first1, last1, first2, last2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::similarity(first1, last1, first2, last2, prefix_weight, score_cutoff,
+                                           score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
                                double score_cutoff = 0.0)
 {
-    return detail::JaroWinkler::similarity(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::similarity(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2,
@@ -5460,7 +5484,7 @@ template <typename InputIt1, typename InputIt2,
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::normalized_distance(first1, last1, first2, last2, prefix_weight,
+    return detail::JaroWinkler::normalized_distance(first1, last1, first2, last2, prefix_weight, score_cutoff,
                                                     score_cutoff);
 }
 
@@ -5468,7 +5492,7 @@ template <typename Sentence1, typename Sentence2>
 double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
                                         double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::normalized_distance(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::normalized_distance(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2,
@@ -5477,14 +5501,14 @@ double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, Input
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
     return detail::JaroWinkler::normalized_similarity(first1, last1, first2, last2, prefix_weight,
-                                                      score_cutoff);
+                                                      score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
-    return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
@@ -6348,37 +6372,49 @@ int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                                     int64_t score_hint)
 {
     /* Swapping the strings so the second string is shorter */
-    if (s1.size() < s2.size()) return uniform_levenshtein_distance(s2, s1, max);
+    if (s1.size() < s2.size()) return uniform_levenshtein_distance(s2, s1, score_cutoff, score_hint);
 
     /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+    score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
 
     // when no differences are allowed a direct comparision is sufficient
-    if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
     // at least length difference insertions/deletions required
-    if (max < (s1.size() - s2.size())) return max + 1;
+    if (score_cutoff < (s1.size() - s2.size())) return score_cutoff + 1;
 
     /* common affix does not effect Levenshtein distance */
     remove_common_affix(s1, s2);
     if (s1.empty() || s2.empty()) return s1.size() + s2.size();
 
-    if (max < 4) return levenshtein_mbleven2018(s1, s2, max);
+    if (score_cutoff < 4) return levenshtein_mbleven2018(s1, s2, score_cutoff);
 
-    // todo could safe up to 25% even without max when ignoring irrelevant paths
+    // todo could safe up to 25% even without score_cutoff when ignoring irrelevant paths
     // in the upper and lower corner
-    int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
+    int64_t full_band = std::min<int64_t>(s1.size(), 2 * score_cutoff + 1);
 
     /* when the short strings has less then 65 elements Hyyrös' algorithm can be used */
     if (s2.size() < 65)
-        return levenshtein_hyrroe2003<false, false>(PatternMatchVector(s2), s2, s1, max).dist;
+        return levenshtein_hyrroe2003<false, false>(PatternMatchVector(s2), s2, s1, score_cutoff).dist;
     else if (full_band <= 64)
-        return levenshtein_hyrroe2003_small_band<false>(s1, s2, max).dist;
-    else
-        return levenshtein_hyrroe2003_block<false, false>(BlockPatternMatchVector(s1), s1, s2, max).dist;
+        return levenshtein_hyrroe2003_small_band<false>(s1, s2, score_cutoff).dist;
+    else {
+        BlockPatternMatchVector PM(s1);
+        while (score_hint < score_cutoff) {
+            int64_t score = levenshtein_hyrroe2003_block<false, false>(PM, s1, s2, score_hint).dist;
+            if (score <= score_hint) return score;
+
+            if (std::numeric_limits<int64_t>::max() / 2 < score_hint) break;
+
+            score_hint *= 2;
+        }
+
+        return levenshtein_hyrroe2003_block<false, false>(PM, s1, s2, score_cutoff).dist;
+    }
 }
 
 /**
@@ -6457,19 +6493,16 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
     int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
 
     LevenshteinResult<true, false> matrix;
-    do {
-        if (s1.empty() || s2.empty())
-            matrix.dist = s1.size() + s2.size();
-        else if (s1.size() <= 64)
-            matrix = levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
-        else if (full_band <= 64)
-            matrix = levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
-        else
-            matrix = levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2, max);
+    if (s1.empty() || s2.empty())
+        matrix.dist = s1.size() + s2.size();
+    else if (s1.size() <= 64)
+        matrix = levenshtein_hyrroe2003<true, false>(PatternMatchVector(s1), s1, s2);
+    else if (full_band <= 64)
+        matrix = levenshtein_hyrroe2003_small_band<true>(s1, s2, max);
+    else
+        matrix = levenshtein_hyrroe2003_block<true, false>(BlockPatternMatchVector(s1), s1, s2, max);
 
-        max *= 2;
-    } while (matrix.dist > max);
-
+    assert(matrix.dist <= max);
     if (matrix.dist != 0) {
         if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
 
@@ -6487,7 +6520,8 @@ LevenshteinResult<false, true> levenshtein_row(Range<InputIt1> s1, Range<InputIt
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
                              LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t max = std::numeric_limits<int64_t>::max())
+                             int64_t score_cutoff = std::numeric_limits<int64_t>::max(),
+                             int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -6495,26 +6529,27 @@ int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
 
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
-            // max can make use of the common divisor of the three weights
-            int64_t new_max = ceil_div(max, weights.insert_cost);
-            int64_t distance = uniform_levenshtein_distance(s1, s2, new_max);
+            // score_cutoff can make use of the common divisor of the three weights
+            int64_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
+            int64_t new_score_hint = ceil_div(score_hint, weights.insert_cost);
+            int64_t distance = uniform_levenshtein_distance(s1, s2, new_score_cutoff, new_score_hint);
             distance *= weights.insert_cost;
-            return (distance <= max) ? distance : max + 1;
+            return (distance <= score_cutoff) ? distance : score_cutoff + 1;
         }
         /*
          * when replace_cost >= insert_cost + delete_cost no substitutions are performed
          * therefore this can be implemented as InDel distance multiplied with the common factor
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
-            // max can make use of the common divisor of the three weights
-            int64_t new_max = ceil_div(max, weights.insert_cost);
-            int64_t distance = rapidfuzz::indel_distance(s1, s2, new_max);
+            // score_cutoff can make use of the common divisor of the three weights
+            int64_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
+            int64_t distance = rapidfuzz::indel_distance(s1, s2, new_score_cutoff);
             distance *= weights.insert_cost;
-            return (distance <= max) ? distance : max + 1;
+            return (distance <= score_cutoff) ? distance : score_cutoff + 1;
         }
     }
 
-    return generalized_levenshtein_wagner_fischer(s1, s2, weights, max);
+    return generalized_levenshtein_wagner_fischer(s1, s2, weights, score_cutoff);
 }
 struct HirschbergPos {
     int64_t left_score;
@@ -6630,18 +6665,6 @@ void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<In
     }
 }
 
-template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_hint)
-{
-    Editops editops;
-    if (score_hint < 31) score_hint = 31;
-
-    levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, score_hint);
-    editops.set_src_len(static_cast<size_t>(s1.size()));
-    editops.set_dest_len(static_cast<size_t>(s2.size()));
-    return editops;
-}
-
 class Levenshtein : public DistanceBase<Levenshtein, int64_t, 0, std::numeric_limits<int64_t>::max(),
                                         LevenshteinWeightTable> {
     friend DistanceBase<Levenshtein, int64_t, 0, std::numeric_limits<int64_t>::max(), LevenshteinWeightTable>;
@@ -6655,11 +6678,35 @@ class Levenshtein : public DistanceBase<Levenshtein, int64_t, 0, std::numeric_li
 
     template <typename InputIt1, typename InputIt2>
     static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
-                             int64_t score_cutoff)
+                             int64_t score_cutoff, int64_t score_hint)
     {
-        return levenshtein_distance(s1, s2, weights, score_cutoff);
+        return levenshtein_distance(s1, s2, weights, score_cutoff, score_hint);
     }
 };
+
+template <typename InputIt1, typename InputIt2>
+Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_hint)
+{
+    Editops editops;
+    if (score_hint < 31) score_hint = 31;
+
+    int64_t score_cutoff = std::max(s1.size(), s2.size());
+    /* score_hint currently leads to calculating the levenshtein distance twice
+     * 1) to find the real distance
+     * 2) to find the alignment
+     * this is only worth it when at least 50% of the runtime could be saved
+     * todo: maybe there is a way to join these two calculations in the future
+     * so it is worth it in more cases
+     */
+    if (std::numeric_limits<int64_t>::max() / 2 > score_hint && 2 * score_hint < score_cutoff)
+        score_cutoff = Levenshtein::distance(s1, s2, {1, 1, 1}, score_cutoff, score_hint);
+
+    levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, score_cutoff);
+
+    editops.set_src_len(static_cast<size_t>(s1.size()));
+    editops.set_dest_len(static_cast<size_t>(s2.size()));
+    return editops;
+}
 
 } // namespace rapidfuzz::detail
 
@@ -6799,7 +6846,7 @@ int64_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, I
                              LevenshteinWeightTable weights = {1, 1, 1},
                              int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Levenshtein::distance(first1, last1, first2, last2, weights, score_cutoff);
+    return detail::Levenshtein::distance(first1, last1, first2, last2, weights, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -6807,35 +6854,36 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
                              LevenshteinWeightTable weights = {1, 1, 1},
                              int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Levenshtein::distance(s1, s2, weights, score_cutoff);
+    return detail::Levenshtein::distance(s1, s2, weights, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0)
 {
-    return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff);
+    return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
                                LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0.0)
 {
-    return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff);
+    return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                        LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0)
 {
-    return detail::Levenshtein::normalized_distance(first1, last1, first2, last2, weights, score_cutoff);
+    return detail::Levenshtein::normalized_distance(first1, last1, first2, last2, weights, score_cutoff,
+                                                    score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
                                        LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0)
 {
-    return detail::Levenshtein::normalized_distance(s1, s2, weights, score_cutoff);
+    return detail::Levenshtein::normalized_distance(s1, s2, weights, score_cutoff, score_cutoff);
 }
 
 /**
@@ -6902,7 +6950,8 @@ double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputI
                                          LevenshteinWeightTable weights = {1, 1, 1},
                                          double score_cutoff = 0.0)
 {
-    return detail::Levenshtein::normalized_similarity(first1, last1, first2, last2, weights, score_cutoff);
+    return detail::Levenshtein::normalized_similarity(first1, last1, first2, last2, weights, score_cutoff,
+                                                      score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -6910,7 +6959,7 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
                                          LevenshteinWeightTable weights = {1, 1, 1},
                                          double score_cutoff = 0.0)
 {
-    return detail::Levenshtein::normalized_similarity(s1, s2, weights, score_cutoff);
+    return detail::Levenshtein::normalized_similarity(s1, s2, weights, score_cutoff, score_cutoff);
 }
 
 /**
@@ -7387,9 +7436,9 @@ class OSA : public DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::m
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
     {
-        if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff);
+        if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff, score_hint);
 
         remove_common_affix(s1, s2);
         if (s1.empty())
@@ -7433,40 +7482,40 @@ template <typename InputIt1, typename InputIt2>
 int64_t osa_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::OSA::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::OSA::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t osa_distance(const Sentence1& s1, const Sentence2& s2,
                      int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::OSA::distance(s1, s2, score_cutoff);
+    return detail::OSA::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t osa_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                        int64_t score_cutoff = 0)
 {
-    return detail::OSA::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::OSA::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t osa_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
-    return detail::OSA::similarity(s1, s2, score_cutoff);
+    return detail::OSA::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double osa_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double score_cutoff = 1.0)
 {
-    return detail::OSA::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::OSA::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double osa_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::OSA::normalized_distance(s1, s2, score_cutoff);
+    return detail::OSA::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 /**
@@ -7497,13 +7546,13 @@ template <typename InputIt1, typename InputIt2>
 double osa_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                  double score_cutoff = 0.0)
 {
-    return detail::OSA::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::OSA::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double osa_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::OSA::normalized_similarity(s1, s2, score_cutoff);
+    return detail::OSA::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 #ifdef RAPIDFUZZ_SIMD
@@ -7681,129 +7730,6 @@ CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
 
 namespace rapidfuzz::detail {
 
-class Prefix : public SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()>;
-    friend NormalizedMetricBase<Prefix>;
-
-    template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
-    {
-        return std::max(s1.size(), s2.size());
-    }
-
-    template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
-    {
-        int64_t dist = static_cast<int64_t>(remove_common_prefix(s1, s2));
-        return (dist >= score_cutoff) ? dist : 0;
-    }
-};
-
-} // namespace rapidfuzz::detail
-
-namespace rapidfuzz {
-
-template <typename InputIt1, typename InputIt2>
-int64_t prefix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
-{
-    return detail::Prefix::distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t prefix_distance(const Sentence1& s1, const Sentence2& s2,
-                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
-{
-    return detail::Prefix::distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-int64_t prefix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                          int64_t score_cutoff = 0)
-{
-    return detail::Prefix::similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-int64_t prefix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
-{
-    return detail::Prefix::similarity(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double prefix_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                  double score_cutoff = 1.0)
-{
-    return detail::Prefix::normalized_distance(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double prefix_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
-{
-    return detail::Prefix::normalized_distance(s1, s2, score_cutoff);
-}
-
-template <typename InputIt1, typename InputIt2>
-double prefix_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                    double score_cutoff = 0.0)
-{
-    return detail::Prefix::normalized_similarity(first1, last1, first2, last2, score_cutoff);
-}
-
-template <typename Sentence1, typename Sentence2>
-double prefix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
-{
-    return detail::Prefix::normalized_similarity(s1, s2, score_cutoff);
-}
-
-template <typename CharT1>
-struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
-                                                          std::numeric_limits<int64_t>::max()> {
-    template <typename Sentence1>
-    explicit CachedPrefix(const Sentence1& s1_) : CachedPrefix(detail::to_begin(s1_), detail::to_end(s1_))
-    {}
-
-    template <typename InputIt1>
-    CachedPrefix(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
-    {}
-
-private:
-    friend detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
-                                        std::numeric_limits<int64_t>::max()>;
-    friend detail::CachedNormalizedMetricBase<CachedPrefix<CharT1>>;
-
-    template <typename InputIt2>
-    int64_t maximum(detail::Range<InputIt2> s2) const
-    {
-        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
-    }
-
-    template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
-    {
-        return detail::Prefix::similarity(s1, s2, score_cutoff);
-    }
-
-    std::basic_string<CharT1> s1;
-};
-
-template <typename Sentence1>
-explicit CachedPrefix(const Sentence1& s1_) -> CachedPrefix<char_type<Sentence1>>;
-
-template <typename InputIt1>
-CachedPrefix(InputIt1 first1, InputIt1 last1) -> CachedPrefix<iter_value_t<InputIt1>>;
-
-/**@}*/
-
-} // namespace rapidfuzz
-
-#include <cmath>
-#include <numeric>
-
-#include "rapidfuzz/details/common.hpp"
-
-namespace rapidfuzz::detail {
-
 class Postfix : public SimilarityBase<Postfix, int64_t, 0, std::numeric_limits<int64_t>::max()> {
     friend SimilarityBase<Postfix, int64_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<Postfix>;
@@ -7815,7 +7741,8 @@ class Postfix : public SimilarityBase<Postfix, int64_t, 0, std::numeric_limits<i
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                               [[maybe_unused]] int64_t score_hint)
     {
         int64_t dist = static_cast<int64_t>(remove_common_suffix(s1, s2));
         return (dist >= score_cutoff) ? dist : 0;
@@ -7830,53 +7757,53 @@ template <typename InputIt1, typename InputIt2>
 int64_t postfix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Postfix::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Postfix::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t postfix_distance(const Sentence1& s1, const Sentence2& s2,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Postfix::distance(s1, s2, score_cutoff);
+    return detail::Postfix::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t postfix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            int64_t score_cutoff = 0)
 {
-    return detail::Postfix::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Postfix::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t postfix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
-    return detail::Postfix::similarity(s1, s2, score_cutoff);
+    return detail::Postfix::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double postfix_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                    double score_cutoff = 1.0)
 {
-    return detail::Postfix::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Postfix::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double postfix_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Postfix::normalized_distance(s1, s2, score_cutoff);
+    return detail::Postfix::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double postfix_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                      double score_cutoff = 0.0)
 {
-    return detail::Postfix::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Postfix::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double postfix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Postfix::normalized_similarity(s1, s2, score_cutoff);
+    return detail::Postfix::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
@@ -7904,7 +7831,7 @@ private:
     template <typename InputIt2>
     int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::Postfix::similarity(s1, s2, score_cutoff);
+        return detail::Postfix::similarity(s1, s2, score_cutoff, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;
@@ -7915,6 +7842,130 @@ explicit CachedPostfix(const Sentence1& s1_) -> CachedPostfix<char_type<Sentence
 
 template <typename InputIt1>
 CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<InputIt1>>;
+
+/**@}*/
+
+} // namespace rapidfuzz
+
+#include <cmath>
+#include <numeric>
+
+#include "rapidfuzz/details/common.hpp"
+
+namespace rapidfuzz::detail {
+
+class Prefix : public SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    friend NormalizedMetricBase<Prefix>;
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    {
+        return std::max(s1.size(), s2.size());
+    }
+
+    template <typename InputIt1, typename InputIt2>
+    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                               [[maybe_unused]] int64_t score_hint)
+    {
+        int64_t dist = static_cast<int64_t>(remove_common_prefix(s1, s2));
+        return (dist >= score_cutoff) ? dist : 0;
+    }
+};
+
+} // namespace rapidfuzz::detail
+
+namespace rapidfuzz {
+
+template <typename InputIt1, typename InputIt2>
+int64_t prefix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+{
+    return detail::Prefix::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t prefix_distance(const Sentence1& s1, const Sentence2& s2,
+                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+{
+    return detail::Prefix::distance(s1, s2, score_cutoff, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+int64_t prefix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                          int64_t score_cutoff = 0)
+{
+    return detail::Prefix::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+int64_t prefix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+{
+    return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double prefix_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                  double score_cutoff = 1.0)
+{
+    return detail::Prefix::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double prefix_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+{
+    return detail::Prefix::normalized_distance(s1, s2, score_cutoff, score_cutoff);
+}
+
+template <typename InputIt1, typename InputIt2>
+double prefix_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                    double score_cutoff = 0.0)
+{
+    return detail::Prefix::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double prefix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    return detail::Prefix::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
+}
+
+template <typename CharT1>
+struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
+                                                          std::numeric_limits<int64_t>::max()> {
+    template <typename Sentence1>
+    explicit CachedPrefix(const Sentence1& s1_) : CachedPrefix(detail::to_begin(s1_), detail::to_end(s1_))
+    {}
+
+    template <typename InputIt1>
+    CachedPrefix(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    {}
+
+private:
+    friend detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
+                                        std::numeric_limits<int64_t>::max()>;
+    friend detail::CachedNormalizedMetricBase<CachedPrefix<CharT1>>;
+
+    template <typename InputIt2>
+    int64_t maximum(detail::Range<InputIt2> s2) const
+    {
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
+    }
+
+    template <typename InputIt2>
+    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    {
+        return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
+    }
+
+    std::basic_string<CharT1> s1;
+};
+
+template <typename Sentence1>
+explicit CachedPrefix(const Sentence1& s1_) -> CachedPrefix<char_type<Sentence1>>;
+
+template <typename InputIt1>
+CachedPrefix(InputIt1 first1, InputIt1 last1) -> CachedPrefix<iter_value_t<InputIt1>>;
 
 /**@}*/
 

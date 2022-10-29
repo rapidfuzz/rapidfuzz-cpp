@@ -75,7 +75,7 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double prefix_weight,
-                              double score_cutoff)
+                              double score_cutoff, [[maybe_unused]] double score_hint)
     {
         return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);
     }

@@ -255,9 +255,9 @@ class OSA : public DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::m
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
     {
-        if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff);
+        if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff, score_hint);
 
         remove_common_affix(s1, s2);
         if (s1.empty())

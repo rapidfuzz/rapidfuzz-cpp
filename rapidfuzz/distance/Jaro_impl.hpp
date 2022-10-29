@@ -435,7 +435,8 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     }
 
     template <typename InputIt1, typename InputIt2>
-    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff)
+    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff,
+                              [[maybe_unused]] double score_hint)
     {
         return jaro_similarity(s1, s2, score_cutoff);
     }

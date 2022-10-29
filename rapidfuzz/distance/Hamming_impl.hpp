@@ -19,7 +19,8 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+                             [[maybe_unused]] int64_t score_hint)
     {
         if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
