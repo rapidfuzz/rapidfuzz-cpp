@@ -157,21 +157,24 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
 
 template <typename InputIt1, typename InputIt2>
 int64_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0, int64_t score_hint = 0)
+                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0,
+                               int64_t score_hint = 0)
 {
     return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff, score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0, int64_t score_hint = 0)
+                               LevenshteinWeightTable weights = {1, 1, 1}, int64_t score_cutoff = 0,
+                               int64_t score_hint = 0)
 {
     return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff, score_hint);
 }
 
 template <typename InputIt1, typename InputIt2>
 double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0, double score_hint = 1.0)
+                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0,
+                                       double score_hint = 1.0)
 {
     return detail::Levenshtein::normalized_distance(first1, last1, first2, last2, weights, score_cutoff,
                                                     score_hint);
@@ -179,7 +182,8 @@ double levenshtein_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2
 
 template <typename Sentence1, typename Sentence2>
 double levenshtein_normalized_distance(const Sentence1& s1, const Sentence2& s2,
-                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0, double score_hint = 1.0)
+                                       LevenshteinWeightTable weights = {1, 1, 1}, double score_cutoff = 1.0,
+                                       double score_hint = 1.0)
 {
     return detail::Levenshtein::normalized_distance(s1, s2, weights, score_cutoff, score_hint);
 }
@@ -248,7 +252,8 @@ double levenshtein_normalized_similarity(InputIt1 first1, InputIt1 last1, InputI
                                          LevenshteinWeightTable weights = {1, 1, 1},
                                          double score_cutoff = 0.0, double score_hint = 0.0)
 {
-    return detail::Levenshtein::normalized_similarity(first1, last1, first2, last2, weights, score_cutoff, score_hint);
+    return detail::Levenshtein::normalized_similarity(first1, last1, first2, last2, weights, score_cutoff,
+                                                      score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -437,7 +442,7 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint) const
     {
         if (weights.insert_cost == weights.delete_cost) {
             /* when insertions + deletions operations are free there can not be any edit distance */
@@ -446,8 +451,10 @@ private:
             /* uniform Levenshtein multiplied with the common factor */
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
-                int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2, new_max);
+                int64_t new_score_cutoff = detail::ceil_div(score_cutoff, weights.insert_cost);
+                int64_t new_score_hint = detail::ceil_div(score_hint, weights.insert_cost);
+                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2,
+                                                                    new_score_cutoff, new_score_hint);
                 dist *= weights.insert_cost;
 
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;

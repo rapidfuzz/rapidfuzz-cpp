@@ -82,7 +82,8 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
+    double _similarity(detail::Range<InputIt2> s2, double score_cutoff,
+                       [[maybe_unused]] double score_hint) const
     {
         return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }

@@ -108,10 +108,11 @@ struct CachedRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
     // private:
     CachedIndel<CharT1> cached_indel;
@@ -178,10 +179,11 @@ struct CachedPartialRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -287,10 +289,11 @@ struct CachedTokenSortRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1_sorted;
@@ -344,10 +347,11 @@ struct CachedPartialTokenSortRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1_sorted;
@@ -411,10 +415,11 @@ struct CachedTokenSetRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -467,10 +472,11 @@ struct CachedPartialTokenSetRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -526,10 +532,11 @@ struct CachedTokenRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -587,10 +594,11 @@ struct CachedPartialTokenRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -642,10 +650,11 @@ struct CachedWRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     // todo somehow implement this using other ratios with creating PatternMatchVector
@@ -758,10 +767,11 @@ struct CachedQRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;

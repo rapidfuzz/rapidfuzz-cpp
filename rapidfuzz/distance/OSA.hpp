@@ -250,7 +250,8 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                      [[maybe_unused]] int64_t score_hint) const
     {
         int64_t res;
         if (s1.empty())

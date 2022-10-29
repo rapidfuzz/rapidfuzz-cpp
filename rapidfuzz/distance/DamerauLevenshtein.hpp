@@ -134,7 +134,8 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                      [[maybe_unused]] int64_t score_hint) const
     {
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }

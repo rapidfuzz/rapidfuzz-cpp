@@ -786,42 +786,56 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
 template <typename InputIt1, typename InputIt2>
 int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1,
-                                     Range<InputIt2> s2, int64_t max)
+                                     Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
 {
     /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+    score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
 
     // when no differences are allowed a direct comparision is sufficient
-    if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
-    if (max < std::abs(s1.size() - s2.size())) return max + 1;
+    if (score_cutoff < std::abs(s1.size() - s2.size())) return score_cutoff + 1;
 
     // important to catch, since this causes block to be empty -> raises exception on access
-    if (s1.empty()) {
-        return (s2.size() <= max) ? s2.size() : max + 1;
-    }
+    if (s1.empty()) return (s2.size() <= score_cutoff) ? s2.size() : score_cutoff + 1;
 
     /* do this first, since we can not remove any affix in encoded form
      * todo actually we could at least remove the common prefix and just shift the band
      */
-    if (max >= 4) {
+    if (score_cutoff >= 4) {
         // todo could safe up to 25% even without max when ignoring irrelevant paths
         // in the upper and lower corner
-        int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
+        int64_t full_band = std::min<int64_t>(s1.size(), 2 * score_cutoff + 1);
 
         if (s1.size() < 65)
-            return levenshtein_hyrroe2003<false, false>(block, s1, s2, max).dist;
+            return levenshtein_hyrroe2003<false, false>(block, s1, s2, score_cutoff).dist;
         else if (full_band <= 64)
-            return levenshtein_hyrroe2003_small_band(block, s1, s2, max);
-        else
-            return levenshtein_hyrroe2003_block<false, false>(block, s1, s2, max).dist;
+            return levenshtein_hyrroe2003_small_band(block, s1, s2, score_cutoff);
+
+        while (score_hint < score_cutoff) {
+            full_band = std::min<int64_t>(s1.size(), 2 * score_hint + 1);
+
+            int64_t score;
+            if (full_band <= 64)
+                score = levenshtein_hyrroe2003_small_band(block, s1, s2, score_hint);
+            else
+                score = levenshtein_hyrroe2003_block<false, false>(block, s1, s2, score_hint).dist;
+
+            if (score <= score_hint) return score;
+
+            if (std::numeric_limits<int64_t>::max() / 2 < score_hint) break;
+
+            score_hint *= 2;
+        }
+
+        return levenshtein_hyrroe2003_block<false, false>(block, s1, s2, score_cutoff).dist;
     }
 
     /* common affix does not effect Levenshtein distance */
     remove_common_affix(s1, s2);
     if (s1.empty() || s2.empty()) return s1.size() + s2.size();
 
-    return levenshtein_mbleven2018(s1, s2, max);
+    return levenshtein_mbleven2018(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>

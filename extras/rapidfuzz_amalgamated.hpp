@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-29 20:06:52.753132
+//  Generated: 2022-10-29 23:40:55.246676
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2845,8 +2845,9 @@ protected:
         auto maximum = T::maximum(s1, s2, args...);
         if (score_cutoff > maximum) return 0;
 
+        score_hint = std::min(score_cutoff, score_hint);
         ResType cutoff_distance = maximum - score_cutoff;
-        ResType hint_distance = (maximum >= score_hint) ? maximum - score_hint : 0;
+        ResType hint_distance = maximum - score_hint;
         ResType dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance, hint_distance);
         ResType sim = maximum - dist;
         return (sim >= score_cutoff) ? sim : 0;
@@ -2916,47 +2917,53 @@ protected:
 template <typename T>
 struct CachedNormalizedMetricBase {
     template <typename InputIt2>
-    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0) const
+    double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0,
+                               double score_hint = 1.0) const
     {
-        return _normalized_distance(Range(first2, last2), score_cutoff);
+        return _normalized_distance(Range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
-    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0) const
+    double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0, double score_hint = 1.0) const
     {
-        return _normalized_distance(Range(s2), score_cutoff);
+        return _normalized_distance(Range(s2), score_cutoff, score_hint);
     }
 
     template <typename InputIt2>
-    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const
+    double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                                 double score_hint = 0.0) const
     {
-        return _normalized_similarity(Range(first2, last2), score_cutoff);
+        return _normalized_similarity(Range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
-    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0) const
+    double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0,
+                                 double score_hint = 0.0) const
     {
-        return _normalized_similarity(Range(s2), score_cutoff);
+        return _normalized_similarity(Range(s2), score_cutoff, score_hint);
     }
 
 protected:
     template <typename InputIt2>
-    double _normalized_distance(Range<InputIt2> s2, double score_cutoff) const
+    double _normalized_distance(Range<InputIt2> s2, double score_cutoff, double score_hint) const
     {
         const T& derived = static_cast<const T&>(*this);
         auto maximum = derived.maximum(s2);
         auto cutoff_distance =
             static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        double dist = static_cast<double>(derived._distance(s2, cutoff_distance));
+        auto hint_distance =
+            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_hint));
+        double dist = static_cast<double>(derived._distance(s2, cutoff_distance, hint_distance));
         double norm_dist = (maximum != 0) ? dist / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
     }
 
     template <typename InputIt2>
-    double _normalized_similarity(Range<InputIt2> s2, double score_cutoff) const
+    double _normalized_similarity(Range<InputIt2> s2, double score_cutoff, double score_hint) const
     {
         double cutoff_score = NormSim_to_NormDist(score_cutoff);
-        double norm_dist = _normalized_distance(s2, cutoff_score);
+        double hint_score = NormSim_to_NormDist(score_hint);
+        double norm_dist = _normalized_distance(s2, cutoff_score, hint_score);
         double norm_sim = 1.0 - norm_dist;
         return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
     }
@@ -2969,43 +2976,48 @@ template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDi
 struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
     template <typename InputIt2>
     ResType distance(InputIt2 first2, InputIt2 last2,
-                     ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
+                     ResType score_cutoff = static_cast<ResType>(WorstDistance),
+                     ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(Range(first2, last2), score_cutoff);
+        return derived._distance(Range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
-    ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
+    ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance),
+                     ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(Range(s2), score_cutoff);
+        return derived._distance(Range(s2), score_cutoff, score_hint);
     }
 
     template <typename InputIt2>
     ResType similarity(InputIt2 first2, InputIt2 last2,
-                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
+                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity),
+                       ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
-        return _similarity(Range(first2, last2), score_cutoff);
+        return _similarity(Range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
-    ResType similarity(const Sentence2& s2,
-                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
+    ResType similarity(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstSimilarity),
+                       ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
-        return _similarity(Range(s2), score_cutoff);
+        return _similarity(Range(s2), score_cutoff, score_hint);
     }
 
 protected:
     template <typename InputIt2>
-    ResType _similarity(Range<InputIt2> s2, ResType score_cutoff) const
+    ResType _similarity(Range<InputIt2> s2, ResType score_cutoff, ResType score_hint) const
     {
         const T& derived = static_cast<const T&>(*this);
         ResType maximum = derived.maximum(s2);
         if (score_cutoff > maximum) return 0;
 
+        score_hint = std::min(score_cutoff, score_hint);
         ResType cutoff_distance = maximum - score_cutoff;
-        ResType dist = derived._distance(s2, cutoff_distance);
+        ResType hint_distance = maximum - score_hint;
+        ResType dist = derived._distance(s2, cutoff_distance, hint_distance);
         ResType sim = maximum - dist;
         return (sim >= score_cutoff) ? sim : 0;
     }
@@ -3018,41 +3030,45 @@ template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDi
 struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
     template <typename InputIt2>
     ResType distance(InputIt2 first2, InputIt2 last2,
-                     ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
+                     ResType score_cutoff = static_cast<ResType>(WorstDistance),
+                     ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
-        return _distance(Range(first2, last2), score_cutoff);
+        return _distance(Range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
-    ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
+    ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance),
+                     ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
-        return _distance(Range(s2), score_cutoff);
+        return _distance(Range(s2), score_cutoff, score_hint);
     }
 
     template <typename InputIt2>
     ResType similarity(InputIt2 first2, InputIt2 last2,
-                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
+                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity),
+                       ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(Range(first2, last2), score_cutoff);
+        return derived._similarity(Range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
-    ResType similarity(const Sentence2& s2,
-                       ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
+    ResType similarity(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstSimilarity),
+                       ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(Range(s2), score_cutoff);
+        return derived._similarity(Range(s2), score_cutoff, score_hint);
     }
 
 protected:
     template <typename InputIt2>
-    ResType _distance(Range<InputIt2> s2, ResType score_cutoff) const
+    ResType _distance(Range<InputIt2> s2, ResType score_cutoff, ResType score_hint) const
     {
         const T& derived = static_cast<const T&>(*this);
         ResType maximum = derived.maximum(s2);
         ResType cutoff_similarity = (maximum > score_cutoff) ? maximum - score_cutoff : 0;
-        ResType sim = derived._similarity(s2, cutoff_similarity);
+        ResType hint_similarity = (maximum > score_hint) ? maximum - score_hint : 0;
+        ResType sim = derived._similarity(s2, cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
 
         if constexpr (std::is_floating_point_v<ResType>)
@@ -3498,7 +3514,8 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                      [[maybe_unused]] int64_t score_hint) const
     {
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -3701,9 +3718,10 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                      [[maybe_unused]] int64_t score_hint) const
     {
-        return detail::Hamming::distance(s1, s2, score_cutoff, score_cutoff);
+        return detail::Hamming::distance(s1, s2, score_cutoff, score_hint);
     }
 
     std::basic_string<CharT1> s1;
@@ -4572,7 +4590,8 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                        [[maybe_unused]] int64_t score_hint) const
     {
         return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }
@@ -4807,11 +4826,12 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint) const
     {
         int64_t maximum_ = maximum(s2);
         int64_t lcs_cutoff = std::max<int64_t>(0, maximum_ / 2 - score_cutoff);
-        int64_t lcs_sim = scorer.similarity(s2, lcs_cutoff);
+        int64_t lcs_cutoff_hint = std::max<int64_t>(0, maximum_ / 2 - score_hint);
+        int64_t lcs_sim = scorer.similarity(s2, lcs_cutoff, lcs_cutoff_hint);
         int64_t dist = maximum_ - 2 * lcs_sim;
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
@@ -5345,7 +5365,8 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
+    double _similarity(detail::Range<InputIt2> s2, double score_cutoff,
+                       [[maybe_unused]] double score_hint) const
     {
         return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }
@@ -5534,7 +5555,8 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(detail::Range<InputIt2> s2, double score_cutoff) const
+    double _similarity(detail::Range<InputIt2> s2, double score_cutoff,
+                       [[maybe_unused]] double score_hint) const
     {
         return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);
     }
@@ -6333,42 +6355,56 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
 template <typename InputIt1, typename InputIt2>
 int64_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1,
-                                     Range<InputIt2> s2, int64_t max)
+                                     Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
 {
     /* upper bound */
-    max = std::min(max, std::max<int64_t>(s1.size(), s2.size()));
+    score_cutoff = std::min(score_cutoff, std::max<int64_t>(s1.size(), s2.size()));
 
     // when no differences are allowed a direct comparision is sufficient
-    if (max == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
 
-    if (max < std::abs(s1.size() - s2.size())) return max + 1;
+    if (score_cutoff < std::abs(s1.size() - s2.size())) return score_cutoff + 1;
 
     // important to catch, since this causes block to be empty -> raises exception on access
-    if (s1.empty()) {
-        return (s2.size() <= max) ? s2.size() : max + 1;
-    }
+    if (s1.empty()) return (s2.size() <= score_cutoff) ? s2.size() : score_cutoff + 1;
 
     /* do this first, since we can not remove any affix in encoded form
      * todo actually we could at least remove the common prefix and just shift the band
      */
-    if (max >= 4) {
+    if (score_cutoff >= 4) {
         // todo could safe up to 25% even without max when ignoring irrelevant paths
         // in the upper and lower corner
-        int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
+        int64_t full_band = std::min<int64_t>(s1.size(), 2 * score_cutoff + 1);
 
         if (s1.size() < 65)
-            return levenshtein_hyrroe2003<false, false>(block, s1, s2, max).dist;
+            return levenshtein_hyrroe2003<false, false>(block, s1, s2, score_cutoff).dist;
         else if (full_band <= 64)
-            return levenshtein_hyrroe2003_small_band(block, s1, s2, max);
-        else
-            return levenshtein_hyrroe2003_block<false, false>(block, s1, s2, max).dist;
+            return levenshtein_hyrroe2003_small_band(block, s1, s2, score_cutoff);
+
+        while (score_hint < score_cutoff) {
+            full_band = std::min<int64_t>(s1.size(), 2 * score_hint + 1);
+
+            int64_t score;
+            if (full_band <= 64)
+                score = levenshtein_hyrroe2003_small_band(block, s1, s2, score_hint);
+            else
+                score = levenshtein_hyrroe2003_block<false, false>(block, s1, s2, score_hint).dist;
+
+            if (score <= score_hint) return score;
+
+            if (std::numeric_limits<int64_t>::max() / 2 < score_hint) break;
+
+            score_hint *= 2;
+        }
+
+        return levenshtein_hyrroe2003_block<false, false>(block, s1, s2, score_cutoff).dist;
     }
 
     /* common affix does not effect Levenshtein distance */
     remove_common_affix(s1, s2);
     if (s1.empty() || s2.empty()) return s1.size() + s2.size();
 
-    return levenshtein_mbleven2018(s1, s2, max);
+    return levenshtein_mbleven2018(s1, s2, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -7146,7 +7182,7 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint) const
     {
         if (weights.insert_cost == weights.delete_cost) {
             /* when insertions + deletions operations are free there can not be any edit distance */
@@ -7155,8 +7191,10 @@ private:
             /* uniform Levenshtein multiplied with the common factor */
             if (weights.insert_cost == weights.replace_cost) {
                 // max can make use of the common divisor of the three weights
-                int64_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2, new_max);
+                int64_t new_score_cutoff = detail::ceil_div(score_cutoff, weights.insert_cost);
+                int64_t new_score_hint = detail::ceil_div(score_hint, weights.insert_cost);
+                int64_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2,
+                                                                    new_score_cutoff, new_score_hint);
                 dist *= weights.insert_cost;
 
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -7701,7 +7739,8 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                      [[maybe_unused]] int64_t score_hint) const
     {
         int64_t res;
         if (s1.empty())
@@ -7835,9 +7874,10 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                        [[maybe_unused]] int64_t score_hint) const
     {
-        return detail::Postfix::similarity(s1, s2, score_cutoff, score_cutoff);
+        return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
 
     std::basic_string<CharT1> s1;
@@ -7959,7 +7999,8 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                        [[maybe_unused]] int64_t score_hint) const
     {
         return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }
@@ -8243,10 +8284,11 @@ struct CachedRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
     // private:
     CachedIndel<CharT1> cached_indel;
@@ -8313,10 +8355,11 @@ struct CachedPartialRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0.0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -8422,10 +8465,11 @@ struct CachedTokenSortRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1_sorted;
@@ -8479,10 +8523,11 @@ struct CachedPartialTokenSortRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1_sorted;
@@ -8546,10 +8591,11 @@ struct CachedTokenSetRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -8602,10 +8648,11 @@ struct CachedPartialTokenSetRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -8661,10 +8708,11 @@ struct CachedTokenRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -8722,10 +8770,11 @@ struct CachedPartialTokenRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -8777,10 +8826,11 @@ struct CachedWRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     // todo somehow implement this using other ratios with creating PatternMatchVector
@@ -8893,10 +8943,11 @@ struct CachedQRatio {
     {}
 
     template <typename InputIt2>
-    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0) const;
+    double similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
+                      double score_hint = 0.0) const;
 
     template <typename Sentence2>
-    double similarity(const Sentence2& s2, double score_cutoff = 0) const;
+    double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
     std::basic_string<CharT1> s1;
@@ -8941,16 +8992,17 @@ double ratio(const Sentence1& s1, const Sentence2& s2, const double score_cutoff
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                       double score_hint) const
 {
-    return similarity(detail::Range(first2, last2), score_cutoff);
+    return similarity(detail::Range(first2, last2), score_cutoff, score_hint);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double score_hint) const
 {
-    return cached_indel.normalized_similarity(s2, score_cutoff / 100) * 100;
+    return cached_indel.normalized_similarity(s2, score_cutoff / 100, score_hint / 100) * 100;
 }
 
 /**********************************************
@@ -9133,7 +9185,8 @@ CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                              [[maybe_unused]] double score_hint) const
 {
     size_t len1 = s1.size();
     size_t len2 = static_cast<size_t>(std::distance(first2, last2));
@@ -9152,7 +9205,8 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                              [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9178,7 +9232,8 @@ double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_c
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                                [[maybe_unused]] double score_hint) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -9187,7 +9242,8 @@ double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                                [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9215,8 +9271,8 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
-                                                       double score_cutoff) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                                       [[maybe_unused]] double score_hint) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -9225,7 +9281,8 @@ double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                                       [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9306,7 +9363,8 @@ double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cu
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                               [[maybe_unused]] double score_hint) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -9315,7 +9373,8 @@ double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                               [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9363,8 +9422,8 @@ double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double 
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
-                                                      double score_cutoff) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                                      [[maybe_unused]] double score_hint) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -9373,7 +9432,8 @@ double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                                      [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9552,14 +9612,16 @@ double token_ratio(const std::basic_string<CharT1>& s1_sorted,
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                            [[maybe_unused]] double score_hint) const
 {
     return fuzz_detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                            [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9636,14 +9698,16 @@ double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                                   [[maybe_unused]] double score_hint) const
 {
     return fuzz_detail::partial_token_ratio(s1_sorted, tokens_s1, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                                   [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9706,7 +9770,8 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                        [[maybe_unused]] double score_hint) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -9745,7 +9810,8 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                        [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -9776,7 +9842,8 @@ double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff) const
+double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
+                                        [[maybe_unused]] double score_hint) const
 {
     auto len2 = std::distance(first2, last2);
 
@@ -9789,7 +9856,8 @@ double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff) const
+double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
+                                        [[maybe_unused]] double score_hint) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }

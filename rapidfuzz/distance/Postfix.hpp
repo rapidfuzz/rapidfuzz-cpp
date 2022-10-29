@@ -85,9 +85,10 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
+                        [[maybe_unused]] int64_t score_hint) const
     {
-        return detail::Postfix::similarity(s1, s2, score_cutoff, score_cutoff);
+        return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
 
     std::basic_string<CharT1> s1;

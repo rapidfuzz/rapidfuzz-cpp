@@ -167,11 +167,12 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff) const
+    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint) const
     {
         int64_t maximum_ = maximum(s2);
         int64_t lcs_cutoff = std::max<int64_t>(0, maximum_ / 2 - score_cutoff);
-        int64_t lcs_sim = scorer.similarity(s2, lcs_cutoff);
+        int64_t lcs_cutoff_hint = std::max<int64_t>(0, maximum_ / 2 - score_hint);
+        int64_t lcs_sim = scorer.similarity(s2, lcs_cutoff, lcs_cutoff_hint);
         int64_t dist = maximum_ - 2 * lcs_sim;
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
