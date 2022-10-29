@@ -11,60 +11,60 @@ namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 int64_t prefix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Prefix::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Prefix::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t prefix_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Prefix::distance(s1, s2, score_cutoff);
+    return detail::Prefix::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 int64_t prefix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0)
+                          int64_t score_cutoff = 0)
 {
-    return detail::Prefix::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Prefix::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 int64_t prefix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
 {
-    return detail::Prefix::similarity(s1, s2, score_cutoff);
+    return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double prefix_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff = 1.0)
+                                  double score_cutoff = 1.0)
 {
-    return detail::Prefix::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Prefix::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double prefix_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Prefix::normalized_distance(s1, s2, score_cutoff);
+    return detail::Prefix::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double prefix_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff = 0.0)
+                                    double score_cutoff = 0.0)
 {
-    return detail::Prefix::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Prefix::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double prefix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Prefix::normalized_similarity(s1, s2, score_cutoff);
+    return detail::Prefix::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
 struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
-                                                         std::numeric_limits<int64_t>::max()> {
+                                                          std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedPrefix(const Sentence1& s1_) : CachedPrefix(detail::to_begin(s1_), detail::to_end(s1_))
     {}
@@ -74,7 +74,8 @@ struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, 
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    friend detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
+                                        std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedPrefix<CharT1>>;
 
     template <typename InputIt2>
@@ -86,7 +87,7 @@ private:
     template <typename InputIt2>
     int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff) const
     {
-        return detail::Prefix::similarity(s1, s2, score_cutoff);
+        return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }
 
     std::basic_string<CharT1> s1;

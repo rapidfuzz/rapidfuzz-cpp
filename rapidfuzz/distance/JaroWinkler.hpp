@@ -14,14 +14,15 @@ template <typename InputIt1, typename InputIt2,
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::distance(first1, last1, first2, last2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::distance(first1, last1, first2, last2, prefix_weight, score_cutoff,
+                                         score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
                              double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::distance(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::distance(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2,
@@ -29,14 +30,15 @@ template <typename InputIt1, typename InputIt2,
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
-    return detail::JaroWinkler::similarity(first1, last1, first2, last2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::similarity(first1, last1, first2, last2, prefix_weight, score_cutoff,
+                                           score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
                                double score_cutoff = 0.0)
 {
-    return detail::JaroWinkler::similarity(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::similarity(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2,
@@ -44,7 +46,7 @@ template <typename InputIt1, typename InputIt2,
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::normalized_distance(first1, last1, first2, last2, prefix_weight,
+    return detail::JaroWinkler::normalized_distance(first1, last1, first2, last2, prefix_weight, score_cutoff,
                                                     score_cutoff);
 }
 
@@ -52,7 +54,7 @@ template <typename Sentence1, typename Sentence2>
 double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
                                         double score_cutoff = 1.0)
 {
-    return detail::JaroWinkler::normalized_distance(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::normalized_distance(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2,
@@ -61,14 +63,14 @@ double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, Input
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
     return detail::JaroWinkler::normalized_similarity(first1, last1, first2, last2, prefix_weight,
-                                                      score_cutoff);
+                                                      score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_normalized_similarity(const Sentence1& s1, const Sentence2& s2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
-    return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff);
+    return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>

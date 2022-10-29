@@ -1,5 +1,8 @@
 ## Changelog
 
+### [1.10.0] - 2022-
+#### Fixed
+- fix bug in `Levenshtein.editops` leading to crashes when used with `score_hint`
 
 ### [1.9.0] - 2022-10-22
 #### Added

@@ -13,52 +13,52 @@ template <typename InputIt1, typename InputIt2>
 double jaro_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                      double score_cutoff = 1.0)
 {
-    return detail::Jaro::distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Jaro::distance(s1, s2, score_cutoff);
+    return detail::Jaro::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double jaro_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                        double score_cutoff = 0.0)
 {
-    return detail::Jaro::similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Jaro::similarity(s1, s2, score_cutoff);
+    return detail::Jaro::similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double jaro_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                 double score_cutoff = 1.0)
 {
-    return detail::Jaro::normalized_distance(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
 {
-    return detail::Jaro::normalized_distance(s1, s2, score_cutoff);
+    return detail::Jaro::normalized_distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double jaro_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                   double score_cutoff = 0.0)
 {
-    return detail::Jaro::normalized_similarity(first1, last1, first2, last2, score_cutoff);
+    return detail::Jaro::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 double jaro_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
 {
-    return detail::Jaro::normalized_similarity(s1, s2, score_cutoff);
+    return detail::Jaro::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
