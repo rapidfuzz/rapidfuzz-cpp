@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-10-30 00:14:59.369071
+//  Generated: 2022-11-02 21:25:29.646502
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2258,7 +2258,6 @@ native_simd<T> operator~(const native_simd<T>& a) noexcept
 #        include <emmintrin.h>
 #        include <ostream>
 #        include <stdint.h>
-#        include <tmmintrin.h>
 
 namespace rapidfuzz {
 namespace detail {

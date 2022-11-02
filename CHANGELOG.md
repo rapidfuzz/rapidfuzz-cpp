@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.10.1] - 2022-11-02
+#### Fixed
+- fix broken sse2 support
+
 ### [1.10.0] - 2022-10-29
 #### Fixed
 - fix bug in `Levenshtein.editops` leading to crashes when used with `score_hint`

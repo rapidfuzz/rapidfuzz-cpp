@@ -7,7 +7,6 @@
 #include <ostream>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <stdint.h>
-#include <tmmintrin.h>
 
 namespace rapidfuzz {
 namespace detail {
