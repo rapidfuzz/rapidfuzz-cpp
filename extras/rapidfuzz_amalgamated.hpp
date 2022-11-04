@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-11-02 21:25:29.646502
+//  Generated: 2022-11-04 11:50:47.498267
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -9014,14 +9014,13 @@ namespace fuzz_detail {
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 ScoreAlignment<double>
-partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Range<InputIt2> s2,
-                           const CachedRatio<CachedCharT1>& cached_ratio,
-                           const detail::CharSet<iter_value_t<InputIt1>>& s1_char_set, double score_cutoff)
+partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Range<InputIt2> s2,
+                   const CachedRatio<CachedCharT1>& cached_ratio,
+                   const detail::CharSet<iter_value_t<InputIt1>>& s1_char_set, double score_cutoff)
 {
     ScoreAlignment<double> res;
     auto len1 = static_cast<size_t>(s1.size());
     auto len2 = static_cast<size_t>(s2.size());
-    assert(len2 >= len1);
     res.src_start = 0;
     res.src_end = len1;
     res.dest_start = 0;
@@ -9119,8 +9118,8 @@ partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::det
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iter_value_t<InputIt1>>
-ScoreAlignment<double> partial_ratio_short_needle(rapidfuzz::detail::Range<InputIt1> s1,
-                                                  rapidfuzz::detail::Range<InputIt2> s2, double score_cutoff)
+ScoreAlignment<double> partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1,
+                                          rapidfuzz::detail::Range<InputIt2> s2, double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(s1);
 
@@ -9128,7 +9127,7 @@ ScoreAlignment<double> partial_ratio_short_needle(rapidfuzz::detail::Range<Input
     for (auto ch : s1)
         s1_char_set.insert(ch);
 
-    return partial_ratio_short_needle(s1, s2, cached_ratio, s1_char_set, score_cutoff);
+    return partial_ratio_impl(s1, s2, cached_ratio, s1_char_set, score_cutoff);
 }
 
 } // namespace fuzz_detail
@@ -9152,8 +9151,21 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    return fuzz_detail::partial_ratio_short_needle(detail::Range(first1, last1), detail::Range(first2, last2),
-                                                   score_cutoff);
+    auto s1 = detail::Range(first1, last1);
+    auto s2 = detail::Range(first2, last2);
+
+    auto alignment = fuzz_detail::partial_ratio_impl(s1, s2, score_cutoff);
+    if (alignment.score != 100 && s1.size() == s2.size()) {
+        score_cutoff = std::max(score_cutoff, alignment.score);
+        auto alignment2 = fuzz_detail::partial_ratio_impl(s2, s1, score_cutoff);
+        if (alignment2.score > alignment.score) {
+            std::swap(alignment2.src_start, alignment2.dest_start);
+            std::swap(alignment2.src_end, alignment2.dest_end);
+            return alignment2;
+        }
+    }
+
+    return alignment;
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -9199,9 +9211,17 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    return fuzz_detail::partial_ratio_short_needle(detail::Range(s1), detail::Range(first2, last2),
-                                                   cached_ratio, s1_char_set, score_cutoff)
-        .score;
+    auto s1_ = detail::Range(s1);
+    auto s2 = detail::Range(first2, last2);
+
+    double score = fuzz_detail::partial_ratio_impl(s1_, s2, cached_ratio, s1_char_set, score_cutoff).score;
+    if (score != 100 && s1_.size() == s2.size()) {
+        score_cutoff = std::max(score_cutoff, score);
+        double score2 = fuzz_detail::partial_ratio_impl(s2, s1_, score_cutoff).score;
+        if (score2 > score) return score2;
+    }
+
+    return score;
 }
 
 template <typename CharT1>

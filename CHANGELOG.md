@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.10.2] - 2022-11-
+#### Fixed
+- `fuzz::partial_ratio` was not always symmetric when `len(s1) == len(s2)`
+
 ### [1.10.1] - 2022-11-02
 #### Fixed
 - fix broken sse2 support
