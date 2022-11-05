@@ -1,6 +1,6 @@
 ## Changelog
 
-### [1.10.2] - 2022-11-
+### [1.10.2] - 2022-11-05
 #### Fixed
 - `fuzz::partial_ratio` was not always symmetric when `len(s1) == len(s2)`
 
