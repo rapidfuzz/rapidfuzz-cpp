@@ -14,7 +14,12 @@ endif()
 
 # include aminya & jason turner's C++ best practices recommended cmake project utilities
 include(FetchContent)
-FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.1.zip)
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
+    FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.1.zip)
+else()
+    FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.2.zip)
+endif()
 FetchContent_MakeAvailable(_project_options)
 include(${_project_options_SOURCE_DIR}/Index.cmake)
 
