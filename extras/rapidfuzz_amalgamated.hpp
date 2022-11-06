@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-11-04 11:50:47.498267
+//  Generated: 2022-11-06 18:50:07.288751
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2798,7 +2798,8 @@ protected:
         return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
     }
 
-    NormalizedMetricBase(){};
+    NormalizedMetricBase()
+    {}
     friend T;
 };
 
@@ -2852,7 +2853,8 @@ protected:
         return (sim >= score_cutoff) ? sim : 0;
     }
 
-    DistanceBase(){};
+    DistanceBase()
+    {}
     friend T;
 };
 
@@ -2909,7 +2911,8 @@ protected:
             return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 
-    SimilarityBase(){};
+    SimilarityBase()
+    {}
     friend T;
 };
 
@@ -2967,7 +2970,8 @@ protected:
         return (norm_sim >= score_cutoff) ? norm_sim : 0.0;
     }
 
-    CachedNormalizedMetricBase(){};
+    CachedNormalizedMetricBase()
+    {}
     friend T;
 };
 
@@ -3021,7 +3025,8 @@ protected:
         return (sim >= score_cutoff) ? sim : 0;
     }
 
-    CachedDistanceBase(){};
+    CachedDistanceBase()
+    {}
     friend T;
 };
 
@@ -3076,7 +3081,8 @@ protected:
             return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 
-    CachedSimilarityBase(){};
+    CachedSimilarityBase()
+    {}
     friend T;
 };
 
@@ -3151,7 +3157,8 @@ protected:
         }
     }
 
-    MultiNormalizedMetricBase(){};
+    MultiNormalizedMetricBase()
+    {}
     friend T;
 };
 
@@ -3201,7 +3208,8 @@ protected:
         }
     }
 
-    MultiDistanceBase(){};
+    MultiDistanceBase()
+    {}
     friend T;
 };
 
@@ -3255,7 +3263,8 @@ protected:
         }
     }
 
-    MultiSimilarityBase(){};
+    MultiSimilarityBase()
+    {}
     friend T;
 };
 

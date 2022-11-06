@@ -1,6 +1,10 @@
 # Cmake config largely taken from catch2
 cmake_minimum_required(VERSION 3.5)
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 # detect if Catch is being bundled,
 # disable testsuite in that case
 if(NOT DEFINED PROJECT_NAME)
