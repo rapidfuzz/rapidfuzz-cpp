@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-11-06 18:50:07.288751
+//  Generated: 2022-11-19 11:04:42.990794
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -9046,8 +9046,11 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
 
         while (!windows.empty()) {
             for (const auto& window : windows) {
-                auto subseq1 = s2.subseq(static_cast<ptrdiff_t>(window.first), static_cast<ptrdiff_t>(len1));
-                auto subseq2 = s2.subseq(static_cast<ptrdiff_t>(window.second), static_cast<ptrdiff_t>(len1));
+                auto subseq1_first = s2.begin() + static_cast<ptrdiff_t>(window.first);
+                auto subseq2_first = s2.begin() + static_cast<ptrdiff_t>(window.second);
+                rapidfuzz::detail::Range subseq1(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
+                rapidfuzz::detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
+
                 if (scores[window.first] == -1) {
                     scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
                     if (scores[window.first] < cutoff_dist) {
@@ -9098,7 +9101,7 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
     }
 
     for (size_t i = 1; i < len1; ++i) {
-        auto subseq = s2.subseq(0, static_cast<ptrdiff_t>(i));
+        rapidfuzz::detail::Range subseq(s2.begin(), s2.begin() + static_cast<ptrdiff_t>(i));
         if (!s1_char_set.find(subseq.back())) continue;
 
         double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
@@ -9111,7 +9114,7 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
     }
 
     for (size_t i = len2 - len1; i < len2; ++i) {
-        auto subseq = s2.subseq(static_cast<ptrdiff_t>(i), static_cast<ptrdiff_t>(len1));
+        rapidfuzz::detail::Range subseq(s2.begin() + static_cast<ptrdiff_t>(i), s2.end());
         if (!s1_char_set.find(subseq.front())) continue;
 
         double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
