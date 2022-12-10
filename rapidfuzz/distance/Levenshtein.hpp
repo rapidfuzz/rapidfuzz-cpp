@@ -387,14 +387,15 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
+        detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
     template <typename InputIt2>

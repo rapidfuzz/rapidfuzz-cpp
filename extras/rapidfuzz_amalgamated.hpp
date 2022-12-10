@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-11-19 11:04:42.990794
+//  Generated: 2022-12-11 00:18:48.007741
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -7137,14 +7137,15 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
+        detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
     template <typename InputIt2>
@@ -7698,14 +7699,15 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
+        detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::osa_hyrroe2003_simd<uint8_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::osa_hyrroe2003_simd<uint16_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::osa_hyrroe2003_simd<uint32_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::osa_hyrroe2003_simd<uint64_t>(scores, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
     template <typename InputIt2>
@@ -8126,6 +8128,7 @@ std::basic_string<CharT> opcodes_apply(const Opcodes& ops, const Sentence1& s1, 
 
 #include <array>
 #include <limits>
+#include <stdint.h>
 #include <stdio.h>
 #include <type_traits>
 #include <unordered_set>

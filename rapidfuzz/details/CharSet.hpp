@@ -5,6 +5,7 @@
 #include <array>
 #include <limits>
 #include <stdio.h>
+#include <stdint.h>
 #include <type_traits>
 #include <unordered_set>
 
