@@ -16,7 +16,7 @@ endif()
 include(FetchContent)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
-    FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.1.zip)
+    FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.2.zip)
 else()
     FetchContent_Declare(_project_options URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.2.zip)
 endif()

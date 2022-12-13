@@ -1,6 +1,10 @@
 ## Changelog
 
-### [1.10.2] - 2022-12-1
+### [1.10.3] - 2022-12-13
+#### Fixed
+- fix warning about `project_options` when building the test suite with `cmake>=3.24`
+
+### [1.10.2] - 2022-12-01
 #### Fixed
 - `fuzz::partial_ratio` was not always symmetric when `len(s1) == len(s2)`
 - fix undefined behavior in experimental SIMD implementaton
