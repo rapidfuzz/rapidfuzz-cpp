@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.10.4] - 2022-12-14
+#### Changed
+- Linters are now disabled in test builds by default and can be enabled using `RAPIDFUZZ_ENABLE_LINTERS`
+
 ### [1.10.3] - 2022-12-13
 #### Fixed
 - fix warning about `project_options` when building the test suite with `cmake>=3.24`
