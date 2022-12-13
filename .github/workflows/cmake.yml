@@ -17,7 +17,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}} -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_BUILD_FUZZERS=1 -DCMAKE_CXX_COMPILER=clang++
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}} -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_ENABLE_LINTERS=1 -DRAPIDFUZZ_BUILD_FUZZERS=1 -DCMAKE_CXX_COMPILER=clang++
 
     - name: Build
       run: cmake --build build --config ${{matrix.BUILD_TYPE}}
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}} -DRAPIDFUZZ_BUILD_TESTING=1 -DCMAKE_CXX_COMPILER=g++
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}} -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_ENABLE_LINTERS=1 -DCMAKE_CXX_COMPILER=g++
 
       - name: Build
         run: cmake --build build --config ${{matrix.BUILD_TYPE}}
@@ -68,7 +68,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}  -DRAPIDFUZZ_BUILD_TESTING=1
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}  -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_ENABLE_LINTERS=1
 
     - name: Build
       run: cmake --build build --config ${{matrix.BUILD_TYPE}}

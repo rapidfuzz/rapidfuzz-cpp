@@ -1,9 +1,10 @@
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-
 function(rapidfuzz_add_test test)
     add_executable(test_${test} tests-${test}.cpp examples/ocr.cpp)
     target_link_libraries(test_${test} ${PROJECT_NAME})
-    target_link_libraries(test_${test} Catch2::Catch2WithMain project_warnings)
+    target_link_libraries(test_${test} Catch2::Catch2WithMain)
+    if (RAPIDFUZZ_ENABLE_LINTERS)
+        target_link_libraries(test_${test} project_warnings)
+    endif()
     add_test(NAME ${test} COMMAND test_${test})
 endfunction()
 

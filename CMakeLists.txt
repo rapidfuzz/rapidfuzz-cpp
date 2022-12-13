@@ -14,6 +14,7 @@ else()
 endif()
 
 option(RAPIDFUZZ_BUILD_TESTING "Build tests" OFF)
+option(RAPIDFUZZ_ENABLE_LINTERS "Enable Linters for the test builds" OFF)
 option(RAPIDFUZZ_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(RAPIDFUZZ_BUILD_FUZZERS "Build fuzzers" OFF)
 
