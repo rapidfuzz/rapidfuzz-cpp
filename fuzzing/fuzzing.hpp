@@ -11,7 +11,7 @@ static inline bool extract_strings(const uint8_t* data, size_t size, std::basic_
     }
     uint32_t len1 = *(uint32_t*)data;
 
-    if (len1 + sizeof(len1) > size) {
+    if (len1 > size - sizeof(len1)) {
         return false;
     }
 
