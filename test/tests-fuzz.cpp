@@ -1,10 +1,9 @@
-#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <rapidfuzz/fuzz.hpp>
 
 namespace fuzz = rapidfuzz::fuzz;
-using Catch::Approx;
 
 using MetricPtr = double (*)(const char*, const char*, double);
 struct Metric {
@@ -32,6 +31,13 @@ struct Metric {
 
 std::vector<Metric> metrics = {LIST_OF_METRICS(CREATE_METRIC)};
 
+void score_test(double expected, double input)
+{
+    REQUIRE(input <= 100);
+    REQUIRE(input >= 0);
+    REQUIRE_THAT(input, Catch::Matchers::WithinAbs(expected, 0.000001));
+}
+
 /**
  * @name RatioTest
  *
@@ -56,77 +62,75 @@ TEST_CASE("RatioTest")
 
     SECTION("testEqual")
     {
-        REQUIRE(100 == fuzz::ratio(s1, s1));
-        REQUIRE(100 == fuzz::ratio("test", "test"));
-        REQUIRE(100 == fuzz::ratio(s8, s8a));
-        REQUIRE(100 == fuzz::ratio(s9, s9a));
+        score_test(100, fuzz::ratio(s1, s1));
+        score_test(100, fuzz::ratio("test", "test"));
+        score_test(100, fuzz::ratio(s8, s8a));
+        score_test(100, fuzz::ratio(s9, s9a));
     }
 
     SECTION("testPartialRatio")
     {
-        REQUIRE(100 == fuzz::partial_ratio(s1, s1));
-        REQUIRE(100 != fuzz::ratio(s1, s3));
-        REQUIRE(100 == fuzz::partial_ratio(s1, s3));
+        score_test(100, fuzz::partial_ratio(s1, s1));
+        score_test(65, fuzz::ratio(s1, s3));
+        score_test(100, fuzz::partial_ratio(s1, s3));
     }
 
     SECTION("testTokenSortRatio")
     {
-        REQUIRE(100 == fuzz::token_sort_ratio(s1, s1));
-        const std::string s92 = "metss new york hello";
-        const std::string s0 = "metss new york hello";
-        REQUIRE(fuzz::token_sort_ratio(s92, s0) > 90);
+        score_test(100, fuzz::token_sort_ratio(s1, s1));
+        score_test(100, fuzz::token_sort_ratio("metss new york hello", "metss new york hello"));
     }
 
     SECTION("testTokenSetRatio")
     {
-        REQUIRE(100 == fuzz::token_set_ratio(s4, s5));
-        REQUIRE(100 == fuzz::token_set_ratio(s8, s8a, false));
-        REQUIRE(100 == fuzz::token_set_ratio(s9, s9a, true));
-        REQUIRE(100 == fuzz::token_set_ratio(s9, s9a, false));
-        REQUIRE(50 == fuzz::token_set_ratio(s10, s10a, false));
+        score_test(100, fuzz::token_set_ratio(s4, s5));
+        score_test(100, fuzz::token_set_ratio(s8, s8a, false));
+        score_test(100, fuzz::token_set_ratio(s9, s9a, true));
+        score_test(100, fuzz::token_set_ratio(s9, s9a, false));
+        score_test(50, fuzz::token_set_ratio(s10, s10a, false));
     }
 
     SECTION("testPartialTokenSetRatio")
     {
-        REQUIRE(100 == fuzz::partial_token_set_ratio(s4, s7));
+        score_test(100, fuzz::partial_token_set_ratio(s4, s7));
     }
 
     SECTION("testWRatioEqual")
     {
-        REQUIRE(100 == fuzz::WRatio(s1, s1));
+        score_test(100, fuzz::WRatio(s1, s1));
     }
 
     SECTION("testWRatioPartialMatch")
     {
         // a partial match is scaled by .9
-        REQUIRE(90 == fuzz::WRatio(s1, s3));
+        score_test(90, fuzz::WRatio(s1, s3));
     }
 
     SECTION("testWRatioMisorderedMatch")
     {
         // misordered full matches are scaled by .95
-        REQUIRE(95 == fuzz::WRatio(s4, s5));
+        score_test(95, fuzz::WRatio(s4, s5));
     }
 
     SECTION("testTwoEmptyStrings")
     {
-        REQUIRE(100 == fuzz::ratio("", ""));
-        REQUIRE(100 == fuzz::partial_ratio("", ""));
-        REQUIRE(100 == fuzz::token_sort_ratio("", ""));
-        REQUIRE(0 == fuzz::token_set_ratio("", ""));
-        REQUIRE(100 == fuzz::partial_token_sort_ratio("", ""));
-        REQUIRE(0 == fuzz::partial_token_set_ratio("", ""));
-        REQUIRE(100 == fuzz::token_ratio("", ""));
-        REQUIRE(100 == fuzz::partial_token_ratio("", ""));
-        REQUIRE(0 == fuzz::WRatio("", ""));
-        REQUIRE(0 == fuzz::QRatio("", ""));
+        score_test(100, fuzz::ratio("", ""));
+        score_test(100, fuzz::partial_ratio("", ""));
+        score_test(100, fuzz::token_sort_ratio("", ""));
+        score_test(0, fuzz::token_set_ratio("", ""));
+        score_test(100, fuzz::partial_token_sort_ratio("", ""));
+        score_test(0, fuzz::partial_token_set_ratio("", ""));
+        score_test(100, fuzz::token_ratio("", ""));
+        score_test(100, fuzz::partial_token_ratio("", ""));
+        score_test(0, fuzz::WRatio("", ""));
+        score_test(0, fuzz::QRatio("", ""));
     }
 
     SECTION("testFirstStringEmpty")
     {
         for (auto& metric : metrics) {
             INFO("Score not 0 for " << metric.name);
-            REQUIRE(0 == metric.call("test", "", 0));
+            score_test(0, metric.call("test", "", 0));
         }
     }
 
@@ -134,14 +138,14 @@ TEST_CASE("RatioTest")
     {
         for (auto& metric : metrics) {
             INFO("Score not 0 for " << metric.name);
-            REQUIRE(0 == metric.call("", "test", 0));
+            score_test(0, metric.call("", "test", 0));
         }
     }
 
     SECTION("testPartialRatioShortNeedle")
     {
-        REQUIRE(Approx(33.3333333) == fuzz::partial_ratio("001", "220222"));
-        REQUIRE(Approx(100) == fuzz::partial_ratio("physics 2 vid", "study physics physics 2 video"));
+        score_test(33.3333333, fuzz::partial_ratio("001", "220222"));
+        score_test(100, fuzz::partial_ratio("physics 2 vid", "study physics physics 2 video"));
     }
 
     SECTION("testIssue206") /* test for https://github.com/maxbachmann/RapidFuzz/issues/206 */
@@ -152,8 +156,8 @@ TEST_CASE("RatioTest")
         for (auto& metric : metrics) {
             double score = metric.call(str1, str2, 0);
             INFO("score_cutoff does not work correctly for " << metric.name);
-            REQUIRE(0 == metric.call(str1, str2, score + 0.0001));
-            REQUIRE(score == metric.call(str1, str2, score));
+            score_test(0, metric.call(str1, str2, score + 0.0001));
+            score_test(score, metric.call(str1, str2, score));
         }
     }
 
@@ -165,8 +169,8 @@ TEST_CASE("RatioTest")
         for (auto& metric : metrics) {
             double score = metric.call(str1, str2, 0);
             INFO("score_cutoff does not work correctly for " << metric.name);
-            REQUIRE(0 == metric.call(str1, str2, score + 0.0001));
-            REQUIRE(score == metric.call(str1, str2, score));
+            score_test(0, metric.call(str1, str2, score + 0.0001));
+            score_test(score, metric.call(str1, str2, score));
         }
     }
 
@@ -178,8 +182,7 @@ TEST_CASE("RatioTest")
                            "jahrhundert entstand ein neu";
 
         auto alignment = fuzz::partial_ratio_alignment(str1, str2);
-        REQUIRE(alignment.score > 66);
-        REQUIRE(alignment.score < 67);
+        score_test(66.2337662, alignment.score);
         REQUIRE(alignment.src_start == 0);
         REQUIRE(alignment.src_end == 103);
         REQUIRE(alignment.dest_start == 0);
@@ -191,12 +194,8 @@ TEST_CASE("RatioTest")
         const char* str1 = "aaaaaaaaaaaaaaaaaaaaaaaabacaaaaaaaabaaabaaaaaaaababbbbbbbbbbabbcb";
         const char* str2 = "aaaaaaaaaaaaaaaaaaaaaaaababaaaaaaaabaaabaaaaaaaababbbbbbbbbbabbcb";
 
-        auto score = fuzz::partial_ratio(str1, str2);
-        REQUIRE(score > 98);
-        REQUIRE(score < 99);
-        score = fuzz::partial_ratio(str2, str1);
-        REQUIRE(score > 98);
-        REQUIRE(score < 99);
+        score_test(98.4615385, fuzz::partial_ratio(str1, str2));
+        score_test(98.4615385, fuzz::partial_ratio(str2, str1));
     }
 
     SECTION("testIssue257") /* test for https://github.com/maxbachmann/RapidFuzz/issues/219 */
@@ -240,17 +239,9 @@ TEST_CASE("RatioTest")
             "CAGAGAGTTAAGATCTAGTACACTGGGTTTCCTAAATGTAAAAATTGGCCCGAATCCGGCCTAATATGCGAACTTTGTGCTACCAAGCGAGCGGGA"
             "AGCTAAGGGTGGGGAGTGCGGGTTTAATGGACCATCTCGCAGGTCTAGCAGTTAATGTATCCTATCTTCCAAACAG";
 
-        auto score = fuzz::partial_ratio(str1, str2);
-        REQUIRE(score > 97);
-        REQUIRE(score < 98);
-        score = fuzz::partial_ratio(str2, str1);
-        REQUIRE(score > 97);
-        REQUIRE(score < 98);
-        score = fuzz::partial_ratio(str1, str2, 97.5);
-        REQUIRE(score > 97);
-        REQUIRE(score < 98);
-        score = fuzz::partial_ratio(str2, str1, 97.5);
-        REQUIRE(score > 97);
-        REQUIRE(score < 98);
+        score_test(97.5274725, fuzz::partial_ratio(str1, str2));
+        score_test(97.5274725, fuzz::partial_ratio(str2, str1));
+        score_test(97.5274725, fuzz::partial_ratio(str1, str2, 97.5));
+        score_test(97.5274725, fuzz::partial_ratio(str2, str1, 97.5));
     }
 }

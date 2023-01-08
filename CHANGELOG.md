@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.10.5] -
+#### Fixed
+- fix some floating point comparisions in the test suite
+
 ### [1.10.4] - 2022-12-14
 #### Changed
 - Linters are now disabled in test builds by default and can be enabled using `RAPIDFUZZ_ENABLE_LINTERS`
@@ -32,7 +36,7 @@
 ### [1.8.0] - 2022-10-02
 #### Fixed
 - fixed incorrect score_cutoff handling in `lcs_seq_distance`
-  
+
 #### Added
 - added experimental simd support for `ratio`/`Levenshtein`/`LCSseq`/`Indel`
 - add Jaro and JaroWinkler
