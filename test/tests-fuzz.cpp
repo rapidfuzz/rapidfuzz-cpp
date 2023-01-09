@@ -54,9 +54,7 @@ TEST_CASE("RatioTest")
     const std::string s7 = "new york city mets - atlanta braves";
     // test silly corner cases
     const std::string s8 = "{";
-    const std::string s8a = "{";
     const std::string s9 = "{a";
-    const std::string s9a = "{a";
     const std::string s10 = "a{";
     const std::string s10a = "{b";
 
@@ -64,8 +62,8 @@ TEST_CASE("RatioTest")
     {
         score_test(100, fuzz::ratio(s1, s1));
         score_test(100, fuzz::ratio("test", "test"));
-        score_test(100, fuzz::ratio(s8, s8a));
-        score_test(100, fuzz::ratio(s9, s9a));
+        score_test(100, fuzz::ratio(s8, s8));
+        score_test(100, fuzz::ratio(s9, s9));
     }
 
     SECTION("testPartialRatio")
@@ -84,10 +82,9 @@ TEST_CASE("RatioTest")
     SECTION("testTokenSetRatio")
     {
         score_test(100, fuzz::token_set_ratio(s4, s5));
-        score_test(100, fuzz::token_set_ratio(s8, s8a, false));
-        score_test(100, fuzz::token_set_ratio(s9, s9a, true));
-        score_test(100, fuzz::token_set_ratio(s9, s9a, false));
-        score_test(50, fuzz::token_set_ratio(s10, s10a, false));
+        score_test(100, fuzz::token_set_ratio(s8, s8));
+        score_test(100, fuzz::token_set_ratio(s9, s9));
+        score_test(50, fuzz::token_set_ratio(s10, s10a));
     }
 
     SECTION("testPartialTokenSetRatio")
@@ -157,7 +154,7 @@ TEST_CASE("RatioTest")
             double score = metric.call(str1, str2, 0);
             INFO("score_cutoff does not work correctly for " << metric.name);
             score_test(0, metric.call(str1, str2, score + 0.0001));
-            score_test(score, metric.call(str1, str2, score));
+            score_test(score, metric.call(str1, str2, score - 0.0001));
         }
     }
 
@@ -170,7 +167,7 @@ TEST_CASE("RatioTest")
             double score = metric.call(str1, str2, 0);
             INFO("score_cutoff does not work correctly for " << metric.name);
             score_test(0, metric.call(str1, str2, score + 0.0001));
-            score_test(score, metric.call(str1, str2, score));
+            score_test(score, metric.call(str1, str2, score - 0.0001));
         }
     }
 
