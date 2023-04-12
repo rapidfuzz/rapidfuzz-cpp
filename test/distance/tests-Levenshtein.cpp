@@ -479,7 +479,7 @@ TEST_CASE("SIMD")
 {
     SECTION("multiple sequences")
     {
-        std::string s2  = "0";
+        std::string s2 = "0";
         size_t count = 256 / 32 + 1;
         rapidfuzz::experimental::MultiLevenshtein<32> scorer(count);
         for (size_t i = 0; i < count - 1; ++i)

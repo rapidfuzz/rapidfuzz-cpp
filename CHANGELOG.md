@@ -1,6 +1,10 @@
 ## Changelog
 
-### [1.10.5] -
+### [1.11.0] -
+#### Changed
+- allow the usage of hamming for different string lengths. Length differences are handled as
+  insertions / deletions
+
 #### Fixed
 - fix some floating point comparisions in the test suite
 

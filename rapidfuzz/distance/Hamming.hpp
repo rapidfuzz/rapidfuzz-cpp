@@ -142,7 +142,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return s2.size();
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>

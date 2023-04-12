@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2022-12-11 00:18:48.007741
+//  Generated: 2023-04-12 20:17:59.604439
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3552,20 +3552,19 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
     friend NormalizedMetricBase<Hamming>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2>)
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
     {
-        return s1.size();
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
     static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
                              [[maybe_unused]] int64_t score_hint)
     {
-        if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
-
-        int64_t dist = 0;
-        for (ptrdiff_t i = 0; i < s1.size(); ++i)
-            dist += bool(s1[i] != s2[i]);
+        ptrdiff_t min_len = std::min(s1.size(), s2.size());
+        int64_t dist = std::max(s1.size(), s2.size());
+        for (ptrdiff_t i = 0; i < min_len; ++i)
+            dist -= bool(s1[i] == s2[i]);
 
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
@@ -3574,11 +3573,17 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
 template <typename InputIt1, typename InputIt2>
 Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t)
 {
-    if (s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
-
     Editops ops;
-    for (ptrdiff_t i = 0; i < s1.size(); ++i)
+    ptrdiff_t min_len = std::min(s1.size(), s2.size());
+    ptrdiff_t i = 0;
+    for (; i < min_len; ++i)
         if (s1[i] != s2[i]) ops.emplace_back(EditType::Replace, i, i);
+
+    for (; i < s1.size(); ++i)
+        ops.emplace_back(EditType::Delete, i, s2.size());
+
+    for (; i < s2.size(); ++i)
+        ops.emplace_back(EditType::Insert, s1.size(), i);
 
     ops.set_src_len(static_cast<size_t>(s1.size()));
     ops.set_dest_len(static_cast<size_t>(s2.size()));
@@ -3722,7 +3727,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return s2.size();
+        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }
 
     template <typename InputIt2>

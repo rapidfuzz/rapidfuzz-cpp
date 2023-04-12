@@ -1,5 +1,6 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <rapidfuzz/distance.hpp>
 #include <rapidfuzz/distance/Hamming.hpp>
 #include <string>
 
@@ -77,8 +78,28 @@ TEST_CASE("Hamming")
         REQUIRE(hamming_distance(diff_a, diff_b) == 2);
     }
 
-    SECTION("hamming raises exception for different lengths")
+    SECTION("hamming handles different string lengths as insertions / deletions")
     {
-        REQUIRE_THROWS_AS(rapidfuzz::hamming_distance(test, diff_len), std::invalid_argument);
+        REQUIRE(hamming_distance(test, diff_len) == 1);
+        REQUIRE(hamming_distance(diff_len, test) == 1);
+    }
+}
+
+TEST_CASE("Hamming_editops")
+{
+    std::string s = "Lorem ipsum.";
+    std::string d = "XYZLorem ABC iPsum";
+
+    {
+        rapidfuzz::Editops ops = rapidfuzz::hamming_editops(s, d);
+        REQUIRE(d == rapidfuzz::editops_apply<char>(ops, s, d));
+        REQUIRE(ops.get_src_len() == s.size());
+        REQUIRE(ops.get_dest_len() == d.size());
+    }
+    {
+        rapidfuzz::Editops ops = rapidfuzz::hamming_editops(d, s);
+        REQUIRE(s == rapidfuzz::editops_apply<char>(ops, d, s));
+        REQUIRE(ops.get_src_len() == d.size());
+        REQUIRE(ops.get_dest_len() == s.size());
     }
 }
