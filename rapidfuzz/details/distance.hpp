@@ -413,7 +413,8 @@ protected:
 
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             auto maximum = derived.maximum(i, s2);
-            double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
+            double norm_dist =
+                (maximum != 0) ? static_cast<double>(scores_i64[i]) / static_cast<double>(maximum) : 0.0;
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
 

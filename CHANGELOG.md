@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.11.1] - 2023-04-16
+#### Fixed
+- fix division by zero in simd implementation of normalized string metrics, when comparing empty strings
+
 ### [1.11.0] - 2023-04-16
 #### Changed
 - allow the usage of hamming for different string lengths. Length differences are handled as

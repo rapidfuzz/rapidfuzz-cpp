@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-04-12 20:17:59.604439
+//  Generated: 2023-04-16 23:07:04.138210
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3137,7 +3137,8 @@ protected:
 
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             auto maximum = derived.maximum(i, s2);
-            double norm_dist = static_cast<double>(scores_i64[i]) / static_cast<double>(maximum);
+            double norm_dist =
+                (maximum != 0) ? static_cast<double>(scores_i64[i]) / static_cast<double>(maximum) : 0.0;
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
 
