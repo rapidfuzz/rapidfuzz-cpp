@@ -56,10 +56,10 @@ double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cuto
  */
 TEST_CASE("JaroWinklerTest")
 {
-    std::array<std::string, 19> names = {"james",    "robert",   "john",   "michael",   "william",
+    std::array<std::string, 20> names = {"james",    "robert",   "john",   "michael",   "william",
                                          "david",    "joseph",   "thomas", "charles",   "mary",
                                          "patricia", "jennifer", "linda",  "elizabeth", "barbara",
-                                         "susan",    "jessica",  "sarah",  "karen"};
+                                         "susan",    "jessica",  "sarah",  "karen", ""};
 
     SECTION("testFullResultWithScoreCutoff")
     {

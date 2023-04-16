@@ -20,7 +20,7 @@ double jaro_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, Inpu
     size_t P_len = static_cast<size_t>(std::distance(P_first, P_last));
     size_t T_len = static_cast<size_t>(std::distance(T_first, T_last));
 
-    if (!P_len || !T_len) return 0;
+    if (!P_len || !T_len) return 1.0;
 
     std::vector<int> P_flag(P_len + 1);
     std::vector<int> T_flag(T_len + 1);

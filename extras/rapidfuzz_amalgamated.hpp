@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-04-16 23:07:04.138210
+//  Generated: 2023-04-17 01:55:45.256062
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5203,6 +5203,8 @@ double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff
     int64_t P_len = P.size();
     int64_t T_len = T.size();
 
+    if (!P_len && !T_len) return 1.0;
+
     /* filter out based on the length difference between the two strings */
     if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
 
@@ -5247,6 +5249,8 @@ double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Ran
 {
     int64_t P_len = P.size();
     int64_t T_len = T.size();
+
+    if (!P_len && !T_len) return 1.0;
 
     /* filter out based on the length difference between the two strings */
     if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
