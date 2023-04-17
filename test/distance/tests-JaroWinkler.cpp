@@ -18,8 +18,8 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
     rapidfuzz::CachedJaroWinkler scorer(s1, prefix_weight);
     double res5 = scorer.similarity(s2, score_cutoff);
     double res6 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
-    double res7 = scorer.similarity(s2, score_cutoff);
-    double res8 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
+    double res7 = scorer.normalized_similarity(s2, score_cutoff);
+    double res8 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
@@ -43,8 +43,8 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
     rapidfuzz::CachedJaroWinkler scorer(s1, prefix_weight);
     double res5 = scorer.distance(s2, score_cutoff);
     double res6 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
-    double res7 = scorer.distance(s2, score_cutoff);
-    double res8 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
+    double res7 = scorer.normalized_distance(s2, score_cutoff);
+    double res8 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
@@ -67,7 +67,9 @@ TEST_CASE("JaroWinklerTest")
 
     SECTION("testFullResultWithScoreCutoff")
     {
-        for (double score_cutoff = 0.0; score_cutoff < 1.1; score_cutoff += 0.1)
+        auto score_cutoffs = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1};
+
+        for (double score_cutoff : score_cutoffs)
             for (const auto& name1 : names)
                 for (const auto& name2 : names) {
                     INFO("name1: " << name1 << ", name2: " << name2 << ", score_cutoff: " << score_cutoff);

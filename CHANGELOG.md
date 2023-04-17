@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.11.2] - 2023-04-17
+#### Fixed
+- fix handling of `score_cutoff > 1.0` in `Jaro` and `JaroWinkler`
+
 ### [1.11.1] - 2023-04-16
 #### Fixed
 - fix division by zero in simd implementation of normalized string metrics, when comparing empty strings
