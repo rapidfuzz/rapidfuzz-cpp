@@ -1,5 +1,9 @@
 ## Changelog
 
+### [1.11.3] - 2023-04-18
+#### Fixed
+- add missing include leading to build failures on gcc 13
+
 ### [1.11.2] - 2023-04-17
 #### Fixed
 - fix handling of `score_cutoff > 1.0` in `Jaro` and `JaroWinkler`
