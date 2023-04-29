@@ -34,57 +34,61 @@ namespace rapidfuzz {
  * @return Hamming distance between s1 and s2
  */
 template <typename InputIt1, typename InputIt2>
-int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Hamming::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
+    return detail::Hamming::distance(first1, last1, first2, last2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
+int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
                          int64_t score_cutoff = std::numeric_limits<int64_t>::max())
 {
-    return detail::Hamming::distance(s1, s2, score_cutoff, score_cutoff);
+    return detail::Hamming::distance(s1, s2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
                            int64_t score_cutoff = 0)
 {
-    return detail::Hamming::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
+    return detail::Hamming::similarity(first1, last1, first2, last2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
+                           int64_t score_cutoff = 0)
 {
-    return detail::Hamming::similarity(s1, s2, score_cutoff, score_cutoff);
+    return detail::Hamming::similarity(s1, s2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                   double score_cutoff = 1.0)
+                                   bool pad_ = true, double score_cutoff = 1.0)
 {
-    return detail::Hamming::normalized_distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
+    return detail::Hamming::normalized_distance(first1, last1, first2, last2, pad_, score_cutoff,
+                                                score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 1.0)
+double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
+                                   double score_cutoff = 1.0)
 {
-    return detail::Hamming::normalized_distance(s1, s2, score_cutoff, score_cutoff);
+    return detail::Hamming::normalized_distance(s1, s2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
                         int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::hamming_editops(detail::Range(first1, last1), detail::Range(first2, last2), score_hint);
+    return detail::hamming_editops(detail::Range(first1, last1), detail::Range(first2, last2), pad_,
+                                   score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
-Editops hamming_editops(const Sentence1& s1, const Sentence2& s2,
+Editops hamming_editops(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
                         int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
-    return detail::hamming_editops(detail::Range(s1), detail::Range(s2), score_hint);
+    return detail::hamming_editops(detail::Range(s1), detail::Range(s2), pad_, score_hint);
 }
 
 /**
@@ -113,26 +117,29 @@ Editops hamming_editops(const Sentence1& s1, const Sentence2& s2,
  */
 template <typename InputIt1, typename InputIt2>
 double hamming_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     double score_cutoff = 0.0)
+                                     bool pad_ = true, double score_cutoff = 0.0)
 {
-    return detail::Hamming::normalized_similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
+    return detail::Hamming::normalized_similarity(first1, last1, first2, last2, pad_, score_cutoff,
+                                                  score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
+                                     double score_cutoff = 0.0)
 {
-    return detail::Hamming::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
+    return detail::Hamming::normalized_similarity(s1, s2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename CharT1>
 struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>, int64_t, 0,
                                                          std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
-    explicit CachedHamming(const Sentence1& s1_) : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_))
+    explicit CachedHamming(const Sentence1& s1_, bool pad_ = true)
+        : CachedHamming(detail::to_begin(s1_), detail::to_end(s1_), pad_)
     {}
 
     template <typename InputIt1>
-    CachedHamming(InputIt1 first1, InputIt1 last1) : s1(first1, last1)
+    CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) : s1(first1, last1), pad(pad_)
     {}
 
 private:
@@ -149,17 +156,18 @@ private:
     int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
                       [[maybe_unused]] int64_t score_hint) const
     {
-        return detail::Hamming::distance(s1, s2, score_cutoff, score_hint);
+        return detail::Hamming::distance(s1, s2, pad, score_cutoff, score_hint);
     }
 
     std::basic_string<CharT1> s1;
+    bool pad;
 };
 
 template <typename Sentence1>
-explicit CachedHamming(const Sentence1& s1_) -> CachedHamming<char_type<Sentence1>>;
+explicit CachedHamming(const Sentence1& s1_, bool pad_ = true) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedHamming(InputIt1 first1, InputIt1 last1) -> CachedHamming<iter_value_t<InputIt1>>;
+CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHamming<iter_value_t<InputIt1>>;
 
 /**@}*/
 

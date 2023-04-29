@@ -1,5 +1,10 @@
 ## Changelog
 
+### [2.0.0] - 2023-04-29
+#### Changed
+- added argument ``pad`` to Hamming distance. This controls whether sequences of different
+  length should be padded or lead to a `std::invalid_argument` exception.
+
 ### [1.11.3] - 2023-04-18
 #### Fixed
 - add missing include leading to build failures on gcc 13

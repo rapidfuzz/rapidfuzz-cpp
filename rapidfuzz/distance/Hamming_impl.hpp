@@ -8,20 +8,22 @@
 
 namespace rapidfuzz::detail {
 
-class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max()>;
-    friend NormalizedMetricBase<Hamming>;
+class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max(), bool> {
+    friend DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max(), bool>;
+    friend NormalizedMetricBase<Hamming, bool>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2, bool)
     {
         return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, bool pad, int64_t score_cutoff,
                              [[maybe_unused]] int64_t score_hint)
     {
+        if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
+
         ptrdiff_t min_len = std::min(s1.size(), s2.size());
         int64_t dist = std::max(s1.size(), s2.size());
         for (ptrdiff_t i = 0; i < min_len; ++i)
@@ -32,8 +34,10 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
 };
 
 template <typename InputIt1, typename InputIt2>
-Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t)
+Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, bool pad, int64_t)
 {
+    if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
+
     Editops ops;
     ptrdiff_t min_len = std::min(s1.size(), s2.size());
     ptrdiff_t i = 0;
