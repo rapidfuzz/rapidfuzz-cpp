@@ -87,7 +87,7 @@ If you don't want to add `rapidfuzz-cpp` as a submodule, you can also download i
 ```cmake
 FetchContent_Declare(rapidfuzz
   GIT_REPOSITORY https://github.com/maxbachmann/rapidfuzz-cpp.git
-  GIT_TAG master)
+  GIT_TAG main)
 FetchContent_MakeAvailable(rapidfuzz)
 add_executable(foo main.cpp)
 target_link_libraries(foo PRIVATE rapidfuzz::rapidfuzz)
