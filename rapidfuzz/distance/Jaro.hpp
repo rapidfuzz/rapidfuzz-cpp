@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "rapidfuzz/details/Range.hpp"
 #include <limits>
+#include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Jaro_impl.hpp>
 
 namespace rapidfuzz {
