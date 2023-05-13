@@ -9,8 +9,15 @@ endif()
 # disable testsuite in that case
 if(NOT DEFINED PROJECT_NAME)
   set(NOT_SUBPROJECT ON)
+  # If RapidFuzz is not being used as a subproject via `add_subdirectory`,
+  # usually installation is required
+  option(RAPIDFUZZ_INSTALL "Install rapidfuzz" ON)
 else()
   set(NOT_SUBPROJECT OFF)
+  # If RapidFuzz is being used as a subproject via `add_subdirectory`,
+  # chances are that the "main project" does not include RapidFuzz headers
+  # in any of its headers, in which case installation is not needed.
+  option(RAPIDFUZZ_INSTALL "Install rapidfuzz (Projects embedding rapidfuzz may want to turn this OFF.)" OFF)
 endif()
 
 option(RAPIDFUZZ_BUILD_TESTING "Build tests" OFF)
@@ -73,9 +80,7 @@ if(RAPIDFUZZ_BUILD_FUZZERS)
     add_subdirectory(fuzzing)
 endif()
 
-# Only perform the installation steps when RapidFuzz is not being used as
-# a subproject via `add_subdirectory`
-if (NOT_SUBPROJECT)
+if (RAPIDFUZZ_INSTALL)
     set(RAPIDFUZZ_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/rapidfuzz")
 
     install(
@@ -135,4 +140,4 @@ if (NOT_SUBPROJECT)
     set(CPACK_PACKAGE_CONTACT "https://github.com/maxbachmann/rapidfuzz-cpp")
     include(CPack)
 
-endif(NOT_SUBPROJECT)
+endif(RAPIDFUZZ_INSTALL)
