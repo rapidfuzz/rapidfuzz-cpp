@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+# Avoid repeatedly including the targets
+if(NOT TARGET foo::foo)
+    find_package(rapidfuzz REQUIRED)
+    # Provide path for scripts
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+    include(${CMAKE_CURRENT_LIST_DIR}/fooTargs.cmake)
+endif()
