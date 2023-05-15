@@ -103,6 +103,10 @@ jobs:
 
   build_cmake_subdir:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD_TYPE: [Release, Debug]
 
     steps:
     - uses: actions/checkout@v2
