@@ -98,9 +98,15 @@ It will be downloaded each time you run CMake in a blank folder.
 
 There are CMake options available:
 
-1. `BUILD_TESTS` : to build test (default OFF and requires [Catch2](https://github.com/catchorg/Catch2))
-
-2. `BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires [Google Benchmark](https://github.com/google/benchmark))
+1. `RAPIDFUZZ_BUILD_TESTING` : to build test (default OFF and requires [Catch2](https://github.com/catchorg/Catch2))
+2. `RAPIDFUZZ_BUILD_BENCHMARKS` : to build benchmarks (default OFF and requires [Google Benchmark](https://github.com/google/benchmark))
+3. `RAPIDFUZZ_INSTALL` : to install the library to local computer
+    - When configured independently, installation is on.
+    - When used as a subproject, the installation is turned off by default.
+    - For library developers, you might want to toggle the behavior depending on your project.
+    - If your project is exported via `CMake`, turn installation on or export error will result.
+    - If your project publicly depends on `RapidFuzz` (includes `rapidfuzz.hpp` in header),
+      turn installation on or apps depending on your project would face include errors.
 
 ## Usage
 ```cpp
