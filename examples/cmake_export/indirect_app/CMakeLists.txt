@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
+project(fooapp LANGUAGES CXX VERSION 0.0.1)
+find_package(foo REQUIRED)
+add_executable(fooapp foo_app.cc)
+target_link_libraries(fooapp foo::foo)

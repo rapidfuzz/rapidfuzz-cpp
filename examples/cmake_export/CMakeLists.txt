@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 project(foo LANGUAGES CXX VERSION 0.0.1)
 
+# The example library publicly dependent on RapidFuzz (includes
+# rapidfuzz.hpp in foo_lib.hpp), necessitating RapidFuzz's installation
+set(RAPIDFUZZ_INSTALL ON CACHE INTERNAL "")
 add_subdirectory(${CMAKE_SOURCE_DIR}/../..
                  ${CMAKE_SOURCE_DIR}/../../build)
+
 add_library(foo foo_lib.cc)
 add_library(foo::foo ALIAS foo)
 target_link_libraries(foo rapidfuzz)
