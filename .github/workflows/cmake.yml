@@ -101,6 +101,40 @@ jobs:
       working-directory: examples/cmake_installed/build
       run: ./foo
 
+  build_cmake_subdir:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD_TYPE: [Release, Debug]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Configure the library dependent on RapidFuzz
+      working-directory: examples/cmake_export
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}
+
+    - name: Build the library dependent on RapidFuzz
+      working-directory: examples/cmake_export
+      run: cmake --build build --config ${{matrix.BUILD_TYPE}}
+
+    - name: Install the library dependent on RapidFuzz
+      working-directory: examples/cmake_export
+      run: sudo cmake --build build --target install
+
+    - name: Configure the app indirectly dependent on RapidFuzz
+      working-directory: examples/cmake_export/indirect_app
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}}
+
+    - name: Build the app indirectly dependent on RapidFuzz
+      working-directory: examples/cmake_export/indirect_app
+      run: cmake --build build --config ${{matrix.BUILD_TYPE}}
+
+    - name: Run the app indirectly dependent on RapidFuzz
+      working-directory: examples/cmake_export/indirect_app/build
+      run: ./fooapp
+
   build_cpack_installed:
     runs-on: ubuntu-latest
 
