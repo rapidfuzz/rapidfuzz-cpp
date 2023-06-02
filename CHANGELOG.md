@@ -1,9 +1,10 @@
 ## Changelog
 
-### [2.0.0] - 2023-04-29
+### [2.0.0] - 2023-06-02
 #### Changed
 - added argument ``pad`` to Hamming distance. This controls whether sequences of different
   length should be padded or lead to a `std::invalid_argument` exception.
+- improve behaviour when including the project as cmake sub project
 
 ### [1.11.3] - 2023-04-18
 #### Fixed
