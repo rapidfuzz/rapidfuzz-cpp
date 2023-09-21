@@ -1,5 +1,10 @@
 ## Changelog
 
+## [2.1.0] -
+### Changed
+- add support for bidirectional iterators
+
+
 ### [2.0.0] - 2023-06-02
 #### Changed
 - added argument ``pad`` to Hamming distance. This controls whether sequences of different

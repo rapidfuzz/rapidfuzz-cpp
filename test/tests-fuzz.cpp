@@ -3,6 +3,8 @@
 
 #include <rapidfuzz/fuzz.hpp>
 
+#include "common.hpp"
+
 namespace fuzz = rapidfuzz::fuzz;
 
 using MetricPtr = double (*)(const char*, const char*, double);

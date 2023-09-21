@@ -4,6 +4,8 @@
 #include <rapidfuzz/distance/OSA.hpp>
 #include <string>
 
+#include "../common.hpp"
+
 template <typename T>
 std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
 {
@@ -20,9 +22,13 @@ int64_t osa_distance(const Sentence1& s1, const Sentence2& s2,
 {
     int64_t res1 = rapidfuzz::osa_distance(s1, s2, max);
     int64_t res2 = rapidfuzz::osa_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
+    int64_t res3 = rapidfuzz::osa_distance(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
+        max);
     rapidfuzz::CachedOSA scorer(s1);
-    int64_t res3 = scorer.distance(s2, max);
-    int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
+    int64_t res4 = scorer.distance(s2, max);
+    int64_t res5 = scorer.distance(s2.begin(), s2.end(), max);
 #ifdef RAPIDFUZZ_SIMD
     if (s1.size() <= 64) {
         std::vector<int64_t> results(256 / 8);
@@ -54,6 +60,7 @@ int64_t osa_distance(const Sentence1& s1, const Sentence2& s2,
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
+    REQUIRE(res1 == res5);
     return res1;
 }
 

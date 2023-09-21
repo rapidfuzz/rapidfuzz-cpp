@@ -55,6 +55,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
     IntType* R1 = &R1_arr[1];
     IntType* FR = &FR_arr[1];
 
+    auto iter_s1 = s1.begin();
     for (IntType i = 1; i <= len1; i++) {
         std::swap(R, R1);
         IntType last_col_id = -1;
@@ -62,19 +63,20 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
         R[0] = i;
         IntType T = maxVal;
 
+        auto iter_s2 = s2.begin();
         for (IntType j = 1; j <= len2; j++) {
-            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(s1[i - 1] != s2[j - 1]);
+            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(*iter_s1 != *iter_s2);
             ptrdiff_t left = R[j - 1] + 1;
             ptrdiff_t up = R1[j] + 1;
             ptrdiff_t temp = std::min({diag, left, up});
 
-            if (s1[i - 1] == s2[j - 1]) {
+            if (*iter_s1 == *iter_s2) {
                 last_col_id = j;   // last occurence of s1_i
                 FR[j] = R1[j - 2]; // save H_k-1,j-2
                 T = last_i2l1;     // save H_i-2,l-1
             }
             else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1])).val;
+                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(*iter_s2)).val;
                 ptrdiff_t l = last_col_id;
 
                 if ((j - l) == 1) {
@@ -89,8 +91,10 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
 
             last_i2l1 = R[j];
             R[j] = static_cast<IntType>(temp);
+            iter_s2++;
         }
-        last_row_id[s1[i - 1]].val = i;
+        last_row_id[*iter_s1].val = i;
+        iter_s1++;
     }
 
     int64_t dist = R[s2.size()];

@@ -63,7 +63,7 @@ TEST_CASE("JaroWinklerTest")
     std::array<std::string, 20> names = {"james",    "robert",   "john",   "michael",   "william",
                                          "david",    "joseph",   "thomas", "charles",   "mary",
                                          "patricia", "jennifer", "linda",  "elizabeth", "barbara",
-                                         "susan",    "jessica",  "sarah",  "karen", ""};
+                                         "susan",    "jessica",  "sarah",  "karen",     ""};
 
     SECTION("testFullResultWithScoreCutoff")
     {

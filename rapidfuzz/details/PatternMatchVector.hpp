@@ -175,11 +175,11 @@ struct BlockPatternMatchVector {
     template <typename InputIt>
     void insert(Range<InputIt> s) noexcept
     {
-        auto len = s.size();
         uint64_t mask = 1;
-        for (ptrdiff_t i = 0; i < len; ++i) {
+        ptrdiff_t i = 0;
+        for (auto iter = s.begin(); iter != s.end(); ++iter,++i) {
             size_t block = static_cast<size_t>(i) / 64;
-            insert_mask(block, s[i], mask);
+            insert_mask(block, *iter, mask);
             mask = rotl(mask, 1);
         }
     }

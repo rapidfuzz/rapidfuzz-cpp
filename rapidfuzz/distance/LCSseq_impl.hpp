@@ -86,17 +86,17 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
     int64_t max_len = 0;
 
     for (uint8_t ops : possible_ops) {
-        ptrdiff_t s1_pos = 0;
-        ptrdiff_t s2_pos = 0;
+        auto iter_s1 = s1.begin();
+        auto iter_s2 = s2.begin();
         int64_t cur_len = 0;
 
-        while (s1_pos < len1 && s2_pos < len2) {
-            if (s1[s1_pos] != s2[s2_pos]) {
+        while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
+            if (*iter_s1 != *iter_s2) {
                 if (!ops) break;
                 if (ops & 1)
-                    s1_pos++;
+                    iter_s1++;
                 else if (ops & 2)
-                    s2_pos++;
+                    iter_s2++;
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wconversion"
@@ -108,8 +108,8 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
             }
             else {
                 cur_len++;
-                s1_pos++;
-                s2_pos++;
+                iter_s1++;
+                iter_s2++;
             }
         }
 
@@ -171,16 +171,18 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
 
+    auto iter_s2 = s2.begin();
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
         unroll<size_t, N>([&](size_t word) {
-            uint64_t Matches = block.get(word, s2[i]);
+            uint64_t Matches = block.get(word, *iter_s2);
             uint64_t u = S[word] & Matches;
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
             if constexpr (RecordMatrix) res.S[i][word] = S[word];
         });
+        iter_s2++;
     }
 
     res.sim = 0;
@@ -201,10 +203,11 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0));
 
+    auto iter_s2 = s2.begin();
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, s2[i]);
+            const uint64_t Matches = block.get(word, *iter_s2);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
@@ -214,6 +217,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
 
             if constexpr (RecordMatrix) res.S[i][word] = S[word];
         }
+        iter_s2++;
     }
 
     res.sim = 0;

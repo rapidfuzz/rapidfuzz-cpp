@@ -26,8 +26,10 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
 
         ptrdiff_t min_len = std::min(s1.size(), s2.size());
         int64_t dist = std::max(s1.size(), s2.size());
+        auto iter_s1 = s1.begin();
+        auto iter_s2 = s2.begin();
         for (ptrdiff_t i = 0; i < min_len; ++i)
-            dist -= bool(s1[i] == s2[i]);
+            dist -= bool(*(iter_s1++) == *(iter_s2++));
 
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }

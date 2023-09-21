@@ -162,7 +162,7 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
     assert(len1 > 0);
     assert(len2 > 0);
     assert(*s1.begin() != *s2.begin());
-    assert(*(s1.end() - 1) != *(s2.end() - 1));
+    assert(*(--s1.end()) != *(--s2.end()));
 
     if (len1 < len2) return levenshtein_mbleven2018(s2, s1, max);
 
@@ -175,15 +175,16 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
     int64_t dist = max + 1;
 
     for (uint8_t ops : possible_ops) {
-        ptrdiff_t s1_pos = 0;
-        ptrdiff_t s2_pos = 0;
+        auto iter_s1 = s1.begin();
+        auto iter_s2 = s2.begin();
         int64_t cur_dist = 0;
-        while (s1_pos < len1 && s2_pos < len2) {
-            if (s1[s1_pos] != s2[s2_pos]) {
+
+        while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
+            if (*iter_s1 != *iter_s2) {
                 cur_dist++;
                 if (!ops) break;
-                if (ops & 1) s1_pos++;
-                if (ops & 2) s2_pos++;
+                if (ops & 1) iter_s1++;
+                if (ops & 2) iter_s2++;
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wconversion"
@@ -194,11 +195,11 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
 #endif
             }
             else {
-                s1_pos++;
-                s2_pos++;
+                iter_s1++;
+                iter_s2++;
             }
         }
-        cur_dist += (len1 - s1_pos) + (len2 - s2_pos);
+        cur_dist += std::distance(iter_s1, s1.end()) + std::distance(iter_s2, s2.end());
         dist = std::min(dist, cur_dist);
     }
 
@@ -245,9 +246,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
 
     /* Searching */
-    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+    auto iter_s2 = s2.begin();
+    for (ptrdiff_t i = 0; iter_s2 != s2.end(); ++iter_s2,++i) {
         /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(0, s2[i]);
+        uint64_t PM_j = PM.get(0, *iter_s2);
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -494,25 +496,27 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     int64_t break_score = max + s2.size() - (s1.size() - max);
     HybridGrowingHashmap<typename Range<InputIt1>::value_type, std::pair<ptrdiff_t, uint64_t>> PM;
 
-    for (ptrdiff_t j = -max; j < 0; ++j) {
-        auto& x = PM[s1[j + max]];
+    auto iter_s1 = s1.begin();
+    for (ptrdiff_t j = -max; j < 0; ++iter_s1,++j) {
+        auto& x = PM[*iter_s1];
         x.second = shr64(x.second, j - x.first) | (UINT64_C(1) << 63);
         x.first = j;
     }
 
     /* Searching */
     ptrdiff_t i = 0;
-    for (; i < s1.size() - max; ++i) {
+    auto iter_s2 = s2.begin();
+    for (; i < s1.size() - max; ++iter_s2,++iter_s1,++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            auto& x = PM[s1[i + max]];
+            auto& x = PM[*iter_s1];
             x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
             x.first = i;
         }
         {
-            auto x = PM.get(s2[i]);
+            auto x = PM.get(*iter_s2);
             PM_j = shr64(x.second, i - x.first);
         }
 
@@ -541,17 +545,17 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         }
     }
 
-    for (; i < s2.size(); ++i) {
+    for (; i < s2.size(); ++iter_s2,++iter_s1,++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            auto& x = PM[s1[i + max]];
+            auto& x = PM[*iter_s1];
             x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
             x.first = i;
         }
         {
-            auto x = PM.get(s2[i]);
+            auto x = PM.get(*iter_s2);
             PM_j = shr64(x.second, i - x.first);
         }
 
@@ -631,7 +635,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         1;
 
     /* Searching */
-    for (ptrdiff_t row = 0; row < s2.size(); ++row) {
+    auto iter_s2 = s2.begin();
+    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2,++row) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
@@ -642,7 +647,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
         auto advance_block = [&](size_t word) {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, s2[row]);
+            uint64_t PM_j = PM.get(word, *iter_s2);
             uint64_t VN = vecs[word].VN;
             uint64_t VP = vecs[word].VP;
 

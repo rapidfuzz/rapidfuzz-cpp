@@ -6,6 +6,8 @@
 
 #include <rapidfuzz/distance/DamerauLevenshtein.hpp>
 
+#include "../common.hpp"
+
 template <typename T>
 std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
 {
@@ -23,12 +25,17 @@ int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
     int64_t res1 = rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, max);
     int64_t res2 = rapidfuzz::experimental::damerau_levenshtein_distance(s1.begin(), s1.end(), s2.begin(),
                                                                          s2.end(), max);
+    int64_t res3 = rapidfuzz::experimental::damerau_levenshtein_distance(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
+        max);
     rapidfuzz::experimental::CachedDamerauLevenshtein scorer(s1);
-    int64_t res3 = scorer.distance(s2, max);
-    int64_t res4 = scorer.distance(s2.begin(), s2.end(), max);
+    int64_t res4 = scorer.distance(s2, max);
+    int64_t res5 = scorer.distance(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
+    REQUIRE(res1 == res5);
     return res1;
 }
 
@@ -38,12 +45,17 @@ int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
     int64_t res1 = rapidfuzz::experimental::damerau_levenshtein_similarity(s1, s2, max);
     int64_t res2 = rapidfuzz::experimental::damerau_levenshtein_similarity(s1.begin(), s1.end(), s2.begin(),
                                                                            s2.end(), max);
+    int64_t res3 = rapidfuzz::experimental::damerau_levenshtein_similarity(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
+        max);
     rapidfuzz::experimental::CachedDamerauLevenshtein scorer(s1);
-    int64_t res3 = scorer.similarity(s2, max);
-    int64_t res4 = scorer.similarity(s2.begin(), s2.end(), max);
+    int64_t res4 = scorer.similarity(s2, max);
+    int64_t res5 = scorer.similarity(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
     REQUIRE(res1 == res3);
     REQUIRE(res1 == res4);
+    REQUIRE(res1 == res5);
     return res1;
 }
 
@@ -54,12 +66,17 @@ double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Senten
     double res1 = rapidfuzz::experimental::damerau_levenshtein_normalized_distance(s1, s2, score_cutoff);
     double res2 = rapidfuzz::experimental::damerau_levenshtein_normalized_distance(
         s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
+    double res3 = rapidfuzz::experimental::damerau_levenshtein_normalized_distance(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
+        score_cutoff);
     rapidfuzz::experimental::CachedDamerauLevenshtein scorer(s1);
-    double res3 = scorer.normalized_distance(s2, score_cutoff);
-    double res4 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
+    double res4 = scorer.normalized_distance(s2, score_cutoff);
+    double res5 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
+    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
     return res1;
 }
 
@@ -70,12 +87,17 @@ double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sent
     double res1 = rapidfuzz::experimental::damerau_levenshtein_normalized_similarity(s1, s2, score_cutoff);
     double res2 = rapidfuzz::experimental::damerau_levenshtein_normalized_similarity(
         s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
+    double res3 = rapidfuzz::experimental::damerau_levenshtein_normalized_similarity(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
+        score_cutoff);
     rapidfuzz::experimental::CachedDamerauLevenshtein scorer(s1);
-    double res3 = scorer.normalized_similarity(s2, score_cutoff);
-    double res4 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
+    double res4 = scorer.normalized_similarity(s2, score_cutoff);
+    double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
     REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
+    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
     return res1;
 }
 

@@ -99,6 +99,11 @@ public:
     {
         return !empty();
     }
+
+    template <
+        typename... Dummy, typename IterCopy = Iter,
+        typename = std::enable_if_t<std::is_base_of_v<
+            std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
     constexpr decltype(auto) operator[](ptrdiff_t n) const
     {
         return _first[n];
@@ -106,11 +111,19 @@ public:
 
     constexpr void remove_prefix(ptrdiff_t n)
     {
-        _first += n;
+        if constexpr (std::is_base_of_v<std::random_access_iterator_tag, typename std::iterator_traits<Iter>::iterator_category>)
+            _first += n;
+        else
+            for (ptrdiff_t i = 0; i < n; ++i)
+                _first++;
     }
     constexpr void remove_suffix(ptrdiff_t n)
     {
-        _last -= n;
+        if constexpr (std::is_base_of_v<std::random_access_iterator_tag, typename std::iterator_traits<Iter>::iterator_category>)
+            _last -= n;
+        else
+            for (ptrdiff_t i = 0; i < n; ++i)
+                _last--;
     }
 
     constexpr Range subseq(ptrdiff_t pos = 0, ptrdiff_t count = std::numeric_limits<ptrdiff_t>::max())

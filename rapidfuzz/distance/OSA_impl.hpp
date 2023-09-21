@@ -193,7 +193,8 @@ int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> 
     std::vector<Row> new_vecs(words + 1);
 
     /* Searching */
-    for (ptrdiff_t row = 0; row < s2.size(); ++row) {
+    auto iter_s2 = s2.begin();
+    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2,++row) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
@@ -210,7 +211,7 @@ int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> 
             /* PM of last word */
             uint64_t PM_last = new_vecs[word].PM;
 
-            uint64_t PM_j = PM.get(word, s2[row]);
+            uint64_t PM_j = PM.get(word, *iter_s2);
             uint64_t X = PM_j;
             uint64_t TR = ((((~D0) & X) << 1) | (((~D0_last) & PM_last) >> 63)) & PM_j_old;
 
