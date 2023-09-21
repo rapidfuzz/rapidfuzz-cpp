@@ -177,7 +177,7 @@ struct BlockPatternMatchVector {
     {
         uint64_t mask = 1;
         ptrdiff_t i = 0;
-        for (auto iter = s.begin(); iter != s.end(); ++iter,++i) {
+        for (auto iter = s.begin(); iter != s.end(); ++iter, ++i) {
             size_t block = static_cast<size_t>(i) / 64;
             insert_mask(block, *iter, mask);
             mask = rotl(mask, 1);

@@ -111,7 +111,8 @@ public:
 
     constexpr void remove_prefix(ptrdiff_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag, typename std::iterator_traits<Iter>::iterator_category>)
+        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
+                                        typename std::iterator_traits<Iter>::iterator_category>)
             _first += n;
         else
             for (ptrdiff_t i = 0; i < n; ++i)
@@ -119,7 +120,8 @@ public:
     }
     constexpr void remove_suffix(ptrdiff_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag, typename std::iterator_traits<Iter>::iterator_category>)
+        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
+                                        typename std::iterator_traits<Iter>::iterator_category>)
             _last -= n;
         else
             for (ptrdiff_t i = 0; i < n; ++i)

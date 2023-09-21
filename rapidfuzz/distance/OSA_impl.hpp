@@ -194,7 +194,7 @@ int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> 
 
     /* Searching */
     auto iter_s2 = s2.begin();
-    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2,++row) {
+    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2, ++row) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 

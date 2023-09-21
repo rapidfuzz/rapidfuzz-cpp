@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-05-09 15:27:58.748752
+//  Generated: 2023-09-21 20:54:04.188885
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -514,6 +514,11 @@ public:
     {
         return !empty();
     }
+
+    template <
+        typename... Dummy, typename IterCopy = Iter,
+        typename = std::enable_if_t<std::is_base_of_v<
+            std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
     constexpr decltype(auto) operator[](ptrdiff_t n) const
     {
         return _first[n];
@@ -521,11 +526,21 @@ public:
 
     constexpr void remove_prefix(ptrdiff_t n)
     {
-        _first += n;
+        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
+                                        typename std::iterator_traits<Iter>::iterator_category>)
+            _first += n;
+        else
+            for (ptrdiff_t i = 0; i < n; ++i)
+                _first++;
     }
     constexpr void remove_suffix(ptrdiff_t n)
     {
-        _last -= n;
+        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
+                                        typename std::iterator_traits<Iter>::iterator_category>)
+            _last -= n;
+        else
+            for (ptrdiff_t i = 0; i < n; ++i)
+                _last--;
     }
 
     constexpr Range subseq(ptrdiff_t pos = 0, ptrdiff_t count = std::numeric_limits<ptrdiff_t>::max())
@@ -3313,6 +3328,7 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
     IntType* R1 = &R1_arr[1];
     IntType* FR = &FR_arr[1];
 
+    auto iter_s1 = s1.begin();
     for (IntType i = 1; i <= len1; i++) {
         std::swap(R, R1);
         IntType last_col_id = -1;
@@ -3320,19 +3336,20 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
         R[0] = i;
         IntType T = maxVal;
 
+        auto iter_s2 = s2.begin();
         for (IntType j = 1; j <= len2; j++) {
-            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(s1[i - 1] != s2[j - 1]);
+            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(*iter_s1 != *iter_s2);
             ptrdiff_t left = R[j - 1] + 1;
             ptrdiff_t up = R1[j] + 1;
             ptrdiff_t temp = std::min({diag, left, up});
 
-            if (s1[i - 1] == s2[j - 1]) {
+            if (*iter_s1 == *iter_s2) {
                 last_col_id = j;   // last occurence of s1_i
                 FR[j] = R1[j - 2]; // save H_k-1,j-2
                 T = last_i2l1;     // save H_i-2,l-1
             }
             else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(s2[j - 1])).val;
+                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(*iter_s2)).val;
                 ptrdiff_t l = last_col_id;
 
                 if ((j - l) == 1) {
@@ -3347,8 +3364,10 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
 
             last_i2l1 = R[j];
             R[j] = static_cast<IntType>(temp);
+            iter_s2++;
         }
-        last_row_id[s1[i - 1]].val = i;
+        last_row_id[*iter_s1].val = i;
+        iter_s1++;
     }
 
     int64_t dist = R[s2.size()];
@@ -3566,8 +3585,10 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
 
         ptrdiff_t min_len = std::min(s1.size(), s2.size());
         int64_t dist = std::max(s1.size(), s2.size());
+        auto iter_s1 = s1.begin();
+        auto iter_s2 = s2.begin();
         for (ptrdiff_t i = 0; i < min_len; ++i)
-            dist -= bool(s1[i] == s2[i]);
+            dist -= bool(*(iter_s1++) == *(iter_s2++));
 
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
@@ -3933,11 +3954,11 @@ struct BlockPatternMatchVector {
     template <typename InputIt>
     void insert(Range<InputIt> s) noexcept
     {
-        auto len = s.size();
         uint64_t mask = 1;
-        for (ptrdiff_t i = 0; i < len; ++i) {
+        ptrdiff_t i = 0;
+        for (auto iter = s.begin(); iter != s.end(); ++iter, ++i) {
             size_t block = static_cast<size_t>(i) / 64;
-            insert_mask(block, s[i], mask);
+            insert_mask(block, *iter, mask);
             mask = rotl(mask, 1);
         }
     }
@@ -4061,17 +4082,17 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
     int64_t max_len = 0;
 
     for (uint8_t ops : possible_ops) {
-        ptrdiff_t s1_pos = 0;
-        ptrdiff_t s2_pos = 0;
+        auto iter_s1 = s1.begin();
+        auto iter_s2 = s2.begin();
         int64_t cur_len = 0;
 
-        while (s1_pos < len1 && s2_pos < len2) {
-            if (s1[s1_pos] != s2[s2_pos]) {
+        while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
+            if (*iter_s1 != *iter_s2) {
                 if (!ops) break;
                 if (ops & 1)
-                    s1_pos++;
+                    iter_s1++;
                 else if (ops & 2)
-                    s2_pos++;
+                    iter_s2++;
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wconversion"
@@ -4083,8 +4104,8 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
             }
             else {
                 cur_len++;
-                s1_pos++;
-                s2_pos++;
+                iter_s1++;
+                iter_s2++;
             }
         }
 
@@ -4146,16 +4167,18 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
 
+    auto iter_s2 = s2.begin();
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
         unroll<size_t, N>([&](size_t word) {
-            uint64_t Matches = block.get(word, s2[i]);
+            uint64_t Matches = block.get(word, *iter_s2);
             uint64_t u = S[word] & Matches;
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
             if constexpr (RecordMatrix) res.S[i][word] = S[word];
         });
+        iter_s2++;
     }
 
     res.sim = 0;
@@ -4176,10 +4199,11 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), words, ~UINT64_C(0));
 
+    auto iter_s2 = s2.begin();
     for (ptrdiff_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
         for (size_t word = 0; word < words; ++word) {
-            const uint64_t Matches = block.get(word, s2[i]);
+            const uint64_t Matches = block.get(word, *iter_s2);
             uint64_t Stemp = S[word];
 
             uint64_t u = Stemp & Matches;
@@ -4189,6 +4213,7 @@ auto lcs_blockwise(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_
 
             if constexpr (RecordMatrix) res.S[i][word] = S[word];
         }
+        iter_s2++;
     }
 
     res.sim = 0;
@@ -5763,7 +5788,7 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
     assert(len1 > 0);
     assert(len2 > 0);
     assert(*s1.begin() != *s2.begin());
-    assert(*(s1.end() - 1) != *(s2.end() - 1));
+    assert(*(--s1.end()) != *(--s2.end()));
 
     if (len1 < len2) return levenshtein_mbleven2018(s2, s1, max);
 
@@ -5776,15 +5801,16 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
     int64_t dist = max + 1;
 
     for (uint8_t ops : possible_ops) {
-        ptrdiff_t s1_pos = 0;
-        ptrdiff_t s2_pos = 0;
+        auto iter_s1 = s1.begin();
+        auto iter_s2 = s2.begin();
         int64_t cur_dist = 0;
-        while (s1_pos < len1 && s2_pos < len2) {
-            if (s1[s1_pos] != s2[s2_pos]) {
+
+        while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
+            if (*iter_s1 != *iter_s2) {
                 cur_dist++;
                 if (!ops) break;
-                if (ops & 1) s1_pos++;
-                if (ops & 2) s2_pos++;
+                if (ops & 1) iter_s1++;
+                if (ops & 2) iter_s2++;
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC) && __GNUC__ < 10
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wconversion"
@@ -5795,11 +5821,11 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
 #endif
             }
             else {
-                s1_pos++;
-                s2_pos++;
+                iter_s1++;
+                iter_s2++;
             }
         }
-        cur_dist += (len1 - s1_pos) + (len2 - s2_pos);
+        cur_dist += std::distance(iter_s1, s1.end()) + std::distance(iter_s2, s2.end());
         dist = std::min(dist, cur_dist);
     }
 
@@ -5846,9 +5872,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
     uint64_t mask = UINT64_C(1) << (s1.size() - 1);
 
     /* Searching */
-    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+    auto iter_s2 = s2.begin();
+    for (ptrdiff_t i = 0; iter_s2 != s2.end(); ++iter_s2, ++i) {
         /* Step 1: Computing D0 */
-        uint64_t PM_j = PM.get(0, s2[i]);
+        uint64_t PM_j = PM.get(0, *iter_s2);
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
@@ -6095,25 +6122,27 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     int64_t break_score = max + s2.size() - (s1.size() - max);
     HybridGrowingHashmap<typename Range<InputIt1>::value_type, std::pair<ptrdiff_t, uint64_t>> PM;
 
-    for (ptrdiff_t j = -max; j < 0; ++j) {
-        auto& x = PM[s1[j + max]];
+    auto iter_s1 = s1.begin();
+    for (ptrdiff_t j = -max; j < 0; ++iter_s1, ++j) {
+        auto& x = PM[*iter_s1];
         x.second = shr64(x.second, j - x.first) | (UINT64_C(1) << 63);
         x.first = j;
     }
 
     /* Searching */
     ptrdiff_t i = 0;
-    for (; i < s1.size() - max; ++i) {
+    auto iter_s2 = s2.begin();
+    for (; i < s1.size() - max; ++iter_s2, ++iter_s1, ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            auto& x = PM[s1[i + max]];
+            auto& x = PM[*iter_s1];
             x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
             x.first = i;
         }
         {
-            auto x = PM.get(s2[i]);
+            auto x = PM.get(*iter_s2);
             PM_j = shr64(x.second, i - x.first);
         }
 
@@ -6142,17 +6171,17 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         }
     }
 
-    for (; i < s2.size(); ++i) {
+    for (; i < s2.size(); ++iter_s2, ++iter_s1, ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
         if (i + max < s1.size()) {
-            auto& x = PM[s1[i + max]];
+            auto& x = PM[*iter_s1];
             x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
             x.first = i;
         }
         {
-            auto x = PM.get(s2[i]);
+            auto x = PM.get(*iter_s2);
             PM_j = shr64(x.second, i - x.first);
         }
 
@@ -6232,7 +6261,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
         1;
 
     /* Searching */
-    for (ptrdiff_t row = 0; row < s2.size(); ++row) {
+    auto iter_s2 = s2.begin();
+    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2, ++row) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
@@ -6243,7 +6273,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
         auto advance_block = [&](size_t word) {
             /* Step 1: Computing D0 */
-            uint64_t PM_j = PM.get(word, s2[row]);
+            uint64_t PM_j = PM.get(word, *iter_s2);
             uint64_t VN = vecs[word].VN;
             uint64_t VP = vecs[word].VP;
 
@@ -7453,7 +7483,8 @@ int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> 
     std::vector<Row> new_vecs(words + 1);
 
     /* Searching */
-    for (ptrdiff_t row = 0; row < s2.size(); ++row) {
+    auto iter_s2 = s2.begin();
+    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2, ++row) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
@@ -7470,7 +7501,7 @@ int64_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> 
             /* PM of last word */
             uint64_t PM_last = new_vecs[word].PM;
 
-            uint64_t PM_j = PM.get(word, s2[row]);
+            uint64_t PM_j = PM.get(word, *iter_s2);
             uint64_t X = PM_j;
             uint64_t TR = ((((~D0) & X) << 1) | (((~D0_last) & PM_last) >> 63)) & PM_j_old;
 

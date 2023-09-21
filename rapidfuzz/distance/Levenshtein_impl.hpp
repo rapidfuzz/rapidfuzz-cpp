@@ -247,7 +247,7 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
 
     /* Searching */
     auto iter_s2 = s2.begin();
-    for (ptrdiff_t i = 0; iter_s2 != s2.end(); ++iter_s2,++i) {
+    for (ptrdiff_t i = 0; iter_s2 != s2.end(); ++iter_s2, ++i) {
         /* Step 1: Computing D0 */
         uint64_t PM_j = PM.get(0, *iter_s2);
         uint64_t X = PM_j;
@@ -497,7 +497,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     HybridGrowingHashmap<typename Range<InputIt1>::value_type, std::pair<ptrdiff_t, uint64_t>> PM;
 
     auto iter_s1 = s1.begin();
-    for (ptrdiff_t j = -max; j < 0; ++iter_s1,++j) {
+    for (ptrdiff_t j = -max; j < 0; ++iter_s1, ++j) {
         auto& x = PM[*iter_s1];
         x.second = shr64(x.second, j - x.first) | (UINT64_C(1) << 63);
         x.first = j;
@@ -506,7 +506,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
     /* Searching */
     ptrdiff_t i = 0;
     auto iter_s2 = s2.begin();
-    for (; i < s1.size() - max; ++iter_s2,++iter_s1,++i) {
+    for (; i < s1.size() - max; ++iter_s2, ++iter_s1, ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
@@ -545,7 +545,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         }
     }
 
-    for (; i < s2.size(); ++iter_s2,++iter_s1,++i) {
+    for (; i < s2.size(); ++iter_s2, ++iter_s1, ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
@@ -636,7 +636,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
     /* Searching */
     auto iter_s2 = s2.begin();
-    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2,++row) {
+    for (ptrdiff_t row = 0; row < s2.size(); ++iter_s2, ++row) {
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
