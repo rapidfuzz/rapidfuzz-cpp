@@ -16,8 +16,7 @@ int64_t indel_distance(const Sentence1& s1, const Sentence2& s2,
     int64_t res2 = rapidfuzz::indel_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
     int64_t res3 = rapidfuzz::indel_distance(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
-        max);
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
     rapidfuzz::CachedIndel scorer(s1);
     int64_t res4 = scorer.distance(s2, max);
     int64_t res5 = scorer.distance(s2.begin(), s2.end(), max);
@@ -63,8 +62,7 @@ int64_t indel_similarity(const Sentence1& s1, const Sentence2& s2, int64_t max =
     int64_t res2 = rapidfuzz::indel_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
     int64_t res3 = rapidfuzz::indel_similarity(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
-        max);
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
     rapidfuzz::CachedIndel scorer(s1);
     int64_t res4 = scorer.similarity(s2, max);
     int64_t res5 = scorer.similarity(s2.begin(), s2.end(), max);
@@ -109,11 +107,9 @@ double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, doubl
     double res1 = rapidfuzz::indel_normalized_distance(s1, s2, score_cutoff);
     double res2 =
         rapidfuzz::indel_normalized_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
-    double res3 =
-        rapidfuzz::indel_normalized_distance(
+    double res3 = rapidfuzz::indel_normalized_distance(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
-            score_cutoff);
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
     rapidfuzz::CachedIndel scorer(s1);
     double res4 = scorer.normalized_distance(s2, score_cutoff);
     double res5 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
@@ -158,11 +154,9 @@ double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, dou
     double res1 = rapidfuzz::indel_normalized_similarity(s1, s2, score_cutoff);
     double res2 =
         rapidfuzz::indel_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
-    double res3 =
-        rapidfuzz::indel_normalized_similarity(
+    double res3 = rapidfuzz::indel_normalized_similarity(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
-            score_cutoff);
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
     rapidfuzz::CachedIndel scorer(s1);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);

@@ -29,8 +29,7 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
     int64_t res2 = rapidfuzz::levenshtein_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), weights, max);
     int64_t res3 = rapidfuzz::levenshtein_distance(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
-        weights, max);
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), weights, max);
     rapidfuzz::CachedLevenshtein scorer(s1, weights);
     int64_t res4 = scorer.distance(s2, max);
     int64_t res5 = scorer.distance(s2.begin(), s2.end(), max);
@@ -86,8 +85,7 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
                                                                weights, score_cutoff);
     double res3 = rapidfuzz::levenshtein_normalized_similarity(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()),
-                                                               weights, score_cutoff);
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), weights, score_cutoff);
     rapidfuzz::CachedLevenshtein scorer(s1, weights);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);

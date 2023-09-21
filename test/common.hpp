@@ -9,6 +9,9 @@ public:
     using reference = typename T::reference;
     using iterator_category = std::bidirectional_iterator_tag;
 
+    BidirectionalIterWrapper() : iter()
+    {}
+
     BidirectionalIterWrapper(T iter_) : iter(iter_)
     {}
 
