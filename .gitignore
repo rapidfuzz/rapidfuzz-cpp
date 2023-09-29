@@ -7,3 +7,5 @@ build/
 *.so
 *.o
 *.out
+.vs/
+CMakeSettings.json

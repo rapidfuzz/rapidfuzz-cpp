@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-09-21 20:54:04.188885
+//  Generated: 2023-09-29 11:52:19.978497
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -6097,6 +6097,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
 {
     assert(max <= s1.size());
     assert(max <= s2.size());
+    assert(s2.size() >= s1.size() - max);
 
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0) << (64 - max - 1);
@@ -6136,7 +6137,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
-        if (i + max < s1.size()) {
+        {
             auto& x = PM[*iter_s1];
             x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
             x.first = i;
@@ -6171,14 +6172,15 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         }
     }
 
-    for (; i < s2.size(); ++iter_s2, ++iter_s1, ++i) {
+    for (; i < s2.size(); ++iter_s2, ++i) {
         /* Step 1: Computing D0 */
         /* update bitmasks online */
         uint64_t PM_j = 0;
-        if (i + max < s1.size()) {
+        if (iter_s1 != s1.end()) {
             auto& x = PM[*iter_s1];
             x.second = shr64(x.second, i - x.first) | (UINT64_C(1) << 63);
             x.first = i;
+            ++iter_s1;
         }
         {
             auto x = PM.get(*iter_s2);
