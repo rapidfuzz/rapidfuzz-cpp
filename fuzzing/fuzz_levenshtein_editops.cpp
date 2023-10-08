@@ -7,7 +7,8 @@
 #include <stdexcept>
 #include <string>
 
-void validate_editops(const std::basic_string<uint8_t>& s1, const std::basic_string<uint8_t>& s2, int64_t score, int64_t score_hint = std::numeric_limits<int64_t>::max())
+void validate_editops(const std::basic_string<uint8_t>& s1, const std::basic_string<uint8_t>& s2,
+                      int64_t score, int64_t score_hint = std::numeric_limits<int64_t>::max())
 {
     rapidfuzz::Editops ops = rapidfuzz::levenshtein_editops(s1, s2, score_hint);
     if (static_cast<int64_t>(ops.size()) == score && s2 != rapidfuzz::editops_apply<uint8_t>(ops, s1, s2))

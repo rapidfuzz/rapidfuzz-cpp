@@ -10,16 +10,6 @@
 
 #include "../common.hpp"
 
-template <typename T>
-std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
-{
-    std::basic_string<T> output;
-    while (b--)
-        output += a;
-
-    return output;
-}
-
 template <typename Sentence1, typename Sentence2>
 int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
                              rapidfuzz::LevenshteinWeightTable weights = {1, 1, 1},

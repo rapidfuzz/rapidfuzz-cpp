@@ -57,3 +57,13 @@ public:
 private:
     T iter;
 };
+
+template <typename T>
+std::basic_string<T> str_multiply(std::basic_string<T> a, size_t b)
+{
+    std::basic_string<T> output;
+    while (b--)
+        output += a;
+
+    return output;
+}

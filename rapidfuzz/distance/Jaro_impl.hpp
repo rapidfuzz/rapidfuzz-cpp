@@ -321,13 +321,11 @@ static inline int64_t jaro_bounds(int64_t P_len, int64_t T_len)
     /* since jaro uses a sliding window some parts of T/P might never be in
      * range an can be removed ahead of time
      */
-    int64_t Bound = 0;
-    if (T_len > P_len) {
-        Bound = T_len / 2 - 1;
-    }
-    else {
-        Bound = P_len / 2 - 1;
-    }
+    int64_t Bound = (T_len > P_len) ? T_len : P_len;
+    Bound /= 2;
+    if(Bound > 0)
+        Bound--;
+
     return Bound;
 }
 
@@ -339,6 +337,10 @@ int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
 {
     int64_t P_len = P.size();
     int64_t T_len = T.size();
+
+    // this is currently an early exit condition
+    // if this is changed handle this below, so Bound is never below 0
+    assert(P_len != 0 || T_len != 0);
 
     /* since jaro uses a sliding window some parts of T/P might never be in
      * range an can be removed ahead of time

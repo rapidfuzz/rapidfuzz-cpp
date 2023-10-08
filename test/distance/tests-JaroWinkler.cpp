@@ -3,6 +3,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <rapidfuzz/distance/JaroWinkler.hpp>
 
+#include "../common.hpp"
+
 using Catch::Approx;
 
 template <typename Sentence1, typename Sentence2>
@@ -86,9 +88,24 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
     return res1;
 }
 
-/**
- * @name JaroWinklerFlagCharsTest
- */
+template <typename Sentence1, typename Sentence2>
+double jaro_winkler_sim_test(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    INFO("name1: " << s1 << ", name2: " << s2 << ", score_cutoff: " << score_cutoff);
+    double Sim_original = rapidfuzz_reference::jaro_winkler_similarity(s1, s2, 0.1, score_cutoff);
+    double Sim_bitparallel = jaro_winkler_similarity(s1, s2, 0.1, score_cutoff);
+    double Dist_bitparallel = jaro_winkler_distance(s1, s2, 0.1, 1.0 - score_cutoff);
+    double Sim_bitparallel2 = jaro_winkler_similarity(s2, s1, 0.1, score_cutoff);
+    double Dist_bitparallel2 = jaro_winkler_distance(s2, s1, 0.1, 1.0 - score_cutoff);
+
+
+    REQUIRE(Sim_original == Approx(Sim_bitparallel));
+    REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel));
+    REQUIRE(Sim_original == Approx(Sim_bitparallel2));
+    REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel2));
+    return Sim_original;
+}
+
 TEST_CASE("JaroWinklerTest")
 {
     std::array<std::string, 22> names = {"james",    "robert",   "john",   "michael",   "william",
@@ -103,14 +120,26 @@ TEST_CASE("JaroWinklerTest")
 
         for (double score_cutoff : score_cutoffs)
             for (const auto& name1 : names)
-                for (const auto& name2 : names) {
-                    INFO("name1: " << name1 << ", name2: " << name2 << ", score_cutoff: " << score_cutoff);
-                    double Sim_original =
-                        rapidfuzz_reference::jaro_winkler_similarity(name1, name2, 0.1, score_cutoff);
-                    double Sim_bitparallel = jaro_winkler_similarity(name1, name2, 0.1, score_cutoff);
-                    double Dist_bitparallel = jaro_winkler_distance(name1, name2, 0.1, 1.0 - score_cutoff);
-                    REQUIRE(Sim_original == Approx(Sim_bitparallel));
-                    REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel));
-                }
+                for (const auto& name2 : names)
+                    jaro_winkler_sim_test(name1, name2, score_cutoff);
+    }
+
+    SECTION("testEdgeCaseLengths")
+    {
+        REQUIRE(jaro_winkler_sim_test(std::string(""), std::string("")) == Approx(1));
+        REQUIRE(jaro_winkler_sim_test(std::string("0"), std::string("0")) == Approx(1));
+        REQUIRE(jaro_winkler_sim_test(std::string("00"), std::string("00")) == Approx(1));
+        REQUIRE(jaro_winkler_sim_test(std::string("0"), std::string("00")) == Approx(0.85));
+
+        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 65), str_multiply(std::string("0"), 65)) == Approx(1));
+        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)) == Approx(0.996923));
+        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)) == Approx(0.993846));
+
+        REQUIRE(jaro_winkler_sim_test(std::string("10000000000000000000000000000000000000000000000000000000000000020"), std::string("00000000000000000000000000000000000000000000000000000000000000000")) == Approx(0.979487));
+        REQUIRE(jaro_winkler_sim_test(std::string("00000000000000100000000000000000000000010000000000000000000000000"), std::string("0000000000000000000000000000000000000000000000000000000000000000000000000000001")) == Approx(0.95334));
+        REQUIRE(jaro_winkler_sim_test(
+                std::string("00000000000000000000000000000000000000000000000000000000000000000"),
+                std::string("01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+            ) == Approx(0.852344));
     }
 }

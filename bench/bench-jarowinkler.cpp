@@ -28,7 +28,6 @@ std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
     return output;
 }
 
-
 static void BM_JaroLongSimilarSequence(benchmark::State& state)
 {
     size_t len = state.range(0);
