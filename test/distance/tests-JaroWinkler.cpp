@@ -20,6 +20,35 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
     double res6 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
     double res7 = scorer.normalized_similarity(s2, score_cutoff);
     double res8 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
+
+#ifdef RAPIDFUZZ_SIMD
+    std::vector<double> results(256 / 8);
+    if (s1.size() <= 8) {
+        rapidfuzz::experimental::MultiJaroWinkler<8> simd_scorer(1, prefix_weight);
+        simd_scorer.insert(s1);
+        simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+    if (s1.size() <= 16) {
+        rapidfuzz::experimental::MultiJaroWinkler<16> simd_scorer(1, prefix_weight);
+        simd_scorer.insert(s1);
+        simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+    if (s1.size() <= 32) {
+        rapidfuzz::experimental::MultiJaroWinkler<32> simd_scorer(1, prefix_weight);
+        simd_scorer.insert(s1);
+        simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+    if (s1.size() <= 64) {
+        rapidfuzz::experimental::MultiJaroWinkler<64> simd_scorer(1, prefix_weight);
+        simd_scorer.insert(s1);
+        simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+#endif
+
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));

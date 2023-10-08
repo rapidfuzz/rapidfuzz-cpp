@@ -42,24 +42,26 @@ int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
             rapidfuzz::experimental::MultiLevenshtein<8> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-        else if (s1.size() <= 16) {
+        if (s1.size() <= 16) {
             rapidfuzz::experimental::MultiLevenshtein<16> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-        else if (s1.size() <= 32) {
+        if (s1.size() <= 32) {
             rapidfuzz::experimental::MultiLevenshtein<32> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-        else {
+        if (s1.size() <= 64) {
             rapidfuzz::experimental::MultiLevenshtein<64> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-
-        REQUIRE(res1 == results[0]);
     }
 #endif
     REQUIRE(res1 == res2);

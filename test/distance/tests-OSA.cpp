@@ -36,24 +36,26 @@ int64_t osa_distance(const Sentence1& s1, const Sentence2& s2,
             rapidfuzz::experimental::MultiOSA<8> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-        else if (s1.size() <= 16) {
+        if (s1.size() <= 16) {
             rapidfuzz::experimental::MultiOSA<16> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-        else if (s1.size() <= 32) {
+        if (s1.size() <= 32) {
             rapidfuzz::experimental::MultiOSA<32> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-        else {
+        if (s1.size() <= 64) {
             rapidfuzz::experimental::MultiOSA<64> simd_scorer(1);
             simd_scorer.insert(s1);
             simd_scorer.distance(&results[0], results.size(), s2, max);
+            REQUIRE(res1 == results[0]);
         }
-
-        REQUIRE(res1 == results[0]);
     }
 #endif
     REQUIRE(res1 == res2);

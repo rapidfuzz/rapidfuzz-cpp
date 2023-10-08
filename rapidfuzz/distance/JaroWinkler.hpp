@@ -73,6 +73,98 @@ double jaro_winkler_normalized_similarity(const Sentence1& s1, const Sentence2& 
     return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
 
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiJaroWinkler : public detail::MultiSimilarityBase<MultiJaroWinkler<MaxLen>, double, 0, 1> {
+
+private:
+    friend detail::MultiSimilarityBase<MultiJaroWinkler<MaxLen>, double, 0, 1>;
+    friend detail::MultiNormalizedMetricBase<MultiJaroWinkler<MaxLen>>;
+
+public:
+    MultiJaroWinkler(size_t count, double prefix_weight_) : scorer(count), prefix_weight(prefix_weight_)
+    {}
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(first1, last1);
+        size_t len = static_cast<size_t>(std::distance(first1, last1));
+        std::array<uint64_t, 4> prefix;
+        for (size_t i = 0; i < std::min<int64_t>(len, 4); ++i)
+            prefix[i] = (uint64_t)first1[i];
+
+        str_lens.push_back(len);
+        prefixes.push_back(prefix);
+    }
+
+private:
+    template <typename InputIt2>
+    void _similarity(double* scores, size_t score_count, detail::Range<InputIt2> s2,
+                     double score_cutoff = 0.0) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        scorer.similarity(scores, score_count, s2, score_cutoff);
+
+        for (size_t i = 0; i < get_input_count(); ++i) {
+            if (scores[i] > 0.7) {
+                int64_t min_len = std::min<int64_t>(s2.size(), str_lens[i]);
+                int64_t max_prefix = std::min<int64_t>(min_len, 4);
+                int64_t prefix = 0;
+                for (; prefix < max_prefix; ++prefix)
+                    if (s2[prefix] != prefixes[i][prefix]) break;
+
+                scores[i] += static_cast<double>(prefix) * prefix_weight * (1.0 - scores[i]);
+            }
+
+            if (scores[i] < score_cutoff) scores[i] = 0.0;
+        }
+    }
+
+    template <typename InputIt2>
+    double maximum(size_t s1_idx, detail::Range<InputIt2>) const
+    {
+        return 1.0;
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return str_lens.size();
+    }
+
+    std::vector<size_t> str_lens;
+    // todo this could lead to incorrect results when comparing uint64_t with int64_t
+    std::vector<std::array<uint64_t, 4>> prefixes;
+    MultiJaro<MaxLen> scorer;
+    double prefix_weight;
+};
+
+} /* namespace experimental */
+#endif /* RAPIDFUZZ_SIMD */
+
 template <typename CharT1>
 struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler<CharT1>, double, 0, 1> {
     template <typename Sentence1>

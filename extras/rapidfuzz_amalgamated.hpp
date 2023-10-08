@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-09-29 11:52:19.978497
+//  Generated: 2023-10-08 12:45:00.456286
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1541,6 +1541,16 @@ static inline int countr_zero(uint64_t x)
 }
 #endif
 
+static inline int countr_zero(uint16_t x)
+{
+    return countr_zero(static_cast<uint32_t>(x));
+}
+
+static inline int countr_zero(uint8_t x)
+{
+    return countr_zero(static_cast<uint32_t>(x));
+}
+
 template <class T, T... inds, class F>
 constexpr void unroll_impl(std::integer_sequence<T, inds...>, F&& f)
 {
@@ -1879,6 +1889,11 @@ public:
         return _mm256_sub_epi64(xmm, b);
     }
 
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi64(_mm256_setzero_si256(), xmm);
+    }
+
     native_simd& operator-=(const native_simd b) noexcept
     {
         xmm = _mm256_sub_epi64(xmm, b);
@@ -1941,6 +1956,11 @@ public:
     {
         xmm = _mm256_add_epi32(xmm, b);
         return *this;
+    }
+
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi32(_mm256_setzero_si256(), xmm);
     }
 
     native_simd operator-(const native_simd b) const noexcept
@@ -2017,6 +2037,11 @@ public:
         return _mm256_sub_epi16(xmm, b);
     }
 
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi16(_mm256_setzero_si256(), xmm);
+    }
+
     native_simd& operator-=(const native_simd b) noexcept
     {
         xmm = _mm256_sub_epi16(xmm, b);
@@ -2084,6 +2109,11 @@ public:
     native_simd operator-(const native_simd b) const noexcept
     {
         return _mm256_sub_epi8(xmm, b);
+    }
+
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi8(_mm256_setzero_si256(), xmm);
     }
 
     native_simd& operator-=(const native_simd b) noexcept
@@ -2194,6 +2224,12 @@ static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
     return _mm256_cmpeq_epi64(a, b);
 }
 
+template <typename T>
+static inline native_simd<T> operator!=(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return ~(a == b);
+}
+
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
     return _mm256_and_si256(_mm256_slli_epi16(a, b),
@@ -2258,6 +2294,76 @@ template <typename T>
 native_simd<T> operator~(const native_simd<T>& a) noexcept
 {
     return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
+}
+
+// potentially we want a special native_simd<bool> for this
+static inline native_simd<uint8_t> operator>=(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi8(_mm256_max_epu8(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint16_t> operator>=(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi16(_mm256_max_epu16(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint32_t> operator>=(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi32(_mm256_max_epu32(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
+                                              const native_simd<uint64_t>& b) noexcept;
+
+static inline native_simd<uint64_t> operator>=(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    return ~(b > a);
+}
+
+template <typename T>
+static inline native_simd<T> operator<=(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return b >= a;
+}
+
+static inline native_simd<uint8_t> operator>(const native_simd<uint8_t>& a,
+                                             const native_simd<uint8_t>& b) noexcept
+{
+    return ~(b >= a);
+}
+
+static inline native_simd<uint16_t> operator>(const native_simd<uint16_t>& a,
+                                              const native_simd<uint16_t>& b) noexcept
+{
+    return ~(b >= a);
+}
+
+static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
+                                              const native_simd<uint32_t>& b) noexcept
+{
+    __m256i signbit = _mm256_set1_epi32(0x80000000);
+    __m256i a1 = _mm256_xor_si256(a, signbit);
+    __m256i b1 = _mm256_xor_si256(b, signbit);
+    return _mm256_cmpgt_epi32(a1, b1); // signed compare
+}
+
+static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
+                                              const native_simd<uint64_t>& b) noexcept
+{
+    __m256i sign64 = native_simd<uint64_t>(0x8000000000000000);
+    __m256i aflip = _mm256_xor_si256(a, sign64);
+    __m256i bflip = _mm256_xor_si256(b, sign64);
+    return _mm256_cmpgt_epi64(aflip, bflip); // signed compare
+}
+
+template <typename T>
+static inline native_simd<T> operator<(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return b > a;
 }
 
 } // namespace simd_avx2
@@ -2340,6 +2446,11 @@ public:
         return _mm_sub_epi64(xmm, b);
     }
 
+    native_simd operator-() const noexcept
+    {
+        return _mm_sub_epi64(_mm_setzero_si128(), xmm);
+    }
+
     native_simd& operator-=(const native_simd b) noexcept
     {
         xmm = _mm_sub_epi64(xmm, b);
@@ -2404,6 +2515,11 @@ public:
     native_simd operator-(const native_simd b) const noexcept
     {
         return _mm_sub_epi32(xmm, b);
+    }
+
+    native_simd operator-() const noexcept
+    {
+        return _mm_sub_epi32(_mm_setzero_si128(), xmm);
     }
 
     native_simd& operator-=(const native_simd b) noexcept
@@ -2472,6 +2588,11 @@ public:
         return _mm_sub_epi16(xmm, b);
     }
 
+    native_simd operator-() const noexcept
+    {
+        return _mm_sub_epi16(_mm_setzero_si128(), xmm);
+    }
+
     native_simd& operator-=(const native_simd b) noexcept
     {
         xmm = _mm_sub_epi16(xmm, b);
@@ -2536,6 +2657,11 @@ public:
     native_simd operator-(const native_simd b) const noexcept
     {
         return _mm_sub_epi8(xmm, b);
+    }
+
+    native_simd operator-() const noexcept
+    {
+        return _mm_sub_epi8(_mm_setzero_si128(), xmm);
     }
 
     native_simd& operator-=(const native_simd b) noexcept
@@ -2675,6 +2801,12 @@ static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
     return testee;
 }
 
+template <typename T>
+static inline native_simd<T> operator!=(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return ~(a == b);
+}
+
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
     return _mm_and_si128(_mm_slli_epi16(a, b), _mm_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
@@ -2738,6 +2870,95 @@ template <typename T>
 native_simd<T> operator~(const native_simd<T>& a) noexcept
 {
     return _mm_xor_si128(a, _mm_set1_epi32(-1));
+}
+
+// potentially we want a special native_simd<bool> for this
+static inline native_simd<uint8_t> operator>=(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm_cmpeq_epi8(_mm_max_epu8(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint16_t> operator>=(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    /* sse4.1 */
+#        if 0
+    return _mm_cmpeq_epi16(_mm_max_epu16(a, b), a); // a == max(a,b)
+#        endif
+
+    __m128i s = _mm_subs_epu16(b, a);               // b-a, saturated
+    return _mm_cmpeq_epi16(s, _mm_setzero_si128()); // s == 0
+}
+
+static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
+                                              const native_simd<uint64_t>& b) noexcept;
+static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
+                                              const native_simd<uint32_t>& b) noexcept;
+
+static inline native_simd<uint32_t> operator>=(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    /* sse4.1 */
+#        if 0
+    return (Vec4ib)_mm_cmpeq_epi32(_mm_max_epu32(a, b), a); // a == max(a,b)
+#        endif
+
+    return ~(b > a);
+}
+
+static inline native_simd<uint64_t> operator>=(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    return ~(b > a);
+}
+
+template <typename T>
+static inline native_simd<T> operator<=(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return b >= a;
+}
+
+static inline native_simd<uint8_t> operator>(const native_simd<uint8_t>& a,
+                                             const native_simd<uint8_t>& b) noexcept
+{
+    return ~(b >= a);
+}
+
+static inline native_simd<uint16_t> operator>(const native_simd<uint16_t>& a,
+                                              const native_simd<uint16_t>& b) noexcept
+{
+    return ~(b >= a);
+}
+
+static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
+                                              const native_simd<uint32_t>& b) noexcept
+{
+    __m128i signbit = _mm_set1_epi32(0x80000000);
+    __m128i a1 = _mm_xor_si128(a, signbit);
+    __m128i b1 = _mm_xor_si128(b, signbit);
+    return _mm_cmpgt_epi32(a1, b1); // signed compare
+}
+
+static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
+                                              const native_simd<uint64_t>& b) noexcept
+{
+    __m128i sign32 = _mm_set1_epi32(0x80000000);       // sign bit of each dword
+    __m128i aflip = _mm_xor_si128(a, sign32);          // a with sign bits flipped to use signed compare
+    __m128i bflip = _mm_xor_si128(b, sign32);          // b with sign bits flipped to use signed compare
+    __m128i equal = _mm_cmpeq_epi32(a, b);             // a == b, dwords
+    __m128i bigger = _mm_cmpgt_epi32(aflip, bflip);    // a > b, dwords
+    __m128i biggerl = _mm_shuffle_epi32(bigger, 0xA0); // a > b, low dwords copied to high dwords
+    __m128i eqbig = _mm_and_si128(equal, biggerl);     // high part equal and low part bigger
+    __m128i hibig = _mm_or_si128(bigger, eqbig);  // high part bigger or high part equal and low part bigger
+    __m128i big = _mm_shuffle_epi32(hibig, 0xF5); // result copied to low part
+    return big;
+}
+
+template <typename T>
+static inline native_simd<T> operator<(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return b > a;
 }
 
 } // namespace simd_sse2
@@ -5208,9 +5429,27 @@ static inline size_t count_transpositions_block(const BlockPatternMatchVector& P
     return Transpositions;
 }
 
+// todo cleanup the split between jaro_bounds
+/**
+ * @brief find bounds
+ */
+static inline int64_t jaro_bounds(int64_t P_len, int64_t T_len)
+{
+    /* since jaro uses a sliding window some parts of T/P might never be in
+     * range an can be removed ahead of time
+     */
+    int64_t Bound = 0;
+    if (T_len > P_len) {
+        Bound = T_len / 2 - 1;
+    }
+    else {
+        Bound = P_len / 2 - 1;
+    }
+    return Bound;
+}
+
 /**
  * @brief find bounds and skip out of bound parts of the sequences
- *
  */
 template <typename InputIt1, typename InputIt2>
 int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
@@ -5328,6 +5567,121 @@ double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Ran
     return (Sim >= score_cutoff) ? Sim : 0;
 }
 
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
+                          const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                          double score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+    size_t result_index = 0;
+
+    if (score_cutoff > 1.0) {
+        for (int64_t i = 0; i < s1_lengths.size(); i++)
+            scores[i] = 0.0;
+
+        return;
+    }
+
+    if (s2.empty()) {
+        for (int64_t i = 0; i < s1_lengths.size(); i++)
+            scores[i] = s1_lengths[i] ? 0.0 : 1.0;
+
+        return;
+    }
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        alignas(32) std::array<VecType, vec_width> boundMaskSize_;
+        alignas(32) std::array<VecType, vec_width> boundMask_;
+
+        auto s2_cur = s2;
+
+        int64_t lastRelevantChar = 0;
+        int64_t maxBound = 0;
+        unroll<int, vec_width>([&](auto i) {
+            int64_t s1_len = s1_lengths[result_index + i];
+            int64_t Bound = jaro_bounds(s1_len, s2_cur.size());
+
+            if (s1_len + Bound > lastRelevantChar) lastRelevantChar = s1_len + Bound;
+
+            if (Bound > maxBound) maxBound = Bound;
+
+            boundMaskSize_[i] = bit_mask_lsb<VecType>(2 * Bound);
+            boundMask_[i] = bit_mask_lsb<VecType>(Bound + 1);
+        });
+
+        if (s2_cur.size() > lastRelevantChar) s2_cur.remove_suffix(s2_cur.size() - lastRelevantChar);
+
+        native_simd<VecType> boundMaskSize(reinterpret_cast<uint64_t*>(boundMaskSize_.data()));
+        native_simd<VecType> boundMask(reinterpret_cast<uint64_t*>(boundMask_.data()));
+
+        native_simd<VecType> P_flag(VecType(0));
+        native_simd<VecType> T_flag(VecType(0));
+
+        native_simd<VecType> counter(VecType(1));
+
+        for (const auto& ch : s2_cur) {
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            native_simd<VecType> X(stored.data());
+            native_simd<VecType> PM_j = andnot(X & boundMask, P_flag);
+
+            P_flag |= blsi(PM_j);
+            T_flag |= andnot(counter, (PM_j == zero));
+
+            counter = counter << 1;
+            boundMask = (boundMask << 1) | ((boundMask <= boundMaskSize) & one);
+        }
+
+        auto counts = popcount(P_flag);
+        alignas(32) std::array<VecType, vec_width> P_flags;
+        P_flag.store(P_flags.data());
+        alignas(32) std::array<VecType, vec_width> T_flags;
+        T_flag.store(T_flags.data());
+        for (int64_t i = 0; i < vec_width; ++i) {
+            VecType CommonChars = counts[i];
+            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
+                scores[static_cast<int64_t>(result_index)] = 0.0;
+                result_index++;
+                continue;
+            }
+
+            VecType P_flag_cur = P_flags[i];
+            VecType T_flag_cur = T_flags[i];
+            size_t Transpositions = 0;
+
+            int64_t cur_block = i / 4;
+            int64_t offset = 8 * (i % 4);
+            while (T_flag_cur) {
+                uint64_t PatternFlagMask = blsi(P_flag_cur);
+
+                Transpositions +=
+                    !(block.get(cur_block, s2[countr_zero(T_flag_cur)]) & (PatternFlagMask << offset));
+
+                T_flag_cur = blsr(T_flag_cur);
+                P_flag_cur ^= PatternFlagMask;
+            }
+
+            double Sim =
+                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+            scores[static_cast<int64_t>(result_index)] = (Sim >= score_cutoff) ? Sim : 0;
+            result_index++;
+        }
+    }
+}
+#endif /* RAPIDFUZZ_SIMD */
+
 class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     friend SimilarityBase<Jaro, double, 0, 1>;
     friend NormalizedMetricBase<Jaro>;
@@ -5401,6 +5755,126 @@ double jaro_normalized_similarity(const Sentence1& s1, const Sentence2& s2, doub
 {
     return detail::Jaro::normalized_similarity(s1, s2, score_cutoff, score_cutoff);
 }
+
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiJaro : public detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1> {
+
+private:
+    friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
+    friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>>;
+
+    constexpr static size_t get_vec_size()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        using namespace detail::simd_avx2;
+#    else
+        using namespace detail::simd_sse2;
+#    endif
+        if constexpr (MaxLen <= 8)
+            return native_simd<uint8_t>::size();
+        else if constexpr (MaxLen <= 16)
+            return native_simd<uint16_t>::size();
+        else if constexpr (MaxLen <= 32)
+            return native_simd<uint32_t>::size();
+        else if constexpr (MaxLen <= 64)
+            return native_simd<uint64_t>::size();
+
+        static_assert(MaxLen <= 64);
+    }
+
+    constexpr static size_t find_block_count(size_t count)
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(count, vec_size);
+        return detail::ceil_div(simd_vec_count * vec_size * MaxLen, 64);
+    }
+
+public:
+    MultiJaro(size_t count) : input_count(count), PM(find_block_count(count) * 64)
+    {
+        str_lens.resize(result_count());
+    }
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        size_t vec_size = get_vec_size();
+        size_t simd_vec_count = detail::ceil_div(input_count, vec_size);
+        return simd_vec_count * vec_size;
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        auto len = std::distance(first1, last1);
+        int block_pos = static_cast<int>((pos * MaxLen) % 64);
+        auto block = (pos * MaxLen) / 64;
+        assert(len <= MaxLen);
+
+        if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
+
+        str_lens[pos] = static_cast<size_t>(len);
+        for (; first1 != last1; ++first1) {
+            PM.insert(block, *first1, block_pos);
+            block_pos++;
+        }
+        pos++;
+    }
+
+private:
+    template <typename InputIt2>
+    void _similarity(double* scores, size_t score_count, detail::Range<InputIt2> s2,
+                     double score_cutoff = 0.0) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        detail::Range scores_(scores, scores + score_count);
+        if constexpr (MaxLen == 8)
+            detail::jaro_similarity_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 16)
+            detail::jaro_similarity_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 32)
+            detail::jaro_similarity_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
+        else if constexpr (MaxLen == 64)
+            detail::jaro_similarity_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
+    }
+
+    template <typename InputIt2>
+    double maximum(size_t s1_idx, detail::Range<InputIt2>) const
+    {
+        return 1.0;
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return input_count;
+    }
+
+    size_t input_count;
+    size_t pos = 0;
+    detail::BlockPatternMatchVector PM;
+    std::vector<size_t> str_lens;
+};
+
+} /* namespace experimental */
+#endif /* RAPIDFUZZ_SIMD */
 
 template <typename CharT1>
 struct CachedJaro : public detail::CachedSimilarityBase<CachedJaro<CharT1>, double, 0, 1> {
@@ -5588,6 +6062,98 @@ double jaro_winkler_normalized_similarity(const Sentence1& s1, const Sentence2& 
 {
     return detail::JaroWinkler::normalized_similarity(s1, s2, prefix_weight, score_cutoff, score_cutoff);
 }
+
+#ifdef RAPIDFUZZ_SIMD
+namespace experimental {
+template <int MaxLen>
+struct MultiJaroWinkler : public detail::MultiSimilarityBase<MultiJaroWinkler<MaxLen>, double, 0, 1> {
+
+private:
+    friend detail::MultiSimilarityBase<MultiJaroWinkler<MaxLen>, double, 0, 1>;
+    friend detail::MultiNormalizedMetricBase<MultiJaroWinkler<MaxLen>>;
+
+public:
+    MultiJaroWinkler(size_t count, double prefix_weight_) : scorer(count), prefix_weight(prefix_weight_)
+    {}
+
+    /**
+     * @brief get minimum size required for result vectors passed into
+     * - distance
+     * - similarity
+     * - normalized_distance
+     * - normalized_similarity
+     *
+     * @return minimum vector size
+     */
+    size_t result_count() const
+    {
+        return scorer.result_count();
+    }
+
+    template <typename Sentence1>
+    void insert(const Sentence1& s1_)
+    {
+        insert(detail::to_begin(s1_), detail::to_end(s1_));
+    }
+
+    template <typename InputIt1>
+    void insert(InputIt1 first1, InputIt1 last1)
+    {
+        scorer.insert(first1, last1);
+        size_t len = static_cast<size_t>(std::distance(first1, last1));
+        std::array<uint64_t, 4> prefix;
+        for (size_t i = 0; i < std::min<int64_t>(len, 4); ++i)
+            prefix[i] = (uint64_t)first1[i];
+
+        str_lens.push_back(len);
+        prefixes.push_back(prefix);
+    }
+
+private:
+    template <typename InputIt2>
+    void _similarity(double* scores, size_t score_count, detail::Range<InputIt2> s2,
+                     double score_cutoff = 0.0) const
+    {
+        if (score_count < result_count())
+            throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        scorer.similarity(scores, score_count, s2, score_cutoff);
+
+        for (size_t i = 0; i < get_input_count(); ++i) {
+            if (scores[i] > 0.7) {
+                int64_t min_len = std::min<int64_t>(s2.size(), str_lens[i]);
+                int64_t max_prefix = std::min<int64_t>(min_len, 4);
+                int64_t prefix = 0;
+                for (; prefix < max_prefix; ++prefix)
+                    if (s2[prefix] != prefixes[i][prefix]) break;
+
+                scores[i] += static_cast<double>(prefix) * prefix_weight * (1.0 - scores[i]);
+            }
+
+            if (scores[i] < score_cutoff) scores[i] = 0.0;
+        }
+    }
+
+    template <typename InputIt2>
+    double maximum(size_t s1_idx, detail::Range<InputIt2>) const
+    {
+        return 1.0;
+    }
+
+    size_t get_input_count() const noexcept
+    {
+        return str_lens.size();
+    }
+
+    std::vector<size_t> str_lens;
+    // todo this could lead to incorrect results when comparing uint64_t with int64_t
+    std::vector<std::array<uint64_t, 4>> prefixes;
+    MultiJaro<MaxLen> scorer;
+    double prefix_weight;
+};
+
+} /* namespace experimental */
+#endif /* RAPIDFUZZ_SIMD */
 
 template <typename CharT1>
 struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler<CharT1>, double, 0, 1> {
@@ -7222,7 +7788,7 @@ private:
     LevenshteinWeightTable weights;
 };
 } /* namespace experimental */
-#endif
+#endif /* RAPIDFUZZ_SIMD */
 
 template <typename CharT1>
 struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>, int64_t, 0,

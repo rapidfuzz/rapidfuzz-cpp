@@ -416,7 +416,7 @@ private:
     LevenshteinWeightTable weights;
 };
 } /* namespace experimental */
-#endif
+#endif /* RAPIDFUZZ_SIMD */
 
 template <typename CharT1>
 struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<CharT1>, int64_t, 0,

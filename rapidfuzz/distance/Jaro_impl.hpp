@@ -312,9 +312,27 @@ static inline size_t count_transpositions_block(const BlockPatternMatchVector& P
     return Transpositions;
 }
 
+// todo cleanup the split between jaro_bounds
+/**
+ * @brief find bounds
+ */
+static inline int64_t jaro_bounds(int64_t P_len, int64_t T_len)
+{
+    /* since jaro uses a sliding window some parts of T/P might never be in
+     * range an can be removed ahead of time
+     */
+    int64_t Bound = 0;
+    if (T_len > P_len) {
+        Bound = T_len / 2 - 1;
+    }
+    else {
+        Bound = P_len / 2 - 1;
+    }
+    return Bound;
+}
+
 /**
  * @brief find bounds and skip out of bound parts of the sequences
- *
  */
 template <typename InputIt1, typename InputIt2>
 int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
@@ -431,6 +449,121 @@ double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Ran
     double Sim = jaro_calculate_similarity(P_len, T_len, CommonChars, Transpositions);
     return (Sim >= score_cutoff) ? Sim : 0;
 }
+
+#ifdef RAPIDFUZZ_SIMD
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
+                          const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                          double score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    assert(block.size() % vecs == 0);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+    size_t result_index = 0;
+
+    if (score_cutoff > 1.0) {
+        for (int64_t i = 0; i < s1_lengths.size(); i++)
+            scores[i] = 0.0;
+
+        return;
+    }
+
+    if (s2.empty()) {
+        for (int64_t i = 0; i < s1_lengths.size(); i++)
+            scores[i] = s1_lengths[i] ? 0.0 : 1.0;
+
+        return;
+    }
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        alignas(32) std::array<VecType, vec_width> boundMaskSize_;
+        alignas(32) std::array<VecType, vec_width> boundMask_;
+
+        auto s2_cur = s2;
+
+        int64_t lastRelevantChar = 0;
+        int64_t maxBound = 0;
+        unroll<int, vec_width>([&](auto i) {
+            int64_t s1_len = s1_lengths[result_index + i];
+            int64_t Bound = jaro_bounds(s1_len, s2_cur.size());
+
+            if (s1_len + Bound > lastRelevantChar) lastRelevantChar = s1_len + Bound;
+
+            if (Bound > maxBound) maxBound = Bound;
+
+            boundMaskSize_[i] = bit_mask_lsb<VecType>(2 * Bound);
+            boundMask_[i] = bit_mask_lsb<VecType>(Bound + 1);
+        });
+
+        if (s2_cur.size() > lastRelevantChar) s2_cur.remove_suffix(s2_cur.size() - lastRelevantChar);
+
+        native_simd<VecType> boundMaskSize(reinterpret_cast<uint64_t*>(boundMaskSize_.data()));
+        native_simd<VecType> boundMask(reinterpret_cast<uint64_t*>(boundMask_.data()));
+
+        native_simd<VecType> P_flag(VecType(0));
+        native_simd<VecType> T_flag(VecType(0));
+
+        native_simd<VecType> counter(VecType(1));
+
+        for (const auto& ch : s2_cur) {
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            native_simd<VecType> X(stored.data());
+            native_simd<VecType> PM_j = andnot(X & boundMask, P_flag);
+
+            P_flag |= blsi(PM_j);
+            T_flag |= andnot(counter, (PM_j == zero));
+
+            counter = counter << 1;
+            boundMask = (boundMask << 1) | ((boundMask <= boundMaskSize) & one);
+        }
+
+        auto counts = popcount(P_flag);
+        alignas(32) std::array<VecType, vec_width> P_flags;
+        P_flag.store(P_flags.data());
+        alignas(32) std::array<VecType, vec_width> T_flags;
+        T_flag.store(T_flags.data());
+        for (int64_t i = 0; i < vec_width; ++i) {
+            VecType CommonChars = counts[i];
+            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
+                scores[static_cast<int64_t>(result_index)] = 0.0;
+                result_index++;
+                continue;
+            }
+
+            VecType P_flag_cur = P_flags[i];
+            VecType T_flag_cur = T_flags[i];
+            size_t Transpositions = 0;
+
+            int64_t cur_block = i / 4;
+            int64_t offset = 8 * (i % 4);
+            while (T_flag_cur) {
+                uint64_t PatternFlagMask = blsi(P_flag_cur);
+
+                Transpositions +=
+                    !(block.get(cur_block, s2[countr_zero(T_flag_cur)]) & (PatternFlagMask << offset));
+
+                T_flag_cur = blsr(T_flag_cur);
+                P_flag_cur ^= PatternFlagMask;
+            }
+
+            double Sim =
+                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+            scores[static_cast<int64_t>(result_index)] = (Sim >= score_cutoff) ? Sim : 0;
+            result_index++;
+        }
+    }
+}
+#endif /* RAPIDFUZZ_SIMD */
 
 class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     friend SimilarityBase<Jaro, double, 0, 1>;

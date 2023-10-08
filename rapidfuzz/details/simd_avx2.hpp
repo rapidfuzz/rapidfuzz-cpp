@@ -77,6 +77,11 @@ public:
         return _mm256_sub_epi64(xmm, b);
     }
 
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi64(_mm256_setzero_si256(), xmm);
+    }
+
     native_simd& operator-=(const native_simd b) noexcept
     {
         xmm = _mm256_sub_epi64(xmm, b);
@@ -139,6 +144,11 @@ public:
     {
         xmm = _mm256_add_epi32(xmm, b);
         return *this;
+    }
+
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi32(_mm256_setzero_si256(), xmm);
     }
 
     native_simd operator-(const native_simd b) const noexcept
@@ -215,6 +225,11 @@ public:
         return _mm256_sub_epi16(xmm, b);
     }
 
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi16(_mm256_setzero_si256(), xmm);
+    }
+
     native_simd& operator-=(const native_simd b) noexcept
     {
         xmm = _mm256_sub_epi16(xmm, b);
@@ -282,6 +297,11 @@ public:
     native_simd operator-(const native_simd b) const noexcept
     {
         return _mm256_sub_epi8(xmm, b);
+    }
+
+    native_simd operator-() const noexcept
+    {
+        return _mm256_sub_epi8(_mm256_setzero_si256(), xmm);
     }
 
     native_simd& operator-=(const native_simd b) noexcept
@@ -392,6 +412,12 @@ static inline native_simd<uint64_t> operator==(const native_simd<uint64_t>& a,
     return _mm256_cmpeq_epi64(a, b);
 }
 
+template <typename T>
+static inline native_simd<T> operator!=(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return ~(a == b);
+}
+
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
     return _mm256_and_si256(_mm256_slli_epi16(a, b),
@@ -456,6 +482,76 @@ template <typename T>
 native_simd<T> operator~(const native_simd<T>& a) noexcept
 {
     return _mm256_xor_si256(a, _mm256_set1_epi32(-1));
+}
+
+// potentially we want a special native_simd<bool> for this
+static inline native_simd<uint8_t> operator>=(const native_simd<uint8_t>& a,
+                                              const native_simd<uint8_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi8(_mm256_max_epu8(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint16_t> operator>=(const native_simd<uint16_t>& a,
+                                               const native_simd<uint16_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi16(_mm256_max_epu16(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint32_t> operator>=(const native_simd<uint32_t>& a,
+                                               const native_simd<uint32_t>& b) noexcept
+{
+    return _mm256_cmpeq_epi32(_mm256_max_epu32(a, b), a); // a == max(a,b)
+}
+
+static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
+                                              const native_simd<uint64_t>& b) noexcept;
+
+static inline native_simd<uint64_t> operator>=(const native_simd<uint64_t>& a,
+                                               const native_simd<uint64_t>& b) noexcept
+{
+    return ~(b > a);
+}
+
+template <typename T>
+static inline native_simd<T> operator<=(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return b >= a;
+}
+
+static inline native_simd<uint8_t> operator>(const native_simd<uint8_t>& a,
+                                             const native_simd<uint8_t>& b) noexcept
+{
+    return ~(b >= a);
+}
+
+static inline native_simd<uint16_t> operator>(const native_simd<uint16_t>& a,
+                                              const native_simd<uint16_t>& b) noexcept
+{
+    return ~(b >= a);
+}
+
+static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
+                                              const native_simd<uint32_t>& b) noexcept
+{
+    __m256i signbit = _mm256_set1_epi32(0x80000000);
+    __m256i a1 = _mm256_xor_si256(a, signbit);
+    __m256i b1 = _mm256_xor_si256(b, signbit);
+    return _mm256_cmpgt_epi32(a1, b1); // signed compare
+}
+
+static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
+                                              const native_simd<uint64_t>& b) noexcept
+{
+    __m256i sign64 = native_simd<uint64_t>(0x8000000000000000);
+    __m256i aflip = _mm256_xor_si256(a, sign64);
+    __m256i bflip = _mm256_xor_si256(b, sign64);
+    return _mm256_cmpgt_epi64(aflip, bflip); // signed compare
+}
+
+template <typename T>
+static inline native_simd<T> operator<(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return b > a;
 }
 
 } // namespace simd_avx2
