@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-08 19:49:45.137761
+//  Generated: 2023-10-08 21:27:21.591281
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5632,9 +5632,15 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
 
         native_simd<VecType> counter(VecType(1));
 
-        for (const auto& ch : s2_cur) {
+        // In case s2 is longer than all of the elements in s1_lengths boundMaskSize
+        // might have all bits set and therefor the condition ((boundMask <= boundMaskSize) & one)
+        // would incorrectly always set the first bit to 1.
+        // this is solved by splitting the loop into two parts where after this boundary is reached
+        // the first bit inside boundMask is no longer set
+        int64_t j = 0;
+        for (; j < maxBound; ++j) {
             alignas(32) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & boundMask, P_flag);
 
@@ -5643,6 +5649,19 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
 
             counter = counter << 1;
             boundMask = (boundMask << 1) | ((boundMask <= boundMaskSize) & one);
+        }
+
+        for (; j < s2_cur.size(); ++j) {
+            alignas(32) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            native_simd<VecType> X(stored.data());
+            native_simd<VecType> PM_j = andnot(X & boundMask, P_flag);
+
+            P_flag |= blsi(PM_j);
+            T_flag |= andnot(counter, (PM_j == zero));
+
+            counter = counter << 1;
+            boundMask = boundMask << 1;
         }
 
         auto counts = popcount(P_flag);

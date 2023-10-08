@@ -1,5 +1,9 @@
 ## Changelog
 
+## [2.1.1] - 2023-10-08
+### Fixed
+- fix edge case in new simd implementation of Jaro and Jaro Winkler
+
 ## [2.1.0] - 2023-10-08
 ### Changed
 - add support for bidirectional iterators

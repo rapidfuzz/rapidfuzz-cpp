@@ -128,6 +128,8 @@ TEST_CASE("JaroTest")
         REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)) == Approx(0.994872));
         REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)) == Approx(0.989744));
 
+        REQUIRE(jaro_sim_test(std::string("01"), std::string("1111100000")) == Approx(0.53333333));
+
         REQUIRE(jaro_sim_test(std::string("10000000000000000000000000000000000000000000000000000000000000020"), std::string("00000000000000000000000000000000000000000000000000000000000000000")) == Approx(0.979487));
         REQUIRE(jaro_sim_test(std::string("00000000000000100000000000000000000000010000000000000000000000000"), std::string("0000000000000000000000000000000000000000000000000000000000000000000000000000001")) == Approx(0.922233));
         REQUIRE(jaro_sim_test(
