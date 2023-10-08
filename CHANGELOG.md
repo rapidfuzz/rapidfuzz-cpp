@@ -3,7 +3,7 @@
 ## [2.1.0] -
 ### Changed
 - add support for bidirectional iterators
-
+- add experimental simd implementation for Jaro and Jaro Winkler
 
 ### [2.0.0] - 2023-06-02
 #### Changed
