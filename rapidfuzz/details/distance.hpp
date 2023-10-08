@@ -362,7 +362,7 @@ protected:
     friend T;
 };
 
-template <typename T>
+template <typename T, typename ResType>
 struct MultiNormalizedMetricBase {
     template <typename InputIt2>
     void normalized_distance(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
@@ -402,23 +402,23 @@ protected:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         // reinterpretation only works when the types have the same size
-        int64_t* scores_i64 = nullptr;
-        if constexpr (sizeof(double) == sizeof(int64_t))
-            scores_i64 = reinterpret_cast<int64_t*>(scores);
+        ResType* scores_orig = nullptr;
+        if constexpr (sizeof(double) == sizeof(ResType))
+            scores_orig = reinterpret_cast<ResType*>(scores);
         else
-            scores_i64 = new int64_t[derived.result_count()];
+            scores_orig = new ResType[derived.result_count()];
 
         Range s2_(s2);
-        derived.distance(scores_i64, derived.result_count(), s2_);
+        derived.distance(scores_orig, derived.result_count(), s2_);
 
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             auto maximum = derived.maximum(i, s2);
             double norm_dist =
-                (maximum != 0) ? static_cast<double>(scores_i64[i]) / static_cast<double>(maximum) : 0.0;
+                (maximum != 0) ? static_cast<double>(scores_orig[i]) / static_cast<double>(maximum) : 0.0;
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
 
-        if constexpr (sizeof(double) != sizeof(int64_t)) delete[] scores_i64;
+        if constexpr (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
     }
 
     template <typename InputIt2>
@@ -440,7 +440,7 @@ protected:
 };
 
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance>
-struct MultiDistanceBase : public MultiNormalizedMetricBase<T> {
+struct MultiDistanceBase : public MultiNormalizedMetricBase<T, ResType> {
     template <typename InputIt2>
     void distance(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                   ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
@@ -491,7 +491,7 @@ protected:
 };
 
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance>
-struct MultiSimilarityBase : public MultiNormalizedMetricBase<T> {
+struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
     template <typename InputIt2>
     void distance(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                   ResType score_cutoff = static_cast<ResType>(WorstDistance)) const

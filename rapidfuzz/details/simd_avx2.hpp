@@ -533,7 +533,7 @@ static inline native_simd<uint16_t> operator>(const native_simd<uint16_t>& a,
 static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
                                               const native_simd<uint32_t>& b) noexcept
 {
-    __m256i signbit = _mm256_set1_epi32(0x80000000);
+    __m256i signbit = _mm256_set1_epi32(static_cast<int32_t>(0x80000000));
     __m256i a1 = _mm256_xor_si256(a, signbit);
     __m256i b1 = _mm256_xor_si256(b, signbit);
     return _mm256_cmpgt_epi32(a1, b1); // signed compare

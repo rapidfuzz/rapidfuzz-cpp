@@ -81,7 +81,7 @@ struct MultiIndel
     : public detail::MultiDistanceBase<MultiIndel<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
 private:
     friend detail::MultiDistanceBase<MultiIndel<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
-    friend detail::MultiNormalizedMetricBase<MultiIndel<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiIndel<MaxLen>, int64_t>;
 
 public:
     MultiIndel(size_t count) : scorer(count)

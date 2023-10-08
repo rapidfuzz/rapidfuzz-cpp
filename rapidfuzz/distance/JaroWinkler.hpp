@@ -80,7 +80,7 @@ struct MultiJaroWinkler : public detail::MultiSimilarityBase<MultiJaroWinkler<Ma
 
 private:
     friend detail::MultiSimilarityBase<MultiJaroWinkler<MaxLen>, double, 0, 1>;
-    friend detail::MultiNormalizedMetricBase<MultiJaroWinkler<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiJaroWinkler<MaxLen>, double>;
 
 public:
     MultiJaroWinkler(size_t count, double prefix_weight_) : scorer(count), prefix_weight(prefix_weight_)
@@ -112,8 +112,8 @@ public:
         scorer.insert(first1, last1);
         size_t len = static_cast<size_t>(std::distance(first1, last1));
         std::array<uint64_t, 4> prefix;
-        for (size_t i = 0; i < std::min<int64_t>(len, 4); ++i)
-            prefix[i] = (uint64_t)first1[i];
+        for (size_t i = 0; i < std::min(len, size_t(4)); ++i)
+            prefix[i] = static_cast<uint64_t>(first1[static_cast<ptrdiff_t>(i)]);
 
         str_lens.push_back(len);
         prefixes.push_back(prefix);
@@ -127,15 +127,15 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        scorer.similarity(scores, score_count, s2, score_cutoff);
+        scorer.similarity(scores, score_count, s2, std::min(0.7, score_cutoff));
 
         for (size_t i = 0; i < get_input_count(); ++i) {
             if (scores[i] > 0.7) {
-                int64_t min_len = std::min<int64_t>(s2.size(), str_lens[i]);
-                int64_t max_prefix = std::min<int64_t>(min_len, 4);
-                int64_t prefix = 0;
+                size_t min_len = std::min(static_cast<size_t>(s2.size()), str_lens[i]);
+                size_t max_prefix = std::min(min_len, size_t(4));
+                size_t prefix = 0;
                 for (; prefix < max_prefix; ++prefix)
-                    if (s2[prefix] != prefixes[i][prefix]) break;
+                    if (static_cast<uint64_t>(s2[static_cast<ptrdiff_t>(prefix)]) != prefixes[i][prefix]) break;
 
                 scores[i] += static_cast<double>(prefix) * prefix_weight * (1.0 - scores[i]);
             }
@@ -145,7 +145,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum(size_t s1_idx, detail::Range<InputIt2>) const
+    double maximum([[maybe_unused]] size_t s1_idx, detail::Range<InputIt2>) const
     {
         return 1.0;
     }

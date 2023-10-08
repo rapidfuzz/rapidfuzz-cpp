@@ -24,10 +24,12 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
 #ifdef RAPIDFUZZ_SIMD
     std::vector<double> results(256 / 8);
     if (s1.size() <= 8) {
-        rapidfuzz::experimental::MultiJaroWinkler<8> simd_scorer(1, prefix_weight);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaroWinkler<8> simd_scorer(32, prefix_weight);
+        for(unsigned int i = 0; i < 32; ++i)
+            simd_scorer.insert(s1);
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(unsigned int i = 0; i < 32; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 16) {
         rapidfuzz::experimental::MultiJaroWinkler<16> simd_scorer(1, prefix_weight);
@@ -89,10 +91,11 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
  */
 TEST_CASE("JaroWinklerTest")
 {
-    std::array<std::string, 20> names = {"james",    "robert",   "john",   "michael",   "william",
+    std::array<std::string, 22> names = {"james",    "robert",   "john",   "michael",   "william",
                                          "david",    "joseph",   "thomas", "charles",   "mary",
                                          "patricia", "jennifer", "linda",  "elizabeth", "barbara",
-                                         "susan",    "jessica",  "sarah",  "karen",     ""};
+                                         "susan",    "jessica",  "sarah",  "karen",     ""
+                                         "aaaaaaaa", "aabaaab"};
 
     SECTION("testFullResultWithScoreCutoff")
     {

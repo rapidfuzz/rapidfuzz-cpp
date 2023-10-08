@@ -82,7 +82,7 @@ struct MultiLCSseq : public detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, int
                                                         std::numeric_limits<int64_t>::max()> {
 private:
     friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
-    friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>, int64_t>;
 
     constexpr static size_t get_vec_size()
     {

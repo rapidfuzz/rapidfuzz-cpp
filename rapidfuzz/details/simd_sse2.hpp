@@ -562,7 +562,7 @@ static inline native_simd<uint16_t> operator>(const native_simd<uint16_t>& a,
 static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
                                               const native_simd<uint32_t>& b) noexcept
 {
-    __m128i signbit = _mm_set1_epi32(0x80000000);
+    __m128i signbit = _mm_set1_epi32(static_cast<int32_t>(0x80000000));
     __m128i a1 = _mm_xor_si128(a, signbit);
     __m128i b1 = _mm_xor_si128(b, signbit);
     return _mm_cmpgt_epi32(a1, b1); // signed compare
@@ -571,7 +571,7 @@ static inline native_simd<uint32_t> operator>(const native_simd<uint32_t>& a,
 static inline native_simd<uint64_t> operator>(const native_simd<uint64_t>& a,
                                               const native_simd<uint64_t>& b) noexcept
 {
-    __m128i sign32 = _mm_set1_epi32(0x80000000);       // sign bit of each dword
+    __m128i sign32 = _mm_set1_epi32(static_cast<int32_t>(0x80000000)); // sign bit of each dword
     __m128i aflip = _mm_xor_si128(a, sign32);          // a with sign bits flipped to use signed compare
     __m128i bflip = _mm_xor_si128(b, sign32);          // b with sign bits flipped to use signed compare
     __m128i equal = _mm_cmpeq_epi32(a, b);             // a == b, dwords

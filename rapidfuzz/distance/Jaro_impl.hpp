@@ -453,7 +453,7 @@ double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Ran
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
-                          const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                          const std::vector<int64_t>& s1_lengths, Range<InputIt> s2,
                           double score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
@@ -471,15 +471,15 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
     size_t result_index = 0;
 
     if (score_cutoff > 1.0) {
-        for (int64_t i = 0; i < s1_lengths.size(); i++)
+        for (int64_t i = 0; i < static_cast<int64_t>(s1_lengths.size()); i++)
             scores[i] = 0.0;
 
         return;
     }
 
     if (s2.empty()) {
-        for (int64_t i = 0; i < s1_lengths.size(); i++)
-            scores[i] = s1_lengths[i] ? 0.0 : 1.0;
+        for (size_t i = 0; i < s1_lengths.size(); i++)
+            scores[static_cast<int64_t>(i)] = s1_lengths[i] ? 0.0 : 1.0;
 
         return;
     }
@@ -500,8 +500,8 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
 
             if (Bound > maxBound) maxBound = Bound;
 
-            boundMaskSize_[i] = bit_mask_lsb<VecType>(2 * Bound);
-            boundMask_[i] = bit_mask_lsb<VecType>(Bound + 1);
+            boundMaskSize_[i] = bit_mask_lsb<VecType>(static_cast<int>(2 * Bound));
+            boundMask_[i] = bit_mask_lsb<VecType>(static_cast<int>(Bound + 1));
         });
 
         if (s2_cur.size() > lastRelevantChar) s2_cur.remove_suffix(s2_cur.size() - lastRelevantChar);
@@ -532,7 +532,7 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
         P_flag.store(P_flags.data());
         alignas(32) std::array<VecType, vec_width> T_flags;
         T_flag.store(T_flags.data());
-        for (int64_t i = 0; i < vec_width; ++i) {
+        for (size_t i = 0; i < vec_width; ++i) {
             VecType CommonChars = counts[i];
             if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
                 scores[static_cast<int64_t>(result_index)] = 0.0;
@@ -544,13 +544,14 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
             VecType T_flag_cur = T_flags[i];
             size_t Transpositions = 0;
 
-            int64_t cur_block = i / 4;
-            int64_t offset = 8 * (i % 4);
+            static constexpr size_t vecs_per_word = vec_width / vecs;
+            size_t cur_block = i / vecs_per_word;
+            int64_t offset = static_cast<int64_t>(sizeof(VecType) * 8 * (i % vecs_per_word));
             while (T_flag_cur) {
-                uint64_t PatternFlagMask = blsi(P_flag_cur);
+                VecType PatternFlagMask = blsi(P_flag_cur);
 
-                Transpositions +=
-                    !(block.get(cur_block, s2[countr_zero(T_flag_cur)]) & (PatternFlagMask << offset));
+                uint64_t PM_j = block.get(cur_block, s2[countr_zero(T_flag_cur)]);
+                Transpositions += !(PM_j & (static_cast<uint64_t>(PatternFlagMask) << offset));
 
                 T_flag_cur = blsr(T_flag_cur);
                 P_flag_cur ^= PatternFlagMask;
@@ -558,6 +559,7 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
 
             double Sim =
                 jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+
             scores[static_cast<int64_t>(result_index)] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
         }

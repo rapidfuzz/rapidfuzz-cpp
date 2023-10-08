@@ -302,7 +302,7 @@ struct MultiLevenshtein : public detail::MultiDistanceBase<MultiLevenshtein<MaxL
 private:
     friend detail::MultiDistanceBase<MultiLevenshtein<MaxLen>, int64_t, 0,
                                      std::numeric_limits<int64_t>::max()>;
-    friend detail::MultiNormalizedMetricBase<MultiLevenshtein<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiLevenshtein<MaxLen>, int64_t>;
 
     constexpr static size_t get_vec_size()
     {

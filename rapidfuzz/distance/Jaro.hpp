@@ -68,7 +68,7 @@ struct MultiJaro : public detail::MultiSimilarityBase<MultiJaro<MaxLen>, double,
 
 private:
     friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
-    friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>>;
+    friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>, double>;
 
     constexpr static size_t get_vec_size()
     {
@@ -134,7 +134,7 @@ public:
 
         if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
 
-        str_lens[pos] = static_cast<size_t>(len);
+        str_lens[pos] = len;
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
@@ -162,7 +162,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum(size_t s1_idx, detail::Range<InputIt2>) const
+    double maximum([[maybe_unused]] size_t s1_idx, detail::Range<InputIt2>) const
     {
         return 1.0;
     }
@@ -175,7 +175,7 @@ private:
     size_t input_count;
     size_t pos = 0;
     detail::BlockPatternMatchVector PM;
-    std::vector<size_t> str_lens;
+    std::vector<int64_t> str_lens;
 };
 
 } /* namespace experimental */
