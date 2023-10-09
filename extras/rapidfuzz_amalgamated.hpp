@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-08 21:27:21.591281
+//  Generated: 2023-10-09 03:12:47.555069
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5229,8 +5229,9 @@ FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]]
     uint64_t BoundMask = bit_mask_lsb<uint64_t>(Bound + 1);
 
     int64_t j = 0;
-    for (; j < std::min(static_cast<int64_t>(Bound), static_cast<int64_t>(T.size())); ++j) {
-        uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
+    auto T_iter = T.begin();
+    for (; j < std::min(static_cast<int64_t>(Bound), static_cast<int64_t>(T.size())); ++j, ++T_iter) {
+        uint64_t PM_j = PM.get(0, *T_iter) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
         flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
@@ -5238,8 +5239,8 @@ FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]]
         BoundMask = (BoundMask << 1) | 1;
     }
 
-    for (; j < T.size(); ++j) {
-        uint64_t PM_j = PM.get(0, T[j]) & BoundMask & (~flagged.P_flag);
+    for (; j < T.size(); ++j, ++T_iter) {
+        uint64_t PM_j = PM.get(0, *T_iter) & BoundMask & (~flagged.P_flag);
 
         flagged.P_flag |= blsi(PM_j);
         flagged.T_flag |= static_cast<uint64_t>(PM_j != 0) << j;
@@ -5348,8 +5349,9 @@ static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPat
     BoundMask.last_mask = (1ull << (start_range % 64)) - 1;
     BoundMask.first_mask = ~UINT64_C(0);
 
-    for (int64_t j = 0; j < T.size(); ++j) {
-        flag_similar_characters_step(PM, T[j], flagged, static_cast<size_t>(j), BoundMask);
+    auto T_iter = T.begin();
+    for (int64_t j = 0; j < T.size(); ++j, ++T_iter) {
+        flag_similar_characters_step(PM, *T_iter, flagged, static_cast<size_t>(j), BoundMask);
 
         if (j + Bound + 1 < P.size()) {
             BoundMask.last_mask = (BoundMask.last_mask << 1) | 1;
@@ -5486,7 +5488,7 @@ double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff
     /* filter out based on the length difference between the two strings */
     if (!jaro_length_filter(P_len, T_len, score_cutoff)) return 0.0;
 
-    if (P_len == 1 && T_len == 1) return static_cast<double>(P[0] == T[0]);
+    if (P_len == 1 && T_len == 1) return static_cast<double>(P.front() == T.front());
 
     int64_t Bound = jaro_bounds(P, T);
 
@@ -5638,7 +5640,7 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
         // this is solved by splitting the loop into two parts where after this boundary is reached
         // the first bit inside boundMask is no longer set
         int64_t j = 0;
-        for (; j < maxBound; ++j) {
+        for (; j < std::min(maxBound, s2_cur.size()); ++j) {
             alignas(32) std::array<uint64_t, vecs> stored;
             unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());

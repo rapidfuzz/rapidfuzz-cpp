@@ -15,11 +15,17 @@ double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cu
     double res3 = rapidfuzz::jaro_normalized_similarity(s1, s2, score_cutoff);
     double res4 =
         rapidfuzz::jaro_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
+#if 0 // todo
+    double res5 = rapidfuzz::jaro_similarity(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
+#endif
+
     rapidfuzz::CachedJaro scorer(s1);
-    double res5 = scorer.similarity(s2, score_cutoff);
-    double res6 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
-    double res7 = scorer.normalized_similarity(s2, score_cutoff);
-    double res8 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
+    double res6 = scorer.similarity(s2, score_cutoff);
+    double res7 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
+    double res8 = scorer.normalized_similarity(s2, score_cutoff);
+    double res9 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
 
 #ifdef RAPIDFUZZ_SIMD
     std::vector<double> results(256 / 8);
@@ -52,10 +58,11 @@ double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cu
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
-    REQUIRE(res1 == Approx(res5));
+    //REQUIRE(res1 == Approx(res5));
     REQUIRE(res1 == Approx(res6));
     REQUIRE(res1 == Approx(res7));
     REQUIRE(res1 == Approx(res8));
+    REQUIRE(res1 == Approx(res9));
     return res1;
 }
 
@@ -67,18 +74,24 @@ double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cuto
     double res3 = rapidfuzz::jaro_normalized_distance(s1, s2, score_cutoff);
     double res4 =
         rapidfuzz::jaro_normalized_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
+#if 0 // todo
+    double res5 = rapidfuzz::jaro_distance(
+        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
+        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
+#endif
     rapidfuzz::CachedJaro scorer(s1);
-    double res5 = scorer.distance(s2, score_cutoff);
-    double res6 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
-    double res7 = scorer.normalized_distance(s2, score_cutoff);
-    double res8 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
+    double res6 = scorer.distance(s2, score_cutoff);
+    double res7 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
+    double res8 = scorer.normalized_distance(s2, score_cutoff);
+    double res9 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
-    REQUIRE(res1 == Approx(res5));
+    //REQUIRE(res1 == Approx(res5));
     REQUIRE(res1 == Approx(res6));
     REQUIRE(res1 == Approx(res7));
     REQUIRE(res1 == Approx(res8));
+    REQUIRE(res1 == Approx(res9));
     return res1;
 }
 
