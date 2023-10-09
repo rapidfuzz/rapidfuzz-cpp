@@ -437,7 +437,9 @@ static inline native_simd<T> operator!=(const native_simd<T>& a, const native_si
 
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
-    return _mm_and_si128(_mm_slli_epi16(a, b), _mm_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+    uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;
+    __m128i am = _mm_and_si128(a,_mm_set1_epi8((char)mask));
+    return _mm_slli_epi16(am, b);
 }
 
 static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
@@ -453,6 +455,28 @@ static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, i
 static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
 {
     return _mm_slli_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator>>(const native_simd<uint8_t>& a, int b) noexcept
+{
+    uint32_t mask = (uint32_t)0xFF << (uint32_t)b;
+    __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));
+    return _mm_srli_epi16(am, b);
+}
+
+static inline native_simd<uint16_t> operator>>(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm_srli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator>>(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm_srli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator>>(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm_srli_epi64(a, b);
 }
 
 template <typename T>

@@ -420,8 +420,9 @@ static inline native_simd<T> operator!=(const native_simd<T>& a, const native_si
 
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
-    return _mm256_and_si256(_mm256_slli_epi16(a, b),
-                            _mm256_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+    uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;
+    __m256i am = _mm256_and_si256(a,_mm256_set1_epi8((char)mask));
+    return _mm256_slli_epi16(am, b);
 }
 
 static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
@@ -437,6 +438,28 @@ static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, i
 static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
 {
     return _mm256_slli_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator>>(const native_simd<uint8_t>& a, int b) noexcept
+{
+    uint32_t mask = (uint32_t)0xFF << (uint32_t)b;
+    __m256i am = _mm256_and_si256(a, _mm256_set1_epi8((char)mask));
+    return _mm256_srli_epi16(am, b);
+}
+
+static inline native_simd<uint16_t> operator>>(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm256_srli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator>>(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm256_srli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator>>(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm256_srli_epi64(a, b);
 }
 
 template <typename T>
@@ -552,6 +575,84 @@ template <typename T>
 static inline native_simd<T> operator<(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     return b > a;
+}
+
+template <typename T>
+static inline native_simd<T> max8(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_max_epu8(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> max16(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_max_epu16(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> max32(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_max_epu32(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> min8(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_min_epu8(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> min16(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_min_epu16(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> min32(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_min_epu32(a, b);
+}
+
+/* taken from https://stackoverflow.com/a/51807800/11335032 */
+static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a, const native_simd<uint8_t>& count_) noexcept
+{
+    __m256i mask_hi        = _mm256_set1_epi32(0xFF00FF00);
+    __m256i multiplier_lut = _mm256_set_epi8(0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1, 0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1);
+
+    __m256i count_sat      = _mm256_min_epu8(count_, _mm256_set1_epi8(8));    /* AVX shift counts are not masked. So a_i << n_i = 0 for n_i >= 8. count_sat is always less than 9.*/
+    __m256i multiplier     = _mm256_shuffle_epi8(multiplier_lut, count_sat);  /* Select the right multiplication factor in the lookup table.                                      */
+    __m256i x_lo           = _mm256_mullo_epi16(a, multiplier);               /* Unfortunately _mm256_mullo_epi8 doesn't exist. Split the 16 bit elements in a high and low part. */
+
+    __m256i multiplier_hi  = _mm256_srli_epi16(multiplier, 8);                /* The multiplier of the high bits.                                                                 */
+    __m256i a_hi           = _mm256_and_si256(a, mask_hi);                    /* Mask off the low bits.                                                                           */
+    __m256i x_hi           = _mm256_mullo_epi16(a_hi, multiplier_hi);
+    __m256i x              = _mm256_blendv_epi8(x_lo, x_hi, mask_hi);         /* Merge the high and low part.                                                                     */
+    return x;
+}
+
+/* taken from https://stackoverflow.com/a/51807800/11335032 */
+static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a_, const native_simd<uint16_t>& count_) noexcept
+{
+    __m256i multiplier_lut = _mm256_set_epi8(0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1, 0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1);
+    __m256i byte_shuf_mask = _mm256_set_epi8(14,14,12,12, 10,10,8,8, 6,6,4,4, 2,2,0,0, 14,14,12,12, 10,10,8,8, 6,6,4,4, 2,2,0,0);
+
+    __m256i mask_lt_15     = _mm256_cmpgt_epi16(_mm256_set1_epi16(16), count_);
+    __m256i a              = _mm256_and_si256(mask_lt_15, a_);                   /* Set a to zero if count > 15.                                                                      */
+    __m256i count          = _mm256_shuffle_epi8(count_, byte_shuf_mask);        /* Duplicate bytes from the even postions to bytes at the even and odd positions.                    */
+            count          = _mm256_sub_epi8(count,_mm256_set1_epi16(0x0800));   /* Subtract 8 at the even byte positions. Note that the vpshufb instruction selects a zero byte if the shuffle control mask is negative.     */
+    __m256i multiplier     = _mm256_shuffle_epi8(multiplier_lut, count);         /* Select the right multiplication factor in the lookup table. Within the 16 bit elements, only the upper byte or the lower byte is nonzero. */
+    __m256i x              = _mm256_mullo_epi16(a, multiplier);
+    return x;
+}
+
+static inline native_simd<uint32_t> sllv(const native_simd<uint32_t>& a, const native_simd<uint32_t>& count) noexcept
+{
+    return _mm256_sllv_epi32(a, count);
+}
+
+static inline native_simd<uint64_t> sllv(const native_simd<uint64_t>& a, const native_simd<uint64_t>& count) noexcept
+{
+    return _mm256_sllv_epi64(a, count);
 }
 
 } // namespace simd_avx2

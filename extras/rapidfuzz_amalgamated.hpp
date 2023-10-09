@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-09 03:30:56.866043
+//  Generated: 2023-10-10 00:11:25.848482
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2232,8 +2232,9 @@ static inline native_simd<T> operator!=(const native_simd<T>& a, const native_si
 
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
-    return _mm256_and_si256(_mm256_slli_epi16(a, b),
-                            _mm256_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+    uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;
+    __m256i am = _mm256_and_si256(a, _mm256_set1_epi8((char)mask));
+    return _mm256_slli_epi16(am, b);
 }
 
 static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
@@ -2249,6 +2250,28 @@ static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, i
 static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
 {
     return _mm256_slli_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator>>(const native_simd<uint8_t>& a, int b) noexcept
+{
+    uint32_t mask = (uint32_t)0xFF << (uint32_t)b;
+    __m256i am = _mm256_and_si256(a, _mm256_set1_epi8((char)mask));
+    return _mm256_srli_epi16(am, b);
+}
+
+static inline native_simd<uint16_t> operator>>(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm256_srli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator>>(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm256_srli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator>>(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm256_srli_epi64(a, b);
 }
 
 template <typename T>
@@ -2364,6 +2387,102 @@ template <typename T>
 static inline native_simd<T> operator<(const native_simd<T>& a, const native_simd<T>& b) noexcept
 {
     return b > a;
+}
+
+template <typename T>
+static inline native_simd<T> max8(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_max_epu8(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> max16(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_max_epu16(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> max32(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_max_epu32(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> min8(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_min_epu8(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> min16(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_min_epu16(a, b);
+}
+
+template <typename T>
+static inline native_simd<T> min32(const native_simd<T>& a, const native_simd<T>& b) noexcept
+{
+    return _mm256_min_epu32(a, b);
+}
+
+/* taken from https://stackoverflow.com/a/51807800/11335032 */
+static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
+                                        const native_simd<uint8_t>& count_) noexcept
+{
+    __m256i mask_hi = _mm256_set1_epi32(0xFF00FF00);
+    __m256i multiplier_lut = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 128, 64, 32, 16, 8, 4, 2, 1, 0, 0, 0, 0,
+                                             0, 0, 0, 0, 128, 64, 32, 16, 8, 4, 2, 1);
+
+    __m256i count_sat =
+        _mm256_min_epu8(count_, _mm256_set1_epi8(8)); /* AVX shift counts are not masked. So a_i << n_i = 0
+                                                         for n_i >= 8. count_sat is always less than 9.*/
+    __m256i multiplier = _mm256_shuffle_epi8(
+        multiplier_lut, count_sat); /* Select the right multiplication factor in the lookup table. */
+    __m256i x_lo = _mm256_mullo_epi16(a, multiplier); /* Unfortunately _mm256_mullo_epi8 doesn't exist. Split
+                                                         the 16 bit elements in a high and low part. */
+
+    __m256i multiplier_hi = _mm256_srli_epi16(multiplier, 8); /* The multiplier of the high bits. */
+    __m256i a_hi = _mm256_and_si256(a, mask_hi);              /* Mask off the low bits.              */
+    __m256i x_hi = _mm256_mullo_epi16(a_hi, multiplier_hi);
+    __m256i x = _mm256_blendv_epi8(x_lo, x_hi, mask_hi); /* Merge the high and low part. */
+    return x;
+}
+
+/* taken from https://stackoverflow.com/a/51807800/11335032 */
+static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a_,
+                                         const native_simd<uint16_t>& count_) noexcept
+{
+    __m256i multiplier_lut = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 128, 64, 32, 16, 8, 4, 2, 1, 0, 0, 0, 0,
+                                             0, 0, 0, 0, 128, 64, 32, 16, 8, 4, 2, 1);
+    __m256i byte_shuf_mask = _mm256_set_epi8(14, 14, 12, 12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0, 14, 14, 12,
+                                             12, 10, 10, 8, 8, 6, 6, 4, 4, 2, 2, 0, 0);
+
+    __m256i mask_lt_15 = _mm256_cmpgt_epi16(_mm256_set1_epi16(16), count_);
+    __m256i a = _mm256_and_si256(mask_lt_15, a_); /* Set a to zero if count > 15. */
+    __m256i count = _mm256_shuffle_epi8(
+        count_,
+        byte_shuf_mask); /* Duplicate bytes from the even postions to bytes at the even and odd positions. */
+    count = _mm256_sub_epi8(
+        count, _mm256_set1_epi16(
+                   0x0800)); /* Subtract 8 at the even byte positions. Note that the vpshufb instruction
+                                selects a zero byte if the shuffle control mask is negative.     */
+    __m256i multiplier = _mm256_shuffle_epi8(
+        multiplier_lut, count); /* Select the right multiplication factor in the lookup table. Within the 16
+                                   bit elements, only the upper byte or the lower byte is nonzero. */
+    __m256i x = _mm256_mullo_epi16(a, multiplier);
+    return x;
+}
+
+static inline native_simd<uint32_t> sllv(const native_simd<uint32_t>& a,
+                                         const native_simd<uint32_t>& count) noexcept
+{
+    return _mm256_sllv_epi32(a, count);
+}
+
+static inline native_simd<uint64_t> sllv(const native_simd<uint64_t>& a,
+                                         const native_simd<uint64_t>& count) noexcept
+{
+    return _mm256_sllv_epi64(a, count);
 }
 
 } // namespace simd_avx2
@@ -2809,7 +2928,9 @@ static inline native_simd<T> operator!=(const native_simd<T>& a, const native_si
 
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
-    return _mm_and_si128(_mm_slli_epi16(a, b), _mm_set1_epi8(static_cast<char>(0xFF << (b & 0b1111))));
+    uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;
+    __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));
+    return _mm_slli_epi16(am, b);
 }
 
 static inline native_simd<uint16_t> operator<<(const native_simd<uint16_t>& a, int b) noexcept
@@ -2825,6 +2946,28 @@ static inline native_simd<uint32_t> operator<<(const native_simd<uint32_t>& a, i
 static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, int b) noexcept
 {
     return _mm_slli_epi64(a, b);
+}
+
+static inline native_simd<uint8_t> operator>>(const native_simd<uint8_t>& a, int b) noexcept
+{
+    uint32_t mask = (uint32_t)0xFF << (uint32_t)b;
+    __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));
+    return _mm_srli_epi16(am, b);
+}
+
+static inline native_simd<uint16_t> operator>>(const native_simd<uint16_t>& a, int b) noexcept
+{
+    return _mm_srli_epi16(a, b);
+}
+
+static inline native_simd<uint32_t> operator>>(const native_simd<uint32_t>& a, int b) noexcept
+{
+    return _mm_srli_epi32(a, b);
+}
+
+static inline native_simd<uint64_t> operator>>(const native_simd<uint64_t>& a, int b) noexcept
+{
+    return _mm_srli_epi64(a, b);
 }
 
 template <typename T>
@@ -5571,9 +5714,109 @@ double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Ran
 }
 
 #ifdef RAPIDFUZZ_SIMD
+
+template <typename VecType>
+struct JaroSimilaritySimdBounds {
+    ptrdiff_t maxBound = 0;
+    VecType boundMaskSize;
+    VecType boundMask;
+};
+
+#    ifdef RAPIDFUZZ_AVX2
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
+{
+    using namespace simd_avx2;
+
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+
+    JaroSimilaritySimdBounds<native_simd<VecType>> bounds;
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+
+    // since the normal implementation would overflow in this case + s2 is guaranteed to be longer
+    // handle this case separately
+    if (s2.size() > sizeof(VecType) * 8) {
+        bounds.maxBound = s2.size() / 2 - 1;
+        bounds.boundMaskSize =
+            native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(2 * bounds.maxBound)));
+        bounds.boundMask = native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(bounds.maxBound + 1)));
+    }
+    else {
+        native_simd<VecType> s1_lengths_simd(reinterpret_cast<const uint64_t*>(s1_lengths));
+        native_simd<VecType> s2_length_simd(static_cast<VecType>(s2.size()));
+
+        // we always know that the number does not exceed 64, so we can operate on smaller vectors if this
+        // proves to be faster
+        native_simd<VecType> boundSizes = max8(s1_lengths_simd, s2_length_simd) >> 1; // divide by two
+        // todo there could be faster options since comparisions can be relatively expensive for some vector
+        // sizes
+        boundSizes -= (boundSizes > zero) & one;
+
+        // this can never overflow even when using larger vectors for shifting here, since in the worst case
+        // of 8bit vectors this shifts by (8/2-1)*2=6 bits todo << 1 performs unneeded masking here sllv is
+        // pretty expensive for 8 / 16 bit since it has to be emulated maybe there is a better solution
+        bounds.boundMaskSize = sllv(one, boundSizes << 1) - one;
+        bounds.boundMask = sllv(one, boundSizes + one) - one;
+
+        VecType maxLen = 0;
+        // todo permutate + max to find maxLen
+        // side-note: we know only the first 8 bit are actually used
+        alignas(32) std::array<VecType, vec_width> lens_;
+        s1_lengths_simd.store(lens_.data());
+        for (int i = 0; i < vec_width; ++i)
+            if (lens_[i] > maxLen) maxLen = lens_[i];
+
+        bounds.maxBound = (s2.size() > maxLen) ? s2.size() : maxLen;
+        bounds.maxBound /= 2;
+        if (bounds.maxBound > 0) bounds.maxBound--;
+
+        int64_t lastRelevantChar = maxLen + bounds.maxBound;
+        if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
+    }
+
+    return bounds;
+}
+#    else
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
+{
+    using namespace simd_sse2;
+
+    static constexpr size_t vec_width = native_simd<VecType>::size();
+
+    JaroSimilaritySimdBounds<native_simd<VecType>> bounds;
+
+    int64_t lastRelevantChar = 0;
+    alignas(32) std::array<VecType, vec_width> boundMaskSize_;
+    alignas(32) std::array<VecType, vec_width> boundMask_;
+
+    // todo try to find a simd implementation for sse2
+    for (int i = 0; i < vec_width; ++i) {
+        VecType s1_len = s1_lengths[i];
+        int64_t Bound = jaro_bounds(s1_len, s2.size());
+
+        if (s1_len + Bound > lastRelevantChar) lastRelevantChar = s1_len + Bound;
+
+        if (Bound > bounds.maxBound) bounds.maxBound = Bound;
+
+        boundMaskSize_[i] = bit_mask_lsb<VecType>(static_cast<int>(2 * Bound));
+        boundMask_[i] = bit_mask_lsb<VecType>(static_cast<int>(Bound + 1));
+    }
+
+    bounds.boundMaskSize = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMaskSize_.data()));
+    bounds.boundMask = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMask_.data()));
+
+    if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
+
+    return bounds;
+}
+#    endif
+
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
-                          const std::vector<int64_t>& s1_lengths, Range<InputIt> s2,
+                          VecType* s1_lengths, size_t s1_lengths_size, Range<InputIt> s2,
                           double score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
@@ -5591,47 +5834,25 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
     size_t result_index = 0;
 
     if (score_cutoff > 1.0) {
-        for (int64_t i = 0; i < static_cast<int64_t>(s1_lengths.size()); i++)
+        for (int64_t i = 0; i < static_cast<int64_t>(s1_lengths_size); i++)
             scores[i] = 0.0;
 
         return;
     }
 
     if (s2.empty()) {
-        for (size_t i = 0; i < s1_lengths.size(); i++)
+        for (size_t i = 0; i < s1_lengths_size; i++)
             scores[static_cast<int64_t>(i)] = s1_lengths[i] ? 0.0 : 1.0;
 
         return;
     }
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
-        alignas(32) std::array<VecType, vec_width> boundMaskSize_;
-        alignas(32) std::array<VecType, vec_width> boundMask_;
-
         auto s2_cur = s2;
-
-        int64_t lastRelevantChar = 0;
-        ptrdiff_t maxBound = 0;
-        unroll<int, vec_width>([&](auto i) {
-            int64_t s1_len = s1_lengths[result_index + i];
-            int64_t Bound = jaro_bounds(s1_len, s2_cur.size());
-
-            if (s1_len + Bound > lastRelevantChar) lastRelevantChar = s1_len + Bound;
-
-            if (Bound > maxBound) maxBound = Bound;
-
-            boundMaskSize_[i] = bit_mask_lsb<VecType>(static_cast<int>(2 * Bound));
-            boundMask_[i] = bit_mask_lsb<VecType>(static_cast<int>(Bound + 1));
-        });
-
-        if (s2_cur.size() > lastRelevantChar) s2_cur.remove_suffix(s2_cur.size() - lastRelevantChar);
-
-        native_simd<VecType> boundMaskSize(reinterpret_cast<uint64_t*>(boundMaskSize_.data()));
-        native_simd<VecType> boundMask(reinterpret_cast<uint64_t*>(boundMask_.data()));
+        auto bounds = jaro_similarity_prepare_bound(s1_lengths + result_index, s2_cur);
 
         native_simd<VecType> P_flag(VecType(0));
         native_simd<VecType> T_flag(VecType(0));
-
         native_simd<VecType> counter(VecType(1));
 
         // In case s2 is longer than all of the elements in s1_lengths boundMaskSize
@@ -5640,30 +5861,30 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
         // this is solved by splitting the loop into two parts where after this boundary is reached
         // the first bit inside boundMask is no longer set
         int64_t j = 0;
-        for (; j < std::min(maxBound, s2_cur.size()); ++j) {
+        for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(32) std::array<uint64_t, vecs> stored;
             unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
-            native_simd<VecType> PM_j = andnot(X & boundMask, P_flag);
+            native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
             P_flag |= blsi(PM_j);
             T_flag |= andnot(counter, (PM_j == zero));
 
             counter = counter << 1;
-            boundMask = (boundMask << 1) | ((boundMask <= boundMaskSize) & one);
+            bounds.boundMask = (bounds.boundMask << 1) | ((bounds.boundMask <= bounds.boundMaskSize) & one);
         }
 
         for (; j < s2_cur.size(); ++j) {
             alignas(32) std::array<uint64_t, vecs> stored;
             unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
-            native_simd<VecType> PM_j = andnot(X & boundMask, P_flag);
+            native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
             P_flag |= blsi(PM_j);
             T_flag |= andnot(counter, (PM_j == zero));
 
             counter = counter << 1;
-            boundMask = boundMask << 1;
+            bounds.boundMask = bounds.boundMask << 1;
         }
 
         auto counts = popcount(P_flag);
@@ -5789,23 +6010,20 @@ private:
     friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
     friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>, double>;
 
+    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
+
+    using VecType = typename std::conditional_t<
+        MaxLen == 8, uint8_t,
+        typename std::conditional_t<MaxLen == 16, uint16_t,
+                                    typename std::conditional_t<MaxLen == 32, uint32_t, uint64_t>>>;
+
     constexpr static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
-        using namespace detail::simd_avx2;
+        return detail::simd_avx2::native_simd<VecType>::size();
 #    else
-        using namespace detail::simd_sse2;
+        return detail::simd_sse2::native_simd<VecType>::size();
 #    endif
-        if constexpr (MaxLen <= 8)
-            return native_simd<uint8_t>::size();
-        else if constexpr (MaxLen <= 16)
-            return native_simd<uint16_t>::size();
-        else if constexpr (MaxLen <= 32)
-            return native_simd<uint32_t>::size();
-        else if constexpr (MaxLen <= 64)
-            return native_simd<uint64_t>::size();
-
-        static_assert(MaxLen <= 64);
     }
 
     constexpr static size_t find_block_count(size_t count)
@@ -5818,7 +6036,14 @@ private:
 public:
     MultiJaro(size_t count) : input_count(count), PM(find_block_count(count) * 64)
     {
-        str_lens.resize(result_count());
+        /* align for avx2 so we can directly load into avx2 registers */
+        str_lens_size = result_count();
+        str_lens = new (std::align_val_t{32}) VecType[str_lens_size]{};
+    }
+
+    ~MultiJaro()
+    {
+        delete str_lens;
     }
 
     /**
@@ -5870,14 +6095,7 @@ private:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
-            detail::jaro_similarity_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
-            detail::jaro_similarity_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
-            detail::jaro_similarity_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
-            detail::jaro_similarity_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
+        detail::jaro_similarity_simd<VecType>(scores_, PM, str_lens, str_lens_size, s2, score_cutoff);
     }
 
     template <typename InputIt2>
@@ -5894,7 +6112,9 @@ private:
     size_t input_count;
     size_t pos = 0;
     detail::BlockPatternMatchVector PM;
-    std::vector<int64_t> str_lens;
+    // todo alignment
+    VecType* str_lens;
+    size_t str_lens_size;
 };
 
 } /* namespace experimental */
