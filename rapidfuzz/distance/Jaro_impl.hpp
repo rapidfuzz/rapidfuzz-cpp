@@ -495,14 +495,14 @@ void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatch
         auto s2_cur = s2;
 
         int64_t lastRelevantChar = 0;
-        int64_t maxBound = 0;
+        ptrdiff_t maxBound = 0;
         unroll<int, vec_width>([&](auto i) {
             int64_t s1_len = s1_lengths[result_index + i];
             int64_t Bound = jaro_bounds(s1_len, s2_cur.size());
 
             if (s1_len + Bound > lastRelevantChar) lastRelevantChar = s1_len + Bound;
 
-            if (Bound > maxBound) maxBound = Bound;
+            if (Bound > maxBound) maxBound = static_cast<ptrdiff_t>(Bound);
 
             boundMaskSize_[i] = bit_mask_lsb<VecType>(static_cast<int>(2 * Bound));
             boundMask_[i] = bit_mask_lsb<VecType>(static_cast<int>(Bound + 1));
