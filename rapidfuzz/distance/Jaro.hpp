@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdlib.h>
 #include <limits>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Jaro_impl.hpp>
@@ -89,9 +90,18 @@ private:
     constexpr static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
-        return detail::simd_avx2::native_simd<VecType>::size();
+        return detail::simd_avx2::native_simd<VecType>::size;
 #    else
-        return detail::simd_sse2::native_simd<VecType>::size();
+        return detail::simd_sse2::native_simd<VecType>::size;
+#    endif
+    }
+
+    constexpr static size_t get_vec_alignment()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        return detail::simd_avx2::native_simd<VecType>::alignment;
+#    else
+        return detail::simd_sse2::native_simd<VecType>::alignment;
 #    endif
     }
 
@@ -107,12 +117,17 @@ public:
     {
         /* align for avx2 so we can directly load into avx2 registers */
         str_lens_size = result_count();
-        str_lens = new (std::align_val_t{32}) VecType[str_lens_size]{};
+
+        // work around compilation failure in msvc
+        str_lens = static_cast<VecType*>(
+            operator new[](sizeof(VecType) * str_lens_size, std::align_val_t(get_vec_alignment()))
+        );
+        std::fill(str_lens, str_lens + str_lens_size, VecType(0));
     }
 
     ~MultiJaro()
     {
-        delete str_lens;
+        ::operator delete[] (str_lens, std::align_val_t(get_vec_alignment()));
     }
 
     /**
@@ -147,7 +162,7 @@ public:
 
         if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
 
-        str_lens[pos] = len;
+        str_lens[pos] = static_cast<VecType>(len);
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
@@ -181,7 +196,6 @@ private:
     size_t input_count;
     size_t pos = 0;
     detail::BlockPatternMatchVector PM;
-    // todo alignment
     VecType* str_lens;
     size_t str_lens_size;
 };

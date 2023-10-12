@@ -18,7 +18,8 @@ class native_simd;
 template <>
 class native_simd<uint64_t> {
 public:
-    static const int _size = 2;
+    static constexpr int alignment = 16;
+    static const int size = 2;
     __m128i xmm;
 
     native_simd() noexcept
@@ -40,11 +41,6 @@ public:
     operator __m128i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -89,7 +85,8 @@ public:
 template <>
 class native_simd<uint32_t> {
 public:
-    static const int _size = 4;
+    static constexpr int alignment = 16;
+    static const int size = 4;
     __m128i xmm;
 
     native_simd() noexcept
@@ -111,11 +108,6 @@ public:
     operator __m128i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -160,7 +152,8 @@ public:
 template <>
 class native_simd<uint16_t> {
 public:
-    static const int _size = 8;
+    static constexpr int alignment = 16;
+    static const int size = 8;
     __m128i xmm;
 
     native_simd() noexcept
@@ -182,11 +175,6 @@ public:
     operator __m128i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -231,7 +219,8 @@ public:
 template <>
 class native_simd<uint8_t> {
 public:
-    static const int _size = 16;
+    static constexpr int alignment = 16;
+    static const int size = 16;
     __m128i xmm;
 
     native_simd() noexcept
@@ -253,11 +242,6 @@ public:
     operator __m128i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -302,7 +286,7 @@ public:
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
 {
-    alignas(32) std::array<T, native_simd<T>::size()> res;
+    alignas(native_simd<T>::alignment) std::array<T, native_simd<T>::size> res;
     a.store(&res[0]);
 
     for (size_t i = res.size() - 1; i != 0; i--)
@@ -385,9 +369,9 @@ native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 }
 
 template <typename T>
-std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
+std::array<T, native_simd<T>::size> popcount(const native_simd<T>& a) noexcept
 {
-    alignas(16) std::array<T, native_simd<T>::size()> res;
+    alignas(native_simd<T>::alignment) std::array<T, native_simd<T>::size> res;
     popcount_impl(a).store(&res[0]);
     return res;
 }
@@ -437,8 +421,8 @@ static inline native_simd<T> operator!=(const native_simd<T>& a, const native_si
 
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
-    uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;
-    __m128i am = _mm_and_si128(a,_mm_set1_epi8((char)mask));
+    char mask = static_cast<char>(0xFF >> b);
+    __m128i am = _mm_and_si128(a, _mm_set1_epi8(mask));
     return _mm_slli_epi16(am, b);
 }
 
@@ -459,8 +443,8 @@ static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, i
 
 static inline native_simd<uint8_t> operator>>(const native_simd<uint8_t>& a, int b) noexcept
 {
-    uint32_t mask = (uint32_t)0xFF << (uint32_t)b;
-    __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));
+    char mask = static_cast<char>(0xFF << b);
+    __m128i am = _mm_and_si128(a, _mm_set1_epi8(mask));
     return _mm_srli_epi16(am, b);
 }
 

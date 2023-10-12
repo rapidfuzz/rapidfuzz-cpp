@@ -83,8 +83,9 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 #    else
     using namespace simd_sse2;
 #    endif
-    static constexpr size_t vec_width = native_simd<VecType>::size();
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+    static constexpr size_t vec_width = native_simd<VecType>::size;
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));
@@ -98,12 +99,12 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
         native_simd<VecType> D0(VecType(0));
         native_simd<VecType> PM_j_old(VecType(0));
 
-        alignas(32) std::array<VecType, vec_width> currDist_;
+        alignas(alignment) std::array<VecType, vec_width> currDist_;
         unroll<int, vec_width>(
             [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
-        alignas(32) std::array<VecType, vec_width> mask_;
+        alignas(alignment) std::array<VecType, vec_width> mask_;
         unroll<int, vec_width>([&](auto i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
@@ -114,7 +115,7 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
-            alignas(32) std::array<uint64_t, vecs> stored;
+            alignas(alignment) std::array<uint64_t, vecs> stored;
             unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> PM_j(stored.data());
@@ -139,7 +140,7 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
             PM_j_old = PM_j;
         }
 
-        alignas(32) std::array<VecType, vec_width> distances;
+        alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
         unroll<int, vec_width>([&](auto i) {

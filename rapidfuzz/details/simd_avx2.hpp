@@ -20,7 +20,8 @@ class native_simd<uint64_t> {
 public:
     using value_type = uint64_t;
 
-    static const int _size = 4;
+    static constexpr int alignment = 32;
+    static const int size = 4;
     __m256i xmm;
 
     native_simd() noexcept
@@ -42,11 +43,6 @@ public:
     operator __m256i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -94,7 +90,8 @@ class native_simd<uint32_t> {
 public:
     using value_type = uint32_t;
 
-    static const int _size = 8;
+    static constexpr int alignment = 32;
+    static const int size = 8;
     __m256i xmm;
 
     native_simd() noexcept
@@ -116,11 +113,6 @@ public:
     operator __m256i() const
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -168,7 +160,8 @@ class native_simd<uint16_t> {
 public:
     using value_type = uint16_t;
 
-    static const int _size = 16;
+    static constexpr int alignment = 32;
+    static const int size = 16;
     __m256i xmm;
 
     native_simd() noexcept
@@ -190,11 +183,6 @@ public:
     operator __m256i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -242,7 +230,8 @@ class native_simd<uint8_t> {
 public:
     using value_type = uint8_t;
 
-    static const int _size = 32;
+    static constexpr int alignment = 32;
+    static const int size = 32;
     __m256i xmm;
 
     native_simd() noexcept
@@ -264,11 +253,6 @@ public:
     operator __m256i() const noexcept
     {
         return xmm;
-    }
-
-    constexpr static int size() noexcept
-    {
-        return _size;
     }
 
     native_simd load(const uint64_t* p) noexcept
@@ -314,7 +298,7 @@ public:
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const native_simd<T>& a)
 {
-    alignas(32) std::array<T, native_simd<T>::size()> res;
+    alignas(native_simd<T>::alignment) std::array<T, native_simd<T>::size> res;
     a.store(&res[0]);
 
     for (size_t i = res.size() - 1; i != 0; i--)
@@ -374,9 +358,9 @@ native_simd<T> popcount_impl(const native_simd<T>& v) noexcept
 }
 
 template <typename T>
-std::array<T, native_simd<T>::size()> popcount(const native_simd<T>& a) noexcept
+std::array<T, native_simd<T>::size> popcount(const native_simd<T>& a) noexcept
 {
-    alignas(32) std::array<T, native_simd<T>::size()> res;
+    alignas(native_simd<T>::alignment) std::array<T, native_simd<T>::size> res;
     popcount_impl(a).store(&res[0]);
     return res;
 }
@@ -420,8 +404,8 @@ static inline native_simd<T> operator!=(const native_simd<T>& a, const native_si
 
 static inline native_simd<uint8_t> operator<<(const native_simd<uint8_t>& a, int b) noexcept
 {
-    uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;
-    __m256i am = _mm256_and_si256(a,_mm256_set1_epi8((char)mask));
+    char mask = static_cast<char>(0xFF >> b);
+    __m256i am = _mm256_and_si256(a,_mm256_set1_epi8(mask));
     return _mm256_slli_epi16(am, b);
 }
 
@@ -442,8 +426,8 @@ static inline native_simd<uint64_t> operator<<(const native_simd<uint64_t>& a, i
 
 static inline native_simd<uint8_t> operator>>(const native_simd<uint8_t>& a, int b) noexcept
 {
-    uint32_t mask = (uint32_t)0xFF << (uint32_t)b;
-    __m256i am = _mm256_and_si256(a, _mm256_set1_epi8((char)mask));
+    char mask = static_cast<char>(0xFF << b);
+    __m256i am = _mm256_and_si256(a, _mm256_set1_epi8(mask));
     return _mm256_srli_epi16(am, b);
 }
 
@@ -617,7 +601,7 @@ static inline native_simd<T> min32(const native_simd<T>& a, const native_simd<T>
 static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a, const native_simd<uint8_t>& count_) noexcept
 {
     __m256i mask_hi        = _mm256_set1_epi32(0xFF00FF00);
-    __m256i multiplier_lut = _mm256_set_epi8(0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1, 0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1);
+    __m256i multiplier_lut = _mm256_set_epi8(0,0,0,0, 0,0,0,0, char(128),64,32,16, 8,4,2,1, 0,0,0,0, 0,0,0,0, char(128),64,32,16, 8,4,2,1);
 
     __m256i count_sat      = _mm256_min_epu8(count_, _mm256_set1_epi8(8));    /* AVX shift counts are not masked. So a_i << n_i = 0 for n_i >= 8. count_sat is always less than 9.*/
     __m256i multiplier     = _mm256_shuffle_epi8(multiplier_lut, count_sat);  /* Select the right multiplication factor in the lookup table.                                      */
@@ -630,19 +614,19 @@ static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a, const nat
     return x;
 }
 
-/* taken from https://stackoverflow.com/a/51807800/11335032 */
-static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a_, const native_simd<uint16_t>& count_) noexcept
+/* taken from https://stackoverflow.com/a/51805592/11335032 */
+static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a, const native_simd<uint16_t>& count) noexcept
 {
-    __m256i multiplier_lut = _mm256_set_epi8(0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1, 0,0,0,0, 0,0,0,0, 128,64,32,16, 8,4,2,1);
-    __m256i byte_shuf_mask = _mm256_set_epi8(14,14,12,12, 10,10,8,8, 6,6,4,4, 2,2,0,0, 14,14,12,12, 10,10,8,8, 6,6,4,4, 2,2,0,0);
-
-    __m256i mask_lt_15     = _mm256_cmpgt_epi16(_mm256_set1_epi16(16), count_);
-    __m256i a              = _mm256_and_si256(mask_lt_15, a_);                   /* Set a to zero if count > 15.                                                                      */
-    __m256i count          = _mm256_shuffle_epi8(count_, byte_shuf_mask);        /* Duplicate bytes from the even postions to bytes at the even and odd positions.                    */
-            count          = _mm256_sub_epi8(count,_mm256_set1_epi16(0x0800));   /* Subtract 8 at the even byte positions. Note that the vpshufb instruction selects a zero byte if the shuffle control mask is negative.     */
-    __m256i multiplier     = _mm256_shuffle_epi8(multiplier_lut, count);         /* Select the right multiplication factor in the lookup table. Within the 16 bit elements, only the upper byte or the lower byte is nonzero. */
-    __m256i x              = _mm256_mullo_epi16(a, multiplier);
-    return x;
+    const __m256i mask = _mm256_set1_epi32(0xFFFF0000);
+    __m256i low_half = _mm256_sllv_epi32(
+        a,
+        _mm256_andnot_si256(mask, count)
+    );
+    __m256i high_half = _mm256_sllv_epi32(
+        _mm256_and_si256(mask, a),
+        _mm256_srli_epi32(count, 16)
+    );
+    return _mm256_blend_epi16(low_half, high_half, 0xAA);
 }
 
 static inline native_simd<uint32_t> sllv(const native_simd<uint32_t>& a, const native_simd<uint32_t>& count) noexcept

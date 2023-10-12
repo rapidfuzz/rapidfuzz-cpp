@@ -133,14 +133,15 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
     using namespace simd_sse2;
 #    endif
     auto score_iter = scores.begin();
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
     assert(block.size() % vecs == 0);
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
         native_simd<VecType> S(static_cast<VecType>(-1));
 
         for (const auto& ch : s2) {
-            alignas(32) std::array<uint64_t, vecs> stored;
+            alignas(alignment) std::array<uint64_t, vecs> stored;
             unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> Matches(stored.data());
