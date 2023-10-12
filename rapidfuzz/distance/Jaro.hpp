@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdlib.h>
 #include <limits>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Jaro_impl.hpp>
@@ -70,23 +71,38 @@ private:
     friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
     friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>, double>;
 
+    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
+
+    using VecType = typename std::conditional_t<
+        MaxLen == 8,
+        uint8_t,
+        typename std::conditional_t<
+            MaxLen == 16,
+            uint16_t,
+            typename std::conditional_t<
+                MaxLen == 32,
+                uint32_t,
+                uint64_t
+            >
+        >
+    >;
+
     constexpr static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
-        using namespace detail::simd_avx2;
+        return detail::simd_avx2::native_simd<VecType>::size;
 #    else
-        using namespace detail::simd_sse2;
+        return detail::simd_sse2::native_simd<VecType>::size;
 #    endif
-        if constexpr (MaxLen <= 8)
-            return native_simd<uint8_t>::size();
-        else if constexpr (MaxLen <= 16)
-            return native_simd<uint16_t>::size();
-        else if constexpr (MaxLen <= 32)
-            return native_simd<uint32_t>::size();
-        else if constexpr (MaxLen <= 64)
-            return native_simd<uint64_t>::size();
+    }
 
-        static_assert(MaxLen <= 64);
+    constexpr static size_t get_vec_alignment()
+    {
+#    ifdef RAPIDFUZZ_AVX2
+        return detail::simd_avx2::native_simd<VecType>::alignment;
+#    else
+        return detail::simd_sse2::native_simd<VecType>::alignment;
+#    endif
     }
 
     constexpr static size_t find_block_count(size_t count)
@@ -99,7 +115,19 @@ private:
 public:
     MultiJaro(size_t count) : input_count(count), PM(find_block_count(count) * 64)
     {
-        str_lens.resize(result_count());
+        /* align for avx2 so we can directly load into avx2 registers */
+        str_lens_size = result_count();
+
+        // work around compilation failure in msvc
+        str_lens = static_cast<VecType*>(
+            operator new[](sizeof(VecType) * str_lens_size, std::align_val_t(get_vec_alignment()))
+        );
+        std::fill(str_lens, str_lens + str_lens_size, VecType(0));
+    }
+
+    ~MultiJaro()
+    {
+        ::operator delete[] (str_lens, std::align_val_t(get_vec_alignment()));
     }
 
     /**
@@ -134,7 +162,7 @@ public:
 
         if (pos >= input_count) throw std::invalid_argument("out of bounds insert");
 
-        str_lens[pos] = len;
+        str_lens[pos] = static_cast<VecType>(len);
         for (; first1 != last1; ++first1) {
             PM.insert(block, *first1, block_pos);
             block_pos++;
@@ -151,14 +179,7 @@ private:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
-            detail::jaro_similarity_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
-            detail::jaro_similarity_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
-            detail::jaro_similarity_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
-            detail::jaro_similarity_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
+        detail::jaro_similarity_simd<VecType>(scores_, PM, str_lens, str_lens_size, s2, score_cutoff);
     }
 
     template <typename InputIt2>
@@ -175,7 +196,8 @@ private:
     size_t input_count;
     size_t pos = 0;
     detail::BlockPatternMatchVector PM;
-    std::vector<int64_t> str_lens;
+    VecType* str_lens;
+    size_t str_lens_size;
 };
 
 } /* namespace experimental */

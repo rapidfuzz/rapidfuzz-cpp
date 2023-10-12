@@ -92,13 +92,13 @@ private:
         using namespace detail::simd_sse2;
 #    endif
         if constexpr (MaxLen <= 8)
-            return native_simd<uint8_t>::size();
+            return native_simd<uint8_t>::size;
         else if constexpr (MaxLen <= 16)
-            return native_simd<uint16_t>::size();
+            return native_simd<uint16_t>::size;
         else if constexpr (MaxLen <= 32)
-            return native_simd<uint32_t>::size();
+            return native_simd<uint32_t>::size;
         else if constexpr (MaxLen <= 64)
-            return native_simd<uint64_t>::size();
+            return native_simd<uint64_t>::size;
 
         static_assert(MaxLen <= 64);
     }
