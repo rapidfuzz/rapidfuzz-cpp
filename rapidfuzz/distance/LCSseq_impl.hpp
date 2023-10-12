@@ -136,8 +136,38 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
     static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size());
     assert(block.size() % vecs == 0);
 
-    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
-        native_simd<VecType> S(static_cast<VecType>(-1));
+    static constexpr size_t interleaveCount = 3;
+
+    size_t cur_vec = 0;
+    for (; cur_vec + interleaveCount*vecs <= block.size(); cur_vec += interleaveCount * vecs) {
+        std::array<native_simd<VecType>, interleaveCount> S;
+        unroll<int, interleaveCount>([&](auto j) {
+            S[j] = static_cast<VecType>(-1);
+        });
+
+        for (const auto& ch : s2) {
+            unroll<int, interleaveCount>([&](auto j) {
+                alignas(32) std::array<uint64_t, vecs> stored;
+                unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
+
+                native_simd<VecType> Matches(stored.data());
+                native_simd<VecType> u = S[j] & Matches;
+                S[j] = (S[j] + u) | (S[j] - u);
+            });
+        }
+
+        unroll<int, interleaveCount>([&](auto j) {
+            auto counts = popcount(~S[j]);
+            unroll<int, counts.size()>([&](auto i) {
+                *score_iter =
+                    (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
+                score_iter++;
+            });
+        });
+    }
+
+    for (; cur_vec < block.size(); cur_vec += vecs) {
+        native_simd<VecType> S = static_cast<VecType>(-1);
 
         for (const auto& ch : s2) {
             alignas(32) std::array<uint64_t, vecs> stored;
@@ -148,9 +178,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
             S = (S + u) | (S - u);
         }
 
-        S = ~S;
-
-        auto counts = popcount(S);
+        auto counts = popcount(~S);
         unroll<int, counts.size()>([&](auto i) {
             *score_iter =
                 (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;

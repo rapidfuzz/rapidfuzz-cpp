@@ -74,8 +74,8 @@ static void BM_LCS_SIMD(benchmark::State& state)
 {
     std::vector<std::string> seq1;
     std::vector<std::string> seq2;
-    std::vector<int64_t> results(64);
-    for (int i = 0; i < 64; i++)
+    std::vector<int64_t> results(32 * 3 * 4);
+    for (int i = 0; i < 32 * 3 * 4; i++)
         seq1.push_back(generate(MaxLen));
     for (int i = 0; i < 10000; i++)
         seq2.push_back(generate(MaxLen));
