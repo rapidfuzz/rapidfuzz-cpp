@@ -509,11 +509,11 @@ auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2
         // side-note: we know only the first 8 bit are actually used
         alignas(alignment) std::array<VecType, vec_width> lens_;
         s1_lengths_simd.store(lens_.data());
-        for(int i = 0; i < vec_width; ++i)
+        for(size_t i = 0; i < vec_width; ++i)
             if(lens_[i] > maxLen)
                 maxLen = lens_[i];
 
-        bounds.maxBound = (s2.size() > maxLen) ? s2.size() : maxLen;
+        bounds.maxBound = (s2.size() > static_cast<ptrdiff_t>(maxLen)) ? s2.size() : static_cast<ptrdiff_t>(maxLen);
         bounds.maxBound /= 2;
         if(bounds.maxBound > 0)
             bounds.maxBound--;
