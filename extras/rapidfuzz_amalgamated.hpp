@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-21 19:41:24.603454
+//  Generated: 2023-10-28 05:15:10.035216
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5341,8 +5341,9 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 }
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
-FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]] Range<InputIt1> P,
-                                              Range<InputIt2> T, int Bound)
+static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
+                                                            [[maybe_unused]] Range<InputIt1> P,
+                                                            Range<InputIt2> T, int Bound)
 {
     assert(P.size() <= 64);
     assert(T.size() <= 64);
@@ -5376,8 +5377,9 @@ FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, [[maybe_unused]]
 }
 
 template <typename CharT>
-void flag_similar_characters_step(const BlockPatternMatchVector& PM, CharT T_j,
-                                  FlaggedCharsMultiword& flagged, size_t j, SearchBoundMask BoundMask)
+static inline void flag_similar_characters_step(const BlockPatternMatchVector& PM, CharT T_j,
+                                                FlaggedCharsMultiword& flagged, size_t j,
+                                                SearchBoundMask BoundMask)
 {
     size_t j_word = j / 64;
     size_t j_pos = j % 64;
@@ -5575,7 +5577,7 @@ static inline int64_t jaro_bounds(int64_t P_len, int64_t T_len)
  * @brief find bounds and skip out of bound parts of the sequences
  */
 template <typename InputIt1, typename InputIt2>
-int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
+static inline int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
 {
     int64_t P_len = P.size();
     int64_t T_len = T.size();
@@ -5600,7 +5602,7 @@ int64_t jaro_bounds(Range<InputIt1>& P, Range<InputIt2>& T)
 }
 
 template <typename InputIt1, typename InputIt2>
-double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff)
+static inline double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff)
 {
     int64_t P_len = P.size();
     int64_t T_len = T.size();
@@ -5648,8 +5650,8 @@ double jaro_similarity(Range<InputIt1> P, Range<InputIt2> T, double score_cutoff
 }
 
 template <typename InputIt1, typename InputIt2>
-double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
-                       double score_cutoff)
+static inline double jaro_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
+                                     double score_cutoff)
 {
     int64_t P_len = P.size();
     int64_t T_len = T.size();
@@ -5705,7 +5707,7 @@ struct JaroSimilaritySimdBounds {
 
 #    ifdef RAPIDFUZZ_AVX2
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
+static inline auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
 {
     using namespace simd_avx2;
 
@@ -5763,7 +5765,7 @@ auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2
 }
 #    else
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
+static inline auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
 {
     using namespace simd_sse2;
 
@@ -5807,9 +5809,9 @@ auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2
 #    endif
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
-                          VecType* s1_lengths, size_t s1_lengths_size, Range<InputIt> s2,
-                          double score_cutoff) noexcept
+static inline void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
+                                        VecType* s1_lengths, size_t s1_lengths_size, Range<InputIt> s2,
+                                        double score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
