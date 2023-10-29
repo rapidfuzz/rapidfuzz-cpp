@@ -4,6 +4,7 @@
 #### Performance
 - improve performance of simd implementation for LCS and Indel by up to 50%
 - improve performance of simd implementation for Jaro and Jaro Winkler
+- improve performance of Jaro and Jaro Winkler for long sequences
 
 ## [2.1.1] - 2023-10-08
 ### Fixed
