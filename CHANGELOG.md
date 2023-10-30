@@ -1,6 +1,6 @@
 ## Changelog
 
-## [2.2.0] - 2023-10-
+## [2.2.0] - 2023-10-30
 #### Performance
 - improve performance of simd implementation for LCS and Indel by up to 50%
 - improve performance of simd implementation for Jaro and Jaro Winkler
