@@ -474,7 +474,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     using namespace simd_sse2;
 #    endif
 
-    static constexpr size_t alignment = native_simd<VecType>::alignment;
+    [[maybe_unused]] static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
     assert(static_cast<size_t>(s2.size()) <= sizeof(VecType)*8);
 
