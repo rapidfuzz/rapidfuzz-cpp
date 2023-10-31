@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-31 11:09:46.332642
+//  Generated: 2023-10-31 11:32:43.133377
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5822,19 +5822,33 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
     assert(block.size() % vecs == 0);
     assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
 
+    struct AlignedAlloc {
+        AlignedAlloc(size_t size)
+        {
+            // work around compilation failure in msvc
+            memory = operator new[](size, std::align_val_t(native_simd<VecType>::alignment));
+        }
+
+        ~AlignedAlloc()
+        {
+            ::operator delete[](memory, std::align_val_t(native_simd<VecType>::alignment));
+        }
+
+        void* memory = nullptr;
+    };
+
     native_simd<VecType> zero(VecType(0));
     native_simd<VecType> one(1);
     size_t result_index = 0;
 
     size_t s2_block_count = static_cast<size_t>(detail::ceil_div(s2.size(), sizeof(VecType) * 8));
-    std::vector<native_simd<VecType>> T_flag;
-    T_flag.resize(s2_block_count);
+    AlignedAlloc memory(2 * s2_block_count * sizeof(native_simd<VecType>));
 
-    std::vector<native_simd<VecType>> counter;
-    counter.resize(s2_block_count);
-
-    std::vector<std::array<VecType, vec_width>> T_flags;
-    T_flags.resize(s2_block_count);
+    native_simd<VecType>* T_flag = static_cast<native_simd<VecType>*>(memory.memory);
+    // reuse the same memory since counter is only required in the first half of the algorithm while
+    // T_flags is required in the second half
+    native_simd<VecType>* counter = static_cast<native_simd<VecType>*>(memory.memory) + s2_block_count;
+    VecType* T_flags = static_cast<VecType*>(memory.memory) + s2_block_count * vec_width;
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
         auto s2_cur = s2;
@@ -5842,9 +5856,9 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         native_simd<VecType> P_flag(VecType(0));
 
-        std::fill(T_flag.begin(), T_flag.begin() + detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8),
+        std::fill(T_flag, T_flag + detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8),
                   native_simd<VecType>(VecType(0)));
-        std::fill(counter.begin(), counter.begin() + detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8),
+        std::fill(counter, counter + detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8),
                   native_simd<VecType>(VecType(1)));
 
         // In case s2 is longer than all of the elements in s1_lengths boundMaskSize
@@ -5886,11 +5900,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
         P_flag.store(P_flags.data());
 
         for (size_t i = 0; i < static_cast<size_t>(detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8)); ++i)
-        {
-            alignas(alignment) std::array<VecType, vec_width> T_flags_;
-            T_flag[i].store(T_flags_.data());
-            T_flags[i] = T_flags_;
-        }
+            T_flag[i].store(T_flags + i * vec_width);
 
         for (size_t i = 0; i < vec_width; ++i) {
             VecType CommonChars = counts[i];
@@ -5911,11 +5921,11 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
             {
                 size_t T_word_index = 0;
-                VecType T_flag_cur = T_flags[T_word_index][i];
+                VecType T_flag_cur = T_flags[T_word_index * vec_width + i];
                 while (P_flag_cur) {
                     while (!T_flag_cur) {
                         ++T_word_index;
-                        T_flag_cur = T_flags[T_word_index][i];
+                        T_flag_cur = T_flags[T_word_index * vec_width + i];
                     }
 
                     VecType PatternFlagMask = blsi(P_flag_cur);
