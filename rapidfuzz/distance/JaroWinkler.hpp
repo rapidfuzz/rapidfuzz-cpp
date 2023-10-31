@@ -83,7 +83,7 @@ private:
     friend detail::MultiNormalizedMetricBase<MultiJaroWinkler<MaxLen>, double>;
 
 public:
-    MultiJaroWinkler(size_t count, double prefix_weight_) : scorer(count), prefix_weight(prefix_weight_)
+    MultiJaroWinkler(size_t count, double prefix_weight_ = 0.1) : scorer(count), prefix_weight(prefix_weight_)
     {}
 
     /**

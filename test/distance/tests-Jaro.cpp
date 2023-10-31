@@ -20,7 +20,6 @@ double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cu
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
         BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
 #endif
-
     rapidfuzz::CachedJaro scorer(s1);
     double res6 = scorer.similarity(s2, score_cutoff);
     double res7 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
@@ -84,6 +83,35 @@ double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cuto
     double res7 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
     double res8 = scorer.normalized_distance(s2, score_cutoff);
     double res9 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
+
+#ifdef RAPIDFUZZ_SIMD
+    std::vector<double> results(256 / 8);
+    if (s1.size() <= 8) {
+        rapidfuzz::experimental::MultiJaro<8> simd_scorer(1);
+        simd_scorer.insert(s1);
+        simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+    if (s1.size() <= 16) {
+        rapidfuzz::experimental::MultiJaro<16> simd_scorer(1);
+        simd_scorer.insert(s1);
+        simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+    if (s1.size() <= 32) {
+        rapidfuzz::experimental::MultiJaro<32> simd_scorer(1);
+        simd_scorer.insert(s1);
+        simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+    if (s1.size() <= 64) {
+        rapidfuzz::experimental::MultiJaro<64> simd_scorer(1);
+        simd_scorer.insert(s1);
+        simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
+        REQUIRE(res1 == Approx(results[0]));
+    }
+#endif
+
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
@@ -104,7 +132,6 @@ double jaro_sim_test(const Sentence1& s1, const Sentence2& s2, double score_cuto
     double Dist_bitparallel = jaro_distance(s1, s2, 1.0 - score_cutoff);
     double Sim_bitparallel2 = jaro_similarity(s2, s1, score_cutoff);
     double Dist_bitparallel2 = jaro_distance(s2, s1, 1.0 - score_cutoff);
-
 
     REQUIRE(Sim_original == Approx(Sim_bitparallel));
     REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel));
@@ -140,6 +167,14 @@ TEST_CASE("JaroTest")
         REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 65), str_multiply(std::string("0"), 65)) == Approx(1));
         REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)) == Approx(0.994872));
         REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)) == Approx(0.989744));
+
+        REQUIRE(jaro_sim_test(std::string("000000001"), std::string("0000010")) == Approx(0.8783068783));
+        {
+            std::string s1("01234567");
+            std::string s2 = str_multiply(std::string("0"), 170) + std::string("7654321") + str_multiply(std::string("0"), 200);
+
+            REQUIRE(jaro_sim_test(s1, s2) == Approx(0.5487400531));
+        }
 
         REQUIRE(jaro_sim_test(std::string("01"), std::string("1111100000")) == Approx(0.53333333));
 

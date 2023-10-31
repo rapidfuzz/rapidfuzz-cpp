@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-28 05:15:10.035216
+//  Generated: 2023-10-31 10:37:34.774579
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -5506,6 +5506,7 @@ static inline size_t count_transpositions_word(const PM_Vec& PM, Range<InputIt1>
 {
     uint64_t P_flag = flagged.P_flag;
     uint64_t T_flag = flagged.T_flag;
+
     size_t Transpositions = 0;
     while (T_flag) {
         uint64_t PatternFlagMask = blsi(P_flag);
@@ -5705,113 +5706,111 @@ struct JaroSimilaritySimdBounds {
     VecType boundMask;
 };
 
-#    ifdef RAPIDFUZZ_AVX2
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-static inline auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
+static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_lengths, Range<InputIt>& s2)
 {
+#    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
 
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
+    assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
 
     JaroSimilaritySimdBounds<native_simd<VecType>> bounds;
 
+    VecType maxLen = 0;
+    // todo permutate + max to find maxLen
+    // side-note: we know only the first 8 bit are actually used
+    for (size_t i = 0; i < vec_width; ++i)
+        if (s1_lengths[i] > maxLen) maxLen = s1_lengths[i];
+
+#    ifdef RAPIDFUZZ_AVX2
     native_simd<VecType> zero(VecType(0));
     native_simd<VecType> one(1);
 
-    // since the normal implementation would overflow in this case + s2 is guaranteed to be longer
-    // handle this case separately
-    if (static_cast<size_t>(s2.size()) > sizeof(VecType) * 8) {
-        bounds.maxBound = s2.size() / 2 - 1;
-        bounds.boundMaskSize =
-            native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(2 * bounds.maxBound)));
-        bounds.boundMask = native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(bounds.maxBound + 1)));
+    native_simd<VecType> s1_lengths_simd(reinterpret_cast<const uint64_t*>(s1_lengths));
+    native_simd<VecType> s2_length_simd(static_cast<VecType>(s2.size()));
+
+    // we always know that the number does not exceed 64, so we can operate on smaller vectors if this
+    // proves to be faster
+    native_simd<VecType> boundSizes = max8(s1_lengths_simd, s2_length_simd) >> 1; // divide by two
+    // todo there could be faster options since comparisions can be relatively expensive for some vector sizes
+    boundSizes -= (boundSizes > zero) & one;
+
+    // this can never overflow even when using larger vectors for shifting here, since in the worst case of
+    // 8bit vectors this shifts by (8/2-1)*2=6 bits todo << 1 performs unneeded masking here sllv is pretty
+    // expensive for 8 / 16 bit since it has to be emulated maybe there is a better solution
+    bounds.boundMaskSize = sllv(one, boundSizes << 1) - one;
+    bounds.boundMask = sllv(one, boundSizes + one) - one;
+
+    bounds.maxBound =
+        (s2.size() > static_cast<ptrdiff_t>(maxLen)) ? s2.size() : static_cast<ptrdiff_t>(maxLen);
+    bounds.maxBound /= 2;
+    if (bounds.maxBound > 0) bounds.maxBound--;
+#    else
+    alignas(alignment) std::array<VecType, vec_width> boundMaskSize_;
+    alignas(alignment) std::array<VecType, vec_width> boundMask_;
+
+    // todo try to find a simd implementation for sse2
+    for (size_t i = 0; i < vec_width; ++i) {
+        int64_t s1_len = static_cast<int64_t>(s1_lengths[i]);
+        int64_t Bound = jaro_bounds(s1_len, s2.size());
+
+        if (Bound > bounds.maxBound) bounds.maxBound = Bound;
+
+        boundMaskSize_[i] = bit_mask_lsb<VecType>(static_cast<int>(2 * Bound));
+        boundMask_[i] = bit_mask_lsb<VecType>(static_cast<int>(Bound + 1));
     }
-    else {
-        native_simd<VecType> s1_lengths_simd(reinterpret_cast<const uint64_t*>(s1_lengths));
-        native_simd<VecType> s2_length_simd(static_cast<VecType>(s2.size()));
 
-        // we always know that the number does not exceed 64, so we can operate on smaller vectors if this
-        // proves to be faster
-        native_simd<VecType> boundSizes = max8(s1_lengths_simd, s2_length_simd) >> 1; // divide by two
-        // todo there could be faster options since comparisions can be relatively expensive for some vector
-        // sizes
-        boundSizes -= (boundSizes > zero) & one;
+    bounds.boundMaskSize = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMaskSize_.data()));
+    bounds.boundMask = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMask_.data()));
+#    endif
 
-        // this can never overflow even when using larger vectors for shifting here, since in the worst case
-        // of 8bit vectors this shifts by (8/2-1)*2=6 bits todo << 1 performs unneeded masking here sllv is
-        // pretty expensive for 8 / 16 bit since it has to be emulated maybe there is a better solution
-        bounds.boundMaskSize = sllv(one, boundSizes << 1) - one;
-        bounds.boundMask = sllv(one, boundSizes + one) - one;
-
-        VecType maxLen = 0;
-        // todo permutate + max to find maxLen
-        // side-note: we know only the first 8 bit are actually used
-        alignas(alignment) std::array<VecType, vec_width> lens_;
-        s1_lengths_simd.store(lens_.data());
-        for (size_t i = 0; i < vec_width; ++i)
-            if (lens_[i] > maxLen) maxLen = lens_[i];
-
-        bounds.maxBound =
-            (s2.size() > static_cast<ptrdiff_t>(maxLen)) ? s2.size() : static_cast<ptrdiff_t>(maxLen);
-        bounds.maxBound /= 2;
-        if (bounds.maxBound > 0) bounds.maxBound--;
-
-        int64_t lastRelevantChar = maxLen + bounds.maxBound;
-        if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
-    }
+    int64_t lastRelevantChar = maxLen + bounds.maxBound;
+    if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
 
     return bounds;
 }
-#    else
+
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-static inline auto jaro_similarity_prepare_bound(const VecType* s1_lengths, Range<InputIt>& s2)
+static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengths, Range<InputIt>& s2)
 {
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
     using namespace simd_sse2;
+#    endif
 
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
+    assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
 
     JaroSimilaritySimdBounds<native_simd<VecType>> bounds;
 
-    if (static_cast<size_t>(s2.size()) > sizeof(VecType) * 8) {
-        bounds.maxBound = s2.size() / 2 - 1;
-        bounds.boundMaskSize =
-            native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(2 * bounds.maxBound)));
-        bounds.boundMask = native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(bounds.maxBound + 1)));
-    }
-    else {
-        int64_t lastRelevantChar = 0;
-        alignas(alignment) std::array<VecType, vec_width> boundMaskSize_;
-        alignas(alignment) std::array<VecType, vec_width> boundMask_;
+    VecType maxLen = 0;
+    // todo permutate + max to find maxLen
+    // side-note: we know only the first 8 bit are actually used
+    for (size_t i = 0; i < vec_width; ++i)
+        if (s1_lengths[i] > maxLen) maxLen = s1_lengths[i];
 
-        // todo try to find a simd implementation for sse2
-        for (size_t i = 0; i < vec_width; ++i) {
-            int64_t s1_len = static_cast<int64_t>(s1_lengths[i]);
-            int64_t Bound = jaro_bounds(s1_len, s2.size());
+    bounds.maxBound = s2.size() / 2 - 1;
+    bounds.boundMaskSize = native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(2 * bounds.maxBound)));
+    bounds.boundMask = native_simd<VecType>(bit_mask_lsb<VecType>(static_cast<int>(bounds.maxBound + 1)));
 
-            if (s1_len + Bound > lastRelevantChar) lastRelevantChar = s1_len + Bound;
-
-            if (Bound > bounds.maxBound) bounds.maxBound = Bound;
-
-            boundMaskSize_[i] = bit_mask_lsb<VecType>(static_cast<int>(2 * Bound));
-            boundMask_[i] = bit_mask_lsb<VecType>(static_cast<int>(Bound + 1));
-        }
-
-        bounds.boundMaskSize = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMaskSize_.data()));
-        bounds.boundMask = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMask_.data()));
-
-        if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
-    }
+    int64_t lastRelevantChar = maxLen + bounds.maxBound;
+    if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
 
     return bounds;
 }
-#    endif
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-static inline void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
-                                        VecType* s1_lengths, size_t s1_lengths_size, Range<InputIt> s2,
-                                        double score_cutoff) noexcept
+static inline void jaro_similarity_simd_long_s2(Range<double*> scores,
+                                                const detail::BlockPatternMatchVector& block,
+                                                VecType* s1_lengths, size_t s1_lengths_size,
+                                                Range<InputIt> s2, double score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -5823,28 +5822,147 @@ static inline void jaro_similarity_simd(Range<double*> scores, const detail::Blo
     static constexpr size_t vec_width = native_simd<VecType>::size;
     static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
     assert(block.size() % vecs == 0);
+    assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
 
     native_simd<VecType> zero(VecType(0));
     native_simd<VecType> one(1);
     size_t result_index = 0;
 
-    if (score_cutoff > 1.0) {
-        for (int64_t i = 0; i < static_cast<int64_t>(s1_lengths_size); i++)
-            scores[i] = 0.0;
+    std::vector<native_simd<VecType>> T_flag;
+    T_flag.resize(detail::ceil_div(s2.size(), sizeof(VecType) * 8));
 
-        return;
-    }
+    std::vector<native_simd<VecType>> counter;
+    counter.resize(detail::ceil_div(s2.size(), sizeof(VecType) * 8));
 
-    if (s2.empty()) {
-        for (size_t i = 0; i < s1_lengths_size; i++)
-            scores[static_cast<int64_t>(i)] = s1_lengths[i] ? 0.0 : 1.0;
-
-        return;
-    }
+    std::vector<std::array<VecType, vec_width>> T_flags;
+    T_flags.resize(detail::ceil_div(s2.size(), sizeof(VecType) * 8));
 
     for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
         auto s2_cur = s2;
-        auto bounds = jaro_similarity_prepare_bound(s1_lengths + result_index, s2_cur);
+        auto bounds = jaro_similarity_prepare_bound_long_s2(s1_lengths + result_index, s2_cur);
+
+        native_simd<VecType> P_flag(VecType(0));
+
+        std::fill(T_flag.begin(), T_flag.begin() + detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8),
+                  native_simd<VecType>(VecType(0)));
+        std::fill(counter.begin(), counter.begin() + detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8),
+                  native_simd<VecType>(VecType(1)));
+
+        // In case s2 is longer than all of the elements in s1_lengths boundMaskSize
+        // might have all bits set and therefor the condition ((boundMask <= boundMaskSize) & one)
+        // would incorrectly always set the first bit to 1.
+        // this is solved by splitting the loop into two parts where after this boundary is reached
+        // the first bit inside boundMask is no longer set
+        int64_t j = 0;
+        for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
+            alignas(alignment) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            native_simd<VecType> X(stored.data());
+            native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
+
+            P_flag |= blsi(PM_j);
+            auto T_word_index = j / (sizeof(VecType) * 8);
+            T_flag[T_word_index] |= andnot(counter[T_word_index], (PM_j == zero));
+
+            counter[T_word_index] = counter[T_word_index] << 1;
+            bounds.boundMask = (bounds.boundMask << 1) | ((bounds.boundMask <= bounds.boundMaskSize) & one);
+        }
+
+        for (; j < s2_cur.size(); ++j) {
+            alignas(alignment) std::array<uint64_t, vecs> stored;
+            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            native_simd<VecType> X(stored.data());
+            native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
+
+            P_flag |= blsi(PM_j);
+            auto T_word_index = j / (sizeof(VecType) * 8);
+            T_flag[T_word_index] |= andnot(counter[T_word_index], (PM_j == zero));
+
+            counter[T_word_index] = counter[T_word_index] << 1;
+            bounds.boundMask = bounds.boundMask << 1;
+        }
+
+        auto counts = popcount(P_flag);
+        alignas(alignment) std::array<VecType, vec_width> P_flags;
+        P_flag.store(P_flags.data());
+
+        for (size_t i = 0; i < detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8); ++i) {
+            alignas(alignment) std::array<VecType, vec_width> T_flags_;
+            T_flag[i].store(T_flags_.data());
+            T_flags[i] = T_flags_;
+        }
+
+        for (size_t i = 0; i < vec_width; ++i) {
+            VecType CommonChars = counts[i];
+            if (!jaro_common_char_filter(static_cast<int64_t>(s1_lengths[result_index]), s2.size(),
+                                         CommonChars, score_cutoff))
+            {
+                scores[static_cast<int64_t>(result_index)] = 0.0;
+                result_index++;
+                continue;
+            }
+
+            VecType P_flag_cur = P_flags[i];
+            size_t Transpositions = 0;
+
+            static constexpr size_t vecs_per_word = vec_width / vecs;
+            size_t cur_block = i / vecs_per_word;
+            int64_t offset = static_cast<int64_t>(sizeof(VecType) * 8 * (i % vecs_per_word));
+
+            {
+                size_t T_word_index = 0;
+                VecType T_flag_cur = T_flags[T_word_index][i];
+                while (P_flag_cur) {
+                    while (!T_flag_cur) {
+                        ++T_word_index;
+                        T_flag_cur = T_flags[T_word_index][i];
+                    }
+
+                    VecType PatternFlagMask = blsi(P_flag_cur);
+
+                    uint64_t PM_j = block.get(
+                        cur_block, s2[countr_zero(T_flag_cur) + T_word_index * sizeof(VecType) * 8]);
+                    Transpositions += !(PM_j & (static_cast<uint64_t>(PatternFlagMask) << offset));
+
+                    T_flag_cur = blsr(T_flag_cur);
+                    P_flag_cur ^= PatternFlagMask;
+                }
+            }
+
+            double Sim = jaro_calculate_similarity(static_cast<int64_t>(s1_lengths[result_index]), s2.size(),
+                                                   CommonChars, Transpositions);
+
+            scores[static_cast<int64_t>(result_index)] = (Sim >= score_cutoff) ? Sim : 0;
+            result_index++;
+        }
+    }
+}
+
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+static inline void jaro_similarity_simd_short_s2(Range<double*> scores,
+                                                 const detail::BlockPatternMatchVector& block,
+                                                 VecType* s1_lengths, size_t s1_lengths_size,
+                                                 Range<InputIt> s2, double score_cutoff) noexcept
+{
+#    ifdef RAPIDFUZZ_AVX2
+    using namespace simd_avx2;
+#    else
+    using namespace simd_sse2;
+#    endif
+
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+    static constexpr size_t vec_width = native_simd<VecType>::size;
+    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    assert(block.size() % vecs == 0);
+    assert(static_cast<size_t>(s2.size()) <= sizeof(VecType) * 8);
+
+    native_simd<VecType> zero(VecType(0));
+    native_simd<VecType> one(1);
+    size_t result_index = 0;
+
+    for (size_t cur_vec = 0; cur_vec < block.size(); cur_vec += vecs) {
+        auto s2_cur = s2;
+        auto bounds = jaro_similarity_prepare_bound_short_s2(s1_lengths + result_index, s2_cur);
 
         native_simd<VecType> P_flag(VecType(0));
         native_simd<VecType> T_flag(VecType(0));
@@ -5904,7 +6022,7 @@ static inline void jaro_similarity_simd(Range<double*> scores, const detail::Blo
             static constexpr size_t vecs_per_word = vec_width / vecs;
             size_t cur_block = i / vecs_per_word;
             int64_t offset = static_cast<int64_t>(sizeof(VecType) * 8 * (i % vecs_per_word));
-            while (T_flag_cur) {
+            while (P_flag_cur) {
                 VecType PatternFlagMask = blsi(P_flag_cur);
 
                 uint64_t PM_j = block.get(cur_block, s2[countr_zero(T_flag_cur)]);
@@ -5922,6 +6040,32 @@ static inline void jaro_similarity_simd(Range<double*> scores, const detail::Blo
         }
     }
 }
+
+template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
+static inline void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
+                                        VecType* s1_lengths, size_t s1_lengths_size, Range<InputIt> s2,
+                                        double score_cutoff) noexcept
+{
+    if (score_cutoff > 1.0) {
+        for (int64_t i = 0; i < static_cast<int64_t>(s1_lengths_size); i++)
+            scores[i] = 0.0;
+
+        return;
+    }
+
+    if (s2.empty()) {
+        for (size_t i = 0; i < s1_lengths_size; i++)
+            scores[static_cast<int64_t>(i)] = s1_lengths[i] ? 0.0 : 1.0;
+
+        return;
+    }
+
+    if (static_cast<size_t>(s2.size()) > sizeof(VecType) * 8)
+        return jaro_similarity_simd_long_s2(scores, block, s1_lengths, s1_lengths_size, s2, score_cutoff);
+    else
+        return jaro_similarity_simd_short_s2(scores, block, s1_lengths, s1_lengths_size, s2, score_cutoff);
+}
+
 #endif /* RAPIDFUZZ_SIMD */
 
 class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
@@ -6326,7 +6470,7 @@ private:
     friend detail::MultiNormalizedMetricBase<MultiJaroWinkler<MaxLen>, double>;
 
 public:
-    MultiJaroWinkler(size_t count, double prefix_weight_) : scorer(count), prefix_weight(prefix_weight_)
+    MultiJaroWinkler(size_t count, double prefix_weight_ = 0.1) : scorer(count), prefix_weight(prefix_weight_)
     {}
 
     /**

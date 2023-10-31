@@ -65,20 +65,20 @@ static void BM_JaroLongNonSimilarSequence(benchmark::State& state)
 }
 
 #ifdef RAPIDFUZZ_SIMD
-template <size_t MaxLen>
+template <size_t MaxLen1, size_t MaxLen2>
 static void BM_Jaro_SIMD(benchmark::State& state)
 {
     std::vector<std::string> seq1;
     std::vector<std::string> seq2;
     std::vector<double> results(64);
     for (int i = 0; i < 64; i++)
-        seq1.push_back(generate(MaxLen));
+        seq1.push_back(generate(MaxLen1));
     for (int i = 0; i < 10000; i++)
-        seq2.push_back(generate(MaxLen));
+        seq2.push_back(generate(MaxLen2));
 
     size_t num = 0;
     for (auto _ : state) {
-        rapidfuzz::experimental::MultiJaro<MaxLen> scorer(seq1.size());
+        rapidfuzz::experimental::MultiJaro<MaxLen1> scorer(seq1.size());
         for (const auto& str1 : seq1)
             scorer.insert(str1);
 
@@ -94,15 +94,15 @@ static void BM_Jaro_SIMD(benchmark::State& state)
 }
 #endif
 
-template <size_t MaxLen>
+template <size_t MaxLen1, size_t MaxLen2>
 static void BM_Jaro(benchmark::State& state)
 {
     std::vector<std::string> seq1;
     std::vector<std::string> seq2;
     for (int i = 0; i < 256; i++)
-        seq1.push_back(generate(MaxLen));
+        seq1.push_back(generate(MaxLen1));
     for (int i = 0; i < 10000; i++)
-        seq2.push_back(generate(MaxLen));
+        seq2.push_back(generate(MaxLen2));
 
     size_t num = 0;
     for (auto _ : state) {
@@ -118,15 +118,15 @@ static void BM_Jaro(benchmark::State& state)
                                                    benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
 }
 
-template <size_t MaxLen>
+template <size_t MaxLen1, size_t MaxLen2>
 static void BM_Jaro_Cached(benchmark::State& state)
 {
     std::vector<std::string> seq1;
     std::vector<std::string> seq2;
     for (int i = 0; i < 256; i++)
-        seq1.push_back(generate(MaxLen));
+        seq1.push_back(generate(MaxLen1));
     for (int i = 0; i < 10000; i++)
-        seq2.push_back(generate(MaxLen));
+        seq2.push_back(generate(MaxLen2));
 
     size_t num = 0;
     for (auto _ : state) {
@@ -143,21 +143,38 @@ static void BM_Jaro_Cached(benchmark::State& state)
                                                    benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
 }
 
-BENCHMARK_TEMPLATE(BM_Jaro, 8);
-BENCHMARK_TEMPLATE(BM_Jaro, 16);
-BENCHMARK_TEMPLATE(BM_Jaro, 32);
-BENCHMARK_TEMPLATE(BM_Jaro, 64);
+BENCHMARK_TEMPLATE(BM_Jaro, 8, 8);
+BENCHMARK_TEMPLATE(BM_Jaro, 16, 16);
+BENCHMARK_TEMPLATE(BM_Jaro, 32, 32);
+BENCHMARK_TEMPLATE(BM_Jaro, 64, 64);
 
-BENCHMARK_TEMPLATE(BM_Jaro_Cached, 8);
-BENCHMARK_TEMPLATE(BM_Jaro_Cached, 16);
-BENCHMARK_TEMPLATE(BM_Jaro_Cached, 32);
-BENCHMARK_TEMPLATE(BM_Jaro_Cached, 64);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 8, 8);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 16, 16);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 32, 32);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 64, 64);
 
 #ifdef RAPIDFUZZ_SIMD
-BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 8);
-BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 16);
-BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 32);
-BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 64);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 8, 8);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 16, 16);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 32, 32);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 64, 64);
+#endif
+
+BENCHMARK_TEMPLATE(BM_Jaro, 8, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro, 16, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro, 32, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro, 64, 1000);
+
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 8, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 16, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 32, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro_Cached, 64, 1000);
+
+#ifdef RAPIDFUZZ_SIMD
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 8, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 16, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 32, 1000);
+BENCHMARK_TEMPLATE(BM_Jaro_SIMD, 64, 1000);
 #endif
 
 BENCHMARK(BM_JaroLongSimilarSequence)

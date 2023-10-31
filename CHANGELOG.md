@@ -1,5 +1,9 @@
 ## Changelog
 
+## [2.2.1] - 2023-10-31
+### Fixed
+- fix wraparound issue in simd implementation of Jaro and Jaro Winkler
+
 ## [2.2.0] - 2023-10-30
 #### Performance
 - improve performance of simd implementation for LCS and Indel by up to 50%
