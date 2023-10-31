@@ -1,5 +1,9 @@
 ## Changelog
 
+## [2.2.2] - 2023-10-31
+### Fixed
+- fix compilation failure on macOS
+
 ## [2.2.1] - 2023-10-31
 ### Fixed
 - fix wraparound issue in simd implementation of Jaro and Jaro Winkler

@@ -75,6 +75,25 @@ size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
+static inline void* rf_aligned_alloc(size_t alignment, size_t size)
+{
+#if defined(_WIN32)
+    return _aligned_malloc(size, alignment);
+#else
+    return aligned_alloc(alignment, size);
+#endif
+}
+
+static inline void rf_aligned_free(void* ptr)
+{
+#if defined(_WIN32)
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}
+
+
 /**@}*/
 
 } // namespace rapidfuzz::detail

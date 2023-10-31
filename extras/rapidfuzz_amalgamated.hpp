@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-10-31 11:48:55.108653
+//  Generated: 2023-11-01 00:20:18.570286
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1628,6 +1628,24 @@ size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
 template <typename InputIt, typename CharT = iter_value_t<InputIt>>
 SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
+
+static inline void* rf_aligned_alloc(size_t alignment, size_t size)
+{
+#if defined(_WIN32)
+    return _aligned_malloc(size, alignment);
+#else
+    return aligned_alloc(alignment, size);
+#endif
+}
+
+static inline void rf_aligned_free(void* ptr)
+{
+#if defined(_WIN32)
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}
 
 /**@}*/
 
@@ -5823,15 +5841,12 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
     assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
 
     struct AlignedAlloc {
-        AlignedAlloc(size_t size)
-        {
-            // work around compilation failure in msvc
-            memory = operator new[](size, std::align_val_t(native_simd<VecType>::alignment));
-        }
+        AlignedAlloc(size_t size) : memory(rf_aligned_alloc(native_simd<VecType>::alignment, size))
+        {}
 
         ~AlignedAlloc()
         {
-            ::operator delete[](memory, std::align_val_t(native_simd<VecType>::alignment));
+            rf_aligned_free(memory);
         }
 
         void* memory = nullptr;
@@ -6199,15 +6214,14 @@ public:
         /* align for avx2 so we can directly load into avx2 registers */
         str_lens_size = result_count();
 
-        // work around compilation failure in msvc
-        str_lens = static_cast<VecType*>(operator new[](sizeof(VecType) * str_lens_size,
-                                                        std::align_val_t(get_vec_alignment())));
+        str_lens = static_cast<VecType*>(
+            detail::rf_aligned_alloc(get_vec_alignment(), sizeof(VecType) * str_lens_size));
         std::fill(str_lens, str_lens + str_lens_size, VecType(0));
     }
 
     ~MultiJaro()
     {
-        ::operator delete[](str_lens, std::align_val_t(get_vec_alignment()));
+        detail::rf_aligned_free(str_lens);
     }
 
     /**

@@ -118,16 +118,15 @@ public:
         /* align for avx2 so we can directly load into avx2 registers */
         str_lens_size = result_count();
 
-        // work around compilation failure in msvc
         str_lens = static_cast<VecType*>(
-            operator new[](sizeof(VecType) * str_lens_size, std::align_val_t(get_vec_alignment()))
+            detail::rf_aligned_alloc(get_vec_alignment(), sizeof(VecType) * str_lens_size)
         );
         std::fill(str_lens, str_lens + str_lens_size, VecType(0));
     }
 
     ~MultiJaro()
     {
-        ::operator delete[] (str_lens, std::align_val_t(get_vec_alignment()));
+        detail::rf_aligned_free(str_lens);
     }
 
     /**
