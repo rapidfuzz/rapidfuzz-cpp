@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-11-01 00:20:18.570286
+//  Generated: 2023-11-02 10:29:38.300883
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1567,6 +1567,10 @@ constexpr void unroll(F&& f)
 
 #include <vector>
 
+#if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#    include <mm_malloc.h>
+#endif
+
 namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
@@ -1633,6 +1637,8 @@ static inline void* rf_aligned_alloc(size_t alignment, size_t size)
 {
 #if defined(_WIN32)
     return _aligned_malloc(size, alignment);
+#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+    return _mm_malloc(size, alignment);
 #else
     return aligned_alloc(alignment, size);
 #endif
@@ -1642,6 +1648,8 @@ static inline void rf_aligned_free(void* ptr)
 {
 #if defined(_WIN32)
     _aligned_free(ptr);
+#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+    _mm_free(ptr);
 #else
     free(ptr);
 #endif

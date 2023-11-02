@@ -13,6 +13,10 @@
 #include <rapidfuzz/details/types.hpp>
 #include <vector>
 
+#if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#    include <mm_malloc.h>
+#endif
+
 namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
@@ -79,6 +83,8 @@ static inline void* rf_aligned_alloc(size_t alignment, size_t size)
 {
 #if defined(_WIN32)
     return _aligned_malloc(size, alignment);
+#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+    return _mm_malloc(size, alignment);
 #else
     return aligned_alloc(alignment, size);
 #endif
@@ -88,6 +94,8 @@ static inline void rf_aligned_free(void* ptr)
 {
 #if defined(_WIN32)
     _aligned_free(ptr);
+#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+    _mm_free(ptr);
 #else
     free(ptr);
 #endif

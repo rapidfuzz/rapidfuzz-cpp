@@ -1,5 +1,9 @@
 ## Changelog
 
+## [2.2.3] - 2023-11-02
+### Fixed
+- use _mm_malloc/_mm_free on macOS if aligned_alloc is unsupported
+
 ## [2.2.2] - 2023-10-31
 ### Fixed
 - fix compilation failure on macOS
