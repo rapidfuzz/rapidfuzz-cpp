@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 
+#include <rapidfuzz/distance.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 
 #include "../common.hpp"
@@ -248,5 +249,35 @@ TEST_CASE("Indel")
         std::string b = "220";
         REQUIRE(Approx(0.3333333) == rapidfuzz::indel_normalized_similarity(a, b));
         REQUIRE(Approx(0.3333333) == rapidfuzz::CachedIndel<char>(a).normalized_similarity(b));
+    }
+
+    SECTION("test banded implementation")
+    {
+        {
+            std::string s1 = "ddccbccc";
+            std::string s2 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccacccaccaaaaaaaa"
+                             "daaaaaaaaccccaccccccaaaaaaaccccaaacccaccccadddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccccccccacccaaaaaacccaaaaaacccacccaaaaaacccdccc"
+                             "cccacccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddaaaaaaaa"
+                             "aaaaaaaaaaaaaaaaaacacccaaaaaacccddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccccaaaaaaaaaa"
+                             "ccccccaadddaaaaaaaaaaaaaaaaaaaaaacaaaaaa";
+            REQUIRE(indel_distance(s1, s2) == 508);
+            REQUIRE(indel_distance(s1, s2, 508) == 508);
+            REQUIRE(indel_distance(s1, s2, 507) == 508);
+            REQUIRE(indel_distance(s1, s2, std::numeric_limits<int64_t>::max()) == 508);
+        }
+
+        {
+            std::string s1 = "bbbdbbmbbbbbbbbbBbfbbbbbbbbbbbbbbbbbbbrbbbbbrbbbbbdbnbbbjbhbbbbbbbbbhbbbbbCbobb"
+                             "bxbbbbbkbbbAbxbbwbbbtbcbbbbebbiblbbbbqbbbbbbpbbbbbbubbbkbbDbbbhbkbCbbgbbrbbbbbb"
+                             "bbbbbkbyvbbsbAbbbbz";
+            std::string s2 = "jaaagaaqyaaaanrCfwaaxaeahtaaaCzaaaspaaBkvaaaaqDaacndaaeolwiaaauaaaaaaamA";
+
+            REQUIRE(indel_distance(s1, s2) == 231);
+
+            rapidfuzz::Editops ops = rapidfuzz::indel_editops(s1, s2);
+            REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
+        }
     }
 }

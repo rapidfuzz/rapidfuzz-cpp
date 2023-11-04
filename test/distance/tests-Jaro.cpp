@@ -57,7 +57,7 @@ double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cu
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
-    //REQUIRE(res1 == Approx(res5));
+    // REQUIRE(res1 == Approx(res5));
     REQUIRE(res1 == Approx(res6));
     REQUIRE(res1 == Approx(res7));
     REQUIRE(res1 == Approx(res8));
@@ -115,7 +115,7 @@ double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cuto
     REQUIRE(res1 == Approx(res2));
     REQUIRE(res1 == Approx(res3));
     REQUIRE(res1 == Approx(res4));
-    //REQUIRE(res1 == Approx(res5));
+    // REQUIRE(res1 == Approx(res5));
     REQUIRE(res1 == Approx(res6));
     REQUIRE(res1 == Approx(res7));
     REQUIRE(res1 == Approx(res8));
@@ -164,25 +164,37 @@ TEST_CASE("JaroTest")
         REQUIRE(jaro_sim_test(std::string("00"), std::string("00")) == Approx(1));
         REQUIRE(jaro_sim_test(std::string("0"), std::string("00")) == Approx(0.833333));
 
-        REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 65), str_multiply(std::string("0"), 65)) == Approx(1));
-        REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)) == Approx(0.994872));
-        REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)) == Approx(0.989744));
+        REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 65), str_multiply(std::string("0"), 65)) ==
+                Approx(1));
+        REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)) ==
+                Approx(0.994872));
+        REQUIRE(jaro_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)) ==
+                Approx(0.989744));
 
         REQUIRE(jaro_sim_test(std::string("000000001"), std::string("0000010")) == Approx(0.8783068783));
         {
             std::string s1("01234567");
-            std::string s2 = str_multiply(std::string("0"), 170) + std::string("7654321") + str_multiply(std::string("0"), 200);
+            std::string s2 = str_multiply(std::string("0"), 170) + std::string("7654321") +
+                             str_multiply(std::string("0"), 200);
 
             REQUIRE(jaro_sim_test(s1, s2) == Approx(0.5487400531));
         }
 
         REQUIRE(jaro_sim_test(std::string("01"), std::string("1111100000")) == Approx(0.53333333));
 
-        REQUIRE(jaro_sim_test(std::string("10000000000000000000000000000000000000000000000000000000000000020"), std::string("00000000000000000000000000000000000000000000000000000000000000000")) == Approx(0.979487));
-        REQUIRE(jaro_sim_test(std::string("00000000000000100000000000000000000000010000000000000000000000000"), std::string("0000000000000000000000000000000000000000000000000000000000000000000000000000001")) == Approx(0.922233));
+        REQUIRE(
+            jaro_sim_test(std::string("10000000000000000000000000000000000000000000000000000000000000020"),
+                          std::string("00000000000000000000000000000000000000000000000000000000000000000")) ==
+            Approx(0.979487));
         REQUIRE(jaro_sim_test(
-                std::string("00000000000000000000000000000000000000000000000000000000000000000"),
-                std::string("01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-            ) == Approx(0.8359375));
+                    std::string("00000000000000100000000000000000000000010000000000000000000000000"),
+                    std::string(
+                        "0000000000000000000000000000000000000000000000000000000000000000000000000000001")) ==
+                Approx(0.922233));
+        REQUIRE(
+            jaro_sim_test(std::string("00000000000000000000000000000000000000000000000000000000000000000"),
+                          std::string("0100000000000000000000000000000000000000000000000000000000000000000000"
+                                      "0000000000000000000000000000000000000000000000000000000000")) ==
+            Approx(0.8359375));
     }
 }

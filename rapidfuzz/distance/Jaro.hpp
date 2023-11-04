@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <stdlib.h>
 #include <limits>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Jaro_impl.hpp>
+#include <stdlib.h>
 
 namespace rapidfuzz {
 
@@ -74,18 +74,9 @@ private:
     static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
 
     using VecType = typename std::conditional_t<
-        MaxLen == 8,
-        uint8_t,
-        typename std::conditional_t<
-            MaxLen == 16,
-            uint16_t,
-            typename std::conditional_t<
-                MaxLen == 32,
-                uint32_t,
-                uint64_t
-            >
-        >
-    >;
+        MaxLen == 8, uint8_t,
+        typename std::conditional_t<MaxLen == 16, uint16_t,
+                                    typename std::conditional_t<MaxLen == 32, uint32_t, uint64_t>>>;
 
     constexpr static size_t get_vec_size()
     {
@@ -119,8 +110,7 @@ public:
         str_lens_size = result_count();
 
         str_lens = static_cast<VecType*>(
-            detail::rf_aligned_alloc(get_vec_alignment(), sizeof(VecType) * str_lens_size)
-        );
+            detail::rf_aligned_alloc(get_vec_alignment(), sizeof(VecType) * str_lens_size));
         std::fill(str_lens, str_lens + str_lens_size, VecType(0));
     }
 

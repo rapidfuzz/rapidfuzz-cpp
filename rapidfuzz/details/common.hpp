@@ -101,7 +101,6 @@ static inline void rf_aligned_free(void* ptr)
 #endif
 }
 
-
 /**@}*/
 
 } // namespace rapidfuzz::detail

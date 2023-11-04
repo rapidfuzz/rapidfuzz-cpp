@@ -27,10 +27,10 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
     std::vector<double> results(256 / 8);
     if (s1.size() <= 8) {
         rapidfuzz::experimental::MultiJaroWinkler<8> simd_scorer(32, prefix_weight);
-        for(unsigned int i = 0; i < 32; ++i)
+        for (unsigned int i = 0; i < 32; ++i)
             simd_scorer.insert(s1);
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        for(unsigned int i = 0; i < 32; ++i)
+        for (unsigned int i = 0; i < 32; ++i)
             REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 16) {
@@ -78,7 +78,6 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
     double res6 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
     double res7 = scorer.normalized_distance(s2, score_cutoff);
     double res8 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
-
 
 #ifdef RAPIDFUZZ_SIMD
     std::vector<double> results(256 / 8);
@@ -128,7 +127,6 @@ double jaro_winkler_sim_test(const Sentence1& s1, const Sentence2& s2, double sc
     double Sim_bitparallel2 = jaro_winkler_similarity(s2, s1, 0.1, score_cutoff);
     double Dist_bitparallel2 = jaro_winkler_distance(s2, s1, 0.1, 1.0 - score_cutoff);
 
-
     REQUIRE(Sim_original == Approx(Sim_bitparallel));
     REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel));
     REQUIRE(Sim_original == Approx(Sim_bitparallel2));
@@ -138,11 +136,28 @@ double jaro_winkler_sim_test(const Sentence1& s1, const Sentence2& s2, double sc
 
 TEST_CASE("JaroWinklerTest")
 {
-    std::array<std::string, 22> names = {"james",    "robert",   "john",   "michael",   "william",
-                                         "david",    "joseph",   "thomas", "charles",   "mary",
-                                         "patricia", "jennifer", "linda",  "elizabeth", "barbara",
-                                         "susan",    "jessica",  "sarah",  "karen",     ""
-                                         "aaaaaaaa", "aabaaab"};
+    std::array<std::string, 22> names = {"james",
+                                         "robert",
+                                         "john",
+                                         "michael",
+                                         "william",
+                                         "david",
+                                         "joseph",
+                                         "thomas",
+                                         "charles",
+                                         "mary",
+                                         "patricia",
+                                         "jennifer",
+                                         "linda",
+                                         "elizabeth",
+                                         "barbara",
+                                         "susan",
+                                         "jessica",
+                                         "sarah",
+                                         "karen",
+                                         ""
+                                         "aaaaaaaa",
+                                         "aabaaab"};
 
     SECTION("testFullResultWithScoreCutoff")
     {
@@ -161,19 +176,30 @@ TEST_CASE("JaroWinklerTest")
         REQUIRE(jaro_winkler_sim_test(std::string("00"), std::string("00")) == Approx(1));
         REQUIRE(jaro_winkler_sim_test(std::string("0"), std::string("00")) == Approx(0.85));
 
-        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 65), str_multiply(std::string("0"), 65)) == Approx(1));
-        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)) == Approx(0.996923));
-        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)) == Approx(0.993846));
+        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 65),
+                                      str_multiply(std::string("0"), 65)) == Approx(1));
+        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 64),
+                                      str_multiply(std::string("0"), 65)) == Approx(0.996923));
+        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 63),
+                                      str_multiply(std::string("0"), 65)) == Approx(0.993846));
 
-        REQUIRE(jaro_winkler_sim_test(std::string("000000001"), std::string("0000010")) == Approx(0.926984127));
+        REQUIRE(jaro_winkler_sim_test(std::string("000000001"), std::string("0000010")) ==
+                Approx(0.926984127));
 
         REQUIRE(jaro_winkler_sim_test(std::string("01"), std::string("1111100000")) == Approx(0.53333333));
 
-        REQUIRE(jaro_winkler_sim_test(std::string("10000000000000000000000000000000000000000000000000000000000000020"), std::string("00000000000000000000000000000000000000000000000000000000000000000")) == Approx(0.979487));
-        REQUIRE(jaro_winkler_sim_test(std::string("00000000000000100000000000000000000000010000000000000000000000000"), std::string("0000000000000000000000000000000000000000000000000000000000000000000000000000001")) == Approx(0.95334));
         REQUIRE(jaro_winkler_sim_test(
-                std::string("00000000000000000000000000000000000000000000000000000000000000000"),
-                std::string("01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-            ) == Approx(0.852344));
+                    std::string("10000000000000000000000000000000000000000000000000000000000000020"),
+                    std::string("00000000000000000000000000000000000000000000000000000000000000000")) ==
+                Approx(0.979487));
+        REQUIRE(jaro_winkler_sim_test(
+                    std::string("00000000000000100000000000000000000000010000000000000000000000000"),
+                    std::string(
+                        "0000000000000000000000000000000000000000000000000000000000000000000000000000001")) ==
+                Approx(0.95334));
+        REQUIRE(jaro_winkler_sim_test(
+                    std::string("00000000000000000000000000000000000000000000000000000000000000000"),
+                    std::string("0100000000000000000000000000000000000000000000000000000000000000000000000000"
+                                "0000000000000000000000000000000000000000000000000000")) == Approx(0.852344));
     }
 }

@@ -19,6 +19,52 @@ std::string generate(int max_length)
     return ret;
 }
 
+template <typename T>
+std::basic_string<T> str_multiply(std::basic_string<T> a, unsigned int b)
+{
+    std::basic_string<T> output;
+    while (b--)
+        output += a;
+
+    return output;
+}
+
+static void BM_LcsLongSimilarSequence(benchmark::State& state)
+{
+    size_t len = state.range(0);
+    size_t score_cutoff = state.range(1);
+    std::string s1 = std::string("a") + str_multiply(std::string("b"), (len - 2)) + std::string("a");
+    std::string s2 = str_multiply(std::string("b"), len);
+
+    size_t num = 0;
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(rapidfuzz::lcs_seq_distance(s1, s2, score_cutoff));
+        ++num;
+    }
+
+    state.counters["Rate"] = benchmark::Counter(static_cast<double>(num * len), benchmark::Counter::kIsRate);
+    state.counters["InvRate"] = benchmark::Counter(static_cast<double>(num * len),
+                                                   benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
+}
+
+static void BM_LcsLongNonSimilarSequence(benchmark::State& state)
+{
+    size_t len = state.range(0);
+    size_t score_cutoff = state.range(1);
+    std::string s1 = str_multiply(std::string("a"), len);
+    std::string s2 = str_multiply(std::string("b"), len);
+
+    size_t num = 0;
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(rapidfuzz::lcs_seq_distance(s1, s2, score_cutoff));
+        ++num;
+    }
+
+    state.counters["Rate"] = benchmark::Counter(static_cast<double>(num * len), benchmark::Counter::kIsRate);
+    state.counters["InvRate"] = benchmark::Counter(static_cast<double>(num * len),
+                                                   benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
+}
+
 template <size_t MaxLen>
 static void BM_LCS(benchmark::State& state)
 {
@@ -97,6 +143,23 @@ static void BM_LCS_SIMD(benchmark::State& state)
                                                    benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
 }
 #endif
+
+BENCHMARK(BM_LcsLongSimilarSequence)
+    ->Args({100, 30})
+    ->Args({500, 100})
+    ->Args({500, 30})
+    ->Args({5000, 30})
+    ->Args({10000, 30})
+    ->Args({20000, 30})
+    ->Args({50000, 30});
+
+BENCHMARK(BM_LcsLongNonSimilarSequence)
+    ->Args({100, 30})
+    ->Args({500, 30})
+    ->Args({5000, 30})
+    ->Args({10000, 30})
+    ->Args({20000, 30})
+    ->Args({50000, 30});
 
 BENCHMARK_TEMPLATE(BM_LCS, 8);
 BENCHMARK_TEMPLATE(BM_LCS, 16);

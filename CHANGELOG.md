@@ -1,5 +1,9 @@
 ## Changelog
 
+## [2.3.0] - 2023-11-
+### Performance
+- add banded implementation of LCS / Indel. This improves the runtime from `O((|s1|/64) * |s2|)` to `O((score_cutoff/64) * |s2|)`
+
 ## [2.2.3] - 2023-11-02
 ### Fixed
 - use _mm_malloc/_mm_free on macOS if aligned_alloc is unsupported

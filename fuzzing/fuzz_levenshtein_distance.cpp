@@ -90,5 +90,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     /* unrestricted */
     validate_distance(reference_dist, s1, s2, std::numeric_limits<int64_t>::max());
 
+    /* score_cutoff to trigger banded implementation */
+    validate_distance(reference_dist, s1, s2, s1.size() / 2);
+    validate_distance(reference_dist, s1, s2, s2.size() / 2);
+
     return 0;
 }
