@@ -62,9 +62,8 @@ int64_t generalized_levenshtein_wagner_fischer(Range<InputIt1> s1, Range<InputIt
     std::vector<int64_t> cache(cache_size);
     assume(cache_size != 0);
 
-    cache[0] = 0;
-    for (size_t i = 1; i < cache_size; ++i)
-        cache[i] = cache[i - 1] + weights.delete_cost;
+    for (size_t i = 0; i < cache_size; ++i)
+        cache[i] = i * weights.delete_cost;
 
     for (const auto& ch2 : s2) {
         auto cache_iter = cache.begin();
@@ -178,6 +177,8 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
         int64_t cur_dist = 0;
+
+        if (!ops) break;
 
         while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
             if (*iter_s1 != *iter_s2) {
@@ -525,6 +526,7 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
+
         /* Step 2: Computing HP and HN */
         uint64_t HP = VN | ~(D0 | VP);
         uint64_t HN = D0 & VP;
@@ -602,6 +604,12 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
                                   int64_t max = std::numeric_limits<int64_t>::max(), ptrdiff_t stop_row = -1)
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
+    LevenshteinResult<RecordMatrix, RecordBitRow> res;
+    if (max < std::abs(s1.size() - s2.size())) {
+        res.dist = max + 1;
+        return res;
+    }
+
     ptrdiff_t word_size = sizeof(uint64_t) * 8;
     auto words = PM.size();
     std::vector<LevenshteinRow> vecs(words);
@@ -613,7 +621,6 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
     scores[words - 1] = s1.size();
 
-    LevenshteinResult<RecordMatrix, RecordBitRow> res;
     if constexpr (RecordMatrix) {
         int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, static_cast<size_t>(full_band / word_size) + 2);
@@ -882,7 +889,9 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     else {
         BlockPatternMatchVector PM(s1);
         while (score_hint < score_cutoff) {
+            // todo use small band implementation if possible
             int64_t score = levenshtein_hyrroe2003_block<false, false>(PM, s1, s2, score_hint).dist;
+
             if (score <= score_hint) return score;
 
             if (std::numeric_limits<int64_t>::max() / 2 < score_hint) break;

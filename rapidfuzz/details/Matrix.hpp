@@ -174,7 +174,7 @@ struct ShiftedBitMatrix {
 
         size_t word_size = sizeof(value_type) * 8;
         size_t col_word = col / word_size;
-        uint64_t col_mask = value_type(1) << (col % word_size);
+        value_type col_mask = value_type(1) << (col % word_size);
 
         return bool(m_matrix[row][col_word] & col_mask);
     }

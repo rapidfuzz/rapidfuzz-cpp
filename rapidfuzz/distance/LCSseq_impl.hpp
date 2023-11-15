@@ -80,7 +80,7 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
     if (len1 < len2) return lcs_seq_mbleven2018(s2, s1, score_cutoff);
 
     auto len_diff = len1 - len2;
-    int64_t max_misses = static_cast<ptrdiff_t>(len1) - score_cutoff;
+    int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
     auto ops_index = (max_misses + max_misses * max_misses) / 2 + len_diff - 1;
     auto& possible_ops = lcs_seq_mbleven2018_matrix[static_cast<size_t>(ops_index)];
     int64_t max_len = 0;
@@ -89,6 +89,8 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
         int64_t cur_len = 0;
+
+        if (!ops) break;
 
         while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
             if (*iter_s1 != *iter_s2) {
@@ -118,9 +120,6 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
 
     return (max_len >= score_cutoff) ? max_len : 0;
 }
-
-template <bool RecordMatrix>
-struct LCSseqResult;
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>

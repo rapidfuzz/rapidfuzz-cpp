@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-11-05 01:08:49.459563
+//  Generated: 2023-11-15 21:34:49.638933
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -391,7 +391,7 @@ struct ShiftedBitMatrix {
 
         size_t word_size = sizeof(value_type) * 8;
         size_t col_word = col / word_size;
-        uint64_t col_mask = value_type(1) << (col % word_size);
+        value_type col_mask = value_type(1) << (col % word_size);
 
         return bool(m_matrix[row][col_word] & col_mask);
     }
@@ -4419,7 +4419,7 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
     if (len1 < len2) return lcs_seq_mbleven2018(s2, s1, score_cutoff);
 
     auto len_diff = len1 - len2;
-    int64_t max_misses = static_cast<ptrdiff_t>(len1) - score_cutoff;
+    int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
     auto ops_index = (max_misses + max_misses * max_misses) / 2 + len_diff - 1;
     auto& possible_ops = lcs_seq_mbleven2018_matrix[static_cast<size_t>(ops_index)];
     int64_t max_len = 0;
@@ -4428,6 +4428,8 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
         int64_t cur_len = 0;
+
+        if (!ops) break;
 
         while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
             if (*iter_s1 != *iter_s2) {
@@ -4457,9 +4459,6 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
 
     return (max_len >= score_cutoff) ? max_len : 0;
 }
-
-template <bool RecordMatrix>
-struct LCSseqResult;
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
@@ -6750,9 +6749,8 @@ int64_t generalized_levenshtein_wagner_fischer(Range<InputIt1> s1, Range<InputIt
     std::vector<int64_t> cache(cache_size);
     assume(cache_size != 0);
 
-    cache[0] = 0;
-    for (size_t i = 1; i < cache_size; ++i)
-        cache[i] = cache[i - 1] + weights.delete_cost;
+    for (size_t i = 0; i < cache_size; ++i)
+        cache[i] = i * weights.delete_cost;
 
     for (const auto& ch2 : s2) {
         auto cache_iter = cache.begin();
@@ -6866,6 +6864,8 @@ int64_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t 
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
         int64_t cur_dist = 0;
+
+        if (!ops) break;
 
         while (iter_s1 != s1.end() && iter_s2 != s2.end()) {
             if (*iter_s1 != *iter_s2) {
@@ -7290,6 +7290,12 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
                                   int64_t max = std::numeric_limits<int64_t>::max(), ptrdiff_t stop_row = -1)
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
+    LevenshteinResult<RecordMatrix, RecordBitRow> res;
+    if (max < std::abs(s1.size() - s2.size())) {
+        res.dist = max + 1;
+        return res;
+    }
+
     ptrdiff_t word_size = sizeof(uint64_t) * 8;
     auto words = PM.size();
     std::vector<LevenshteinRow> vecs(words);
@@ -7301,7 +7307,6 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<Input
 
     scores[words - 1] = s1.size();
 
-    LevenshteinResult<RecordMatrix, RecordBitRow> res;
     if constexpr (RecordMatrix) {
         int64_t full_band = std::min<int64_t>(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, static_cast<size_t>(full_band / word_size) + 2);
@@ -7570,7 +7575,9 @@ int64_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int
     else {
         BlockPatternMatchVector PM(s1);
         while (score_hint < score_cutoff) {
+            // todo use small band implementation if possible
             int64_t score = levenshtein_hyrroe2003_block<false, false>(PM, s1, s2, score_hint).dist;
+
             if (score <= score_hint) return score;
 
             if (std::numeric_limits<int64_t>::max() / 2 < score_hint) break;
