@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-11-15 21:34:49.638933
+//  Generated: 2023-11-21 23:26:14.326817
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3891,7 +3891,7 @@ private:
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
 };
 
 template <typename Sentence1>
@@ -4113,7 +4113,7 @@ private:
         return detail::Hamming::distance(s1, s2, pad, score_cutoff, score_hint);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     bool pad;
 };
 
@@ -4592,8 +4592,8 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
     auto words = PM.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
-    size_t band_width_left = s1.size() - score_cutoff;
-    size_t band_width_right = s2.size() - score_cutoff;
+    size_t band_width_left = static_cast<size_t>(s1.size() - score_cutoff);
+    size_t band_width_right = static_cast<size_t>(s2.size() - score_cutoff);
 
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) {
@@ -4626,10 +4626,10 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
         }
 
         if (row > static_cast<ptrdiff_t>(band_width_right))
-            first_block = (row - band_width_right) / word_size;
+            first_block = (static_cast<size_t>(row) - band_width_right) / static_cast<size_t>(word_size);
 
         if (row + 1 + static_cast<ptrdiff_t>(band_width_left) <= s1.size())
-            last_block = ceil_div(row + 1 + band_width_left, word_size);
+            last_block = ceil_div(static_cast<size_t>(row) + 1 + band_width_left, word_size);
 
         iter_s2++;
     }
@@ -5081,7 +5081,7 @@ private:
         return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
@@ -6397,7 +6397,7 @@ private:
         return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
@@ -6680,7 +6680,7 @@ private:
     }
 
     double prefix_weight;
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
@@ -8352,7 +8352,7 @@ private:
         return detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };
@@ -8895,7 +8895,7 @@ private:
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
@@ -9018,7 +9018,7 @@ private:
         return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
 };
 
 template <typename Sentence1>
@@ -9141,7 +9141,7 @@ private:
         return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
 };
 
 template <typename Sentence1>
@@ -9499,7 +9499,7 @@ struct CachedPartialRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     rapidfuzz::detail::CharSet<CharT1> s1_char_set;
     CachedRatio<CharT1> cached_ratio;
 };
@@ -9609,7 +9609,7 @@ struct CachedTokenSortRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1_sorted;
+    std::vector<CharT1> s1_sorted;
     CachedRatio<CharT1> cached_ratio;
 };
 
@@ -9667,7 +9667,7 @@ struct CachedPartialTokenSortRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1_sorted;
+    std::vector<CharT1> s1_sorted;
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
@@ -9735,8 +9735,8 @@ struct CachedTokenSetRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1;
-    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    std::vector<CharT1> s1;
+    detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
 };
 
 template <typename Sentence1>
@@ -9792,8 +9792,8 @@ struct CachedPartialTokenSetRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1;
-    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
+    std::vector<CharT1> s1;
+    detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
 };
 
 template <typename Sentence1>
@@ -9852,9 +9852,9 @@ struct CachedTokenRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1;
-    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> s1_tokens;
-    std::basic_string<CharT1> s1_sorted;
+    std::vector<CharT1> s1;
+    detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> s1_tokens;
+    std::vector<CharT1> s1_sorted;
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
@@ -9914,9 +9914,9 @@ struct CachedPartialTokenRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1;
-    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
-    std::basic_string<CharT1> s1_sorted;
+    std::vector<CharT1> s1;
+    detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
+    std::vector<CharT1> s1_sorted;
 };
 
 template <typename Sentence1>
@@ -9972,10 +9972,10 @@ struct CachedWRatio {
 private:
     // todo somehow implement this using other ratios with creating PatternMatchVector
     // multiple times
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     CachedPartialRatio<CharT1> cached_partial_ratio;
-    detail::SplittedSentenceView<typename std::basic_string<CharT1>::iterator> tokens_s1;
-    std::basic_string<CharT1> s1_sorted;
+    detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
+    std::vector<CharT1> s1_sorted;
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
@@ -10087,7 +10087,7 @@ struct CachedQRatio {
     double similarity(const Sentence2& s2, double score_cutoff = 0.0, double score_hint = 0.0) const;
 
 private:
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     CachedRatio<CharT1> cached_ratio;
 };
 
@@ -10711,7 +10711,7 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename InputIt1, typename InputIt2>
-double token_ratio(const std::basic_string<CharT1>& s1_sorted,
+double token_ratio(const std::vector<CharT1>& s1_sorted,
                    const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
                    const detail::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2, InputIt2 last2,
                    double score_cutoff)
@@ -10827,7 +10827,7 @@ double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double scor
 
 namespace fuzz_detail {
 template <typename CharT1, typename InputIt1, typename InputIt2>
-double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
+double partial_token_ratio(const std::vector<CharT1>& s1_sorted,
                            const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
                            InputIt2 first2, InputIt2 last2, double score_cutoff)
 {

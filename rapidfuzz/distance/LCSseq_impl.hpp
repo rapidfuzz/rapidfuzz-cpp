@@ -253,8 +253,8 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
     auto words = PM.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
-    size_t band_width_left = s1.size() - score_cutoff;
-    size_t band_width_right = s2.size() - score_cutoff;
+    size_t band_width_left = static_cast<size_t>(s1.size() - score_cutoff);
+    size_t band_width_right = static_cast<size_t>(s2.size() - score_cutoff);
 
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) {
@@ -287,10 +287,10 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
         }
 
         if (row > static_cast<ptrdiff_t>(band_width_right))
-            first_block = (row - band_width_right) / word_size;
+            first_block = (static_cast<size_t>(row) - band_width_right) / static_cast<size_t>(word_size);
 
         if (row + 1 + static_cast<ptrdiff_t>(band_width_left) <= s1.size())
-            last_block = ceil_div(row + 1 + band_width_left, word_size);
+            last_block = ceil_div(static_cast<size_t>(row) + 1 + band_width_left, word_size);
 
         iter_s2++;
     }

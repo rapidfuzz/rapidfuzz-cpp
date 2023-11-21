@@ -140,7 +140,7 @@ private:
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
 };
 
 template <typename Sentence1>

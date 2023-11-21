@@ -476,7 +476,7 @@ private:
         return detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, score_cutoff);
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
     LevenshteinWeightTable weights;
 };

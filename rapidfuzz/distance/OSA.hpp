@@ -267,7 +267,7 @@ private:
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }
 
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 

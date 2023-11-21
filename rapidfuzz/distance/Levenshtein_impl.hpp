@@ -526,7 +526,6 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, i
         uint64_t X = PM_j;
         uint64_t D0 = (((X & VP) + VP) ^ VP) | X | VN;
 
-
         /* Step 2: Computing HP and HN */
         uint64_t HP = VN | ~(D0 | VP);
         uint64_t HN = D0 & VP;

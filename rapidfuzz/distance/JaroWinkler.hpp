@@ -196,7 +196,7 @@ private:
     }
 
     double prefix_weight;
-    std::basic_string<CharT1> s1;
+    std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 

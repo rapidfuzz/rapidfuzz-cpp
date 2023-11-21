@@ -613,7 +613,7 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
 
 // todo this is a temporary solution until WRatio is properly implemented using other scorers
 template <typename CharT1, typename InputIt1, typename InputIt2>
-double token_ratio(const std::basic_string<CharT1>& s1_sorted,
+double token_ratio(const std::vector<CharT1>& s1_sorted,
                    const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
                    const detail::BlockPatternMatchVector& blockmap_s1_sorted, InputIt2 first2, InputIt2 last2,
                    double score_cutoff)
@@ -729,7 +729,7 @@ double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double scor
 
 namespace fuzz_detail {
 template <typename CharT1, typename InputIt1, typename InputIt2>
-double partial_token_ratio(const std::basic_string<CharT1>& s1_sorted,
+double partial_token_ratio(const std::vector<CharT1>& s1_sorted,
                            const rapidfuzz::detail::SplittedSentenceView<InputIt1>& tokens_s1,
                            InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
