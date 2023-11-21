@@ -308,12 +308,12 @@ template <typename PMV, typename InputIt1, typename InputIt2>
 int64_t longest_common_subsequence(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2,
                                    int64_t score_cutoff)
 {
-    ptrdiff_t word_size = sizeof(uint64_t) * 8;
-    auto words = PM.size();
-    size_t band_width_left = s1.size() - score_cutoff;
-    size_t band_width_right = s2.size() - score_cutoff;
-    int64_t full_band = band_width_left + 1 + band_width_right;
-    size_t full_band_words = std::min(words, static_cast<size_t>(full_band / word_size) + 2);
+    size_t word_size = sizeof(uint64_t) * 8;
+    size_t words = PM.size();
+    size_t band_width_left = static_cast<size_t>(s1.size() - score_cutoff);
+    size_t band_width_right = static_cast<size_t>(s2.size() - score_cutoff);
+    size_t full_band = band_width_left + 1 + band_width_right;
+    size_t full_band_words = std::min(words, full_band / word_size + 2);
 
     if (full_band_words < words) return lcs_blockwise<false>(PM, s1, s2, score_cutoff).sim;
 
