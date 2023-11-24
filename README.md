@@ -6,7 +6,7 @@
 <p align="center">
   <a href="https://github.com/maxbachmann/rapidfuzz-cpp/actions">
     <img src="https://github.com/maxbachmann/rapidfuzz-cpp/workflows/CMake/badge.svg"
-         alt="Continous Integration">
+         alt="Continuous Integration">
   </a>
   <a href="https://maxbachmann.github.io/rapidfuzz-cpp">
     <img src="https://img.shields.io/badge/-documentation-blue"
@@ -27,11 +27,11 @@
 
 ---
 ## Description
-RapidFuzz is a fast string matching library for Python and C++, which is using the string similarity calculations from [FuzzyWuzzy](https://github.com/seatgeek/fuzzywuzzy). However there are two aspects that set RapidFuzz apart from FuzzyWuzzy:
+RapidFuzz is a fast string matching library for Python and C++, which is using the string similarity calculations from [FuzzyWuzzy](https://github.com/seatgeek/fuzzywuzzy). However, there are two aspects that set RapidFuzz apart from FuzzyWuzzy:
 1) It is MIT licensed so it can be used whichever License you might want to choose for your project, while you're forced to adopt the GPL license when using FuzzyWuzzy
-2) It is mostly written in C++ and on top of this comes with a lot of Algorithmic improvements to make string matching even faster, while still providing the same results. More details on these performance improvements in form of benchmarks can be found [here](https://github.com/maxbachmann/rapidfuzz/blob/master/Benchmarks.md)
+2) It is mostly written in C++ and on top of this comes with a lot of Algorithmic improvements to make string matching even faster, while still providing the same results. More details on these performance improvements in the form of benchmarks can be found [here](https://github.com/maxbachmann/rapidfuzz/blob/master/Benchmarks.md)
 
-The Library is splitted across multiple repositories for the different supported programming languages:
+The Library is split across multiple repositories for the different supported programming languages:
 - The C++ version is versioned in this repository
 - The Python version can be found at [maxbachmann/rapidfuzz](https://github.com/maxbachmann/rapidfuzz)
 
@@ -146,9 +146,9 @@ double score = rapidfuzz::fuzz::token_set_ratio("fuzzy was a bear", "fuzzy fuzzy
 ```
 
 ### Process
-In the Python implementation there is a module process, which is used to compare e.g. a string to a list of strings.
-In Python this both saves the time to implement those features yourself and can be a lot more efficient than repeated type
-conversions between Python and C++. Implementing a similar function in C++ using templates is not easily possible and probably slower than implementing them on your own. Thats why this section describes how users can implement those features with a couple lines of code using the C++ library.
+In the Python implementation, there is a module process, which is used to compare e.g. a string to a list of strings.
+In Python, this both saves the time to implement those features yourself and can be a lot more efficient than repeated type
+conversions between Python and C++. Implementing a similar function in C++ using templates is not easily possible and probably slower than implementing them on your own. That's why this section describes how users can implement those features with a couple of lines of code using the C++ library.
 
 ### extract
 
@@ -238,5 +238,5 @@ extract(const Sentence1& query, const Iterable& choices, const double score_cuto
 ```
 
 ## License
-RapidFuzz is licensed under the MIT license since I believe that everyone should be able to use it without being forced to adopt the GPL license. Thats why the library is based on an older version of fuzzywuzzy that was MIT licensed as well.
+RapidFuzz is licensed under the MIT license since I believe that everyone should be able to use it without being forced to adopt the GPL license. That's why the library is based on an older version of fuzzywuzzy that was MIT-licensed as well.
 This old version of fuzzywuzzy can be found [here](https://github.com/seatgeek/fuzzywuzzy/tree/4bf28161f7005f3aa9d4d931455ac55126918df7).
