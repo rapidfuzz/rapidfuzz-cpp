@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-11-21 23:35:28.074748
+//  Generated: 2023-11-27 18:24:26.464140
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1304,7 +1304,7 @@ public:
         return m_sentence.size();
     }
 
-    std::basic_string<CharT> join() const;
+    std::vector<CharT> join() const;
 
     const RangeVec<InputIt>& words() const
     {
@@ -1338,19 +1338,18 @@ size_t SplittedSentenceView<InputIt>::size() const
 }
 
 template <typename InputIt>
-auto SplittedSentenceView<InputIt>::join() const -> std::basic_string<CharT>
+auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
 {
     if (m_sentence.empty()) {
-        return std::basic_string<CharT>();
+        return std::vector<CharT>();
     }
 
     auto sentence_iter = m_sentence.begin();
-    std::basic_string<CharT> joined(sentence_iter->begin(), sentence_iter->end());
-    const std::basic_string<CharT> whitespace{0x20};
+    std::vector<CharT> joined(sentence_iter->begin(), sentence_iter->end());
     ++sentence_iter;
     for (; sentence_iter != m_sentence.end(); ++sentence_iter) {
-        joined.append(whitespace)
-            .append(std::basic_string<CharT>(sentence_iter->begin(), sentence_iter->end()));
+        joined.push_back(0x20);
+        joined.insert(joined.end(), sentence_iter->begin(), sentence_iter->end());
     }
     return joined;
 }
@@ -10472,8 +10471,8 @@ double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& 
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    size_t ab_len = diff_ab_joined.length();
-    size_t ba_len = diff_ba_joined.length();
+    size_t ab_len = diff_ab_joined.size();
+    size_t ba_len = diff_ba_joined.size();
     size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
@@ -10620,8 +10619,8 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    size_t ab_len = diff_ab_joined.length();
-    size_t ba_len = diff_ba_joined.length();
+    size_t ab_len = diff_ab_joined.size();
+    size_t ba_len = diff_ba_joined.size();
     size_t sect_len = intersect.length();
 
     double result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
@@ -10679,8 +10678,8 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
+    int64_t ab_len = diff_ab_joined.size();
+    int64_t ba_len = diff_ba_joined.size();
     int64_t sect_len = intersect.length();
 
     double result = cached_ratio_s1_sorted.similarity(s2_tokens.join(), score_cutoff);
@@ -10730,8 +10729,8 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
+    int64_t ab_len = diff_ab_joined.size();
+    int64_t ba_len = diff_ba_joined.size();
     int64_t sect_len = intersect.length();
 
     double result = 0;

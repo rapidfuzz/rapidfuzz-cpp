@@ -374,8 +374,8 @@ double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& 
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    size_t ab_len = diff_ab_joined.length();
-    size_t ba_len = diff_ba_joined.length();
+    size_t ab_len = diff_ab_joined.size();
+    size_t ba_len = diff_ba_joined.size();
     size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
@@ -522,8 +522,8 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    size_t ab_len = diff_ab_joined.length();
-    size_t ba_len = diff_ba_joined.length();
+    size_t ab_len = diff_ab_joined.size();
+    size_t ba_len = diff_ba_joined.size();
     size_t sect_len = intersect.length();
 
     double result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
@@ -581,8 +581,8 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
+    int64_t ab_len = diff_ab_joined.size();
+    int64_t ba_len = diff_ba_joined.size();
     int64_t sect_len = intersect.length();
 
     double result = cached_ratio_s1_sorted.similarity(s2_tokens.join(), score_cutoff);
@@ -632,8 +632,8 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.length();
-    int64_t ba_len = diff_ba_joined.length();
+    int64_t ab_len = diff_ab_joined.size();
+    int64_t ba_len = diff_ba_joined.size();
     int64_t sect_len = intersect.length();
 
     double result = 0;
