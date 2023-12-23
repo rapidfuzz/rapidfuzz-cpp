@@ -488,10 +488,10 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, s
         res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
         res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
 
-        ptrdiff_t start_offset = static_cast<ptrdiff_t>(max) + 2 - 64;
+        ssize_t start_offset = static_cast<ssize_t>(max) + 2 - 64;
         for (size_t i = 0; i < s2.size(); ++i) {
-            res.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
-            res.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res.VP.set_offset(i, start_offset + static_cast<ssize_t>(i));
+            res.VN.set_offset(i, start_offset + static_cast<ssize_t>(i));
         }
     }
 

@@ -788,4 +788,4 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 
 } // namespace rapidfuzz::fuzz
 
-#include <rapidfuzz/fuzz.impl>
+#include <rapidfuzz/fuzz_impl.hpp>
