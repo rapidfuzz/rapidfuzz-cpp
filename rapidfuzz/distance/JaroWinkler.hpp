@@ -135,8 +135,7 @@ private:
                 size_t max_prefix = std::min(min_len, size_t(4));
                 size_t prefix = 0;
                 for (; prefix < max_prefix; ++prefix)
-                    if (static_cast<uint64_t>(s2[prefix]) != prefixes[i][prefix])
-                        break;
+                    if (static_cast<uint64_t>(s2[prefix]) != prefixes[i][prefix]) break;
 
                 scores[i] += static_cast<double>(prefix) * prefix_weight * (1.0 - scores[i]);
             }

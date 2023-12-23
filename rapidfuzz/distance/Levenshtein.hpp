@@ -389,13 +389,17 @@ private:
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2,
+                                                         static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 16)
-            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2,
+                                                          static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 32)
-            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2,
+                                                          static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 64)
-            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2,
+                                                          static_cast<size_t>(score_cutoff));
     }
 
     template <typename InputIt2>
@@ -439,7 +443,8 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), static_cast<ptrdiff_t>(s2.size()), weights);
+        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()),
+                                           static_cast<ptrdiff_t>(s2.size()), weights);
     }
 
     template <typename InputIt2>
@@ -454,8 +459,9 @@ private:
                 // max can make use of the common divisor of the three weights
                 int64_t new_score_cutoff = detail::ceil_div(score_cutoff, weights.insert_cost);
                 int64_t new_score_hint = detail::ceil_div(score_hint, weights.insert_cost);
-                int64_t dist = static_cast<int64_t>(detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2,
-                                                                    static_cast<size_t>(new_score_cutoff), static_cast<size_t>(new_score_hint)));
+                int64_t dist = static_cast<int64_t>(detail::uniform_levenshtein_distance(
+                    PM, detail::Range(s1), s2, static_cast<size_t>(new_score_cutoff),
+                    static_cast<size_t>(new_score_hint)));
                 dist *= weights.insert_cost;
 
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -473,7 +479,8 @@ private:
             }
         }
 
-        return static_cast<int64_t>(detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, static_cast<size_t>(score_cutoff)));
+        return static_cast<int64_t>(detail::generalized_levenshtein_distance(
+            detail::Range(s1), s2, weights, static_cast<size_t>(score_cutoff)));
     }
 
     std::vector<CharT1> s1;

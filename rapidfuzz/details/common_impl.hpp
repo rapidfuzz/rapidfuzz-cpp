@@ -42,8 +42,8 @@ template <typename InputIt1, typename InputIt2>
 size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto first1 = std::begin(s1);
-    size_t prefix =
-        static_cast<size_t>(std::distance(first1, std::mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
+    size_t prefix = static_cast<size_t>(
+        std::distance(first1, std::mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
     s1.remove_prefix(prefix);
     s2.remove_prefix(prefix);
     return prefix;
@@ -56,8 +56,8 @@ template <typename InputIt1, typename InputIt2>
 size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto rfirst1 = std::rbegin(s1);
-    size_t suffix =
-        static_cast<size_t>(std::distance(rfirst1, std::mismatch(rfirst1, std::rend(s1), std::rbegin(s2), std::rend(s2)).first));
+    size_t suffix = static_cast<size_t>(
+        std::distance(rfirst1, std::mismatch(rfirst1, std::rend(s1), std::rbegin(s2), std::rend(s2)).first));
     s1.remove_suffix(suffix);
     s2.remove_suffix(suffix);
     return suffix;

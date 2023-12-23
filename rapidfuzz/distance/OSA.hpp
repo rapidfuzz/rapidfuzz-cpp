@@ -201,13 +201,17 @@ private:
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2,
+                                                 static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 16)
-            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2,
+                                                  static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 32)
-            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2,
+                                                  static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 64)
-            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2,
+                                                  static_cast<size_t>(score_cutoff));
     }
 
     template <typename InputIt2>
@@ -260,9 +264,11 @@ private:
         else if (s2.empty())
             res = static_cast<int64_t>(s1.size());
         else if (s1.size() < 64)
-            res = static_cast<int64_t>(detail::osa_hyrroe2003(PM, detail::Range(s1), s2, static_cast<size_t>(score_cutoff)));
+            res = static_cast<int64_t>(
+                detail::osa_hyrroe2003(PM, detail::Range(s1), s2, static_cast<size_t>(score_cutoff)));
         else
-            res = static_cast<int64_t>(detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, static_cast<size_t>(score_cutoff)));
+            res = static_cast<int64_t>(
+                detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, static_cast<size_t>(score_cutoff)));
 
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }

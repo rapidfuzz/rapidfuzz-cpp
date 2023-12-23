@@ -3,13 +3,13 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <limits>
 #include <ostream>
 #include <stdexcept>
 #include <vector>
-#include <cassert>
 
 namespace rapidfuzz::detail {
 

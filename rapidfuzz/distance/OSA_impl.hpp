@@ -172,7 +172,7 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 
 template <typename InputIt1, typename InputIt2>
 size_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                             size_t max = std::numeric_limits<size_t>::max())
+                            size_t max = std::numeric_limits<size_t>::max())
 {
     struct Row {
         uint64_t VP;
@@ -262,11 +262,14 @@ class OSA : public DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::m
 
         remove_common_affix(s1, s2);
         if (s1.empty())
-            return (s2.size() <= static_cast<size_t>(score_cutoff)) ? static_cast<int64_t>(s2.size()) : score_cutoff + 1;
+            return (s2.size() <= static_cast<size_t>(score_cutoff)) ? static_cast<int64_t>(s2.size())
+                                                                    : score_cutoff + 1;
         else if (s1.size() < 64)
-            return static_cast<int64_t>(osa_hyrroe2003(PatternMatchVector(s1), s1, s2, static_cast<size_t>(score_cutoff)));
+            return static_cast<int64_t>(
+                osa_hyrroe2003(PatternMatchVector(s1), s1, s2, static_cast<size_t>(score_cutoff)));
         else
-            return static_cast<int64_t>(osa_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2, static_cast<size_t>(score_cutoff)));
+            return static_cast<int64_t>(
+                osa_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2, static_cast<size_t>(score_cutoff)));
     }
 };
 

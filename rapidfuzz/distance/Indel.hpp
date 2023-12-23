@@ -153,7 +153,8 @@ struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>, int6
     {}
 
     template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1) : s1_len(static_cast<size_t>(std::distance(first1, last1))), scorer(first1, last1)
+    CachedIndel(InputIt1 first1, InputIt1 last1)
+        : s1_len(static_cast<size_t>(std::distance(first1, last1))), scorer(first1, last1)
     {}
 
 private:

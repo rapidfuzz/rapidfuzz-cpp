@@ -498,8 +498,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     bounds.boundMaskSize = sllv(one, boundSizes << 1) - one;
     bounds.boundMask = sllv(one, boundSizes + one) - one;
 
-    bounds.maxBound =
-        (s2.size() > maxLen) ? s2.size() : maxLen;
+    bounds.maxBound = (s2.size() > maxLen) ? s2.size() : maxLen;
     bounds.maxBound /= 2;
     if (bounds.maxBound > 0) bounds.maxBound--;
 #    else
@@ -652,9 +651,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         for (size_t i = 0; i < vec_width; ++i) {
             VecType CommonChars = counts[i];
-            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(),
-                                         CommonChars, score_cutoff))
-            {
+            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -678,9 +675,8 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
                     VecType PatternFlagMask = blsi(P_flag_cur);
 
-                    uint64_t PM_j =
-                        block.get(cur_block, s2[countr_zero(T_flag_cur) +
-                                                T_word_index * sizeof(VecType) * 8]);
+                    uint64_t PM_j = block.get(
+                        cur_block, s2[countr_zero(T_flag_cur) + T_word_index * sizeof(VecType) * 8]);
                     Transpositions += !(PM_j & (static_cast<uint64_t>(PatternFlagMask) << offset));
 
                     T_flag_cur = blsr(T_flag_cur);
@@ -688,8 +684,8 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
                 }
             }
 
-            double Sim = jaro_calculate_similarity(s1_lengths[result_index], s2.size(),
-                                                   CommonChars, Transpositions);
+            double Sim =
+                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
@@ -765,9 +761,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         T_flag.store(T_flags.data());
         for (size_t i = 0; i < vec_width; ++i) {
             VecType CommonChars = counts[i];
-            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(),
-                                         CommonChars, score_cutoff))
-            {
+            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -790,8 +784,8 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
                 P_flag_cur ^= PatternFlagMask;
             }
 
-            double Sim = jaro_calculate_similarity(s1_lengths[result_index], s2.size(),
-                                                   CommonChars, Transpositions);
+            double Sim =
+                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
