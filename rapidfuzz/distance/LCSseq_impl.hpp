@@ -22,12 +22,12 @@ template <>
 struct LCSseqResult<true> {
     ShiftedBitMatrix<uint64_t> S;
 
-    int64_t sim;
+    size_t sim;
 };
 
 template <>
 struct LCSseqResult<false> {
-    int64_t sim;
+    size_t sim;
 };
 
 /*
@@ -49,7 +49,7 @@ struct LCSseqResult<false> {
  * 0x9 -> INS + DEL
  * 0xA -> INS + INS
  */
-static constexpr std::array<std::array<uint8_t, 7>, 14> lcs_seq_mbleven2018_matrix = {{
+static constexpr std::array<std::array<uint8_t, 6>, 14> lcs_seq_mbleven2018_matrix = {{
     /* max edit distance 1 */
     {0},
     /* case does not occur */ /* len_diff 0 */
@@ -72,23 +72,25 @@ static constexpr std::array<std::array<uint8_t, 7>, 14> lcs_seq_mbleven2018_matr
 }};
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+size_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
 {
     auto len1 = s1.size();
     auto len2 = s2.size();
+    assert(len1 != 0);
+    assert(len2 != 0);
 
     if (len1 < len2) return lcs_seq_mbleven2018(s2, s1, score_cutoff);
 
     auto len_diff = len1 - len2;
-    int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
-    auto ops_index = (max_misses + max_misses * max_misses) / 2 + len_diff - 1;
-    auto& possible_ops = lcs_seq_mbleven2018_matrix[static_cast<size_t>(ops_index)];
-    int64_t max_len = 0;
+    size_t max_misses = len1 + len2 - 2 * score_cutoff;
+    size_t ops_index = (max_misses + max_misses * max_misses) / 2 + len_diff - 1;
+    auto& possible_ops = lcs_seq_mbleven2018_matrix[ops_index];
+    size_t max_len = 0;
 
     for (uint8_t ops : possible_ops) {
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
-        int64_t cur_len = 0;
+        size_t cur_len = 0;
 
         if (!ops) break;
 
@@ -124,7 +126,7 @@ int64_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, int64_t scor
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Range<InputIt> s2,
-              int64_t score_cutoff) noexcept
+              size_t score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -157,8 +159,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
         unroll<int, interleaveCount>([&](auto j) {
             auto counts = popcount(~S[j]);
             unroll<int, counts.size()>([&](auto i) {
-                *score_iter =
-                    (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
+                *score_iter = (counts[i] >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
                 score_iter++;
             });
         });
@@ -178,8 +179,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
 
         auto counts = popcount(~S);
         unroll<int, counts.size()>([&](auto i) {
-            *score_iter =
-                (static_cast<int64_t>(counts[i]) >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
+            *score_iter = (counts[i] >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
             score_iter++;
         });
     }
@@ -188,7 +188,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
 #endif
 
 template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
-auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t score_cutoff = 0)
+auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, size_t score_cutoff = 0)
     -> LCSseqResult<RecordMatrix>
 {
     uint64_t S[N];
@@ -198,7 +198,7 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
     if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
 
     auto iter_s2 = s2.begin();
-    for (ptrdiff_t i = 0; i < s2.size(); ++i) {
+    for (size_t i = 0; i < s2.size(); ++i) {
         uint64_t carry = 0;
 
         static constexpr size_t unroll_factor = 3;
@@ -242,24 +242,23 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, int64_t s
  * The paper refers to s1 as m and s2 as n
  */
 template <bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
-auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff = 0)
+auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff = 0)
     -> LCSseqResult<RecordMatrix>
 {
-    assert(score_cutoff >= 0);
     assert(score_cutoff <= s1.size());
     assert(score_cutoff <= s2.size());
 
-    ptrdiff_t word_size = sizeof(uint64_t) * 8;
-    auto words = PM.size();
+    size_t word_size = sizeof(uint64_t) * 8;
+    size_t words = PM.size();
     std::vector<uint64_t> S(words, ~UINT64_C(0));
 
-    size_t band_width_left = static_cast<size_t>(s1.size() - score_cutoff);
-    size_t band_width_right = static_cast<size_t>(s2.size() - score_cutoff);
+    size_t band_width_left = s1.size() - score_cutoff;
+    size_t band_width_right = s2.size() - score_cutoff;
 
     LCSseqResult<RecordMatrix> res;
     if constexpr (RecordMatrix) {
-        int64_t full_band = band_width_left + 1 + band_width_right;
-        size_t full_band_words = std::min(words, static_cast<size_t>(full_band / word_size) + 2);
+        size_t full_band = band_width_left + 1 + band_width_right;
+        size_t full_band_words = std::min(words, full_band / word_size + 2);
         res.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
     }
 
@@ -268,11 +267,10 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
     size_t last_block = std::min(words, ceil_div(band_width_left + 1, word_size));
 
     auto iter_s2 = s2.begin();
-    for (ptrdiff_t row = 0; row < s2.size(); ++row) {
+    for (size_t row = 0; row < s2.size(); ++row) {
         uint64_t carry = 0;
 
-        if constexpr (RecordMatrix)
-            res.S.set_offset(static_cast<size_t>(row), static_cast<int64_t>(first_block) * word_size);
+        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ssize_t>(first_block * word_size));
 
         for (size_t word = first_block; word < last_block; ++word) {
             const uint64_t Matches = PM.get(word, *iter_s2);
@@ -286,11 +284,10 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
             if constexpr (RecordMatrix) res.S[static_cast<size_t>(row)][word - first_block] = S[word];
         }
 
-        if (row > static_cast<ptrdiff_t>(band_width_right))
-            first_block = (static_cast<size_t>(row) - band_width_right) / static_cast<size_t>(word_size);
+        if (row > band_width_right) first_block = (row - band_width_right) / word_size;
 
-        if (row + 1 + static_cast<ptrdiff_t>(band_width_left) <= s1.size())
-            last_block = ceil_div(static_cast<size_t>(row) + 1 + band_width_left, word_size);
+        if (row + 1 + band_width_left <= s1.size())
+            last_block = ceil_div(row + 1 + band_width_left, word_size);
 
         iter_s2++;
     }
@@ -305,13 +302,15 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, int64_
 }
 
 template <typename PMV, typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                                   int64_t score_cutoff)
+size_t longest_common_subsequence(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
 {
+    assert(score_cutoff <= s1.size());
+    assert(score_cutoff <= s2.size());
+
     size_t word_size = sizeof(uint64_t) * 8;
     size_t words = PM.size();
-    size_t band_width_left = static_cast<size_t>(s1.size() - score_cutoff);
-    size_t band_width_right = static_cast<size_t>(s2.size() - score_cutoff);
+    size_t band_width_left = s1.size() - score_cutoff;
+    size_t band_width_right = s2.size() - score_cutoff;
     size_t full_band = band_width_left + 1 + band_width_right;
     size_t full_band_words = std::min(words, full_band / word_size + 2);
 
@@ -333,7 +332,7 @@ int64_t longest_common_subsequence(const PMV& PM, Range<InputIt1> s1, Range<Inpu
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+size_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
 {
     if (s1.empty()) return 0;
     if (s1.size() <= 64) return longest_common_subsequence(PatternMatchVector(s1), s1, s2, score_cutoff);
@@ -343,61 +342,70 @@ int64_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, int64
 
 template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                           int64_t score_cutoff)
+                           int64_t sscore_cutoff)
 {
-    if (score_cutoff < 0) score_cutoff = 0;
+    size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
 
     auto len1 = s1.size();
     auto len2 = s2.size();
-    int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
+
+    if (score_cutoff > len1 || score_cutoff > len2) return 0;
+
+    size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? static_cast<int64_t>(len1) : 0;
 
-    if (max_misses < std::abs(len1 - len2)) return 0;
+    if (max_misses < abs_diff(len1, len2)) return 0;
 
     // do this first, since we can not remove any affix in encoded form
     if (max_misses >= 5) return longest_common_subsequence(block, s1, s2, score_cutoff);
 
     /* common affix does not effect Levenshtein distance */
     StringAffix affix = remove_common_affix(s1, s2);
-    int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
-    if (!s1.empty() && !s2.empty()) lcs_sim += lcs_seq_mbleven2018(s1, s2, score_cutoff - lcs_sim);
+    size_t lcs_sim = affix.prefix_len + affix.suffix_len;
+    if (!s1.empty() && !s2.empty()) {
+        size_t adjusted_cutoff = score_cutoff >= lcs_sim ? score_cutoff - lcs_sim : 0;
+        lcs_sim += lcs_seq_mbleven2018(s1, s2, adjusted_cutoff);
+    }
 
-    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
+    return (lcs_sim >= score_cutoff) ? static_cast<int64_t>(lcs_sim) : 0;
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff)
+int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscore_cutoff)
 {
-    if (score_cutoff < 0) score_cutoff = 0;
-
     auto len1 = s1.size();
     auto len2 = s2.size();
 
     // Swapping the strings so the second string is shorter
-    if (len1 < len2) return lcs_seq_similarity(s2, s1, score_cutoff);
+    if (len1 < len2) return lcs_seq_similarity(s2, s1, sscore_cutoff);
 
-    int64_t max_misses = static_cast<int64_t>(len1) + len2 - 2 * score_cutoff;
+    size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+
+    if (score_cutoff > len1 || score_cutoff > len2) return 0;
+
+    size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? static_cast<int64_t>(len1) : 0;
 
-    if (max_misses < std::abs(len1 - len2)) return 0;
+    if (max_misses < abs_diff(len1, len2)) return 0;
 
     /* common affix does not effect Levenshtein distance */
     StringAffix affix = remove_common_affix(s1, s2);
-    int64_t lcs_sim = static_cast<int64_t>(affix.prefix_len + affix.suffix_len);
+    size_t lcs_sim = affix.prefix_len + affix.suffix_len;
     if (s1.size() && s2.size()) {
+        size_t adjusted_cutoff = score_cutoff >= lcs_sim ? score_cutoff - lcs_sim : 0;
         if (max_misses < 5)
-            lcs_sim += lcs_seq_mbleven2018(s1, s2, std::max(score_cutoff - lcs_sim, int64_t(0)));
+            lcs_sim += lcs_seq_mbleven2018(s1, s2, adjusted_cutoff);
         else
-            lcs_sim += longest_common_subsequence(s1, s2, std::max(score_cutoff - lcs_sim, int64_t(0)));
+            lcs_sim += longest_common_subsequence(s1, s2, adjusted_cutoff);
     }
 
-    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
+    return (lcs_sim >= score_cutoff) ? static_cast<int64_t>(lcs_sim) : 0;
 }
 
 /**
@@ -407,9 +415,9 @@ template <typename InputIt1, typename InputIt2>
 Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqResult<true>& matrix,
                           StringAffix affix)
 {
-    auto len1 = s1.size();
-    auto len2 = s2.size();
-    size_t dist = static_cast<size_t>(static_cast<int64_t>(len1) + len2 - 2 * matrix.sim);
+    size_t len1 = s1.size();
+    size_t len2 = s2.size();
+    size_t dist = len1 + len2 - 2 * matrix.sim;
     Editops editops(dist);
     editops.set_src_len(len1 + affix.prefix_len + affix.suffix_len);
     editops.set_dest_len(len2 + affix.prefix_len + affix.suffix_len);
@@ -425,7 +433,8 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
         /* Deletion */
         if (matrix.S.test_bit(row - 1, col - 1)) {
             assert(dist > 0);
-            assert(col >= row - static_cast<ptrdiff_t>(band_width_right));
+            assert(static_cast<ssize_t>(col) >=
+                   static_cast<ssize_t>(row) - static_cast<ssize_t>(band_width_right));
             dist--;
             col--;
             editops[dist].type = EditType::Delete;
@@ -473,7 +482,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
 template <typename InputIt1, typename InputIt2>
 LCSseqResult<true> lcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
 {
-    auto nr = ceil_div(s1.size(), 64);
+    size_t nr = ceil_div(s1.size(), 64);
     switch (nr) {
     case 0:
     {

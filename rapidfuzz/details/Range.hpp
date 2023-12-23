@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <iterator>
 #include <limits>
 #include <ostream>
@@ -87,9 +88,11 @@ public:
         return reverse_iterator(begin());
     }
 
-    constexpr ptrdiff_t size() const
+    constexpr size_t size() const
     {
-        return std::distance(_first, _last);
+        // todo store length to prevent recalculation which could be expensive
+        assert(std::distance(_first, _last) >= 0);
+        return static_cast<size_t>(std::distance(_first, _last));
     }
     constexpr bool empty() const
     {
@@ -104,37 +107,39 @@ public:
         typename... Dummy, typename IterCopy = Iter,
         typename = std::enable_if_t<std::is_base_of_v<
             std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
-    constexpr decltype(auto) operator[](ptrdiff_t n) const
+    constexpr decltype(auto) operator[](size_t n) const
     {
-        return _first[n];
+        return _first[static_cast<ptrdiff_t>(n)];
     }
 
-    constexpr void remove_prefix(ptrdiff_t n)
+    constexpr void remove_prefix(size_t n)
     {
         if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
                                         typename std::iterator_traits<Iter>::iterator_category>)
-            _first += n;
+            _first += static_cast<ptrdiff_t>(n);
         else
-            for (ptrdiff_t i = 0; i < n; ++i)
+            for (size_t i = 0; i < n; ++i)
                 _first++;
     }
-    constexpr void remove_suffix(ptrdiff_t n)
+    constexpr void remove_suffix(size_t n)
     {
         if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
                                         typename std::iterator_traits<Iter>::iterator_category>)
-            _last -= n;
+            _last -= static_cast<ptrdiff_t>(n);
         else
-            for (ptrdiff_t i = 0; i < n; ++i)
+            for (size_t i = 0; i < n; ++i)
                 _last--;
     }
 
-    constexpr Range subseq(ptrdiff_t pos = 0, ptrdiff_t count = std::numeric_limits<ptrdiff_t>::max())
+    constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
     {
         if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
 
-        auto start = _first + pos;
-        if (std::distance(start, _last) < count) return {start, _last};
-        return {start, start + count};
+        // todo we should probably support non random access iterators here too
+        ptrdiff_t scount = static_cast<ptrdiff_t>(count);
+        auto start = _first + static_cast<ptrdiff_t>(pos);
+        if (std::distance(start, _last) < scount) return {start, _last};
+        return {start, start + scount};
     }
 
     constexpr decltype(auto) front() const

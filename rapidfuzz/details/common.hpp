@@ -32,6 +32,11 @@ struct DecomposedSet {
     {}
 };
 
+static inline size_t abs_diff(size_t a, size_t b)
+{
+    return a > b ? a - b : b - a;
+}
+
 /**
  * @defgroup Common Common
  * Common utilities shared among multiple functions

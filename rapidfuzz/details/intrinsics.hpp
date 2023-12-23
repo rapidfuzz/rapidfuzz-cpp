@@ -67,24 +67,24 @@ constexpr T ceil_div(T a, U divisor)
     return a / _div + static_cast<T>(a % _div != 0);
 }
 
-static inline int popcount(uint64_t x)
+static inline size_t popcount(uint64_t x)
 {
-    return static_cast<int>(std::bitset<64>(x).count());
+    return std::bitset<64>(x).count();
 }
 
-static inline int popcount(uint32_t x)
+static inline size_t popcount(uint32_t x)
 {
-    return static_cast<int>(std::bitset<32>(x).count());
+    return std::bitset<32>(x).count();
 }
 
-static inline int popcount(uint16_t x)
+static inline size_t popcount(uint16_t x)
 {
-    return static_cast<int>(std::bitset<16>(x).count());
+    return std::bitset<16>(x).count();
 }
 
-static inline int popcount(uint8_t x)
+static inline size_t popcount(uint8_t x)
 {
-    static constexpr int bit_count[256] = {
+    static constexpr uint8_t bit_count[256] = {
         0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
         1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
         1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
