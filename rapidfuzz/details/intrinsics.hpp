@@ -17,10 +17,10 @@
 namespace rapidfuzz::detail {
 
 template <typename T>
-T bit_mask_lsb(int n)
+T bit_mask_lsb(size_t n)
 {
     T mask = static_cast<T>(-1);
-    if (n < static_cast<int>(sizeof(T) * 8)) {
+    if (n < sizeof(T) * 8) {
         mask += static_cast<T>(static_cast<T>(1) << n);
     }
     return mask;
@@ -151,7 +151,7 @@ constexpr T blsmsk(T a)
 }
 
 #if defined(_MSC_VER) && !defined(__clang__)
-static inline int countr_zero(uint32_t x)
+static inline unsigned int countr_zero(uint32_t x)
 {
     unsigned long trailing_zero = 0;
     _BitScanForward(&trailing_zero, x);
@@ -159,14 +159,14 @@ static inline int countr_zero(uint32_t x)
 }
 
 #    if defined(_M_ARM) || defined(_M_X64)
-static inline int countr_zero(uint64_t x)
+static inline unsigned int countr_zero(uint64_t x)
 {
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
 #    else
-static inline int countr_zero(uint64_t x)
+static inline unsigned int countr_zero(uint64_t x)
 {
     uint32_t msh = (uint32_t)(x >> 32);
     uint32_t lsh = (uint32_t)(x & 0xFFFFFFFF);
@@ -176,25 +176,25 @@ static inline int countr_zero(uint64_t x)
 #    endif
 
 #else /*  gcc / clang */
-static inline int countr_zero(uint32_t x)
+static inline unsigned int countr_zero(uint32_t x)
 {
-    return __builtin_ctz(x);
+    return static_cast<unsigned int>(__builtin_ctz(x));
 }
 
-static inline int countr_zero(uint64_t x)
+static inline unsigned int countr_zero(uint64_t x)
 {
-    return __builtin_ctzll(x);
+    return static_cast<unsigned int>(__builtin_ctzll(x));
 }
 #endif
 
-static inline int countr_zero(uint16_t x)
+static inline unsigned int countr_zero(uint16_t x)
 {
-    return countr_zero(static_cast<uint32_t>(x));
+    return static_cast<unsigned int>(countr_zero(static_cast<uint32_t>(x)));
 }
 
-static inline int countr_zero(uint8_t x)
+static inline unsigned int countr_zero(uint8_t x)
 {
-    return countr_zero(static_cast<uint32_t>(x));
+    return static_cast<unsigned int>(countr_zero(static_cast<uint32_t>(x)));
 }
 
 template <class T, T... inds, class F>

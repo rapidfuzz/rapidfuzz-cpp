@@ -9,6 +9,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 
 namespace rapidfuzz::detail {
 

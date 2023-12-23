@@ -9,11 +9,11 @@ template <typename InputIt1, typename InputIt2>
 double jaro_winkler_similarity(Range<InputIt1> P, Range<InputIt2> T, double prefix_weight,
                                double score_cutoff)
 {
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-    int64_t min_len = std::min(P_len, T_len);
-    int64_t prefix = 0;
-    int64_t max_prefix = std::min<int64_t>(min_len, 4);
+    size_t P_len = P.size();
+    size_t T_len = T.size();
+    size_t min_len = std::min(P_len, T_len);
+    size_t prefix = 0;
+    size_t max_prefix = std::min(min_len, size_t(4));
 
     for (; prefix < max_prefix; ++prefix)
         if (T[prefix] != P[prefix]) break;
@@ -38,11 +38,11 @@ template <typename InputIt1, typename InputIt2>
 double jaro_winkler_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
                                double prefix_weight, double score_cutoff)
 {
-    int64_t P_len = P.size();
-    int64_t T_len = T.size();
-    int64_t min_len = std::min(P_len, T_len);
-    int64_t prefix = 0;
-    int64_t max_prefix = std::min<int64_t>(min_len, 4);
+    size_t P_len = P.size();
+    size_t T_len = T.size();
+    size_t min_len = std::min(P_len, T_len);
+    size_t prefix = 0;
+    size_t max_prefix = std::min(min_len, size_t(4));
 
     for (; prefix < max_prefix; ++prefix)
         if (T[prefix] != P[prefix]) break;
