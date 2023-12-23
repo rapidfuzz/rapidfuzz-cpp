@@ -201,19 +201,19 @@ private:
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 16)
-            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 32)
-            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
         else if constexpr (MaxLen == 64)
-            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
+            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, static_cast<size_t>(score_cutoff));
     }
 
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size());
+        return static_cast<int64_t>(std::max(str_lens[s1_idx], s2.size()));
     }
 
     size_t get_input_count() const noexcept
@@ -247,7 +247,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>
@@ -256,13 +256,13 @@ private:
     {
         int64_t res;
         if (s1.empty())
-            res = s2.size();
+            res = static_cast<int64_t>(s2.size());
         else if (s2.empty())
             res = static_cast<int64_t>(s1.size());
         else if (s1.size() < 64)
-            res = detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
+            res = static_cast<int64_t>(detail::osa_hyrroe2003(PM, detail::Range(s1), s2, static_cast<size_t>(score_cutoff)));
         else
-            res = detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+            res = static_cast<int64_t>(detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, static_cast<size_t>(score_cutoff)));
 
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }

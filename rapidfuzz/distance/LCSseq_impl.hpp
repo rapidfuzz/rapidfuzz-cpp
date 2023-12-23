@@ -360,7 +360,7 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
     if (max_misses < abs_diff(len1, len2)) return 0;
 
     // do this first, since we can not remove any affix in encoded form
-    if (max_misses >= 5) return longest_common_subsequence(block, s1, s2, score_cutoff);
+    if (max_misses >= 5) return static_cast<int64_t>(longest_common_subsequence(block, s1, s2, score_cutoff));
 
     /* common affix does not effect Levenshtein distance */
     StringAffix affix = remove_common_affix(s1, s2);
@@ -518,7 +518,7 @@ class LCSseq : public SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int
     template <typename InputIt1, typename InputIt2>
     static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
     {
-        return std::max(s1.size(), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt1, typename InputIt2>

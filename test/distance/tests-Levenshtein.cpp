@@ -342,7 +342,7 @@ TEST_CASE("Levenshtein small band")
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
         rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2),
-                                             static_cast<int64_t>(ops1.size()));
+                                             ops1.size());
         REQUIRE(ops1 == ops2);
     }
 
@@ -390,7 +390,7 @@ TEST_CASE("Levenshtein small band")
         REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
         rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2),
-                                             static_cast<int64_t>(ops1.size()));
+                                             ops1.size());
         REQUIRE(ops1 == ops2);
     }
 }
@@ -410,7 +410,7 @@ TEST_CASE("Levenshtein large band")
         REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
         rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2),
-                                             static_cast<int64_t>(ops1.size()));
+                                             ops1.size());
         REQUIRE(ops1 == ops2);
     }
 

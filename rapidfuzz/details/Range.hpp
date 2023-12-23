@@ -94,6 +94,14 @@ public:
         assert(std::distance(_first, _last) >= 0);
         return static_cast<size_t>(std::distance(_first, _last));
     }
+
+    constexpr ssize_t ssize() const
+    {
+        // todo store length to prevent recalculation which could be expensive
+        assert(std::distance(_first, _last) >= 0);
+        return std::distance(_first, _last);
+    }
+
     constexpr bool empty() const
     {
         return size() == 0;

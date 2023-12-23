@@ -160,10 +160,12 @@ public:
 private:
     template <typename InputIt2>
     void _similarity(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
-                     int64_t score_cutoff = 0) const
+                     int64_t sscore_cutoff = 0) const
     {
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
+
+        size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
@@ -179,7 +181,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<int64_t>(str_lens[s1_idx]), static_cast<int64_t>(s2.size()));
+        return static_cast<int64_t>(std::max(str_lens[s1_idx], s2.size()));
     }
 
     size_t get_input_count() const noexcept
@@ -214,7 +216,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>

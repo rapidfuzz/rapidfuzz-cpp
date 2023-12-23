@@ -14,7 +14,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t indel_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
                        int64_t score_cutoff)
 {
-    int64_t maximum = s1.size() + s2.size();
+    int64_t maximum = static_cast<int64_t>(s1.size() + s2.size());
     int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
     int64_t lcs_sim = lcs_seq_similarity(block, s1, s2, lcs_cutoff);
     int64_t dist = maximum - 2 * lcs_sim;
@@ -25,7 +25,7 @@ template <typename InputIt1, typename InputIt2>
 double indel_normalized_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
                                  double score_cutoff)
 {
-    int64_t maximum = s1.size() + s2.size();
+    int64_t maximum = static_cast<int64_t>(s1.size() + s2.size());
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = indel_distance(block, s1, s2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -49,7 +49,7 @@ class Indel : public DistanceBase<Indel, int64_t, 0, std::numeric_limits<int64_t
     template <typename InputIt1, typename InputIt2>
     static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
     {
-        return s1.size() + s2.size();
+        return static_cast<int64_t>(s1.size() + s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>

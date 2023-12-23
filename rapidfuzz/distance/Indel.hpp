@@ -131,7 +131,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
     {
-        return static_cast<int64_t>(str_lens[s1_idx]) + s2.size();
+        return static_cast<int64_t>(str_lens[s1_idx] + s2.size());
     }
 
     size_t get_input_count() const noexcept
@@ -153,7 +153,7 @@ struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>, int6
     {}
 
     template <typename InputIt1>
-    CachedIndel(InputIt1 first1, InputIt1 last1) : s1_len(std::distance(first1, last1)), scorer(first1, last1)
+    CachedIndel(InputIt1 first1, InputIt1 last1) : s1_len(static_cast<size_t>(std::distance(first1, last1))), scorer(first1, last1)
     {}
 
 private:
@@ -163,7 +163,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(detail::Range<InputIt2> s2) const
     {
-        return s1_len + s2.size();
+        return static_cast<int64_t>(s1_len + s2.size());
     }
 
     template <typename InputIt2>
@@ -177,7 +177,7 @@ private:
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
     }
 
-    int64_t s1_len;
+    size_t s1_len;
     CachedLCSseq<CharT1> scorer;
 };
 

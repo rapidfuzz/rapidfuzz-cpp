@@ -19,6 +19,8 @@ struct StringAffix {
 };
 
 struct LevenshteinWeightTable {
+    // usage with negative values is undefined
+    // in the next major release these will be changed to size_t
     int64_t insert_cost;
     int64_t delete_cost;
     int64_t replace_cost;

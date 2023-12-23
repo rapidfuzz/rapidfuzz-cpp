@@ -663,7 +663,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             if (!jaro_common_char_filter(static_cast<int64_t>(s1_lengths[result_index]), s2.size(),
                                          CommonChars, score_cutoff))
             {
-                scores[static_cast<int64_t>(result_index)] = 0.0;
+                scores[result_index] = 0.0;
                 result_index++;
                 continue;
             }
@@ -699,7 +699,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             double Sim = jaro_calculate_similarity(static_cast<int64_t>(s1_lengths[result_index]), s2.size(),
                                                    CommonChars, Transpositions);
 
-            scores[static_cast<int64_t>(result_index)] = (Sim >= score_cutoff) ? Sim : 0;
+            scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
         }
     }
@@ -776,7 +776,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
             if (!jaro_common_char_filter(static_cast<int64_t>(s1_lengths[result_index]), s2.size(),
                                          CommonChars, score_cutoff))
             {
-                scores[static_cast<int64_t>(result_index)] = 0.0;
+                scores[result_index] = 0.0;
                 result_index++;
                 continue;
             }
@@ -801,7 +801,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
             double Sim = jaro_calculate_similarity(static_cast<int64_t>(s1_lengths[result_index]), s2.size(),
                                                    CommonChars, Transpositions);
 
-            scores[static_cast<int64_t>(result_index)] = (Sim >= score_cutoff) ? Sim : 0;
+            scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
         }
     }
@@ -813,7 +813,7 @@ static inline void jaro_similarity_simd(Range<double*> scores, const detail::Blo
                                         double score_cutoff) noexcept
 {
     if (score_cutoff > 1.0) {
-        for (int64_t i = 0; i < static_cast<int64_t>(s1_lengths_size); i++)
+        for (size_t i = 0; i < s1_lengths_size; i++)
             scores[i] = 0.0;
 
         return;
@@ -821,7 +821,7 @@ static inline void jaro_similarity_simd(Range<double*> scores, const detail::Blo
 
     if (s2.empty()) {
         for (size_t i = 0; i < s1_lengths_size; i++)
-            scores[static_cast<int64_t>(i)] = s1_lengths[i] ? 0.0 : 1.0;
+            scores[i] = s1_lengths[i] ? 0.0 : 1.0;
 
         return;
     }

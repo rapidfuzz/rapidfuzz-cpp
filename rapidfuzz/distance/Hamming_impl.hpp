@@ -24,11 +24,11 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
     {
         if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
-        ptrdiff_t min_len = std::min(s1.size(), s2.size());
-        int64_t dist = std::max(s1.size(), s2.size());
+        size_t min_len = std::min(s1.size(), s2.size());
+        int64_t dist = static_cast<int64_t>(std::max(s1.size(), s2.size()));
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
-        for (ptrdiff_t i = 0; i < min_len; ++i)
+        for (size_t i = 0; i < min_len; ++i)
             dist -= bool(*(iter_s1++) == *(iter_s2++));
 
         return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -41,8 +41,8 @@ Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, bool pad, int64_
     if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
     Editops ops;
-    ptrdiff_t min_len = std::min(s1.size(), s2.size());
-    ptrdiff_t i = 0;
+    size_t min_len = std::min(s1.size(), s2.size());
+    size_t i = 0;
     for (; i < min_len; ++i)
         if (s1[i] != s2[i]) ops.emplace_back(EditType::Replace, i, i);
 
@@ -52,8 +52,8 @@ Editops hamming_editops(Range<InputIt1> s1, Range<InputIt2> s2, bool pad, int64_
     for (; i < s2.size(); ++i)
         ops.emplace_back(EditType::Insert, s1.size(), i);
 
-    ops.set_src_len(static_cast<size_t>(s1.size()));
-    ops.set_dest_len(static_cast<size_t>(s2.size()));
+    ops.set_src_len(s1.size());
+    ops.set_dest_len(s2.size());
     return ops;
 }
 

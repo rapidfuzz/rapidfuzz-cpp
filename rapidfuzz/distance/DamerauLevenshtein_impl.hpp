@@ -35,8 +35,9 @@ struct RowId {
  * from Chunchun Zhao and Sartaj Sahni
  */
 template <typename IntType, typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+size_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2, size_t max)
 {
+    // todo check types
     IntType len1 = static_cast<IntType>(s1.size());
     IntType len2 = static_cast<IntType>(s2.size());
     IntType maxVal = static_cast<IntType>(std::max(len1, len2) + 1);
@@ -97,20 +98,20 @@ int64_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2
         iter_s1++;
     }
 
-    int64_t dist = R[s2.size()];
+    size_t dist = static_cast<size_t>(R[s2.size()]);
     return (dist <= max) ? dist : max + 1;
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t max)
+size_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size_t max)
 {
-    int64_t min_edits = std::abs(s1.size() - s2.size());
+    size_t min_edits = abs_diff(s1.size(), s2.size());
     if (min_edits > max) return max + 1;
 
     /* common affix does not effect Levenshtein distance */
     remove_common_affix(s1, s2);
 
-    ptrdiff_t maxVal = std::max(s1.size(), s2.size()) + 1;
+    size_t maxVal = std::max(s1.size(), s2.size()) + 1;
     if (std::numeric_limits<int16_t>::max() > maxVal)
         return damerau_levenshtein_distance_zhao<int16_t>(s1, s2, max);
     else if (std::numeric_limits<int32_t>::max() > maxVal)
@@ -127,14 +128,14 @@ class DamerauLevenshtein
     template <typename InputIt1, typename InputIt2>
     static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
     {
-        return std::max(s1.size(), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt1, typename InputIt2>
     static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
                              [[maybe_unused]] int64_t score_hint)
     {
-        return damerau_levenshtein_distance(s1, s2, score_cutoff);
+        return static_cast<int64_t>(damerau_levenshtein_distance(s1, s2, static_cast<size_t>(score_cutoff)));
     }
 };
 
