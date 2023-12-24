@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <sys/types.h>
 #include <unordered_map>
 #include <vector>
 
@@ -50,6 +51,19 @@ double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
 
 namespace fuzz_detail {
 
+static constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
+{
+    double score =
+        (lensum > 0) ? (100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0;
+
+    return (score >= score_cutoff) ? score : 0;
+}
+
+static inline size_t score_cutoff_to_distance(double score_cutoff, size_t lensum)
+{
+    return static_cast<size_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / 100)));
+}
+
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 ScoreAlignment<double>
 partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Range<InputIt2> s2,
@@ -57,19 +71,19 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
                    const detail::CharSet<iter_value_t<InputIt1>>& s1_char_set, double score_cutoff)
 {
     ScoreAlignment<double> res;
-    auto len1 = static_cast<size_t>(s1.size());
-    auto len2 = static_cast<size_t>(s2.size());
+    size_t len1 = s1.size();
+    size_t len2 = s2.size();
     res.src_start = 0;
     res.src_end = len1;
     res.dest_start = 0;
     res.dest_end = len1;
 
     if (len2 > len1) {
-        int64_t maximum = static_cast<int64_t>(len1) * 2;
+        size_t maximum = len1 * 2;
         double norm_cutoff_sim = rapidfuzz::detail::NormSim_to_NormDist(score_cutoff / 100);
-        int64_t cutoff_dist = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * norm_cutoff_sim));
-        int64_t best_dist = std::numeric_limits<int64_t>::max();
-        std::vector<int64_t> scores(len2 - len1, -1);
+        size_t cutoff_dist = static_cast<size_t>(std::ceil(static_cast<double>(maximum) * norm_cutoff_sim));
+        size_t best_dist = std::numeric_limits<size_t>::max();
+        std::vector<size_t> scores(len2 - len1, std::numeric_limits<size_t>::max());
         std::vector<std::pair<size_t, size_t>> windows = {{0, len2 - len1 - 1}};
         std::vector<std::pair<size_t, size_t>> new_windows;
 
@@ -80,8 +94,8 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
                 rapidfuzz::detail::Range subseq1(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
                 rapidfuzz::detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
 
-                if (scores[window.first] == -1) {
-                    scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
+                if (scores[window.first] == std::numeric_limits<size_t>::max()) {
+                    scores[window.first] = static_cast<size_t>(cached_ratio.cached_indel.distance(subseq1));
                     if (scores[window.first] < cutoff_dist) {
                         cutoff_dist = best_dist = scores[window.first];
                         res.dest_start = window.first;
@@ -92,8 +106,8 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
                         }
                     }
                 }
-                if (scores[window.second] == -1) {
-                    scores[window.second] = cached_ratio.cached_indel.distance(subseq2);
+                if (scores[window.second] == std::numeric_limits<size_t>::max()) {
+                    scores[window.second] = static_cast<size_t>(cached_ratio.cached_indel.distance(subseq2));
                     if (scores[window.second] < cutoff_dist) {
                         cutoff_dist = best_dist = scores[window.second];
                         res.dest_start = window.second;
@@ -109,11 +123,12 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
                 if (cell_diff == 1) continue;
 
                 /* find the minimum score possible in the range first <-> last */
-                int64_t known_edits = std::abs(scores[window.first] - scores[window.second]);
+                size_t known_edits = detail::abs_diff(scores[window.first], scores[window.second]);
                 /* half of the cells that are not needed for known_edits can lead to a better score */
-                int64_t min_score = std::min(scores[window.first], scores[window.second]) -
-                                    (static_cast<int64_t>(cell_diff) + known_edits / 2);
-                if (min_score < cutoff_dist) {
+                ssize_t min_score =
+                    static_cast<ssize_t>(std::min(scores[window.first], scores[window.second])) -
+                    static_cast<ssize_t>(cell_diff + known_edits / 2);
+                if (min_score < static_cast<ssize_t>(cutoff_dist)) {
                     size_t center = cell_diff / 2;
                     new_windows.emplace_back(window.first, window.first + center);
                     new_windows.emplace_back(window.first + center, window.second);
@@ -177,8 +192,8 @@ template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
                                                InputIt2 last2, double score_cutoff)
 {
-    auto len1 = static_cast<size_t>(std::distance(first1, last1));
-    auto len2 = static_cast<size_t>(std::distance(first2, last2));
+    size_t len1 = static_cast<size_t>(std::distance(first1, last1));
+    size_t len2 = static_cast<size_t>(std::distance(first2, last2));
 
     if (len1 > len2) {
         ScoreAlignment<double> result = partial_ratio_alignment(first2, last2, first1, last1, score_cutoff);
@@ -379,15 +394,15 @@ double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& 
     size_t sect_len = intersect.length();
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = static_cast<int64_t>(sect_len + bool(sect_len) + ab_len);
-    int64_t sect_ba_len = static_cast<int64_t>(sect_len + bool(sect_len) + ba_len);
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     double result = 0;
-    auto cutoff_distance = detail::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
-    int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
+    size_t cutoff_distance = score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
+    size_t dist = static_cast<size_t>(
+        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
 
-    if (dist <= cutoff_distance)
-        result = detail::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff);
+    if (dist <= cutoff_distance) result = norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
 
     // exit early since the other ratios are 0
     if (!sect_len) return result;
@@ -395,13 +410,11 @@ double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& 
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = static_cast<int64_t>(bool(sect_len) + ab_len);
-    double sect_ab_ratio =
-        detail::norm_distance<100>(sect_ab_dist, static_cast<int64_t>(sect_len) + sect_ab_len, score_cutoff);
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
+    double sect_ab_ratio = norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = static_cast<int64_t>(bool(sect_len) + ba_len);
-    double sect_ba_ratio =
-        detail::norm_distance<100>(sect_ba_dist, static_cast<int64_t>(sect_len) + sect_ba_len, score_cutoff);
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
+    double sect_ba_ratio = norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -529,13 +542,14 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     double result = ratio(tokens_a.join(), tokens_b.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = static_cast<int64_t>(sect_len + bool(sect_len) + ab_len);
-    int64_t sect_ba_len = static_cast<int64_t>(sect_len + bool(sect_len) + ba_len);
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    auto cutoff_distance = detail::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
-    int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
+    size_t cutoff_distance = fuzz_detail::score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
+    size_t dist = static_cast<size_t>(
+        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
     if (dist <= cutoff_distance)
-        result = std::max(result, detail::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(result, fuzz_detail::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
 
     // exit early since the other ratios are 0
     if (!sect_len) return result;
@@ -543,13 +557,11 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = static_cast<int64_t>(bool(sect_len) + ab_len);
-    double sect_ab_ratio =
-        detail::norm_distance<100>(sect_ab_dist, static_cast<int64_t>(sect_len) + sect_ab_len, score_cutoff);
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
+    double sect_ab_ratio = fuzz_detail::norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = static_cast<int64_t>(bool(sect_len) + ba_len);
-    double sect_ba_ratio =
-        detail::norm_distance<100>(sect_ba_dist, static_cast<int64_t>(sect_len) + sect_ba_len, score_cutoff);
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
+    double sect_ba_ratio = fuzz_detail::norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -581,20 +593,21 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.size();
-    int64_t ba_len = diff_ba_joined.size();
-    int64_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.size();
+    size_t ba_len = diff_ba_joined.size();
+    size_t sect_len = intersect.length();
 
     double result = cached_ratio_s1_sorted.similarity(s2_tokens.join(), score_cutoff);
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
-    int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    auto cutoff_distance = detail::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
-    int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
+    size_t cutoff_distance = score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
+    size_t dist = static_cast<size_t>(
+        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
     if (dist <= cutoff_distance)
-        result = std::max(result, detail::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(result, norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
 
     // exit early since the other ratios are 0
     if (!sect_len) return result;
@@ -602,11 +615,11 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = bool(sect_len) + ab_len;
-    double sect_ab_ratio = detail::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
+    double sect_ab_ratio = norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = bool(sect_len) + ba_len;
-    double sect_ba_ratio = detail::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
+    double sect_ba_ratio = norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -632,9 +645,9 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     auto diff_ab_joined = diff_ab.join();
     auto diff_ba_joined = diff_ba.join();
 
-    int64_t ab_len = diff_ab_joined.size();
-    int64_t ba_len = diff_ba_joined.size();
-    int64_t sect_len = intersect.length();
+    size_t ab_len = diff_ab_joined.size();
+    size_t ba_len = diff_ba_joined.size();
+    size_t sect_len = intersect.length();
 
     double result = 0;
     auto s2_sorted = tokens_b.join();
@@ -648,13 +661,14 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     }
 
     // string length sect+ab <-> sect and sect+ba <-> sect
-    int64_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
-    int64_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
+    size_t sect_ab_len = sect_len + bool(sect_len) + ab_len;
+    size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
-    auto cutoff_distance = detail::score_cutoff_to_distance<100>(score_cutoff, sect_ab_len + sect_ba_len);
-    int64_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
+    size_t cutoff_distance = score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
+    size_t dist = static_cast<size_t>(
+        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
     if (dist <= cutoff_distance)
-        result = std::max(result, detail::norm_distance<100>(dist, sect_ab_len + sect_ba_len, score_cutoff));
+        result = std::max(result, norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
 
     // exit early since the other ratios are 0
     if (!sect_len) return result;
@@ -662,11 +676,11 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     // levenshtein distance sect+ab <-> sect and sect+ba <-> sect
     // since only sect is similar in them the distance can be calculated based on
     // the length difference
-    int64_t sect_ab_dist = bool(sect_len) + ab_len;
-    double sect_ab_ratio = detail::norm_distance<100>(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
+    size_t sect_ab_dist = bool(sect_len) + ab_len;
+    double sect_ab_ratio = norm_distance(sect_ab_dist, sect_len + sect_ab_len, score_cutoff);
 
-    int64_t sect_ba_dist = bool(sect_len) + ba_len;
-    double sect_ba_ratio = detail::norm_distance<100>(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
+    size_t sect_ba_dist = bool(sect_len) + ba_len;
+    double sect_ba_ratio = norm_distance(sect_ba_dist, sect_len + sect_ba_len, score_cutoff);
 
     return std::max({result, sect_ab_ratio, sect_ba_ratio});
 }
@@ -839,8 +853,8 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
     constexpr double UNBASE_SCALE = 0.95;
 
-    ptrdiff_t len1 = s1.size();
-    ptrdiff_t len2 = std::distance(first2, last2);
+    size_t len1 = s1.size();
+    size_t len2 = static_cast<size_t>(std::distance(first2, last2));
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
@@ -885,8 +899,8 @@ double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff
 template <typename InputIt1, typename InputIt2>
 double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
-    auto len1 = std::distance(first1, last1);
-    auto len2 = std::distance(first2, last2);
+    ptrdiff_t len1 = std::distance(first1, last1);
+    ptrdiff_t len2 = std::distance(first2, last2);
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
      * see https://github.com/maxbachmann/RapidFuzz/issues/110 */

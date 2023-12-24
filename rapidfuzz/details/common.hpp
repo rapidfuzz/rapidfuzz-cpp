@@ -52,26 +52,6 @@ template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
                                                               SplittedSentenceView<InputIt2> b);
 
-constexpr double result_cutoff(double result, double score_cutoff)
-{
-    return (result >= score_cutoff) ? result : 0;
-}
-
-template <int Max = 1>
-constexpr double norm_distance(int64_t dist, int64_t lensum, double score_cutoff = 0)
-{
-    double max = static_cast<double>(Max);
-    return result_cutoff((lensum > 0) ? (max - max * static_cast<double>(dist) / static_cast<double>(lensum))
-                                      : max,
-                         score_cutoff);
-}
-
-template <int Max = 1>
-static inline int64_t score_cutoff_to_distance(double score_cutoff, int64_t lensum)
-{
-    return static_cast<int64_t>(std::ceil(static_cast<double>(lensum) * (1.0 - score_cutoff / Max)));
-}
-
 template <typename InputIt1, typename InputIt2>
 StringAffix remove_common_affix(Range<InputIt1>& s1, Range<InputIt2>& s2);
 
