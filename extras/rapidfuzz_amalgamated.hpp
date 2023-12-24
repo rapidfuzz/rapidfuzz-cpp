@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-24 17:28:29.475831
+//  Generated: 2023-12-24 18:34:14.416744
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -483,6 +483,9 @@ public:
         _size = static_cast<size_t>(std::distance(_first, _last));
     }
 
+    constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
+    {}
+
     template <typename T>
     constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
     {
@@ -513,11 +516,6 @@ public:
         return _size;
     }
 
-    constexpr ssize_t ssize() const
-    {
-        return static_cast<ssize_t>(_size);
-    }
-
     constexpr bool empty() const
     {
         return size() == 0;
@@ -544,6 +542,8 @@ public:
         else
             for (size_t i = 0; i < n; ++i)
                 _first++;
+
+        _size -= n;
     }
     constexpr void remove_suffix(size_t n)
     {
@@ -553,17 +553,19 @@ public:
         else
             for (size_t i = 0; i < n; ++i)
                 _last--;
+
+        _size -= n;
     }
 
     constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
     {
         if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
 
-        // todo we should probably support non random access iterators here too
-        ptrdiff_t scount = static_cast<ptrdiff_t>(count);
-        auto start = _first + static_cast<ptrdiff_t>(pos);
-        if (std::distance(start, _last) < scount) return {start, _last};
-        return {start, start + scount};
+        Range res = *this;
+        res.remove_prefix(pos);
+        if (count < res.size()) res.remove_suffix(res.size() - count);
+
+        return res;
     }
 
     constexpr decltype(auto) front() const
@@ -578,7 +580,7 @@ public:
 
     constexpr Range<reverse_iterator> reversed() const
     {
-        return {rbegin(), rend()};
+        return {rbegin(), rend(), _size};
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Range& seq)
@@ -7016,7 +7018,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
             else {
                 if constexpr (!std::is_same_v<VecType, uint64_t>) {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
-                    size_t wraparound_score = std::numeric_limits<VecType>::max() + 1;
+                    size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
                     score = (min_dist / wraparound_score) * wraparound_score;
                     VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
@@ -8487,7 +8489,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
             else {
                 if constexpr (!std::is_same_v<VecType, uint64_t>) {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
-                    size_t wraparound_score = std::numeric_limits<VecType>::max() + 1;
+                    size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
                     score = (min_dist / wraparound_score) * wraparound_score;
                     VecType remainder = static_cast<VecType>(min_dist % wraparound_score);

@@ -369,7 +369,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
             else {
                 if constexpr (!std::is_same_v<VecType, uint64_t>) {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
-                    size_t wraparound_score = std::numeric_limits<VecType>::max() + 1;
+                    size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
                     score = (min_dist / wraparound_score) * wraparound_score;
                     VecType remainder = static_cast<VecType>(min_dist % wraparound_score);
