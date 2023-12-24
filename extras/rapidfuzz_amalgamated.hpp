@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-24 17:22:29.576990
+//  Generated: 2023-12-24 17:28:29.475831
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1546,12 +1546,12 @@ static inline unsigned int countr_zero(uint64_t x)
 
 static inline unsigned int countr_zero(uint16_t x)
 {
-    return static_cast<unsigned int>(countr_zero(static_cast<uint32_t>(x)));
+    return countr_zero(static_cast<uint32_t>(x));
 }
 
 static inline unsigned int countr_zero(uint8_t x)
 {
-    return static_cast<unsigned int>(countr_zero(static_cast<uint32_t>(x)));
+    return countr_zero(static_cast<uint32_t>(x));
 }
 
 template <class T, T... inds, class F>
@@ -8238,17 +8238,13 @@ private:
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2,
-                                                         static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2,
-                                                          static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2,
-                                                          static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2,
-                                                          static_cast<size_t>(score_cutoff));
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
     template <typename InputIt2>
@@ -8600,7 +8596,7 @@ class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::ma
 
         remove_common_affix(s1, s2);
         if (s1.empty())
-            return (s2.size() <= static_cast<size_t>(score_cutoff)) ? s2.size() : score_cutoff + 1;
+            return (s2.size() <= score_cutoff) ? s2.size() : score_cutoff + 1;
         else if (s1.size() < 64)
             return osa_hyrroe2003(PatternMatchVector(s1), s1, s2, score_cutoff);
         else
@@ -8804,17 +8800,13 @@ private:
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2,
-                                                 static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2,
-                                                  static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2,
-                                                  static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2,
-                                                  static_cast<size_t>(score_cutoff));
+            detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
     template <typename InputIt2>

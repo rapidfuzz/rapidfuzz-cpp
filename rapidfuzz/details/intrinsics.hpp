@@ -189,12 +189,12 @@ static inline unsigned int countr_zero(uint64_t x)
 
 static inline unsigned int countr_zero(uint16_t x)
 {
-    return static_cast<unsigned int>(countr_zero(static_cast<uint32_t>(x)));
+    return countr_zero(static_cast<uint32_t>(x));
 }
 
 static inline unsigned int countr_zero(uint8_t x)
 {
-    return static_cast<unsigned int>(countr_zero(static_cast<uint32_t>(x)));
+    return countr_zero(static_cast<uint32_t>(x));
 }
 
 template <class T, T... inds, class F>

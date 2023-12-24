@@ -262,7 +262,7 @@ class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::ma
 
         remove_common_affix(s1, s2);
         if (s1.empty())
-            return (s2.size() <= static_cast<size_t>(score_cutoff)) ? s2.size() : score_cutoff + 1;
+            return (s2.size() <= score_cutoff) ? s2.size() : score_cutoff + 1;
         else if (s1.size() < 64)
             return osa_hyrroe2003(PatternMatchVector(s1), s1, s2, score_cutoff);
         else
