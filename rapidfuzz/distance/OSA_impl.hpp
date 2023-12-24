@@ -85,7 +85,7 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 #    endif
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));

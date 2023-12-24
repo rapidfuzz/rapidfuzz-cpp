@@ -131,7 +131,7 @@ private:
 
         for (size_t i = 0; i < get_input_count(); ++i) {
             if (scores[i] > 0.7) {
-                size_t min_len = std::min(static_cast<size_t>(s2.size()), str_lens[i]);
+                size_t min_len = std::min(s2.size(), str_lens[i]);
                 size_t max_prefix = std::min(min_len, size_t(4));
                 size_t prefix = 0;
                 for (; prefix < max_prefix; ++prefix)

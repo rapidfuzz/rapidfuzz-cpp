@@ -135,7 +135,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, cons
 #    endif
     auto score_iter = scores.begin();
     static constexpr size_t alignment = native_simd<VecType>::alignment;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
 
     static constexpr size_t interleaveCount = 3;
@@ -281,7 +281,7 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            if constexpr (RecordMatrix) res.S[static_cast<size_t>(row)][word - first_block] = S[word];
+            if constexpr (RecordMatrix) res.S[row][word - first_block] = S[word];
         }
 
         if (row > band_width_right) first_block = (row - band_width_right) / word_size;
@@ -345,7 +345,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
                            int64_t sscore_cutoff)
 {
-    size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+    size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
     auto len1 = s1.size();
     auto len2 = s2.size();
@@ -383,7 +383,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscor
     // Swapping the strings so the second string is shorter
     if (len1 < len2) return lcs_seq_similarity(s2, s1, sscore_cutoff);
 
-    size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+    size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
     if (score_cutoff > len1 || score_cutoff > len2) return 0;
 

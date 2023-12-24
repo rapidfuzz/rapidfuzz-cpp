@@ -165,7 +165,7 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+        size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)

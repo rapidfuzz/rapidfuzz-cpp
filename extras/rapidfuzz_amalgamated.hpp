@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-24 12:49:19.667929
+//  Generated: 2023-12-24 13:43:19.371296
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -376,7 +376,7 @@ struct ShiftedBitMatrix {
 
     bool test_bit(size_t row, size_t col, bool default_ = false) const noexcept
     {
-        ptrdiff_t offset = static_cast<ptrdiff_t>(m_offsets[row]);
+        ptrdiff_t offset = m_offsets[row];
 
         if (offset < 0) {
             col += static_cast<size_t>(-offset);
@@ -3666,7 +3666,7 @@ size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<
     assert(std::numeric_limits<IntType>::max() > maxVal);
 
     HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId<IntType>> last_row_id;
-    size_t size = static_cast<size_t>(s2.size() + 2);
+    size_t size = s2.size() + 2;
     assume(size != 0);
     std::vector<IntType> FR_arr(size, maxVal);
     std::vector<IntType> R1_arr(size, maxVal);
@@ -4110,7 +4110,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>
@@ -4481,7 +4481,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, cons
 #    endif
     auto score_iter = scores.begin();
     static constexpr size_t alignment = native_simd<VecType>::alignment;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
 
     static constexpr size_t interleaveCount = 3;
@@ -4627,7 +4627,7 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            if constexpr (RecordMatrix) res.S[static_cast<size_t>(row)][word - first_block] = S[word];
+            if constexpr (RecordMatrix) res.S[row][word - first_block] = S[word];
         }
 
         if (row > band_width_right) first_block = (row - band_width_right) / word_size;
@@ -4691,7 +4691,7 @@ template <typename InputIt1, typename InputIt2>
 int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
                            int64_t sscore_cutoff)
 {
-    size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+    size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
     auto len1 = s1.size();
     auto len2 = s2.size();
@@ -4729,7 +4729,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscor
     // Swapping the strings so the second string is shorter
     if (len1 < len2) return lcs_seq_similarity(s2, s1, sscore_cutoff);
 
-    size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+    size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
     if (score_cutoff > len1 || score_cutoff > len2) return 0;
 
@@ -5039,7 +5039,7 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        size_t score_cutoff = static_cast<size_t>(std::max(sscore_cutoff, int64_t(0)));
+        size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
@@ -5424,7 +5424,7 @@ static inline bool jaro_common_char_filter(size_t P_len, size_t T_len, size_t Co
 
 static inline size_t count_common_chars(const FlaggedCharsWord& flagged)
 {
-    return static_cast<size_t>(popcount(flagged.P_flag));
+    return popcount(flagged.P_flag);
 }
 
 static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
@@ -5432,12 +5432,12 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
     size_t CommonChars = 0;
     if (flagged.P_flag.size() < flagged.T_flag.size()) {
         for (uint64_t flag : flagged.P_flag) {
-            CommonChars += static_cast<size_t>(popcount(flag));
+            CommonChars += popcount(flag);
         }
     }
     else {
         for (uint64_t flag : flagged.T_flag) {
-            CommonChars += static_cast<size_t>(popcount(flag));
+            CommonChars += popcount(flag);
         }
     }
     return CommonChars;
@@ -5568,8 +5568,8 @@ static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPat
     assert(Bound >= 31);
 
     FlaggedCharsMultiword flagged;
-    flagged.T_flag.resize(static_cast<size_t>(ceil_div(T.size(), 64)));
-    flagged.P_flag.resize(static_cast<size_t>(ceil_div(P.size(), 64)));
+    flagged.T_flag.resize(ceil_div(T.size(), 64));
+    flagged.P_flag.resize(ceil_div(P.size(), 64));
 
     SearchBoundMask BoundMask;
     size_t start_range = std::min(Bound + 1, P.size());
@@ -5820,7 +5820,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
     [[maybe_unused]] static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    assert(static_cast<size_t>(s2.size()) <= sizeof(VecType) * 8);
+    assert(s2.size() <= sizeof(VecType) * 8);
 
     JaroSimilaritySimdBounds<native_simd<VecType>> bounds;
 
@@ -5886,7 +5886,7 @@ static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengt
 #    endif
 
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
+    assert(s2.size() > sizeof(VecType) * 8);
 
     JaroSimilaritySimdBounds<native_simd<VecType>> bounds;
 
@@ -5919,9 +5919,9 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
-    assert(static_cast<size_t>(s2.size()) > sizeof(VecType) * 8);
+    assert(s2.size() > sizeof(VecType) * 8);
 
     struct AlignedAlloc {
         AlignedAlloc(size_t size) : memory(rf_aligned_alloc(native_simd<VecType>::alignment, size))
@@ -5939,7 +5939,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
     native_simd<VecType> one(1);
     size_t result_index = 0;
 
-    size_t s2_block_count = static_cast<size_t>(detail::ceil_div(s2.size(), sizeof(VecType) * 8));
+    size_t s2_block_count = detail::ceil_div(s2.size(), sizeof(VecType) * 8);
     AlignedAlloc memory(2 * s2_block_count * sizeof(native_simd<VecType>));
 
     native_simd<VecType>* T_flag = static_cast<native_simd<VecType>*>(memory.memory);
@@ -5972,7 +5972,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
             P_flag |= blsi(PM_j);
-            size_t T_word_index = static_cast<size_t>(j) / (sizeof(VecType) * 8);
+            size_t T_word_index = j / (sizeof(VecType) * 8);
             T_flag[T_word_index] |= andnot(counter[T_word_index], (PM_j == zero));
 
             counter[T_word_index] = counter[T_word_index] << 1;
@@ -5986,7 +5986,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
             P_flag |= blsi(PM_j);
-            size_t T_word_index = static_cast<size_t>(j) / (sizeof(VecType) * 8);
+            size_t T_word_index = j / (sizeof(VecType) * 8);
             T_flag[T_word_index] |= andnot(counter[T_word_index], (PM_j == zero));
 
             counter[T_word_index] = counter[T_word_index] << 1;
@@ -5997,7 +5997,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
         alignas(alignment) std::array<VecType, vec_width> P_flags;
         P_flag.store(P_flags.data());
 
-        for (size_t i = 0; i < static_cast<size_t>(detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8)); ++i)
+        for (size_t i = 0; i < detail::ceil_div(s2_cur.size(), sizeof(VecType) * 8); ++i)
             T_flag[i].store(T_flags + i * vec_width);
 
         for (size_t i = 0; i < vec_width; ++i) {
@@ -6057,9 +6057,9 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
 
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
-    assert(static_cast<size_t>(s2.size()) <= sizeof(VecType) * 8);
+    assert(s2.size() <= sizeof(VecType) * 8);
 
     native_simd<VecType> zero(VecType(0));
     native_simd<VecType> one(1);
@@ -6163,7 +6163,7 @@ static inline void jaro_similarity_simd(Range<double*> scores, const detail::Blo
         return;
     }
 
-    if (static_cast<size_t>(s2.size()) > sizeof(VecType) * 8)
+    if (s2.size() > sizeof(VecType) * 8)
         return jaro_similarity_simd_long_s2(scores, block, s1_lengths, s2, score_cutoff);
     else
         return jaro_similarity_simd_short_s2(scores, block, s1_lengths, s2, score_cutoff);
@@ -6622,7 +6622,7 @@ private:
 
         for (size_t i = 0; i < get_input_count(); ++i) {
             if (scores[i] > 0.7) {
-                size_t min_len = std::min(static_cast<size_t>(s2.size()), str_lens[i]);
+                size_t min_len = std::min(s2.size(), str_lens[i]);
                 size_t max_prefix = std::min(min_len, size_t(4));
                 size_t prefix = 0;
                 for (; prefix < max_prefix; ++prefix)
@@ -6752,7 +6752,7 @@ template <typename InputIt1, typename InputIt2>
 size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                               LevenshteinWeightTable weights, size_t max)
 {
-    size_t cache_size = static_cast<size_t>(s1.size()) + 1;
+    size_t cache_size = s1.size() + 1;
     std::vector<size_t> cache(cache_size);
     assume(cache_size != 0);
 
@@ -6802,8 +6802,10 @@ template <typename InputIt1, typename InputIt2>
 size_t levenshtein_min_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                 LevenshteinWeightTable weights)
 {
-    return static_cast<size_t>(std::max((s1.ssize() - s2.ssize()) * weights.delete_cost,
-                                        (s2.ssize() - s1.ssize()) * weights.insert_cost));
+    if (s1.size() > s2.size())
+        return (s1.size() - s2.size()) * static_cast<size_t>(weights.delete_cost);
+    else
+        return (s2.size() - s1.size()) * static_cast<size_t>(weights.insert_cost);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -6866,7 +6868,7 @@ size_t levenshtein_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>&
     if (max == 1) return max + static_cast<size_t>(len_diff == 1 || len1 != 1);
 
     size_t ops_index = (max + max * max) / 2 + len_diff - 1;
-    auto& possible_ops = levenshtein_mbleven2018_matrix[static_cast<size_t>(ops_index)];
+    auto& possible_ops = levenshtein_mbleven2018_matrix[ops_index];
     size_t dist = max + 1;
 
     for (uint8_t ops : possible_ops) {
@@ -6996,7 +6998,7 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 #    endif
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));
@@ -7179,8 +7181,8 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
     if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
 
         ssize_t start_offset = static_cast<ssize_t>(max) + 2 - 64;
         for (size_t i = 0; i < s2.size(); ++i) {
@@ -7616,9 +7618,9 @@ void recover_alignment(Editops& editops, const Range<InputIt1>& s1, const Range<
                        const LevenshteinResult<true, false>& matrix, size_t src_pos, size_t dest_pos,
                        size_t editop_pos)
 {
-    size_t dist = static_cast<size_t>(matrix.dist);
-    size_t col = static_cast<size_t>(s1.size());
-    size_t row = static_cast<size_t>(s2.size());
+    size_t dist = matrix.dist;
+    size_t col = s1.size();
+    size_t row = s2.size();
 
     while (row && col) {
         /* Deletion */
@@ -7695,7 +7697,7 @@ void levenshtein_align(Editops& editops, const Range<InputIt1>& s1, const Range<
 
     assert(matrix.dist <= max);
     if (matrix.dist != 0) {
-        if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
+        if (editops.size() == 0) editops.resize(matrix.dist);
 
         recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
     }
@@ -7759,7 +7761,7 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
     size_t left_size = s2.size() / 2;
     size_t right_size = s2.size() - left_size;
     hpos.s2_mid = left_size;
-    size_t s1_len = static_cast<size_t>(s1.size());
+    size_t s1_len = s1.size();
     size_t best_score = std::numeric_limits<size_t>::max();
     size_t right_first_pos = 0;
     size_t right_last_pos = 0;
@@ -7841,11 +7843,11 @@ void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<In
 
     size_t matrix_size = 2 * full_band * s2.size() / 8;
     if (matrix_size < 1024 * 1024 || s1.size() < 65 || s2.size() < 10) {
-        levenshtein_align(editops, s1, s2, static_cast<size_t>(max), src_pos, dest_pos, editop_pos);
+        levenshtein_align(editops, s1, s2, max, src_pos, dest_pos, editop_pos);
     }
     /* Hirschbergs algorithm */
     else {
-        auto hpos = find_hirschberg_pos(s1, s2, static_cast<size_t>(max));
+        auto hpos = find_hirschberg_pos(s1, s2, max);
 
         if (editops.size() == 0) editops.resize(hpos.left_score + hpos.right_score);
 
@@ -7897,8 +7899,8 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
 
     levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, static_cast<size_t>(score_cutoff));
 
-    editops.set_src_len(static_cast<size_t>(s1.size()));
-    editops.set_dest_len(static_cast<size_t>(s2.size()));
+    editops.set_src_len(s1.size());
+    editops.set_dest_len(s2.size());
     return editops;
 }
 
@@ -8476,7 +8478,7 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 #    endif
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));
@@ -9045,7 +9047,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>
@@ -9168,7 +9170,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
+        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>

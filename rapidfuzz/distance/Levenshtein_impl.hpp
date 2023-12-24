@@ -59,7 +59,7 @@ template <typename InputIt1, typename InputIt2>
 size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                               LevenshteinWeightTable weights, size_t max)
 {
-    size_t cache_size = static_cast<size_t>(s1.size()) + 1;
+    size_t cache_size = s1.size() + 1;
     std::vector<size_t> cache(cache_size);
     assume(cache_size != 0);
 
@@ -109,8 +109,10 @@ template <typename InputIt1, typename InputIt2>
 size_t levenshtein_min_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                 LevenshteinWeightTable weights)
 {
-    return static_cast<size_t>(std::max((s1.ssize() - s2.ssize()) * weights.delete_cost,
-                                        (s2.ssize() - s1.ssize()) * weights.insert_cost));
+    if (s1.size() > s2.size())
+        return (s1.size() - s2.size()) * static_cast<size_t>(weights.delete_cost);
+    else
+        return (s2.size() - s1.size()) * static_cast<size_t>(weights.insert_cost);
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -173,7 +175,7 @@ size_t levenshtein_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>&
     if (max == 1) return max + static_cast<size_t>(len_diff == 1 || len1 != 1);
 
     size_t ops_index = (max + max * max) / 2 + len_diff - 1;
-    auto& possible_ops = levenshtein_mbleven2018_matrix[static_cast<size_t>(ops_index)];
+    auto& possible_ops = levenshtein_mbleven2018_matrix[ops_index];
     size_t dist = max + 1;
 
     for (uint8_t ops : possible_ops) {
@@ -303,7 +305,7 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 #    endif
     static constexpr size_t alignment = native_simd<VecType>::alignment;
     static constexpr size_t vec_width = native_simd<VecType>::size;
-    static constexpr size_t vecs = static_cast<size_t>(native_simd<uint64_t>::size);
+    static constexpr size_t vecs = native_simd<uint64_t>::size;
     assert(block.size() % vecs == 0);
 
     native_simd<VecType> zero(VecType(0));
@@ -486,8 +488,8 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
     if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(static_cast<size_t>(s2.size()), 1, 0);
+        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
 
         ssize_t start_offset = static_cast<ssize_t>(max) + 2 - 64;
         for (size_t i = 0; i < s2.size(); ++i) {
@@ -923,9 +925,9 @@ void recover_alignment(Editops& editops, const Range<InputIt1>& s1, const Range<
                        const LevenshteinResult<true, false>& matrix, size_t src_pos, size_t dest_pos,
                        size_t editop_pos)
 {
-    size_t dist = static_cast<size_t>(matrix.dist);
-    size_t col = static_cast<size_t>(s1.size());
-    size_t row = static_cast<size_t>(s2.size());
+    size_t dist = matrix.dist;
+    size_t col = s1.size();
+    size_t row = s2.size();
 
     while (row && col) {
         /* Deletion */
@@ -1002,7 +1004,7 @@ void levenshtein_align(Editops& editops, const Range<InputIt1>& s1, const Range<
 
     assert(matrix.dist <= max);
     if (matrix.dist != 0) {
-        if (editops.size() == 0) editops.resize(static_cast<size_t>(matrix.dist));
+        if (editops.size() == 0) editops.resize(matrix.dist);
 
         recover_alignment(editops, s1, s2, matrix, src_pos, dest_pos, editop_pos);
     }
@@ -1066,7 +1068,7 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
     size_t left_size = s2.size() / 2;
     size_t right_size = s2.size() - left_size;
     hpos.s2_mid = left_size;
-    size_t s1_len = static_cast<size_t>(s1.size());
+    size_t s1_len = s1.size();
     size_t best_score = std::numeric_limits<size_t>::max();
     size_t right_first_pos = 0;
     size_t right_last_pos = 0;
@@ -1148,11 +1150,11 @@ void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<In
 
     size_t matrix_size = 2 * full_band * s2.size() / 8;
     if (matrix_size < 1024 * 1024 || s1.size() < 65 || s2.size() < 10) {
-        levenshtein_align(editops, s1, s2, static_cast<size_t>(max), src_pos, dest_pos, editop_pos);
+        levenshtein_align(editops, s1, s2, max, src_pos, dest_pos, editop_pos);
     }
     /* Hirschbergs algorithm */
     else {
-        auto hpos = find_hirschberg_pos(s1, s2, static_cast<size_t>(max));
+        auto hpos = find_hirschberg_pos(s1, s2, max);
 
         if (editops.size() == 0) editops.resize(hpos.left_score + hpos.right_score);
 
@@ -1204,8 +1206,8 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
 
     levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, static_cast<size_t>(score_cutoff));
 
-    editops.set_src_len(static_cast<size_t>(s1.size()));
-    editops.set_dest_len(static_cast<size_t>(s2.size()));
+    editops.set_src_len(s1.size());
+    editops.set_dest_len(s2.size());
     return editops;
 }
 

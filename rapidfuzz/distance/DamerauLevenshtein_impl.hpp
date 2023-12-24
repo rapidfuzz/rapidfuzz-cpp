@@ -44,7 +44,7 @@ size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<
     assert(std::numeric_limits<IntType>::max() > maxVal);
 
     HybridGrowingHashmap<typename Range<InputIt1>::value_type, RowId<IntType>> last_row_id;
-    size_t size = static_cast<size_t>(s2.size() + 2);
+    size_t size = s2.size() + 2;
     assume(size != 0);
     std::vector<IntType> FR_arr(size, maxVal);
     std::vector<IntType> R1_arr(size, maxVal);

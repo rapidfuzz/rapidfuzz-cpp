@@ -159,7 +159,7 @@ struct ShiftedBitMatrix {
 
     bool test_bit(size_t row, size_t col, bool default_ = false) const noexcept
     {
-        ptrdiff_t offset = static_cast<ptrdiff_t>(m_offsets[row]);
+        ptrdiff_t offset = m_offsets[row];
 
         if (offset < 0) {
             col += static_cast<size_t>(-offset);
