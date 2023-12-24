@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-24 14:07:28.891419
+//  Generated: 2023-12-24 14:16:03.132679
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3743,21 +3743,21 @@ size_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
 }
 
 class DamerauLevenshtein
-    : public DistanceBase<DamerauLevenshtein, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend DistanceBase<DamerauLevenshtein, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    : public DistanceBase<DamerauLevenshtein, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<DamerauLevenshtein, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<DamerauLevenshtein>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_cutoff,
-                             [[maybe_unused]] int64_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
+                            [[maybe_unused]] size_t score_hint)
     {
-        return static_cast<int64_t>(damerau_levenshtein_distance(s1, s2, static_cast<size_t>(score_cutoff)));
+        return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
 };
 
@@ -3788,28 +3788,28 @@ namespace experimental {
  * @return Damerau Levenshtein distance between s1 and s2
  */
 template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                    size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+                                    size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       int64_t score_cutoff = 0)
+size_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                      size_t score_cutoff = 0)
 {
     return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+size_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, size_t score_cutoff = 0)
 {
     return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff, score_cutoff);
 }
@@ -3869,7 +3869,7 @@ double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sent
 }
 
 template <typename CharT1>
-struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, int64_t,
+struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, size_t,
                                                                     0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedDamerauLevenshtein(const Sentence1& s1_)
@@ -3881,19 +3881,19 @@ struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamera
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, int64_t, 0,
+    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, size_t, 0,
                                       std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _distance(const detail::Range<InputIt2>& s2, int64_t score_cutoff,
-                      [[maybe_unused]] int64_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
+                     [[maybe_unused]] size_t score_hint) const
     {
         return rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -3917,24 +3917,24 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 
 namespace rapidfuzz::detail {
 
-class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max(), bool> {
-    friend DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max(), bool>;
+class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool> {
+    friend DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool>;
     friend NormalizedMetricBase<Hamming, bool>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool)
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad,
-                             int64_t score_cutoff, [[maybe_unused]] int64_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad,
+                            size_t score_cutoff, [[maybe_unused]] size_t score_hint)
     {
         if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
         size_t min_len = std::min(s1.size(), s2.size());
-        int64_t dist = static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        size_t dist = std::max(s1.size(), s2.size());
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
         for (size_t i = 0; i < min_len; ++i)
@@ -3945,7 +3945,7 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
 };
 
 template <typename InputIt1, typename InputIt2>
-Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad, int64_t)
+Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad, size_t)
 {
     if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
@@ -3995,29 +3995,28 @@ namespace rapidfuzz {
  * @return Hamming distance between s1 and s2
  */
 template <typename InputIt1, typename InputIt2>
-int64_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t hamming_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Hamming::distance(first1, last1, first2, last2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_distance(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t hamming_distance(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Hamming::distance(s1, s2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
-                           int64_t score_cutoff = 0)
+size_t hamming_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
+                          size_t score_cutoff = 0)
 {
     return detail::Hamming::similarity(first1, last1, first2, last2, pad_, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
-                           int64_t score_cutoff = 0)
+size_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, bool pad_ = true, size_t score_cutoff = 0)
 {
     return detail::Hamming::similarity(s1, s2, pad_, score_cutoff, score_cutoff);
 }
@@ -4039,7 +4038,7 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, boo
 
 template <typename InputIt1, typename InputIt2>
 Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
-                        int64_t score_hint = std::numeric_limits<int64_t>::max())
+                        size_t score_hint = std::numeric_limits<size_t>::max())
 {
     return detail::hamming_editops(detail::Range(first1, last1), detail::Range(first2, last2), pad_,
                                    score_hint);
@@ -4047,7 +4046,7 @@ Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputI
 
 template <typename Sentence1, typename Sentence2>
 Editops hamming_editops(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
-                        int64_t score_hint = std::numeric_limits<int64_t>::max())
+                        size_t score_hint = std::numeric_limits<size_t>::max())
 {
     return detail::hamming_editops(detail::Range(s1), detail::Range(s2), pad_, score_hint);
 }
@@ -4092,7 +4091,7 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, b
 }
 
 template <typename CharT1>
-struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>, int64_t, 0,
+struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>, size_t, 0,
                                                          std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedHamming(const Sentence1& s1_, bool pad_ = true)
@@ -4104,18 +4103,18 @@ struct CachedHamming : public detail::CachedDistanceBase<CachedHamming<CharT1>, 
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedHamming<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    friend detail::CachedDistanceBase<CachedHamming<CharT1>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedHamming<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _distance(const detail::Range<InputIt2>& s2, int64_t score_cutoff,
-                      [[maybe_unused]] int64_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
+                     [[maybe_unused]] size_t score_hint) const
     {
         return detail::Hamming::distance(s1, s2, pad, score_cutoff, score_hint);
     }
@@ -8948,21 +8947,21 @@ CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
 
 namespace rapidfuzz::detail {
 
-class Postfix : public SimilarityBase<Postfix, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend SimilarityBase<Postfix, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend SimilarityBase<Postfix, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<Postfix>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
-                               [[maybe_unused]] int64_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
+                              [[maybe_unused]] size_t score_hint)
     {
-        int64_t dist = static_cast<int64_t>(remove_common_suffix(s1, s2));
+        size_t dist = remove_common_suffix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
     }
 };
@@ -8972,28 +8971,28 @@ class Postfix : public SimilarityBase<Postfix, int64_t, 0, std::numeric_limits<i
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-int64_t postfix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t postfix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Postfix::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t postfix_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t postfix_distance(const Sentence1& s1, const Sentence2& s2,
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Postfix::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t postfix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0)
+size_t postfix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                          size_t score_cutoff = 0)
 {
     return detail::Postfix::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t postfix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+size_t postfix_similarity(const Sentence1& s1, const Sentence2& s2, size_t score_cutoff = 0)
 {
     return detail::Postfix::similarity(s1, s2, score_cutoff, score_cutoff);
 }
@@ -9025,7 +9024,7 @@ double postfix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 }
 
 template <typename CharT1>
-struct CachedPostfix : public detail::CachedSimilarityBase<CachedPostfix<CharT1>, int64_t, 0,
+struct CachedPostfix : public detail::CachedSimilarityBase<CachedPostfix<CharT1>, size_t, 0,
                                                            std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedPostfix(const Sentence1& s1_) : CachedPostfix(detail::to_begin(s1_), detail::to_end(s1_))
@@ -9036,19 +9035,19 @@ struct CachedPostfix : public detail::CachedSimilarityBase<CachedPostfix<CharT1>
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedPostfix<CharT1>, int64_t, 0,
+    friend detail::CachedSimilarityBase<CachedPostfix<CharT1>, size_t, 0,
                                         std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedPostfix<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
-                        [[maybe_unused]] int64_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
+                       [[maybe_unused]] size_t score_hint) const
     {
         return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
@@ -9071,21 +9070,21 @@ CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<Inp
 
 namespace rapidfuzz::detail {
 
-class Prefix : public SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<Prefix>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
-                               [[maybe_unused]] int64_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
+                              [[maybe_unused]] size_t score_hint)
     {
-        int64_t dist = static_cast<int64_t>(remove_common_prefix(s1, s2));
+        size_t dist = remove_common_prefix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
     }
 };
@@ -9095,28 +9094,28 @@ class Prefix : public SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-int64_t prefix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t prefix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                       size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Prefix::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t prefix_distance(const Sentence1& s1, const Sentence2& s2,
-                        int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t prefix_distance(const Sentence1& s1, const Sentence2& s2,
+                       size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Prefix::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t prefix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                          int64_t score_cutoff = 0)
+size_t prefix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                         size_t score_cutoff = 0)
 {
     return detail::Prefix::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t prefix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+size_t prefix_similarity(const Sentence1& s1, const Sentence2& s2, size_t score_cutoff = 0)
 {
     return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
 }
@@ -9148,7 +9147,7 @@ double prefix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, do
 }
 
 template <typename CharT1>
-struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
+struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, size_t, 0,
                                                           std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedPrefix(const Sentence1& s1_) : CachedPrefix(detail::to_begin(s1_), detail::to_end(s1_))
@@ -9159,19 +9158,18 @@ struct CachedPrefix : public detail::CachedSimilarityBase<CachedPrefix<CharT1>, 
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedPrefix<CharT1>, int64_t, 0,
-                                        std::numeric_limits<int64_t>::max()>;
+    friend detail::CachedSimilarityBase<CachedPrefix<CharT1>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedPrefix<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
-                        [[maybe_unused]] int64_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
+                       [[maybe_unused]] size_t score_hint) const
     {
         return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }

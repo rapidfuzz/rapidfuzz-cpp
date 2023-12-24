@@ -8,21 +8,21 @@
 
 namespace rapidfuzz::detail {
 
-class Prefix : public SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<Prefix>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
-                               [[maybe_unused]] int64_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
+                              [[maybe_unused]] size_t score_hint)
     {
-        int64_t dist = static_cast<int64_t>(remove_common_prefix(s1, s2));
+        size_t dist = remove_common_prefix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
     }
 };

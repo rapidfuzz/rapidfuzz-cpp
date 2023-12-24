@@ -8,24 +8,24 @@
 
 namespace rapidfuzz::detail {
 
-class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max(), bool> {
-    friend DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int64_t>::max(), bool>;
+class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool> {
+    friend DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool>;
     friend NormalizedMetricBase<Hamming, bool>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool)
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad,
-                             int64_t score_cutoff, [[maybe_unused]] int64_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad,
+                            size_t score_cutoff, [[maybe_unused]] size_t score_hint)
     {
         if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
         size_t min_len = std::min(s1.size(), s2.size());
-        int64_t dist = static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        size_t dist = std::max(s1.size(), s2.size());
         auto iter_s1 = s1.begin();
         auto iter_s2 = s2.begin();
         for (size_t i = 0; i < min_len; ++i)
@@ -36,7 +36,7 @@ class Hamming : public DistanceBase<Hamming, int64_t, 0, std::numeric_limits<int
 };
 
 template <typename InputIt1, typename InputIt2>
-Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad, int64_t)
+Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad, size_t)
 {
     if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 

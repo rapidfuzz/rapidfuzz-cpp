@@ -121,21 +121,21 @@ size_t damerau_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
 }
 
 class DamerauLevenshtein
-    : public DistanceBase<DamerauLevenshtein, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend DistanceBase<DamerauLevenshtein, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+    : public DistanceBase<DamerauLevenshtein, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<DamerauLevenshtein, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<DamerauLevenshtein>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_cutoff,
-                             [[maybe_unused]] int64_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
+                            [[maybe_unused]] size_t score_hint)
     {
-        return static_cast<int64_t>(damerau_levenshtein_distance(s1, s2, static_cast<size_t>(score_cutoff)));
+        return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
 };
 

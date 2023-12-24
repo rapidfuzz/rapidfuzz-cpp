@@ -30,28 +30,28 @@ namespace experimental {
  * @return Damerau Levenshtein distance between s1 and s2
  */
 template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t damerau_levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                    size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::DamerauLevenshtein::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                                     int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+                                    size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::DamerauLevenshtein::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                                       int64_t score_cutoff = 0)
+size_t damerau_levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                                      size_t score_cutoff = 0)
 {
     return detail::DamerauLevenshtein::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+size_t damerau_levenshtein_similarity(const Sentence1& s1, const Sentence2& s2, size_t score_cutoff = 0)
 {
     return detail::DamerauLevenshtein::similarity(s1, s2, score_cutoff, score_cutoff);
 }
@@ -111,7 +111,7 @@ double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sent
 }
 
 template <typename CharT1>
-struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, int64_t,
+struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, size_t,
                                                                     0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedDamerauLevenshtein(const Sentence1& s1_)
@@ -123,19 +123,19 @@ struct CachedDamerauLevenshtein : public detail::CachedDistanceBase<CachedDamera
     {}
 
 private:
-    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, int64_t, 0,
+    friend detail::CachedDistanceBase<CachedDamerauLevenshtein<CharT1>, size_t, 0,
                                       std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _distance(const detail::Range<InputIt2>& s2, int64_t score_cutoff,
-                      [[maybe_unused]] int64_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
+                     [[maybe_unused]] size_t score_hint) const
     {
         return rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, score_cutoff);
     }

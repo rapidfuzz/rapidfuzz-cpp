@@ -10,28 +10,28 @@
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-int64_t postfix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t postfix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Postfix::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t postfix_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t postfix_distance(const Sentence1& s1, const Sentence2& s2,
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Postfix::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t postfix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0)
+size_t postfix_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                          size_t score_cutoff = 0)
 {
     return detail::Postfix::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t postfix_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+size_t postfix_similarity(const Sentence1& s1, const Sentence2& s2, size_t score_cutoff = 0)
 {
     return detail::Postfix::similarity(s1, s2, score_cutoff, score_cutoff);
 }
@@ -63,7 +63,7 @@ double postfix_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 }
 
 template <typename CharT1>
-struct CachedPostfix : public detail::CachedSimilarityBase<CachedPostfix<CharT1>, int64_t, 0,
+struct CachedPostfix : public detail::CachedSimilarityBase<CachedPostfix<CharT1>, size_t, 0,
                                                            std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedPostfix(const Sentence1& s1_) : CachedPostfix(detail::to_begin(s1_), detail::to_end(s1_))
@@ -74,19 +74,19 @@ struct CachedPostfix : public detail::CachedSimilarityBase<CachedPostfix<CharT1>
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedPostfix<CharT1>, int64_t, 0,
+    friend detail::CachedSimilarityBase<CachedPostfix<CharT1>, size_t, 0,
                                         std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedPostfix<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
-                        [[maybe_unused]] int64_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
+                       [[maybe_unused]] size_t score_hint) const
     {
         return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
