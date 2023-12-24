@@ -74,7 +74,7 @@ size_t osa_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const Range<I
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
+void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchVector& block,
                          const std::vector<size_t>& s1_lengths, const Range<InputIt>& s2,
                          size_t score_cutoff) noexcept
 {
@@ -163,7 +163,7 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 
                 score += distances[i];
             }
-            scores[result_index] = static_cast<int64_t>((score <= score_cutoff) ? score : score_cutoff + 1);
+            scores[result_index] = (score <= score_cutoff) ? score : score_cutoff + 1;
             result_index++;
         });
     }
@@ -245,31 +245,28 @@ size_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range<Input
     return (currDist <= max) ? currDist : max + 1;
 }
 
-class OSA : public DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<OSA>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
+    static size_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff, size_t score_hint)
     {
         if (s2.size() < s1.size()) return _distance(s2, s1, score_cutoff, score_hint);
 
         remove_common_affix(s1, s2);
         if (s1.empty())
-            return (s2.size() <= static_cast<size_t>(score_cutoff)) ? static_cast<int64_t>(s2.size())
-                                                                    : score_cutoff + 1;
+            return (s2.size() <= static_cast<size_t>(score_cutoff)) ? s2.size() : score_cutoff + 1;
         else if (s1.size() < 64)
-            return static_cast<int64_t>(
-                osa_hyrroe2003(PatternMatchVector(s1), s1, s2, static_cast<size_t>(score_cutoff)));
+            return osa_hyrroe2003(PatternMatchVector(s1), s1, s2, score_cutoff);
         else
-            return static_cast<int64_t>(
-                osa_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2, static_cast<size_t>(score_cutoff)));
+            return osa_hyrroe2003_block(BlockPatternMatchVector(s1), s1, s2, score_cutoff);
     }
 };
 

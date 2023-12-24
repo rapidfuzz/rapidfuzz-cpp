@@ -1,8 +1,11 @@
 ## Changelog
 
-## [2.3.0] - 2023-11-
+## [3.0.0] - 2023-11-
 ### Performance
 - add banded implementation of LCS / Indel. This improves the runtime from `O((|s1|/64) * |s2|)` to `O((score_cutoff/64) * |s2|)`
+
+### Changed
+- changed many types in the interface from int64_t to size_t, since they can't be negative.
 
 ## [2.2.3] - 2023-11-02
 ### Fixed
