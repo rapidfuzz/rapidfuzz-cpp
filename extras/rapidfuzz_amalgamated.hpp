@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-24 13:43:19.371296
+//  Generated: 2023-12-24 13:50:43.720794
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -6782,14 +6782,17 @@ size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const R
  * @brief calculates the maximum possible Levenshtein distance based on
  * string lengths and weights
  */
-static inline int64_t levenshtein_maximum(ptrdiff_t len1, ptrdiff_t len2, LevenshteinWeightTable weights)
+static inline size_t levenshtein_maximum(size_t len1, size_t len2, LevenshteinWeightTable weights)
 {
-    int64_t max_dist = len1 * weights.delete_cost + len2 * weights.insert_cost;
+    size_t max_dist =
+        len1 * static_cast<size_t>(weights.delete_cost) + len2 * static_cast<size_t>(weights.insert_cost);
 
     if (len1 >= len2)
-        max_dist = std::min(max_dist, len2 * weights.replace_cost + (len1 - len2) * weights.delete_cost);
+        max_dist = std::min(max_dist, len2 * static_cast<size_t>(weights.replace_cost) +
+                                          (len1 - len2) * static_cast<size_t>(weights.delete_cost));
     else
-        max_dist = std::min(max_dist, len1 * weights.replace_cost + (len2 - len1) * weights.insert_cost);
+        max_dist = std::min(max_dist, len1 * static_cast<size_t>(weights.replace_cost) +
+                                          (len2 - len1) * static_cast<size_t>(weights.insert_cost));
 
     return max_dist;
 }
@@ -7868,8 +7871,7 @@ class Levenshtein : public DistanceBase<Levenshtein, int64_t, 0, std::numeric_li
     static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                            LevenshteinWeightTable weights)
     {
-        return levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), static_cast<ptrdiff_t>(s2.size()),
-                                   weights);
+        return static_cast<int64_t>(levenshtein_maximum(s1.size(), s2.size(), weights));
     }
 
     template <typename InputIt1, typename InputIt2>
@@ -8305,7 +8307,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, const detail::Range<InputIt2>& s2) const
     {
-        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size(), weights);
+        return static_cast<int64_t>(detail::levenshtein_maximum(str_lens[s1_idx], s2.size(), weights));
     }
 
     size_t get_input_count() const noexcept
@@ -8343,8 +8345,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()),
-                                           static_cast<ptrdiff_t>(s2.size()), weights);
+        return static_cast<int64_t>(detail::levenshtein_maximum(s1.size(), s2.size(), weights));
     }
 
     template <typename InputIt2>

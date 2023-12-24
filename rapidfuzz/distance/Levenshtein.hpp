@@ -405,7 +405,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(size_t s1_idx, const detail::Range<InputIt2>& s2) const
     {
-        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size(), weights);
+        return static_cast<int64_t>(detail::levenshtein_maximum(str_lens[s1_idx], s2.size(), weights));
     }
 
     size_t get_input_count() const noexcept
@@ -443,8 +443,7 @@ private:
     template <typename InputIt2>
     int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()),
-                                           static_cast<ptrdiff_t>(s2.size()), weights);
+        return static_cast<int64_t>(detail::levenshtein_maximum(s1.size(), s2.size(), weights));
     }
 
     template <typename InputIt2>
