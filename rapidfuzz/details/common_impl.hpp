@@ -3,8 +3,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cctype>
-#include <cwctype>
 #include <iterator>
 
 namespace rapidfuzz::detail {

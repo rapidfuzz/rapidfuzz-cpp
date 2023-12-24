@@ -9,7 +9,6 @@
 #include <cmath>
 #include <iterator>
 #include <sys/types.h>
-#include <unordered_map>
 #include <vector>
 
 namespace rapidfuzz::fuzz {
@@ -95,7 +94,7 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
                 detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
 
                 if (scores[window.first] == std::numeric_limits<size_t>::max()) {
-                    scores[window.first] = static_cast<size_t>(cached_ratio.cached_indel.distance(subseq1));
+                    scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
                     if (scores[window.first] < cutoff_dist) {
                         cutoff_dist = best_dist = scores[window.first];
                         res.dest_start = window.first;
@@ -107,7 +106,7 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
                     }
                 }
                 if (scores[window.second] == std::numeric_limits<size_t>::max()) {
-                    scores[window.second] = static_cast<size_t>(cached_ratio.cached_indel.distance(subseq2));
+                    scores[window.second] = cached_ratio.cached_indel.distance(subseq2);
                     if (scores[window.second] < cutoff_dist) {
                         cutoff_dist = best_dist = scores[window.second];
                         res.dest_start = window.second;
@@ -399,8 +398,7 @@ double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& 
 
     double result = 0;
     size_t cutoff_distance = score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
-    size_t dist = static_cast<size_t>(
-        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
+    size_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
 
     if (dist <= cutoff_distance) result = norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff);
 
@@ -546,8 +544,7 @@ double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 la
     size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     size_t cutoff_distance = fuzz_detail::score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
-    size_t dist = static_cast<size_t>(
-        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
+    size_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance)
         result = std::max(result, fuzz_detail::norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
 
@@ -604,8 +601,7 @@ double token_ratio(const rapidfuzz::detail::SplittedSentenceView<CharT1>& s1_tok
     size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     size_t cutoff_distance = score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
-    size_t dist = static_cast<size_t>(
-        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
+    size_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance)
         result = std::max(result, norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
 
@@ -665,8 +661,7 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     size_t sect_ba_len = sect_len + bool(sect_len) + ba_len;
 
     size_t cutoff_distance = score_cutoff_to_distance(score_cutoff, sect_ab_len + sect_ba_len);
-    size_t dist = static_cast<size_t>(
-        indel_distance(diff_ab_joined, diff_ba_joined, static_cast<int64_t>(cutoff_distance)));
+    size_t dist = indel_distance(diff_ab_joined, diff_ba_joined, cutoff_distance);
     if (dist <= cutoff_distance)
         result = std::max(result, norm_distance(dist, sect_ab_len + sect_ba_len, score_cutoff));
 

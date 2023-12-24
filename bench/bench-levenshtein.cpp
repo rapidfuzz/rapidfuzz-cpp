@@ -158,7 +158,7 @@ static void BM_Levenshtein_SIMD(benchmark::State& state)
 {
     std::vector<std::string> seq1;
     std::vector<std::string> seq2;
-    std::vector<int64_t> results(64);
+    std::vector<size_t> results(64);
     for (int i = 0; i < 64; i++)
         seq1.push_back(generate(MaxLen));
     for (int i = 0; i < 10000; i++)

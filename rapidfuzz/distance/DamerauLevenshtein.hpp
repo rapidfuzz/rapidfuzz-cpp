@@ -2,7 +2,6 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #include <algorithm>
-#include <cmath>
 #include <rapidfuzz/distance/DamerauLevenshtein_impl.hpp>
 
 namespace rapidfuzz {

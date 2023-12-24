@@ -11,22 +11,22 @@
 #include "../common.hpp"
 
 template <typename Sentence1, typename Sentence2>
-int64_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
+size_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
                              rapidfuzz::LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t max = std::numeric_limits<int64_t>::max())
+                             size_t max = std::numeric_limits<size_t>::max())
 {
-    int64_t res1 = rapidfuzz::levenshtein_distance(s1, s2, weights, max);
-    int64_t res2 = rapidfuzz::levenshtein_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), weights, max);
-    int64_t res3 = rapidfuzz::levenshtein_distance(
+    size_t res1 = rapidfuzz::levenshtein_distance(s1, s2, weights, max);
+    size_t res2 = rapidfuzz::levenshtein_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), weights, max);
+    size_t res3 = rapidfuzz::levenshtein_distance(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
         BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), weights, max);
     rapidfuzz::CachedLevenshtein scorer(s1, weights);
-    int64_t res4 = scorer.distance(s2, max);
-    int64_t res5 = scorer.distance(s2.begin(), s2.end(), max);
+    size_t res4 = scorer.distance(s2, max);
+    size_t res5 = scorer.distance(s2.begin(), s2.end(), max);
 #ifdef RAPIDFUZZ_SIMD
     if (weights.delete_cost == 1 && weights.insert_cost == 1 && weights.replace_cost == 1 && s1.size() <= 64)
     {
-        std::vector<int64_t> results(256 / 8);
+        std::vector<size_t> results(256 / 8);
 
         if (s1.size() <= 8) {
             rapidfuzz::experimental::MultiLevenshtein<8> simd_scorer(1);
@@ -447,7 +447,7 @@ TEST_CASE("SIMD wraparound")
     scorer.insert(std::string("b"));
     scorer.insert(std::string("aa"));
     scorer.insert(std::string("bb"));
-    std::vector<int64_t> results(scorer.result_count());
+    std::vector<size_t> results(scorer.result_count());
 
     {
         std::string s2 = str_multiply(std::string("b"), 256);
@@ -489,7 +489,7 @@ TEST_CASE("SIMD")
 
         scorer.insert(std::string("00000000000000000"));
 
-        std::vector<int64_t> results(scorer.result_count());
+        std::vector<size_t> results(scorer.result_count());
         scorer.distance(&results[0], results.size(), s2);
 
         for (size_t i = 0; i < count - 1; ++i)

@@ -3,9 +3,7 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iterator>
 #include <limits>
-#include <memory>
 #include <numeric>
 #include <rapidfuzz/details/GrowingHashmap.hpp>
 #include <rapidfuzz/details/Matrix.hpp>

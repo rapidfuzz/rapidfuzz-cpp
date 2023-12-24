@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -13,7 +12,6 @@
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
-#include <stdexcept>
 #include <sys/types.h>
 
 namespace rapidfuzz::detail {
@@ -64,18 +62,18 @@ size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const R
     assume(cache_size != 0);
 
     for (size_t i = 0; i < cache_size; ++i)
-        cache[i] = i * static_cast<size_t>(weights.delete_cost);
+        cache[i] = i * weights.delete_cost;
 
     for (const auto& ch2 : s2) {
         auto cache_iter = cache.begin();
         size_t temp = *cache_iter;
-        *cache_iter += static_cast<size_t>(weights.insert_cost);
+        *cache_iter += weights.insert_cost;
 
         for (const auto& ch1 : s1) {
             if (ch1 != ch2)
-                temp = std::min({*cache_iter + static_cast<size_t>(weights.delete_cost),
-                                 *(cache_iter + 1) + static_cast<size_t>(weights.insert_cost),
-                                 temp + static_cast<size_t>(weights.replace_cost)});
+                temp = std::min({*cache_iter + weights.delete_cost,
+                                 *(cache_iter + 1) + weights.insert_cost,
+                                 temp + weights.replace_cost});
             ++cache_iter;
             std::swap(*cache_iter, temp);
         }
@@ -92,14 +90,14 @@ size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const R
 static inline size_t levenshtein_maximum(size_t len1, size_t len2, LevenshteinWeightTable weights)
 {
     size_t max_dist =
-        len1 * static_cast<size_t>(weights.delete_cost) + len2 * static_cast<size_t>(weights.insert_cost);
+        len1 * weights.delete_cost + len2 * weights.insert_cost;
 
     if (len1 >= len2)
-        max_dist = std::min(max_dist, len2 * static_cast<size_t>(weights.replace_cost) +
-                                          (len1 - len2) * static_cast<size_t>(weights.delete_cost));
+        max_dist = std::min(max_dist, len2 * weights.replace_cost +
+                                          (len1 - len2) * weights.delete_cost);
     else
-        max_dist = std::min(max_dist, len1 * static_cast<size_t>(weights.replace_cost) +
-                                          (len2 - len1) * static_cast<size_t>(weights.insert_cost));
+        max_dist = std::min(max_dist, len1 * weights.replace_cost +
+                                          (len2 - len1) * weights.insert_cost);
 
     return max_dist;
 }
@@ -113,9 +111,9 @@ size_t levenshtein_min_distance(const Range<InputIt1>& s1, const Range<InputIt2>
                                 LevenshteinWeightTable weights)
 {
     if (s1.size() > s2.size())
-        return (s1.size() - s2.size()) * static_cast<size_t>(weights.delete_cost);
+        return (s1.size() - s2.size()) * weights.delete_cost;
     else
-        return (s2.size() - s1.size()) * static_cast<size_t>(weights.insert_cost);
+        return (s2.size() - s1.size()) * weights.insert_cost;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -297,7 +295,7 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
+void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchVector& block,
                                  const std::vector<size_t>& s1_lengths, const Range<InputIt>& s2,
                                  size_t score_cutoff) noexcept
 {
@@ -381,7 +379,7 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 
                 score += distances[i];
             }
-            scores[result_index] = static_cast<int64_t>((score <= score_cutoff) ? score : score_cutoff + 1);
+            scores[result_index] = (score <= score_cutoff) ? score : score_cutoff + 1;
             result_index++;
         });
     }
@@ -649,8 +647,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
     size_t first_block = 0;
     /* last_block is the index of the last block in Ukkonen band. */
     size_t last_block =
-        std::min(words, static_cast<size_t>(
-                            ceil_div(std::min(max, (max + s1.size() - s2.size()) / 2) + 1, word_size))) -
+        std::min(words, ceil_div(std::min(max, (max + s1.size() - s2.size()) / 2) + 1, word_size)) -
         1;
 
     /* Searching */
@@ -713,7 +710,6 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             scores[word] = static_cast<size_t>(static_cast<ssize_t>(scores[word]) + advance_block(word));
         }
 
-        // todo
         max = static_cast<size_t>(
             std::min(static_cast<ssize_t>(max),
                      static_cast<ssize_t>(scores[last_block]) +
@@ -911,7 +907,7 @@ size_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
 
             if (score <= score_hint) return score;
 
-            if (std::numeric_limits<int64_t>::max() / 2 < score_hint) break;
+            if (std::numeric_limits<size_t>::max() / 2 < score_hint) break;
 
             score_hint *= 2;
         }
@@ -1021,10 +1017,10 @@ LevenshteinResult<false, true> levenshtein_row(const Range<InputIt1>& s1, const 
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+size_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                              LevenshteinWeightTable weights = {1, 1, 1},
-                             int64_t score_cutoff = std::numeric_limits<int64_t>::max(),
-                             int64_t score_hint = std::numeric_limits<int64_t>::max())
+                             size_t score_cutoff = std::numeric_limits<size_t>::max(),
+                             size_t score_hint = std::numeric_limits<size_t>::max())
 {
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -1033,10 +1029,10 @@ int64_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s
         /* uniform Levenshtein multiplied with the common factor */
         if (weights.insert_cost == weights.replace_cost) {
             // score_cutoff can make use of the common divisor of the three weights
-            int64_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
-            int64_t new_score_hint = ceil_div(score_hint, weights.insert_cost);
-            int64_t distance = static_cast<int64_t>(uniform_levenshtein_distance(
-                s1, s2, static_cast<size_t>(new_score_cutoff), static_cast<size_t>(new_score_hint)));
+            size_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
+            size_t new_score_hint = ceil_div(score_hint, weights.insert_cost);
+            size_t distance = uniform_levenshtein_distance(
+                s1, s2, new_score_cutoff, new_score_hint);
             distance *= weights.insert_cost;
             return (distance <= score_cutoff) ? distance : score_cutoff + 1;
         }
@@ -1046,15 +1042,14 @@ int64_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s
          */
         else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
             // score_cutoff can make use of the common divisor of the three weights
-            int64_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
-            int64_t distance = rapidfuzz::indel_distance(s1, s2, new_score_cutoff);
+            size_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
+            size_t distance = rapidfuzz::indel_distance(s1, s2, new_score_cutoff);
             distance *= weights.insert_cost;
             return (distance <= score_cutoff) ? distance : score_cutoff + 1;
         }
     }
 
-    return static_cast<int64_t>(
-        generalized_levenshtein_distance(s1, s2, weights, static_cast<size_t>(score_cutoff)));
+    return generalized_levenshtein_distance(s1, s2, weights, score_cutoff);
 }
 struct HirschbergPos {
     size_t left_score;
@@ -1133,7 +1128,7 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
     if (hpos.left_score + hpos.right_score > max)
         return find_hirschberg_pos(s1, s2, max * 2);
     else {
-        assert(static_cast<size_t>(levenshtein_distance(s1, s2)) == hpos.left_score + hpos.right_score);
+        assert(levenshtein_distance(s1, s2) == hpos.left_score + hpos.right_score);
         return hpos;
     }
 }
@@ -1169,33 +1164,33 @@ void levenshtein_align_hirschberg(Editops& editops, Range<InputIt1> s1, Range<In
     }
 }
 
-class Levenshtein : public DistanceBase<Levenshtein, int64_t, 0, std::numeric_limits<int64_t>::max(),
+class Levenshtein : public DistanceBase<Levenshtein, size_t, 0, std::numeric_limits<int64_t>::max(),
                                         LevenshteinWeightTable> {
-    friend DistanceBase<Levenshtein, int64_t, 0, std::numeric_limits<int64_t>::max(), LevenshteinWeightTable>;
+    friend DistanceBase<Levenshtein, size_t, 0, std::numeric_limits<int64_t>::max(), LevenshteinWeightTable>;
     friend NormalizedMetricBase<Levenshtein, LevenshteinWeightTable>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                            LevenshteinWeightTable weights)
     {
-        return static_cast<int64_t>(levenshtein_maximum(s1.size(), s2.size(), weights));
+        return levenshtein_maximum(s1.size(), s2.size(), weights);
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
-                             LevenshteinWeightTable weights, int64_t score_cutoff, int64_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                             LevenshteinWeightTable weights, size_t score_cutoff, size_t score_hint)
     {
         return levenshtein_distance(s1, s2, weights, score_cutoff, score_hint);
     }
 };
 
 template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_hint)
+Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_hint)
 {
     Editops editops;
     if (score_hint < 31) score_hint = 31;
 
-    int64_t score_cutoff = static_cast<int64_t>(std::max(s1.size(), s2.size()));
+    size_t score_cutoff = std::max(s1.size(), s2.size());
     /* score_hint currently leads to calculating the levenshtein distance twice
      * 1) to find the real distance
      * 2) to find the alignment
@@ -1203,10 +1198,10 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
      * todo: maybe there is a way to join these two calculations in the future
      * so it is worth it in more cases
      */
-    if (std::numeric_limits<int64_t>::max() / 2 > score_hint && 2 * score_hint < score_cutoff)
+    if (std::numeric_limits<size_t>::max() / 2 > score_hint && 2 * score_hint < score_cutoff)
         score_cutoff = Levenshtein::distance(s1, s2, {1, 1, 1}, score_cutoff, score_hint);
 
-    levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, static_cast<size_t>(score_cutoff));
+    levenshtein_align_hirschberg(editops, s1, s2, 0, 0, 0, score_cutoff);
 
     editops.set_src_len(s1.size());
     editops.set_dest_len(s2.size());

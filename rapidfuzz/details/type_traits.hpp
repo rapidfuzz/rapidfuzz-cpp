@@ -4,9 +4,7 @@
 #pragma once
 #include <rapidfuzz/details/types.hpp>
 
-#include <functional>
 #include <iterator>
-#include <type_traits>
 #include <utility>
 
 namespace rapidfuzz {

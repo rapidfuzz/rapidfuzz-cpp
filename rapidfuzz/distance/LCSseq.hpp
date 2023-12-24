@@ -5,34 +5,33 @@
 #include <rapidfuzz/distance/LCSseq_impl.hpp>
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                         size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::LCSseq::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t score_cutoff = std::numeric_limits<int64_t>::max())
+size_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
+                         size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::LCSseq::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           int64_t score_cutoff = 0)
+size_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                           size_t score_cutoff = 0)
 {
     return detail::LCSseq::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t score_cutoff = 0)
+size_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, size_t score_cutoff = 0)
 {
     return detail::LCSseq::similarity(s1, s2, score_cutoff, score_cutoff);
 }
@@ -78,11 +77,11 @@ Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
 template <int MaxLen>
-struct MultiLCSseq : public detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, int64_t, 0,
+struct MultiLCSseq : public detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, size_t, 0,
                                                         std::numeric_limits<int64_t>::max()> {
 private:
-    friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, int64_t, 0, std::numeric_limits<int64_t>::max()>;
-    friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>, int64_t>;
+    friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, size_t, 0, std::numeric_limits<int64_t>::max()>;
+    friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>, size_t>;
 
     constexpr static size_t get_vec_size()
     {
@@ -159,13 +158,11 @@ public:
 
 private:
     template <typename InputIt2>
-    void _similarity(int64_t* scores, size_t score_count, const detail::Range<InputIt2>& s2,
-                     int64_t sscore_cutoff = 0) const
+    void _similarity(size_t* scores, size_t score_count, const detail::Range<InputIt2>& s2,
+                     size_t score_cutoff = 0) const
     {
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
-
-        size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
@@ -179,9 +176,9 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t maximum(size_t s1_idx, const detail::Range<InputIt2>& s2) const
+    size_t maximum(size_t s1_idx, const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(str_lens[s1_idx], s2.size()));
+        return std::max(str_lens[s1_idx], s2.size());
     }
 
     size_t get_input_count() const noexcept
@@ -199,7 +196,7 @@ private:
 
 template <typename CharT1>
 struct CachedLCSseq
-    : detail::CachedSimilarityBase<CachedLCSseq<CharT1>, int64_t, 0, std::numeric_limits<int64_t>::max()> {
+    : detail::CachedSimilarityBase<CachedLCSseq<CharT1>, size_t, 0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedLCSseq(const Sentence1& s1_) : CachedLCSseq(detail::to_begin(s1_), detail::to_end(s1_))
     {}
@@ -209,19 +206,19 @@ struct CachedLCSseq
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>, int64_t, 0,
+    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>, size_t, 0,
                                         std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedLCSseq<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(const detail::Range<InputIt2>& s2) const
+    size_t maximum(const detail::Range<InputIt2>& s2) const
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt2>
-    int64_t _similarity(const detail::Range<InputIt2>& s2, int64_t score_cutoff,
-                        [[maybe_unused]] int64_t score_hint) const
+    size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff,
+                        [[maybe_unused]] size_t score_hint) const
     {
         return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }

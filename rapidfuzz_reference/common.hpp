@@ -2,9 +2,7 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include <cmath>
-#include <numeric>
-#include <stdexcept>
+#include <algorithm>
 
 namespace rapidfuzz_reference {
 
@@ -22,9 +20,9 @@ public:
         delete[] matrix;
     }
 
-    T& operator()(ptrdiff_t row, ptrdiff_t col)
+    T& operator()(size_t row, size_t col)
     {
-        return matrix[static_cast<size_t>(row) + static_cast<size_t>(col) * rows];
+        return matrix[row + col * rows];
     }
 
     T& back()

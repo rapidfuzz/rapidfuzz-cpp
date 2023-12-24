@@ -125,7 +125,7 @@ size_t lcs_seq_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, const Range<InputIt>& s2,
+void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const Range<InputIt>& s2,
               size_t score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
@@ -159,7 +159,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, cons
         unroll<int, interleaveCount>([&](auto j) {
             auto counts = popcount(~S[j]);
             unroll<int, counts.size()>([&](auto i) {
-                *score_iter = (counts[i] >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
+                *score_iter = (counts[i] >= score_cutoff) ? counts[i] : 0;
                 score_iter++;
             });
         });
@@ -179,7 +179,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, cons
 
         auto counts = popcount(~S);
         unroll<int, counts.size()>([&](auto i) {
-            *score_iter = (counts[i] >= score_cutoff) ? static_cast<int64_t>(counts[i]) : 0;
+            *score_iter = (counts[i] >= score_cutoff) ? counts[i] : 0;
             score_iter++;
         });
     }
@@ -342,11 +342,9 @@ size_t longest_common_subsequence(const Range<InputIt1>& s1, const Range<InputIt
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                           int64_t sscore_cutoff)
+size_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
+                           size_t score_cutoff)
 {
-    size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
-
     auto len1 = s1.size();
     auto len2 = s2.size();
 
@@ -356,12 +354,12 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? static_cast<int64_t>(len1) : 0;
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
     // do this first, since we can not remove any affix in encoded form
-    if (max_misses >= 5) return static_cast<int64_t>(longest_common_subsequence(block, s1, s2, score_cutoff));
+    if (max_misses >= 5) return longest_common_subsequence(block, s1, s2, score_cutoff);
 
     /* common affix does not effect Levenshtein distance */
     StringAffix affix = remove_common_affix(s1, s2);
@@ -371,19 +369,17 @@ int64_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1>
         lcs_sim += lcs_seq_mbleven2018(s1, s2, adjusted_cutoff);
     }
 
-    return (lcs_sim >= score_cutoff) ? static_cast<int64_t>(lcs_sim) : 0;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscore_cutoff)
+size_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
 {
     auto len1 = s1.size();
     auto len2 = s2.size();
 
     // Swapping the strings so the second string is shorter
-    if (len1 < len2) return lcs_seq_similarity(s2, s1, sscore_cutoff);
-
-    size_t score_cutoff = sscore_cutoff >= 0 ? static_cast<size_t>(sscore_cutoff) : 0;
+    if (len1 < len2) return lcs_seq_similarity(s2, s1, score_cutoff);
 
     if (score_cutoff > len1 || score_cutoff > len2) return 0;
 
@@ -391,7 +387,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscor
 
     /* no edits are allowed */
     if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? static_cast<int64_t>(len1) : 0;
+        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -406,7 +402,7 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscor
             lcs_sim += longest_common_subsequence(s1, s2, adjusted_cutoff);
     }
 
-    return (lcs_sim >= score_cutoff) ? static_cast<int64_t>(lcs_sim) : 0;
+    return (lcs_sim >= score_cutoff) ? lcs_sim : 0;
 }
 
 /**
@@ -512,19 +508,19 @@ Editops lcs_seq_editops(Range<InputIt1> s1, Range<InputIt2> s2)
     return recover_alignment(s1, s2, lcs_matrix(s1, s2), affix);
 }
 
-class LCSseq : public SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int64_t>::max()> {
-    friend SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int64_t>::max()>;
+class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int64_t>::max()> {
+    friend SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend NormalizedMetricBase<LCSseq>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
+    static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
-        return static_cast<int64_t>(std::max(s1.size(), s2.size()));
+        return std::max(s1.size(), s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_cutoff,
-                               [[maybe_unused]] int64_t score_hint)
+    static size_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
+                               [[maybe_unused]] size_t score_hint)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }

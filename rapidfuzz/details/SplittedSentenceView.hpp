@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
-#include <string>
 
 namespace rapidfuzz::detail {
 

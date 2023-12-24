@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <limits>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/distance/Jaro_impl.hpp>
 #include <stdlib.h>

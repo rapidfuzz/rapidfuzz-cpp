@@ -32,11 +32,11 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
     for (const auto& s : strings)
         scorer.insert(s);
 
-    std::vector<int64_t> simd_results(scorer.result_count());
+    std::vector<size_t> simd_results(scorer.result_count());
     scorer.distance(&simd_results[0], simd_results.size(), s2);
 
     for (size_t i = 0; i < strings.size(); ++i) {
-        int64_t reference_score = rapidfuzz_reference::levenshtein_distance(strings[i], s2);
+        size_t reference_score = rapidfuzz_reference::levenshtein_distance(strings[i], s2);
         if (reference_score != simd_results[i]) {
             print_seq("s1: ", s1);
             print_seq("s2: ", s2);
@@ -51,8 +51,8 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
 #endif
 }
 
-void validate_distance(int64_t reference_dist, const std::basic_string<uint8_t>& s1,
-                       const std::basic_string<uint8_t>& s2, int64_t score_cutoff)
+void validate_distance(size_t reference_dist, const std::basic_string<uint8_t>& s1,
+                       const std::basic_string<uint8_t>& s2, size_t score_cutoff)
 {
     if (reference_dist > score_cutoff) reference_dist = score_cutoff + 1;
 
@@ -77,18 +77,18 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     std::basic_string<uint8_t> s1, s2;
     if (!extract_strings(data, size, s1, s2)) return 0;
 
-    int64_t reference_dist = rapidfuzz_reference::levenshtein_distance(s1, s2);
+    size_t reference_dist = rapidfuzz_reference::levenshtein_distance(s1, s2);
 
     /* test mbleven */
-    for (int64_t i = 0; i < 4; ++i)
+    for (size_t i = 0; i < 4; ++i)
         validate_distance(reference_dist, s1, s2, i);
 
     /* test small band */
-    for (int64_t i = 4; i < 32; ++i)
+    for (size_t i = 4; i < 32; ++i)
         validate_distance(reference_dist, s1, s2, i);
 
     /* unrestricted */
-    validate_distance(reference_dist, s1, s2, std::numeric_limits<int64_t>::max());
+    validate_distance(reference_dist, s1, s2, std::numeric_limits<size_t>::max());
 
     /* score_cutoff to trigger banded implementation */
     validate_distance(reference_dist, s1, s2, s1.size() / 2);

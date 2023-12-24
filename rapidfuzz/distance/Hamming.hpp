@@ -2,8 +2,7 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include <cmath>
-#include <numeric>
+#include <limits>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/distance/Hamming_impl.hpp>
 

@@ -3,12 +3,8 @@
 
 #pragma once
 #include <array>
-#include <limits>
 #include <stdint.h>
 #include <stdio.h>
-#include <type_traits>
-#include <unordered_set>
-#include <vector>
 
 #include <rapidfuzz/details/GrowingHashmap.hpp>
 #include <rapidfuzz/details/Matrix.hpp>

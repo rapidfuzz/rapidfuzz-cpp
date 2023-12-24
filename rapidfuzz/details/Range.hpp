@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <sys/types.h>
 #include <vector>
+#include <stdint.h>
 
 namespace rapidfuzz::detail {
 

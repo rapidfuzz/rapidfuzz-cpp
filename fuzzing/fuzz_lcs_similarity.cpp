@@ -30,11 +30,11 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
     for (const auto& s : strings)
         scorer.insert(s);
 
-    std::vector<int64_t> simd_results(scorer.result_count());
+    std::vector<size_t> simd_results(scorer.result_count());
     scorer.similarity(&simd_results[0], simd_results.size(), s2);
 
     for (size_t i = 0; i < strings.size(); ++i) {
-        int64_t reference_score = rapidfuzz_reference::lcs_seq_similarity(strings[i], s2);
+        size_t reference_score = rapidfuzz_reference::lcs_seq_similarity(strings[i], s2);
         if (reference_score != simd_results[i]) {
             print_seq("s1: ", s1);
             print_seq("s2: ", s2);

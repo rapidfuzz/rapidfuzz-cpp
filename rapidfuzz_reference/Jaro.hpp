@@ -2,13 +2,8 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
-#include "common.hpp"
 #include <algorithm>
-#include <cassert>
-#include <cmath>
 #include <cstddef>
-#include <cstdint>
-#include <limits>
 #include <vector>
 
 namespace rapidfuzz_reference {

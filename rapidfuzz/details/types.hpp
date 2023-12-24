@@ -4,11 +4,8 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <stddef.h>
 #include <stdexcept>
-#include <stdint.h>
-#include <type_traits>
 #include <vector>
 
 namespace rapidfuzz {
@@ -19,11 +16,9 @@ struct StringAffix {
 };
 
 struct LevenshteinWeightTable {
-    // usage with negative values is undefined
-    // in the next major release these will be changed to size_t
-    int64_t insert_cost;
-    int64_t delete_cost;
-    int64_t replace_cost;
+    size_t insert_cost;
+    size_t delete_cost;
+    size_t replace_cost;
 };
 
 /**

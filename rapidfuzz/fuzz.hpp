@@ -8,8 +8,6 @@
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 
-#include <type_traits>
-
 namespace rapidfuzz::fuzz {
 
 /**

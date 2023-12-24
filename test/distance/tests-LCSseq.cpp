@@ -8,20 +8,20 @@
 #include "../common.hpp"
 
 template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
-                         int64_t max = std::numeric_limits<int64_t>::max())
+size_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
+                         size_t max = std::numeric_limits<size_t>::max())
 {
-    int64_t res1 = rapidfuzz::lcs_seq_distance(s1, s2, max);
-    int64_t res2 = rapidfuzz::lcs_seq_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    int64_t res3 = rapidfuzz::lcs_seq_distance(
+    size_t res1 = rapidfuzz::lcs_seq_distance(s1, s2, max);
+    size_t res2 = rapidfuzz::lcs_seq_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
+    size_t res3 = rapidfuzz::lcs_seq_distance(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
         BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
     rapidfuzz::CachedLCSseq scorer(s1);
-    int64_t res4 = scorer.distance(s2, max);
-    int64_t res5 = scorer.distance(s2.begin(), s2.end(), max);
+    size_t res4 = scorer.distance(s2, max);
+    size_t res5 = scorer.distance(s2.begin(), s2.end(), max);
 #ifdef RAPIDFUZZ_SIMD
     if (s1.size() <= 64) {
-        std::vector<int64_t> results(256 / 8);
+        std::vector<size_t> results(256 / 8);
 
         if (s1.size() <= 8) {
             rapidfuzz::experimental::MultiLCSseq<8> simd_scorer(1);
@@ -57,19 +57,19 @@ int64_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
 }
 
 template <typename Sentence1, typename Sentence2>
-int64_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, int64_t max = 0)
+size_t lcs_seq_similarity(const Sentence1& s1, const Sentence2& s2, size_t max = 0)
 {
-    int64_t res1 = rapidfuzz::lcs_seq_similarity(s1, s2, max);
-    int64_t res2 = rapidfuzz::lcs_seq_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    int64_t res3 = rapidfuzz::lcs_seq_similarity(
+    size_t res1 = rapidfuzz::lcs_seq_similarity(s1, s2, max);
+    size_t res2 = rapidfuzz::lcs_seq_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
+    size_t res3 = rapidfuzz::lcs_seq_similarity(
         BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
         BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
     rapidfuzz::CachedLCSseq scorer(s1);
-    int64_t res4 = scorer.similarity(s2, max);
-    int64_t res5 = scorer.similarity(s2.begin(), s2.end(), max);
+    size_t res4 = scorer.similarity(s2, max);
+    size_t res5 = scorer.similarity(s2.begin(), s2.end(), max);
 #ifdef RAPIDFUZZ_SIMD
     if (s1.size() <= 64) {
-        std::vector<int64_t> results(256 / 8);
+        std::vector<size_t> results(256 / 8);
 
         if (s1.size() <= 8) {
             rapidfuzz::experimental::MultiLCSseq<8> simd_scorer(1);
@@ -207,7 +207,7 @@ TEST_CASE("SIMD wraparound")
     scorer.insert(std::string("b"));
     scorer.insert(std::string("aa"));
     scorer.insert(std::string("bb"));
-    std::vector<int64_t> results(scorer.result_count());
+    std::vector<size_t> results(scorer.result_count());
 
     {
         std::string s2 = str_multiply(std::string("b"), 256);

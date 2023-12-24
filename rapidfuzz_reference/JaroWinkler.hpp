@@ -12,11 +12,11 @@ double jaro_winkler_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_fir
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
     int64_t min_len = std::min(std::distance(P_first, P_last), std::distance(T_first, T_last));
-    int64_t max_prefix = std::min<int64_t>(min_len, 4);
+    size_t max_prefix = std::min(static_cast<size_t>(min_len), size_t(4));
 
-    int64_t prefix = 0;
+    size_t prefix = 0;
     for (; prefix < max_prefix; ++prefix)
-        if (T_first[prefix] != P_first[prefix]) break;
+        if (T_first[static_cast<ptrdiff_t>(prefix)] != P_first[static_cast<ptrdiff_t>(prefix)]) break;
 
     double Sim = jaro_similarity(P_first, P_last, T_first, T_last);
     if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);

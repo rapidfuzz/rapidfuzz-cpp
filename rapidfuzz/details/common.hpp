@@ -2,16 +2,12 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include <array>
-#include <cmath>
 #include <cstring>
-#include <limits>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/SplittedSentenceView.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
-#include <vector>
 
 #if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
 #    include <mm_malloc.h>

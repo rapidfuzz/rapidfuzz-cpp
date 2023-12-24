@@ -9,7 +9,7 @@
 #include <string>
 
 void validate_distance(const std::basic_string<uint8_t>& s1, const std::basic_string<uint8_t>& s2,
-                       int64_t score_cutoff)
+                       size_t score_cutoff)
 {
     auto dist = rapidfuzz::indel_distance(s1, s2, score_cutoff);
     auto reference_dist = rapidfuzz_reference::indel_distance(s1, s2, score_cutoff);
@@ -38,7 +38,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     validate_distance(s1, s2, s2.size() / 2);
 
     /* unrestricted */
-    validate_distance(s1, s2, std::numeric_limits<int64_t>::max());
+    validate_distance(s1, s2, std::numeric_limits<size_t>::max());
 
     return 0;
 }

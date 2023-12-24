@@ -8,8 +8,8 @@
 #include <stdexcept>
 #include <string>
 
-void validate_distance(int64_t reference_dist, const std::basic_string<uint8_t>& s1,
-                       const std::basic_string<uint8_t>& s2, int64_t score_cutoff)
+void validate_distance(size_t reference_dist, const std::basic_string<uint8_t>& s1,
+                       const std::basic_string<uint8_t>& s2, size_t score_cutoff)
 {
     if (reference_dist > score_cutoff) reference_dist = score_cutoff + 1;
 
@@ -29,14 +29,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     std::basic_string<uint8_t> s1, s2;
     if (!extract_strings(data, size, s1, s2)) return 0;
 
-    int64_t reference_dist = rapidfuzz_reference::damerau_levenshtein_distance(s1, s2);
+    size_t reference_dist = rapidfuzz_reference::damerau_levenshtein_distance(s1, s2);
 
     /* test small band */
-    for (int64_t i = 4; i < 32; ++i)
+    for (size_t i = 4; i < 32; ++i)
         validate_distance(reference_dist, s1, s2, i);
 
     /* unrestricted */
-    validate_distance(reference_dist, s1, s2, std::numeric_limits<int64_t>::max());
+    validate_distance(reference_dist, s1, s2, std::numeric_limits<size_t>::max());
 
     /* test long sequences */
     for (unsigned int i = 2; i < 9; ++i) {
@@ -46,7 +46,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         if (s1_.size() > 10000 || s2_.size() > 10000) break;
 
         reference_dist = rapidfuzz_reference::damerau_levenshtein_distance(s1_, s2_);
-        validate_distance(reference_dist, s1_, s2_, std::numeric_limits<int64_t>::max());
+        validate_distance(reference_dist, s1_, s2_, std::numeric_limits<size_t>::max());
     }
 
     return 0;

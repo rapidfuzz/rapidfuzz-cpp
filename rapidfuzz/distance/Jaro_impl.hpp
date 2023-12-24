@@ -1,10 +1,8 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <rapidfuzz/details/PatternMatchVector.hpp>
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/distance.hpp>
