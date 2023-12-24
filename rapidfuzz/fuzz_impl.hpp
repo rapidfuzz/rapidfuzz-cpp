@@ -66,7 +66,7 @@ static inline size_t score_cutoff_to_distance(double score_cutoff, size_t lensum
 
 template <typename InputIt1, typename InputIt2, typename CachedCharT1>
 ScoreAlignment<double>
-partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Range<InputIt2> s2,
+partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputIt2>& s2,
                    const CachedRatio<CachedCharT1>& cached_ratio,
                    const detail::CharSet<iter_value_t<InputIt1>>& s1_char_set, double score_cutoff)
 {
@@ -91,8 +91,8 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
             for (const auto& window : windows) {
                 auto subseq1_first = s2.begin() + static_cast<ptrdiff_t>(window.first);
                 auto subseq2_first = s2.begin() + static_cast<ptrdiff_t>(window.second);
-                rapidfuzz::detail::Range subseq1(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
-                rapidfuzz::detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
+                detail::Range subseq1(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
+                detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
 
                 if (scores[window.first] == std::numeric_limits<size_t>::max()) {
                     scores[window.first] = static_cast<size_t>(cached_ratio.cached_indel.distance(subseq1));
@@ -174,8 +174,8 @@ partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1, rapidfuzz::detail::Ran
 }
 
 template <typename InputIt1, typename InputIt2, typename CharT1 = iter_value_t<InputIt1>>
-ScoreAlignment<double> partial_ratio_impl(rapidfuzz::detail::Range<InputIt1> s1,
-                                          rapidfuzz::detail::Range<InputIt2> s2, double score_cutoff)
+ScoreAlignment<double> partial_ratio_impl(const detail::Range<InputIt1>& s1,
+                                          const detail::Range<InputIt2>& s2, double score_cutoff)
 {
     CachedRatio<CharT1> cached_ratio(s1);
 

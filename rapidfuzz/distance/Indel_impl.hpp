@@ -11,8 +11,8 @@
 namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2>
-int64_t indel_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                       int64_t score_cutoff)
+int64_t indel_distance(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
+                       const Range<InputIt2>& s2, int64_t score_cutoff)
 {
     int64_t maximum = static_cast<int64_t>(s1.size() + s2.size());
     int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);
@@ -22,10 +22,10 @@ int64_t indel_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1,
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_distance(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                                 double score_cutoff)
+double indel_normalized_distance(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
+                                 const Range<InputIt2>& s2, double score_cutoff)
 {
-    int64_t maximum = static_cast<int64_t>(s1.size() + s2.size());
+    size_t maximum = s1.size() + s2.size();
     int64_t cutoff_distance = static_cast<int64_t>(std::ceil(static_cast<double>(maximum) * score_cutoff));
     int64_t dist = indel_distance(block, s1, s2, cutoff_distance);
     double norm_dist = (maximum) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
@@ -33,8 +33,8 @@ double indel_normalized_distance(const BlockPatternMatchVector& block, Range<Inp
 }
 
 template <typename InputIt1, typename InputIt2>
-double indel_normalized_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1,
-                                   Range<InputIt2> s2, double score_cutoff)
+double indel_normalized_similarity(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
+                                   const Range<InputIt2>& s2, double score_cutoff)
 {
     double cutoff_score = NormSim_to_NormDist(score_cutoff);
     double norm_dist = indel_normalized_distance(block, s1, s2, cutoff_score);
@@ -47,13 +47,14 @@ class Indel : public DistanceBase<Indel, int64_t, 0, std::numeric_limits<int64_t
     friend NormalizedMetricBase<Indel>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return static_cast<int64_t>(s1.size() + s2.size());
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint)
+    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_cutoff,
+                             int64_t score_hint)
     {
         int64_t maximum = Indel::maximum(s1, s2);
         int64_t lcs_cutoff = std::max<int64_t>(0, maximum / 2 - score_cutoff);

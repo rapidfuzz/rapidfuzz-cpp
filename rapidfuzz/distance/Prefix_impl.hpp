@@ -13,7 +13,7 @@ class Prefix : public SimilarityBase<Prefix, int64_t, 0, std::numeric_limits<int
     friend NormalizedMetricBase<Prefix>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return std::max(s1.size(), s2.size());
     }

@@ -128,13 +128,13 @@ private:
     friend detail::CachedNormalizedMetricBase<CachedDamerauLevenshtein<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(detail::Range<InputIt2> s2) const
+    int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
         return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff,
+    int64_t _distance(const detail::Range<InputIt2>& s2, int64_t score_cutoff,
                       [[maybe_unused]] int64_t score_hint) const
     {
         return rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, score_cutoff);

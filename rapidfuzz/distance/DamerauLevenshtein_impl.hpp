@@ -35,7 +35,7 @@ struct RowId {
  * from Chunchun Zhao and Sartaj Sahni
  */
 template <typename IntType, typename InputIt1, typename InputIt2>
-size_t damerau_levenshtein_distance_zhao(Range<InputIt1> s1, Range<InputIt2> s2, size_t max)
+size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t max)
 {
     // todo check types
     IntType len1 = static_cast<IntType>(s1.size());
@@ -126,13 +126,13 @@ class DamerauLevenshtein
     friend NormalizedMetricBase<DamerauLevenshtein>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_cutoff,
                              [[maybe_unused]] int64_t score_hint)
     {
         return static_cast<int64_t>(damerau_levenshtein_distance(s1, s2, static_cast<size_t>(score_cutoff)));

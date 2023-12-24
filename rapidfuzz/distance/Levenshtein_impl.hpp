@@ -56,7 +56,7 @@ struct LevenshteinResult<false, false> {
 };
 
 template <typename InputIt1, typename InputIt2>
-size_t generalized_levenshtein_wagner_fischer(Range<InputIt1> s1, Range<InputIt2> s2,
+size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                               LevenshteinWeightTable weights, size_t max)
 {
     size_t cache_size = static_cast<size_t>(s1.size()) + 1;
@@ -106,7 +106,8 @@ static inline int64_t levenshtein_maximum(ptrdiff_t len1, ptrdiff_t len2, Levens
  * string lengths and weights
  */
 template <typename InputIt1, typename InputIt2>
-size_t levenshtein_min_distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights)
+size_t levenshtein_min_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                                LevenshteinWeightTable weights)
 {
     return static_cast<size_t>(std::max((s1.ssize() - s2.ssize()) * weights.delete_cost,
                                         (s2.ssize() - s1.ssize()) * weights.insert_cost));
@@ -156,7 +157,7 @@ static constexpr std::array<std::array<uint8_t, 7>, 9> levenshtein_mbleven2018_m
 }};
 
 template <typename InputIt1, typename InputIt2>
-size_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, size_t max)
+size_t levenshtein_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t max)
 {
     size_t len1 = s1.size();
     size_t len2 = s2.size();
@@ -228,7 +229,7 @@ size_t levenshtein_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, size_t ma
  * @return returns the levenshtein distance between s1 and s2
  */
 template <bool RecordMatrix, bool RecordBitRow, typename PM_Vec, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2,
+auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                             size_t max = std::numeric_limits<size_t>::max())
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
@@ -292,7 +293,7 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
-                                 const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                                 const std::vector<size_t>& s1_lengths, const Range<InputIt>& s2,
                                  size_t score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
@@ -383,8 +384,8 @@ void levenshtein_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatt
 #endif
 
 template <typename InputIt1, typename InputIt2>
-size_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Range<InputIt1> s1,
-                                         Range<InputIt2> s2, size_t max)
+size_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, const Range<InputIt1>& s1,
+                                         const Range<InputIt2>& s2, size_t max)
 {
     /* VP is set to 1^m. */
     uint64_t VP = ~UINT64_C(0) << (64 - max - 1);
@@ -471,7 +472,7 @@ size_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, Rang
 }
 
 template <bool RecordMatrix, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, size_t max)
+auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t max)
     -> LevenshteinResult<RecordMatrix, false>
 {
     assert(max <= s1.size());
@@ -602,8 +603,8 @@ auto levenshtein_hyrroe2003_small_band(Range<InputIt1> s1, Range<InputIt2> s2, s
  * @param stop_row specifies the row to record when using RecordBitRow
  */
 template <bool RecordMatrix, bool RecordBitRow, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                                  size_t max = std::numeric_limits<size_t>::max(),
+auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range<InputIt1>& s1,
+                                  const Range<InputIt2>& s2, size_t max = std::numeric_limits<size_t>::max(),
                                   size_t stop_row = std::numeric_limits<size_t>::max())
     -> LevenshteinResult<RecordMatrix, RecordBitRow>
 {
@@ -918,7 +919,7 @@ size_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename InputIt1, typename InputIt2>
-void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+void recover_alignment(Editops& editops, const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                        const LevenshteinResult<true, false>& matrix, size_t src_pos, size_t dest_pos,
                        size_t editop_pos)
 {
@@ -981,7 +982,7 @@ void recover_alignment(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 }
 
 template <typename InputIt1, typename InputIt2>
-void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
+void levenshtein_align(Editops& editops, const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                        size_t max = std::numeric_limits<size_t>::max(), size_t src_pos = 0,
                        size_t dest_pos = 0, size_t editop_pos = 0)
 {
@@ -1008,14 +1009,14 @@ void levenshtein_align(Editops& editops, Range<InputIt1> s1, Range<InputIt2> s2,
 }
 
 template <typename InputIt1, typename InputIt2>
-LevenshteinResult<false, true> levenshtein_row(Range<InputIt1> s1, Range<InputIt2> s2, size_t max,
-                                               size_t stop_row)
+LevenshteinResult<false, true> levenshtein_row(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                                               size_t max, size_t stop_row)
 {
     return levenshtein_hyrroe2003_block<false, true>(BlockPatternMatchVector(s1), s1, s2, max, stop_row);
 }
 
 template <typename InputIt1, typename InputIt2>
-int64_t levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2,
+int64_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                              LevenshteinWeightTable weights = {1, 1, 1},
                              int64_t score_cutoff = std::numeric_limits<int64_t>::max(),
                              int64_t score_hint = std::numeric_limits<int64_t>::max())
@@ -1058,7 +1059,7 @@ struct HirschbergPos {
 };
 
 template <typename InputIt1, typename InputIt2>
-HirschbergPos find_hirschberg_pos(Range<InputIt1> s1, Range<InputIt2> s2,
+HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                   size_t max = std::numeric_limits<size_t>::max())
 {
     HirschbergPos hpos = {};
@@ -1169,22 +1170,23 @@ class Levenshtein : public DistanceBase<Levenshtein, int64_t, 0, std::numeric_li
     friend NormalizedMetricBase<Levenshtein, LevenshteinWeightTable>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights)
+    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                           LevenshteinWeightTable weights)
     {
         return levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()), static_cast<ptrdiff_t>(s2.size()),
                                    weights);
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _distance(Range<InputIt1> s1, Range<InputIt2> s2, LevenshteinWeightTable weights,
-                             int64_t score_cutoff, int64_t score_hint)
+    static int64_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                             LevenshteinWeightTable weights, int64_t score_cutoff, int64_t score_hint)
     {
         return levenshtein_distance(s1, s2, weights, score_cutoff, score_hint);
     }
 };
 
 template <typename InputIt1, typename InputIt2>
-Editops levenshtein_editops(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_hint)
+Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_hint)
 {
     Editops editops;
     if (score_hint < 31) score_hint = 31;

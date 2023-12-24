@@ -79,7 +79,7 @@ private:
     friend detail::CachedNormalizedMetricBase<CachedPrefix<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(detail::Range<InputIt2> s2) const
+    int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
         return std::max(static_cast<ptrdiff_t>(s1.size()), s2.size());
     }

@@ -6,7 +6,7 @@
 namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2>
-double jaro_winkler_similarity(Range<InputIt1> P, Range<InputIt2> T, double prefix_weight,
+double jaro_winkler_similarity(const Range<InputIt1>& P, const Range<InputIt2>& T, double prefix_weight,
                                double score_cutoff)
 {
     size_t P_len = P.size();
@@ -35,8 +35,8 @@ double jaro_winkler_similarity(Range<InputIt1> P, Range<InputIt2> T, double pref
 }
 
 template <typename InputIt1, typename InputIt2>
-double jaro_winkler_similarity(const BlockPatternMatchVector& PM, Range<InputIt1> P, Range<InputIt2> T,
-                               double prefix_weight, double score_cutoff)
+double jaro_winkler_similarity(const BlockPatternMatchVector& PM, const Range<InputIt1>& P,
+                               const Range<InputIt2>& T, double prefix_weight, double score_cutoff)
 {
     size_t P_len = P.size();
     size_t T_len = T.size();
@@ -68,13 +68,13 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
     friend NormalizedMetricBase<JaroWinkler, double>;
 
     template <typename InputIt1, typename InputIt2>
-    static double maximum(Range<InputIt1>, Range<InputIt2>, double) noexcept
+    static double maximum(const Range<InputIt1>&, const Range<InputIt2>&, double) noexcept
     {
         return 1.0;
     }
 
     template <typename InputIt1, typename InputIt2>
-    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double prefix_weight,
+    static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double prefix_weight,
                               double score_cutoff, [[maybe_unused]] double score_hint)
     {
         return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);

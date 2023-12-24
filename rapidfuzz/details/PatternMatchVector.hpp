@@ -67,7 +67,7 @@ struct PatternMatchVector {
     {}
 
     template <typename InputIt>
-    PatternMatchVector(Range<InputIt> s) : m_extendedAscii()
+    PatternMatchVector(const Range<InputIt>& s) : m_extendedAscii()
     {
         insert(s);
     }
@@ -78,7 +78,7 @@ struct PatternMatchVector {
     }
 
     template <typename InputIt>
-    void insert(Range<InputIt> s) noexcept
+    void insert(const Range<InputIt>& s) noexcept
     {
         uint64_t mask = 1;
         for (const auto& ch : s) {
@@ -144,7 +144,7 @@ struct BlockPatternMatchVector {
     {}
 
     template <typename InputIt>
-    BlockPatternMatchVector(Range<InputIt> s) : BlockPatternMatchVector(static_cast<size_t>(s.size()))
+    BlockPatternMatchVector(const Range<InputIt>& s) : BlockPatternMatchVector(s.size())
     {
         insert(s);
     }
@@ -173,12 +173,12 @@ struct BlockPatternMatchVector {
      * @param last
      */
     template <typename InputIt>
-    void insert(Range<InputIt> s) noexcept
+    void insert(const Range<InputIt>& s) noexcept
     {
         uint64_t mask = 1;
-        ptrdiff_t i = 0;
+        size_t i = 0;
         for (auto iter = s.begin(); iter != s.end(); ++iter, ++i) {
-            size_t block = static_cast<size_t>(i) / 64;
+            size_t block = i / 64;
             insert_mask(block, *iter, mask);
             mask = rotl(mask, 1);
         }

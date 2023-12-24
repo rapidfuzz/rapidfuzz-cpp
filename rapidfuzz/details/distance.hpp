@@ -49,7 +49,7 @@ struct NormalizedMetricBase {
 
 protected:
     template <typename InputIt1, typename InputIt2>
-    static double _normalized_distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args,
+    static double _normalized_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, Args... args,
                                        double score_cutoff, double score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
@@ -63,7 +63,7 @@ protected:
     }
 
     template <typename InputIt1, typename InputIt2>
-    static double _normalized_similarity(Range<InputIt1> s1, Range<InputIt2> s2, Args... args,
+    static double _normalized_similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, Args... args,
                                          double score_cutoff, double score_hint)
     {
         double cutoff_score = NormSim_to_NormDist(score_cutoff);
@@ -170,8 +170,8 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
 
 protected:
     template <typename InputIt1, typename InputIt2>
-    static ResType _distance(Range<InputIt1> s1, Range<InputIt2> s2, Args... args, ResType score_cutoff,
-                             ResType score_hint)
+    static ResType _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, Args... args,
+                             ResType score_cutoff, ResType score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
         ResType cutoff_similarity =
@@ -223,7 +223,7 @@ struct CachedNormalizedMetricBase {
 
 protected:
     template <typename InputIt2>
-    double _normalized_distance(Range<InputIt2> s2, double score_cutoff, double score_hint) const
+    double _normalized_distance(const Range<InputIt2>& s2, double score_cutoff, double score_hint) const
     {
         const T& derived = static_cast<const T&>(*this);
         auto maximum = derived.maximum(s2);
@@ -237,7 +237,7 @@ protected:
     }
 
     template <typename InputIt2>
-    double _normalized_similarity(Range<InputIt2> s2, double score_cutoff, double score_hint) const
+    double _normalized_similarity(const Range<InputIt2>& s2, double score_cutoff, double score_hint) const
     {
         double cutoff_score = NormSim_to_NormDist(score_cutoff);
         double hint_score = NormSim_to_NormDist(score_hint);
@@ -287,7 +287,7 @@ struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
 
 protected:
     template <typename InputIt2>
-    ResType _similarity(Range<InputIt2> s2, ResType score_cutoff, ResType score_hint) const
+    ResType _similarity(const Range<InputIt2>& s2, ResType score_cutoff, ResType score_hint) const
     {
         const T& derived = static_cast<const T&>(*this);
         ResType maximum = derived.maximum(s2);
@@ -342,7 +342,7 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
 
 protected:
     template <typename InputIt2>
-    ResType _distance(Range<InputIt2> s2, ResType score_cutoff, ResType score_hint) const
+    ResType _distance(const Range<InputIt2>& s2, ResType score_cutoff, ResType score_hint) const
     {
         const T& derived = static_cast<const T&>(*this);
         ResType maximum = derived.maximum(s2);
@@ -394,7 +394,7 @@ struct MultiNormalizedMetricBase {
 
 protected:
     template <typename InputIt2>
-    void _normalized_distance(double* scores, size_t score_count, Range<InputIt2> s2,
+    void _normalized_distance(double* scores, size_t score_count, const Range<InputIt2>& s2,
                               double score_cutoff = 1.0) const
     {
         const T& derived = static_cast<const T&>(*this);
@@ -408,8 +408,7 @@ protected:
         else
             scores_orig = new ResType[derived.result_count()];
 
-        Range s2_(s2);
-        derived.distance(scores_orig, derived.result_count(), s2_);
+        derived.distance(scores_orig, derived.result_count(), s2);
 
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             auto maximum = derived.maximum(i, s2);
@@ -422,7 +421,7 @@ protected:
     }
 
     template <typename InputIt2>
-    void _normalized_similarity(double* scores, size_t score_count, Range<InputIt2> s2,
+    void _normalized_similarity(double* scores, size_t score_count, const Range<InputIt2>& s2,
                                 double score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
@@ -473,7 +472,8 @@ struct MultiDistanceBase : public MultiNormalizedMetricBase<T, ResType> {
 
 protected:
     template <typename InputIt2>
-    void _similarity(ResType* scores, size_t score_count, Range<InputIt2> s2, ResType score_cutoff) const
+    void _similarity(ResType* scores, size_t score_count, const Range<InputIt2>& s2,
+                     ResType score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._distance(scores, score_count, s2);
@@ -524,7 +524,7 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
 
 protected:
     template <typename InputIt2>
-    void _distance(ResType* scores, size_t score_count, Range<InputIt2> s2, ResType score_cutoff) const
+    void _distance(ResType* scores, size_t score_count, const Range<InputIt2>& s2, ResType score_cutoff) const
     {
         const T& derived = static_cast<const T&>(*this);
         derived._similarity(scores, score_count, s2);

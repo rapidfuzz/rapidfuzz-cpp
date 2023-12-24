@@ -381,7 +381,7 @@ public:
 
 private:
     template <typename InputIt2>
-    void _distance(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
+    void _distance(int64_t* scores, size_t score_count, const detail::Range<InputIt2>& s2,
                    int64_t score_cutoff = std::numeric_limits<int64_t>::max()) const
     {
         if (score_count < result_count())
@@ -403,7 +403,7 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
+    int64_t maximum(size_t s1_idx, const detail::Range<InputIt2>& s2) const
     {
         return detail::levenshtein_maximum(static_cast<ptrdiff_t>(str_lens[s1_idx]), s2.size(), weights);
     }
@@ -441,14 +441,14 @@ private:
     friend detail::CachedNormalizedMetricBase<CachedLevenshtein<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(detail::Range<InputIt2> s2) const
+    int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
         return detail::levenshtein_maximum(static_cast<ptrdiff_t>(s1.size()),
                                            static_cast<ptrdiff_t>(s2.size()), weights);
     }
 
     template <typename InputIt2>
-    int64_t _distance(detail::Range<InputIt2> s2, int64_t score_cutoff, int64_t score_hint) const
+    int64_t _distance(const detail::Range<InputIt2>& s2, int64_t score_cutoff, int64_t score_hint) const
     {
         if (weights.insert_cost == weights.delete_cost) {
             /* when insertions + deletions operations are free there can not be any edit distance */

@@ -72,7 +72,7 @@ static constexpr std::array<std::array<uint8_t, 6>, 14> lcs_seq_mbleven2018_matr
 }};
 
 template <typename InputIt1, typename InputIt2>
-size_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
+size_t lcs_seq_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff)
 {
     auto len1 = s1.size();
     auto len2 = s2.size();
@@ -125,7 +125,7 @@ size_t lcs_seq_mbleven2018(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_
 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
-void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Range<InputIt> s2,
+void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, const Range<InputIt>& s2,
               size_t score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
@@ -188,7 +188,7 @@ void lcs_simd(Range<int64_t*> scores, const BlockPatternMatchVector& block, Rang
 #endif
 
 template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
-auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, size_t score_cutoff = 0)
+auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>& s2, size_t score_cutoff = 0)
     -> LCSseqResult<RecordMatrix>
 {
     uint64_t S[N];
@@ -242,8 +242,8 @@ auto lcs_unroll(const PMV& block, Range<InputIt1>, Range<InputIt2> s2, size_t sc
  * The paper refers to s1 as m and s2 as n
  */
 template <bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
-auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff = 0)
-    -> LCSseqResult<RecordMatrix>
+auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                   size_t score_cutoff = 0) -> LCSseqResult<RecordMatrix>
 {
     assert(score_cutoff <= s1.size());
     assert(score_cutoff <= s2.size());
@@ -302,7 +302,8 @@ auto lcs_blockwise(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, size_t
 }
 
 template <typename PMV, typename InputIt1, typename InputIt2>
-size_t longest_common_subsequence(const PMV& PM, Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
+size_t longest_common_subsequence(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                                  size_t score_cutoff)
 {
     assert(score_cutoff <= s1.size());
     assert(score_cutoff <= s2.size());
@@ -332,7 +333,7 @@ size_t longest_common_subsequence(const PMV& PM, Range<InputIt1> s1, Range<Input
 }
 
 template <typename InputIt1, typename InputIt2>
-size_t longest_common_subsequence(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff)
+size_t longest_common_subsequence(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff)
 {
     if (s1.empty()) return 0;
     if (s1.size() <= 64) return longest_common_subsequence(PatternMatchVector(s1), s1, s2, score_cutoff);
@@ -412,8 +413,8 @@ int64_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t sscor
  * @brief recover alignment from bitparallel Levenshtein matrix
  */
 template <typename InputIt1, typename InputIt2>
-Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqResult<true>& matrix,
-                          StringAffix affix)
+Editops recover_alignment(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                          const LCSseqResult<true>& matrix, StringAffix affix)
 {
     size_t len1 = s1.size();
     size_t len2 = s2.size();
@@ -480,7 +481,7 @@ Editops recover_alignment(Range<InputIt1> s1, Range<InputIt2> s2, const LCSseqRe
 }
 
 template <typename InputIt1, typename InputIt2>
-LCSseqResult<true> lcs_matrix(Range<InputIt1> s1, Range<InputIt2> s2)
+LCSseqResult<true> lcs_matrix(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
 {
     size_t nr = ceil_div(s1.size(), 64);
     switch (nr) {
@@ -516,13 +517,13 @@ class LCSseq : public SimilarityBase<LCSseq, int64_t, 0, std::numeric_limits<int
     friend NormalizedMetricBase<LCSseq>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, int64_t score_cutoff,
+    static int64_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, int64_t score_cutoff,
                                [[maybe_unused]] int64_t score_hint)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);

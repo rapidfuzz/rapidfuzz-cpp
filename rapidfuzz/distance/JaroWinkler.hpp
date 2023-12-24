@@ -121,7 +121,7 @@ public:
 
 private:
     template <typename InputIt2>
-    void _similarity(double* scores, size_t score_count, detail::Range<InputIt2> s2,
+    void _similarity(double* scores, size_t score_count, const detail::Range<InputIt2>& s2,
                      double score_cutoff = 0.0) const
     {
         if (score_count < result_count())
@@ -145,7 +145,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, detail::Range<InputIt2>) const
+    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -182,13 +182,13 @@ private:
     friend detail::CachedNormalizedMetricBase<CachedJaroWinkler<CharT1>>;
 
     template <typename InputIt2>
-    double maximum(detail::Range<InputIt2>) const
+    double maximum(const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
 
     template <typename InputIt2>
-    double _similarity(detail::Range<InputIt2> s2, double score_cutoff,
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
                        [[maybe_unused]] double score_hint) const
     {
         return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);

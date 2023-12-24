@@ -9,6 +9,7 @@
 #include <limits>
 #include <ostream>
 #include <stdexcept>
+#include <sys/types.h>
 #include <vector>
 
 namespace rapidfuzz::detail {
@@ -58,6 +59,9 @@ template <typename Iter>
 class Range {
     Iter _first;
     Iter _last;
+    // todo we might not want to cache the size for iterators
+    // that can can retrieve the size in O(1) time
+    size_t _size;
 
 public:
     using value_type = typename std::iterator_traits<Iter>::value_type;
@@ -65,11 +69,17 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
 
     constexpr Range(Iter first, Iter last) : _first(first), _last(last)
-    {}
+    {
+        assert(std::distance(_first, _last) >= 0);
+        _size = static_cast<size_t>(std::distance(_first, _last));
+    }
 
     template <typename T>
     constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
-    {}
+    {
+        assert(std::distance(_first, _last) >= 0);
+        _size = static_cast<size_t>(std::distance(_first, _last));
+    }
 
     constexpr iterator begin() const noexcept
     {
@@ -91,16 +101,12 @@ public:
 
     constexpr size_t size() const
     {
-        // todo store length to prevent recalculation which could be expensive
-        assert(std::distance(_first, _last) >= 0);
-        return static_cast<size_t>(std::distance(_first, _last));
+        return _size;
     }
 
     constexpr ssize_t ssize() const
     {
-        // todo store length to prevent recalculation which could be expensive
-        assert(std::distance(_first, _last) >= 0);
-        return std::distance(_first, _last);
+        return static_cast<ssize_t>(_size);
     }
 
     constexpr bool empty() const

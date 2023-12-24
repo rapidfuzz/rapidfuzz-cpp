@@ -94,8 +94,8 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
 static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
-                                                            [[maybe_unused]] Range<InputIt1> P,
-                                                            Range<InputIt2> T, size_t Bound)
+                                                            [[maybe_unused]] const Range<InputIt1>& P,
+                                                            const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() <= 64);
     assert(T.size() <= 64);
@@ -209,8 +209,8 @@ static inline void flag_similar_characters_step(const BlockPatternMatchVector& P
 
 template <typename InputIt1, typename InputIt2>
 static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPatternMatchVector& PM,
-                                                                  Range<InputIt1> P, Range<InputIt2> T,
-                                                                  size_t Bound)
+                                                                  const Range<InputIt1>& P,
+                                                                  const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() > 64 || T.size() > 64);
     assert(Bound > P.size() || P.size() - Bound <= T.size());
@@ -253,7 +253,7 @@ static inline FlaggedCharsMultiword flag_similar_characters_block(const BlockPat
 }
 
 template <typename PM_Vec, typename InputIt1>
-static inline size_t count_transpositions_word(const PM_Vec& PM, Range<InputIt1> T,
+static inline size_t count_transpositions_word(const PM_Vec& PM, const Range<InputIt1>& T,
                                                const FlaggedCharsWord& flagged)
 {
     uint64_t P_flag = flagged.P_flag;
@@ -273,7 +273,7 @@ static inline size_t count_transpositions_word(const PM_Vec& PM, Range<InputIt1>
 }
 
 template <typename InputIt1>
-static inline size_t count_transpositions_block(const BlockPatternMatchVector& PM, Range<InputIt1> T,
+static inline size_t count_transpositions_block(const BlockPatternMatchVector& PM, const Range<InputIt1>& T,
                                                 const FlaggedCharsMultiword& flagged, size_t FlaggedChars)
 {
     size_t TextWord = 0;
@@ -795,7 +795,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline void jaro_similarity_simd(Range<double*> scores, const detail::BlockPatternMatchVector& block,
-                                        VecType* s1_lengths, size_t s1_lengths_size, Range<InputIt> s2,
+                                        VecType* s1_lengths, size_t s1_lengths_size, const Range<InputIt>& s2,
                                         double score_cutoff) noexcept
 {
     if (score_cutoff > 1.0) {
@@ -825,13 +825,13 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     friend NormalizedMetricBase<Jaro>;
 
     template <typename InputIt1, typename InputIt2>
-    static double maximum(Range<InputIt1>, Range<InputIt2>) noexcept
+    static double maximum(const Range<InputIt1>&, const Range<InputIt2>&) noexcept
     {
         return 1.0;
     }
 
     template <typename InputIt1, typename InputIt2>
-    static double _similarity(Range<InputIt1> s1, Range<InputIt2> s2, double score_cutoff,
+    static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double score_cutoff,
                               [[maybe_unused]] double score_hint)
     {
         return jaro_similarity(s1, s2, score_cutoff);

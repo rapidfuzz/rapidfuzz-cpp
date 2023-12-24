@@ -159,7 +159,7 @@ public:
 
 private:
     template <typename InputIt2>
-    void _similarity(int64_t* scores, size_t score_count, detail::Range<InputIt2> s2,
+    void _similarity(int64_t* scores, size_t score_count, const detail::Range<InputIt2>& s2,
                      int64_t sscore_cutoff = 0) const
     {
         if (score_count < result_count())
@@ -179,7 +179,7 @@ private:
     }
 
     template <typename InputIt2>
-    int64_t maximum(size_t s1_idx, detail::Range<InputIt2> s2) const
+    int64_t maximum(size_t s1_idx, const detail::Range<InputIt2>& s2) const
     {
         return static_cast<int64_t>(std::max(str_lens[s1_idx], s2.size()));
     }
@@ -214,13 +214,13 @@ private:
     friend detail::CachedNormalizedMetricBase<CachedLCSseq<CharT1>>;
 
     template <typename InputIt2>
-    int64_t maximum(detail::Range<InputIt2> s2) const
+    int64_t maximum(const detail::Range<InputIt2>& s2) const
     {
         return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
 
     template <typename InputIt2>
-    int64_t _similarity(detail::Range<InputIt2> s2, int64_t score_cutoff,
+    int64_t _similarity(const detail::Range<InputIt2>& s2, int64_t score_cutoff,
                         [[maybe_unused]] int64_t score_hint) const
     {
         return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);

@@ -31,7 +31,7 @@ namespace rapidfuzz::detail {
  * @return returns the OSA distance between s1 and s2
  */
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
-size_t osa_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2, size_t max)
+size_t osa_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t max)
 {
     /* VP is set to 1^m. Shifting by bitwidth would be undefined behavior */
     uint64_t VP = ~UINT64_C(0);
@@ -75,7 +75,7 @@ size_t osa_hyrroe2003(const PM_Vec& PM, Range<InputIt1> s1, Range<InputIt2> s2, 
 #ifdef RAPIDFUZZ_SIMD
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatchVector& block,
-                         const std::vector<size_t>& s1_lengths, Range<InputIt> s2,
+                         const std::vector<size_t>& s1_lengths, const Range<InputIt>& s2,
                          size_t score_cutoff) noexcept
 {
 #    ifdef RAPIDFUZZ_AVX2
@@ -171,8 +171,8 @@ void osa_hyrroe2003_simd(Range<int64_t*> scores, const detail::BlockPatternMatch
 #endif
 
 template <typename InputIt1, typename InputIt2>
-size_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, Range<InputIt1> s1, Range<InputIt2> s2,
-                            size_t max = std::numeric_limits<size_t>::max())
+size_t osa_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range<InputIt1>& s1,
+                            const Range<InputIt2>& s2, size_t max = std::numeric_limits<size_t>::max())
 {
     struct Row {
         uint64_t VP;
@@ -250,7 +250,7 @@ class OSA : public DistanceBase<OSA, int64_t, 0, std::numeric_limits<int64_t>::m
     friend NormalizedMetricBase<OSA>;
 
     template <typename InputIt1, typename InputIt2>
-    static int64_t maximum(Range<InputIt1> s1, Range<InputIt2> s2)
+    static int64_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2)
     {
         return static_cast<int64_t>(std::max(s1.size(), s2.size()));
     }
