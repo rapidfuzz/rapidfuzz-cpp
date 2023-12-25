@@ -66,6 +66,9 @@ static inline void* rf_aligned_alloc(size_t alignment, size_t size)
     return _aligned_malloc(size, alignment);
 #elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
     return _mm_malloc(size, alignment);
+#elif defined(__ANDROID__) && __ANDROID_API__ > 16
+    void* ptr = nullptr;
+    return posix_memalign(&ptr, alignment, size) ? nullptr : ptr;
 #else
     return aligned_alloc(alignment, size);
 #endif

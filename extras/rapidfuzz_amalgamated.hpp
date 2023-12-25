@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-25 11:17:08.593362
+//  Generated: 2023-12-25 15:26:08.006867
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1627,6 +1627,9 @@ static inline void* rf_aligned_alloc(size_t alignment, size_t size)
     return _aligned_malloc(size, alignment);
 #elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
     return _mm_malloc(size, alignment);
+#elif defined(__ANDROID__) && __ANDROID_API__ > 16
+    void* ptr = nullptr;
+    return posix_memalign(&ptr, alignment, size) ? nullptr : ptr;
 #else
     return aligned_alloc(alignment, size);
 #endif

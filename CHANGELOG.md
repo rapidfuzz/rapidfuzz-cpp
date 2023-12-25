@@ -9,6 +9,7 @@
 
 ### Fixed
 - fix incorrect transposition calculation in simd implementation of Jaro similarity
+- use posix_memalign on android
 
 ## [2.2.3] - 2023-11-02
 ### Fixed
