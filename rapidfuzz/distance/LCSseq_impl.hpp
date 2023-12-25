@@ -270,7 +270,7 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     for (size_t row = 0; row < s2.size(); ++row) {
         uint64_t carry = 0;
 
-        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ssize_t>(first_block * word_size));
+        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
 
         for (size_t word = first_block; word < last_block; ++word) {
             const uint64_t Matches = PM.get(word, *iter_s2);
@@ -430,8 +430,8 @@ Editops recover_alignment(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
         /* Deletion */
         if (matrix.S.test_bit(row - 1, col - 1)) {
             assert(dist > 0);
-            assert(static_cast<ssize_t>(col) >=
-                   static_cast<ssize_t>(row) - static_cast<ssize_t>(band_width_right));
+            assert(static_cast<ptrdiff_t>(col) >=
+                   static_cast<ptrdiff_t>(row) - static_cast<ptrdiff_t>(band_width_right));
             dist--;
             col--;
             editops[dist].type = EditType::Delete;

@@ -124,10 +124,10 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
                 /* find the minimum score possible in the range first <-> last */
                 size_t known_edits = detail::abs_diff(scores[window.first], scores[window.second]);
                 /* half of the cells that are not needed for known_edits can lead to a better score */
-                ssize_t min_score =
-                    static_cast<ssize_t>(std::min(scores[window.first], scores[window.second])) -
-                    static_cast<ssize_t>(cell_diff + known_edits / 2);
-                if (min_score < static_cast<ssize_t>(cutoff_dist)) {
+                ptrdiff_t min_score =
+                    static_cast<ptrdiff_t>(std::min(scores[window.first], scores[window.second])) -
+                    static_cast<ptrdiff_t>(cell_diff + known_edits / 2);
+                if (min_score < static_cast<ptrdiff_t>(cutoff_dist)) {
                     size_t center = cell_diff / 2;
                     new_windows.emplace_back(window.first, window.first + center);
                     new_windows.emplace_back(window.first + center, window.second);
