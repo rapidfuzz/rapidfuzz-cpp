@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-25 16:08:55.279788
+//  Generated: 2023-12-25 16:10:46.428949
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -7384,8 +7384,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
                 vecs[last_block].VN = 0;
 
                 size_t chars_in_block = (last_block + 1 == words) ? ((s1.size() - 1) % word_size + 1) : 64;
-                scores[last_block] = scores[last_block - 1] + chars_in_block - static_cast<size_t>(HP_carry) +
-                                     static_cast<size_t>(HN_carry);
+                scores[last_block] = scores[last_block - 1] + chars_in_block - HP_carry + HN_carry;
                 // todo probably wrong types
                 scores[last_block] = static_cast<size_t>(static_cast<ptrdiff_t>(scores[last_block]) +
                                                          advance_block(last_block));
