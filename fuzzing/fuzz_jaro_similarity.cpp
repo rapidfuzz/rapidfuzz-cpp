@@ -44,11 +44,12 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
         double reference_sim = rapidfuzz_reference::jaro_similarity(strings[i], s2);
 
         if (!is_close(simd_results[i], reference_sim, 0.0001)) {
-            print_seq("s1", s1);
+            print_seq("s1", strings[i]);
             print_seq("s2", s2);
             throw std::logic_error(std::string("jaro similarity using simd failed (reference_score = ") +
                                    std::to_string(reference_sim) + std::string(", score = ") +
-                                   std::to_string(simd_results[i]) + ")");
+                                   std::to_string(simd_results[i]) + std::string(", i = ") +
+                                   std::to_string(i) + ")");
         }
     }
 

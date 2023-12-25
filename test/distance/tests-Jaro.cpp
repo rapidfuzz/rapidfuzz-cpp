@@ -29,28 +29,40 @@ double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cu
 #ifdef RAPIDFUZZ_SIMD
     std::vector<double> results(256 / 8);
     if (s1.size() <= 8) {
-        rapidfuzz::experimental::MultiJaro<8> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<8> simd_scorer(32);
+        for(size_t i = 0; i < 32; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 32; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 16) {
-        rapidfuzz::experimental::MultiJaro<16> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<16> simd_scorer(16);
+        for(size_t i = 0; i < 16; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 16; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 32) {
-        rapidfuzz::experimental::MultiJaro<32> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<32> simd_scorer(8);
+        for(size_t i = 0; i < 8; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 8; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 64) {
-        rapidfuzz::experimental::MultiJaro<64> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<64> simd_scorer(4);
+        for(size_t i = 0; i < 4; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 4; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
 #endif
 
@@ -87,28 +99,40 @@ double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cuto
 #ifdef RAPIDFUZZ_SIMD
     std::vector<double> results(256 / 8);
     if (s1.size() <= 8) {
-        rapidfuzz::experimental::MultiJaro<8> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<8> simd_scorer(32);
+        for(size_t i = 0; i < 32; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 32; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 16) {
-        rapidfuzz::experimental::MultiJaro<16> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<16> simd_scorer(16);
+        for(size_t i = 0; i < 16; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 16; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 32) {
-        rapidfuzz::experimental::MultiJaro<32> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<32> simd_scorer(8);
+        for(size_t i = 0; i < 8; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 8; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
     if (s1.size() <= 64) {
-        rapidfuzz::experimental::MultiJaro<64> simd_scorer(1);
-        simd_scorer.insert(s1);
+        rapidfuzz::experimental::MultiJaro<64> simd_scorer(4);
+        for(size_t i = 0; i < 4; ++i)
+            simd_scorer.insert(s1);
+
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        for(size_t i = 0; i < 4; ++i)
+            REQUIRE(res1 == Approx(results[i]));
     }
 #endif
 
@@ -196,5 +220,31 @@ TEST_CASE("JaroTest")
                           std::string("0100000000000000000000000000000000000000000000000000000000000000000000"
                                       "0000000000000000000000000000000000000000000000000000000000")) ==
             Approx(0.8359375));
+    }
+
+    SECTION("testFuzzingRegressions")
+    {
+#ifdef RAPIDFUZZ_SIMD
+    {
+        std::string s2 = "010101010101010101010101010101010101010101010101010101010101010101"
+                         "010101010101010101010101010101010101010101010101010101010101010101"
+                         "010101010101010101010101010101010101010101010101010101010101010101"
+                         "0101010101010101010101010101010101010101010101010101010101";
+
+        std::vector<double> results(512 / 8);
+        rapidfuzz::experimental::MultiJaro<8> simd_scorer(64);
+        for(size_t i = 0; i < 32; ++i)
+            simd_scorer.insert("10010010");
+
+        simd_scorer.insert("00100100");
+        simd_scorer.similarity(&results[0], results.size(), s2);
+
+        for(size_t i = 0; i < 32; ++i)
+            REQUIRE(results[i] == Approx(0.593750));
+
+        REQUIRE(results[32] == Approx(0.593750));
+    }
+#endif
+
     }
 }

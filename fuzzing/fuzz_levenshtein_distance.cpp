@@ -38,11 +38,12 @@ void validate_simd(const std::basic_string<uint8_t>& s1, const std::basic_string
     for (size_t i = 0; i < strings.size(); ++i) {
         size_t reference_score = rapidfuzz_reference::levenshtein_distance(strings[i], s2);
         if (reference_score != simd_results[i]) {
-            print_seq("s1: ", s1);
+            print_seq("s1: ", strings[i]);
             print_seq("s2: ", s2);
             throw std::logic_error(std::string("levenshtein distance using simd failed (reference_score = ") +
                                    std::to_string(reference_score) + std::string(", score = ") +
-                                   std::to_string(simd_results[i]) + ")");
+                                   std::to_string(simd_results[i]) + std::string(", i = ") +
+                                   std::to_string(i) + ")");
         }
     }
 #else

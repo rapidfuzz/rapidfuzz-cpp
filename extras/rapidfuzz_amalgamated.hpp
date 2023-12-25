@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-24 18:34:14.416744
+//  Generated: 2023-12-25 11:17:08.593362
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2425,7 +2425,7 @@ static inline native_simd<T> min32(const native_simd<T>& a, const native_simd<T>
 static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
                                         const native_simd<uint8_t>& count_) noexcept
 {
-    __m256i mask_hi = _mm256_set1_epi32(0xFF00FF00);
+    __m256i mask_hi = _mm256_set1_epi32(static_cast<int32_t>(0xFF00FF00));
     __m256i multiplier_lut = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, char(128), 64, 32, 16, 8, 4, 2, 1, 0, 0,
                                              0, 0, 0, 0, 0, 0, char(128), 64, 32, 16, 8, 4, 2, 1);
 
@@ -2448,7 +2448,7 @@ static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
 static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a,
                                          const native_simd<uint16_t>& count) noexcept
 {
-    const __m256i mask = _mm256_set1_epi32(0xFFFF0000);
+    const __m256i mask = _mm256_set1_epi32(static_cast<int32_t>(0xFFFF0000));
     __m256i low_half = _mm256_sllv_epi32(a, _mm256_andnot_si256(mask, count));
     __m256i high_half = _mm256_sllv_epi32(_mm256_and_si256(mask, a), _mm256_srli_epi32(count, 16));
     return _mm256_blend_epi16(low_half, high_half, 0xAA);
@@ -5988,8 +5988,9 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
                     VecType PatternFlagMask = blsi(P_flag_cur);
 
-                    uint64_t PM_j = block.get(
-                        cur_block, s2[countr_zero(T_flag_cur) + T_word_index * sizeof(VecType) * 8]);
+                    uint64_t PM_j =
+                        block.get(cur_vec + cur_block,
+                                  s2[countr_zero(T_flag_cur) + T_word_index * sizeof(VecType) * 8]);
                     Transpositions += !(PM_j & (static_cast<uint64_t>(PatternFlagMask) << offset));
 
                     T_flag_cur = blsr(T_flag_cur);
@@ -6090,7 +6091,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
             while (P_flag_cur) {
                 VecType PatternFlagMask = blsi(P_flag_cur);
 
-                uint64_t PM_j = block.get(cur_block, s2[countr_zero(T_flag_cur)]);
+                uint64_t PM_j = block.get(cur_vec + cur_block, s2[countr_zero(T_flag_cur)]);
                 Transpositions += !(PM_j & (static_cast<uint64_t>(PatternFlagMask) << offset));
 
                 T_flag_cur = blsr(T_flag_cur);

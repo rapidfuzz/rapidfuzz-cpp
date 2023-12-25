@@ -7,6 +7,9 @@
 ### Changed
 - changed many types in the interface from int64_t to size_t, since they can't be negative.
 
+### Fixed
+- fix incorrect transposition calculation in simd implementation of Jaro similarity
+
 ## [2.2.3] - 2023-11-02
 ### Fixed
 - use _mm_malloc/_mm_free on macOS if aligned_alloc is unsupported
