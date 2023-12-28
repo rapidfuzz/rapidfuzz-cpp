@@ -147,7 +147,7 @@ TEST_CASE("RatioTest")
         score_test(100, fuzz::partial_ratio("physics 2 vid", "study physics physics 2 video"));
     }
 
-    SECTION("testIssue206") /* test for https://github.com/maxbachmann/RapidFuzz/issues/206 */
+    SECTION("testIssue206") /* test for https://github.com/rapidfuzz/RapidFuzz/issues/206 */
     {
         const char* str1 = "South Korea";
         const char* str2 = "North Korea";
@@ -160,7 +160,7 @@ TEST_CASE("RatioTest")
         }
     }
 
-    SECTION("testIssue210") /* test for https://github.com/maxbachmann/RapidFuzz/issues/210 */
+    SECTION("testIssue210") /* test for https://github.com/rapidfuzz/RapidFuzz/issues/210 */
     {
         const char* str1 = "bc";
         const char* str2 = "bca";
@@ -173,7 +173,7 @@ TEST_CASE("RatioTest")
         }
     }
 
-    SECTION("testIssue231") /* test for https://github.com/maxbachmann/RapidFuzz/issues/231 */
+    SECTION("testIssue231") /* test for https://github.com/rapidfuzz/RapidFuzz/issues/231 */
     {
         const char* str1 = "er merkantilismus f/rderte handel und verkehr mit teils marktkonformen, teils "
                            "dirigistischen ma_nahmen.";
@@ -188,7 +188,7 @@ TEST_CASE("RatioTest")
         REQUIRE(alignment.dest_end == 51);
     }
 
-    SECTION("testIssue257") /* test for https://github.com/maxbachmann/RapidFuzz/issues/257 */
+    SECTION("testIssue257") /* test for https://github.com/rapidfuzz/RapidFuzz/issues/257 */
     {
         const char* str1 = "aaaaaaaaaaaaaaaaaaaaaaaabacaaaaaaaabaaabaaaaaaaababbbbbbbbbbabbcb";
         const char* str2 = "aaaaaaaaaaaaaaaaaaaaaaaababaaaaaaaabaaabaaaaaaaababbbbbbbbbbabbcb";
@@ -197,7 +197,7 @@ TEST_CASE("RatioTest")
         score_test(98.4615385, fuzz::partial_ratio(str2, str1));
     }
 
-    SECTION("testIssue257") /* test for https://github.com/maxbachmann/RapidFuzz/issues/219 */
+    SECTION("testIssue257") /* test for https://github.com/rapidfuzz/RapidFuzz/issues/219 */
     {
         const char* str1 =
             "TTAGCGCTACCGGTCGCCACCATGGTTTTCTAAGGGGAGGCCGTCATCAAAAGAGTTCATGTAGCACGAAGTCCACCTTTGAAGGATCGATGAATG"

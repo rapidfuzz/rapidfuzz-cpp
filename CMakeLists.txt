@@ -137,7 +137,7 @@ if (RAPIDFUZZ_INSTALL)
     endif()
 
     set(CPACK_PACKAGE_VENDOR "Max Bachmann")
-    set(CPACK_PACKAGE_CONTACT "https://github.com/maxbachmann/rapidfuzz-cpp")
+    set(CPACK_PACKAGE_CONTACT "https://github.com/rapidfuzz/rapidfuzz-cpp")
     include(CPack)
 
 endif(RAPIDFUZZ_INSTALL)

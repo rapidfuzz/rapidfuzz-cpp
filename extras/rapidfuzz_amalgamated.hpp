@@ -10443,7 +10443,7 @@ double token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<InputIt1>& 
                        const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */
     if (tokens_a.empty() || tokens_b.empty()) return 0;
 
     auto decomposition = detail::set_decomposition(tokens_a, tokens_b);
@@ -10532,7 +10532,7 @@ double partial_token_set_ratio(const rapidfuzz::detail::SplittedSentenceView<Inp
                                const double score_cutoff)
 {
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */
     if (tokens_a.empty() || tokens_b.empty()) return 0;
 
     auto decomposition = detail::set_decomposition(tokens_a, tokens_b);
@@ -10867,7 +10867,7 @@ double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
     auto len2 = std::distance(first2, last2);
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */
     if (!len1 || !len2) return 0;
 
     double len_ratio = (len1 > len2) ? static_cast<double>(len1) / static_cast<double>(len2)
@@ -10921,7 +10921,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
     size_t len2 = static_cast<size_t>(std::distance(first2, last2));
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */
     if (!len1 || !len2) return 0;
 
     double len_ratio = (len1 > len2) ? static_cast<double>(len1) / static_cast<double>(len2)
@@ -10967,7 +10967,7 @@ double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
     ptrdiff_t len2 = std::distance(first2, last2);
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */
     if (!len1 || !len2) return 0;
 
     return ratio(first1, last1, first2, last2, score_cutoff);
@@ -10988,7 +10988,7 @@ double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
     auto len2 = std::distance(first2, last2);
 
     /* in FuzzyWuzzy this returns 0. For sake of compatibility return 0 here as well
-     * see https://github.com/maxbachmann/RapidFuzz/issues/110 */
+     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */
     if (s1.empty() || !len2) return 0;
 
     return cached_ratio.similarity(first2, last2, score_cutoff);

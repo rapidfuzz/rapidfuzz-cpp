@@ -1,19 +1,19 @@
   <h1 align="center">
-<img src="https://raw.githubusercontent.com/maxbachmann/rapidfuzz/master/docs/img/RapidFuzz.svg?sanitize=true" alt="RapidFuzz" width="400">
+<img src="https://raw.githubusercontent.com/rapidfuzz/rapidfuzz/master/docs/img/RapidFuzz.svg?sanitize=true" alt="RapidFuzz" width="400">
 </h1>
 <h4 align="center">Rapid fuzzy string matching in C++ using the Levenshtein Distance</h4>
 
 <p align="center">
-  <a href="https://github.com/maxbachmann/rapidfuzz-cpp/actions">
-    <img src="https://github.com/maxbachmann/rapidfuzz-cpp/workflows/CMake/badge.svg"
+  <a href="https://github.com/rapidfuzz/rapidfuzz-cpp/actions">
+    <img src="https://github.com/rapidfuzz/rapidfuzz-cpp/workflows/CMake/badge.svg"
          alt="Continuous Integration">
   </a>
-  <a href="https://maxbachmann.github.io/rapidfuzz-cpp">
+  <a href="https://rapidfuzz.github.io/rapidfuzz-cpp">
     <img src="https://img.shields.io/badge/-documentation-blue"
          alt="Documentation">
   </a>
-  <a href="https://github.com/maxbachmann/rapidfuzz-cpp/blob/dev/LICENSE">
-    <img src="https://img.shields.io/github/license/maxbachmann/rapidfuzz-cpp"
+  <a href="https://github.com/rapidfuzz/rapidfuzz-cpp/blob/dev/LICENSE">
+    <img src="https://img.shields.io/github/license/rapidfuzz/rapidfuzz-cpp"
          alt="GitHub license">
   </a>
 </p>
@@ -29,11 +29,11 @@
 ## Description
 RapidFuzz is a fast string matching library for Python and C++, which is using the string similarity calculations from [FuzzyWuzzy](https://github.com/seatgeek/fuzzywuzzy). However, there are two aspects that set RapidFuzz apart from FuzzyWuzzy:
 1) It is MIT licensed so it can be used whichever License you might want to choose for your project, while you're forced to adopt the GPL license when using FuzzyWuzzy
-2) It is mostly written in C++ and on top of this comes with a lot of Algorithmic improvements to make string matching even faster, while still providing the same results. More details on these performance improvements in the form of benchmarks can be found [here](https://github.com/maxbachmann/rapidfuzz/blob/master/Benchmarks.md)
+2) It is mostly written in C++ and on top of this comes with a lot of Algorithmic improvements to make string matching even faster, while still providing the same results. More details on these performance improvements in the form of benchmarks can be found [here](https://github.com/rapidfuzz/rapidfuzz/blob/master/Benchmarks.md)
 
 The Library is split across multiple repositories for the different supported programming languages:
 - The C++ version is versioned in this repository
-- The Python version can be found at [maxbachmann/rapidfuzz](https://github.com/maxbachmann/rapidfuzz)
+- The Python version can be found at [rapidfuzz/rapidfuzz](https://github.com/rapidfuzz/rapidfuzz)
 
 
 ## CMake Integration
@@ -42,7 +42,7 @@ There are severals ways to integrate `rapidfuzz` in your CMake project.
 
 ### By Installing it
 ```bash
-git clone https://github.com/maxbachmann/rapidfuzz-cpp.git rapidfuzz-cpp
+git clone https://github.com/rapidfuzz/rapidfuzz-cpp.git rapidfuzz-cpp
 cd rapidfuzz-cpp
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -59,7 +59,7 @@ target_link_libraries(foo rapidfuzz::rapidfuzz)
 
 ### Add this repository as a submodule
 ```bash
-git submodule add https://github.com/maxbachmann/rapidfuzz-cpp.git 3rdparty/RapidFuzz
+git submodule add https://github.com/rapidfuzz/rapidfuzz-cpp.git 3rdparty/RapidFuzz
 ```
 Then you can either:
 
@@ -86,7 +86,7 @@ Then you can either:
 If you don't want to add `rapidfuzz-cpp` as a submodule, you can also download it with `FetchContent`:
 ```cmake
 FetchContent_Declare(rapidfuzz
-  GIT_REPOSITORY https://github.com/maxbachmann/rapidfuzz-cpp.git
+  GIT_REPOSITORY https://github.com/rapidfuzz/rapidfuzz-cpp.git
   GIT_TAG main)
 FetchContent_MakeAvailable(rapidfuzz)
 add_executable(foo main.cpp)
