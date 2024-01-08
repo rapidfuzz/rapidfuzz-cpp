@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['normalized_5fhamming_28',['normalized_hamming',['../group__string__metric.html#ga8589e7617a317961abf1096a990afe39',1,'rapidfuzz::string_metric']]],
-  ['normalized_5flevenshtein_29',['normalized_levenshtein',['../group__string__metric.html#ga63bcd785829ec8b10b4bcb41e853fe74',1,'rapidfuzz::string_metric']]]
+  ['wratio_21',['WRatio',['../group__Fuzz.html#gaa144360e61d1301672d05751ec356123',1,'rapidfuzz::fuzz']]]
 ];
