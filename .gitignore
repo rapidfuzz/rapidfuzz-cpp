@@ -8,4 +8,9 @@ build/
 *.o
 *.out
 .vs/
-CMakeSettings.json
+
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
