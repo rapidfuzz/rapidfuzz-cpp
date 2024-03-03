@@ -89,13 +89,13 @@ $(function() {
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">   21</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;{</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(detail::Range(first1, last1), detail::Range(first2, last2), score_cutoff);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(detail::Range(first1, last1), detail::Range(first2, last2), score_cutoff);</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;}</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keyword">const</span> <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">   27</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keyword">const</span> <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;{</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordflow">return</span> indel_normalized_similarity(s1, s2, score_cutoff / 100) * 100;</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;}</div>
@@ -302,13 +302,13 @@ $(function() {
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;}</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160; </div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00234"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">  234</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;{</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <span class="keywordflow">return</span> partial_ratio_alignment(first1, last1, first2, last2, score_cutoff).score;</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;}</div>
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160; </div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00240"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">  240</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;{</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordflow">return</span> partial_ratio_alignment(s1, s2, score_cutoff).score;</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;}</div>
@@ -331,7 +331,7 @@ $(function() {
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordtype">size_t</span> len2 = <span class="keyword">static_cast&lt;</span><span class="keywordtype">size_t</span><span class="keyword">&gt;</span>(std::distance(first2, last2));</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160; </div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keywordflow">if</span> (len1 &gt; len2)</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(detail::to_begin(s1), detail::to_end(s1), first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(detail::to_begin(s1), detail::to_end(s1), first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160; </div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160; </div>
@@ -362,18 +362,18 @@ $(function() {
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;<span class="comment"> *             token_sort_ratio</span></div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00294"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga2bd067bd88457cb2e21add5678ac5ae1">  294</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga2bd067bd88457cb2e21add5678ac5ae1">token_sort_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gad11b4e6223b7e258ac1df2549a476fdd">token_sort_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;{</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160; </div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(detail::sorted_split(first1, last1).join(), detail::sorted_split(first2, last2).join(),</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(detail::sorted_split(first1, last1).join(), detail::sorted_split(first2, last2).join(),</div>
 <div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;                 score_cutoff);</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;}</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160; </div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga2bd067bd88457cb2e21add5678ac5ae1">token_sort_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00303"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gad11b4e6223b7e258ac1df2549a476fdd">  303</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gad11b4e6223b7e258ac1df2549a476fdd">token_sort_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;{</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga2bd067bd88457cb2e21add5678ac5ae1">token_sort_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gad11b4e6223b7e258ac1df2549a476fdd">token_sort_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;                            detail::to_end(s2), score_cutoff);</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;}</div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160; </div>
@@ -400,19 +400,19 @@ $(function() {
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160; </div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00332"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga871db1dc809604cb302cfde6b2d55f10">  332</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga871db1dc809604cb302cfde6b2d55f10">partial_token_sort_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gabc2ec33c2f0c2e324c0088e18e75c88c">partial_token_sort_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;                                <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;{</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160; </div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(detail::sorted_split(first1, last1).join(),</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(detail::sorted_split(first1, last1).join(),</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;                         detail::sorted_split(first2, last2).join(), score_cutoff);</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;}</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160; </div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga871db1dc809604cb302cfde6b2d55f10">partial_token_sort_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00342"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gabc2ec33c2f0c2e324c0088e18e75c88c">  342</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gabc2ec33c2f0c2e324c0088e18e75c88c">partial_token_sort_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;{</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga871db1dc809604cb302cfde6b2d55f10">partial_token_sort_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gabc2ec33c2f0c2e324c0088e18e75c88c">partial_token_sort_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;                                    detail::to_end(s2), score_cutoff);</div>
 <div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;}</div>
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160; </div>
@@ -440,7 +440,7 @@ $(function() {
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160; </div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;<span class="keyword">namespace </span>fuzz_detail {</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">token_set_ratio</a>(<span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt1&gt;&amp; tokens_a,</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">token_set_ratio</a>(<span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt1&gt;&amp; tokens_a,</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                       <span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt2&gt;&amp; tokens_b,</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;                       <span class="keyword">const</span> <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;{</div>
@@ -490,18 +490,18 @@ $(function() {
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;} <span class="comment">// namespace fuzz_detail</span></div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160; </div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00422"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">  422</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">token_set_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">token_set_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;{</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160; </div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">fuzz_detail::token_set_ratio</a>(detail::sorted_split(first1, last1),</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">fuzz_detail::token_set_ratio</a>(detail::sorted_split(first1, last1),</div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;                                        detail::sorted_split(first2, last2), score_cutoff);</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;}</div>
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160; </div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">token_set_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00431"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">  431</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">token_set_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;{</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">token_set_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">token_set_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;                           score_cutoff);</div>
 <div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;}</div>
 <div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160; </div>
@@ -512,7 +512,7 @@ $(function() {
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="keyword"></span>{</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160; </div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">fuzz_detail::token_set_ratio</a>(tokens_s1, detail::sorted_split(first2, last2), score_cutoff);</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">fuzz_detail::token_set_ratio</a>(tokens_s1, detail::sorted_split(first2, last2), score_cutoff);</div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;}</div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160; </div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1&gt;</div>
@@ -529,7 +529,7 @@ $(function() {
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160; </div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<span class="keyword">namespace </span>fuzz_detail {</div>
 <div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">partial_token_set_ratio</a>(<span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt1&gt;&amp; tokens_a,</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">partial_token_set_ratio</a>(<span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt1&gt;&amp; tokens_a,</div>
 <div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;                               <span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt2&gt;&amp; tokens_b,</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;                               <span class="keyword">const</span> <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;{</div>
@@ -542,25 +542,25 @@ $(function() {
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    <span class="comment">// exit early when there is a common word in both sequences</span></div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;    <span class="keywordflow">if</span> (!decomposition.intersection.empty()) <span class="keywordflow">return</span> 100;</div>
 <div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160; </div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(decomposition.difference_ab.join(), decomposition.difference_ba.join(),</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(decomposition.difference_ab.join(), decomposition.difference_ba.join(),</div>
 <div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;                         score_cutoff);</div>
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;}</div>
 <div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;} <span class="comment">// namespace fuzz_detail</span></div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160; </div>
 <div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00480"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">  480</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">partial_token_set_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">partial_token_set_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,</div>
 <div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;                               <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;{</div>
 <div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160; </div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">fuzz_detail::partial_token_set_ratio</a>(detail::sorted_split(first1, last1),</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">fuzz_detail::partial_token_set_ratio</a>(detail::sorted_split(first1, last1),</div>
 <div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;                                                detail::sorted_split(first2, last2), score_cutoff);</div>
 <div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;}</div>
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160; </div>
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">partial_token_set_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00490"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">  490</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">partial_token_set_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;{</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">partial_token_set_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">partial_token_set_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;                                   detail::to_end(s2), score_cutoff);</div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;}</div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160; </div>
@@ -571,7 +571,7 @@ $(function() {
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;<span class="keyword"></span>{</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160; </div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">fuzz_detail::partial_token_set_ratio</a>(tokens_s1, detail::sorted_split(first2, last2), score_cutoff);</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">fuzz_detail::partial_token_set_ratio</a>(tokens_s1, detail::sorted_split(first2, last2), score_cutoff);</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;}</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160; </div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1&gt;</div>
@@ -587,7 +587,7 @@ $(function() {
 <div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160; </div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00519"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">  519</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">token_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;{</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160; </div>
@@ -608,7 +608,7 @@ $(function() {
 <div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    <span class="keywordtype">size_t</span> ba_len = diff_ba_joined.size();</div>
 <div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    <span class="keywordtype">size_t</span> sect_len = intersect.length();</div>
 <div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160; </div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keywordtype">double</span> result = <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(tokens_a.join(), tokens_b.join(), score_cutoff);</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keywordtype">double</span> result = <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(tokens_a.join(), tokens_b.join(), score_cutoff);</div>
 <div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160; </div>
 <div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    <span class="comment">// string length sect+ab &lt;-&gt; sect and sect+ba &lt;-&gt; sect</span></div>
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="keywordtype">size_t</span> sect_ab_len = sect_len + bool(sect_len) + ab_len;</div>
@@ -635,15 +635,15 @@ $(function() {
 <div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;}</div>
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160; </div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">token_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00567"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">  567</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;{</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">token_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;                       score_cutoff);</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;}</div>
 <div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160; </div>
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;<span class="keyword">namespace </span>fuzz_detail {</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1, <span class="keyword">typename</span> CachedCharT1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">token_ratio</a>(<span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;CharT1&gt;&amp; s1_tokens,</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(<span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;CharT1&gt;&amp; s1_tokens,</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;                   <span class="keyword">const</span> CachedRatio&lt;CachedCharT1&gt;&amp; cached_ratio_s1_sorted, InputIt2 first2, InputIt2 last2,</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                   <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;{</div>
@@ -693,7 +693,7 @@ $(function() {
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160; </div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;<span class="comment">// todo this is a temporary solution until WRatio is properly implemented using other scorers</span></div>
 <div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1, <span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">token_ratio</a>(<span class="keyword">const</span> std::vector&lt;CharT1&gt;&amp; s1_sorted,</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(<span class="keyword">const</span> std::vector&lt;CharT1&gt;&amp; s1_sorted,</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;                   <span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt1&gt;&amp; tokens_s1,</div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;                   <span class="keyword">const</span> detail::BlockPatternMatchVector&amp; blockmap_s1_sorted, InputIt2 first2, InputIt2 last2,</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;                   <span class="keywordtype">double</span> score_cutoff)</div>
@@ -724,7 +724,7 @@ $(function() {
 <div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;        result = norm_sim * 100;</div>
 <div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;    }</div>
 <div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;    <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;        result = <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">fuzz::ratio</a>(s1_sorted, s2_sorted, score_cutoff);</div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;        result = <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">fuzz::ratio</a>(s1_sorted, s2_sorted, score_cutoff);</div>
 <div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;    }</div>
 <div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160; </div>
 <div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;    <span class="comment">// string length sect+ab &lt;-&gt; sect and sect+ba &lt;-&gt; sect</span></div>
@@ -757,7 +757,7 @@ $(function() {
 <div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;<span class="keywordtype">double</span> CachedTokenRatio&lt;CharT1&gt;::similarity(InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff,</div>
 <div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;                                            [[maybe_unused]] <span class="keywordtype">double</span> score_hint)<span class="keyword"> const</span></div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;<span class="keyword"></span>{</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">fuzz_detail::token_ratio</a>(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">fuzz_detail::token_ratio</a>(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;}</div>
 <div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160; </div>
 <div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1&gt;</div>
@@ -773,7 +773,7 @@ $(function() {
 <div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160; </div>
 <div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00705"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">  705</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">partial_token_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,</div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">partial_token_ratio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,</div>
 <div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;                           <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;{</div>
 <div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
@@ -789,7 +789,7 @@ $(function() {
 <div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="keyword">auto</span> diff_ab = decomposition.difference_ab;</div>
 <div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;    <span class="keyword">auto</span> diff_ba = decomposition.difference_ba;</div>
 <div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160; </div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    <span class="keywordtype">double</span> result = <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(tokens_a.join(), tokens_b.join(), score_cutoff);</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    <span class="keywordtype">double</span> result = <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(tokens_a.join(), tokens_b.join(), score_cutoff);</div>
 <div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160; </div>
 <div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;    <span class="comment">// do not calculate the same partial_ratio twice</span></div>
 <div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="keywordflow">if</span> (tokens_a.word_count() == diff_ab.word_count() &amp;&amp; tokens_b.word_count() == diff_ba.word_count()) {</div>
@@ -797,19 +797,19 @@ $(function() {
 <div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;    }</div>
 <div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160; </div>
 <div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;    score_cutoff = std::max(score_cutoff, result);</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <span class="keywordflow">return</span> std::max(result, <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(diff_ab.join(), diff_ba.join(), score_cutoff));</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <span class="keywordflow">return</span> std::max(result, <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(diff_ab.join(), diff_ba.join(), score_cutoff));</div>
 <div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;}</div>
 <div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160; </div>
 <div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">partial_token_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00733"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">  733</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">partial_token_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;{</div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">partial_token_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">partial_token_ratio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2),</div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;                               detail::to_end(s2), score_cutoff);</div>
 <div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;}</div>
 <div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160; </div>
 <div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;<span class="keyword">namespace </span>fuzz_detail {</div>
 <div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1, <span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">partial_token_ratio</a>(<span class="keyword">const</span> std::vector&lt;CharT1&gt;&amp; s1_sorted,</div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">partial_token_ratio</a>(<span class="keyword">const</span> std::vector&lt;CharT1&gt;&amp; s1_sorted,</div>
 <div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;                           <span class="keyword">const</span> rapidfuzz::detail::SplittedSentenceView&lt;InputIt1&gt;&amp; tokens_s1,</div>
 <div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;                           InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;{</div>
@@ -825,7 +825,7 @@ $(function() {
 <div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;    <span class="keyword">auto</span> diff_ab = decomposition.difference_ab;</div>
 <div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;    <span class="keyword">auto</span> diff_ba = decomposition.difference_ba;</div>
 <div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160; </div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;    <span class="keywordtype">double</span> result = <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(s1_sorted, tokens_b.join(), score_cutoff);</div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;    <span class="keywordtype">double</span> result = <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(s1_sorted, tokens_b.join(), score_cutoff);</div>
 <div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160; </div>
 <div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;    <span class="comment">// do not calculate the same partial_ratio twice</span></div>
 <div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;    <span class="keywordflow">if</span> (tokens_s1.word_count() == diff_ab.word_count() &amp;&amp; tokens_b.word_count() == diff_ba.word_count()) {</div>
@@ -833,7 +833,7 @@ $(function() {
 <div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;    }</div>
 <div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160; </div>
 <div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;    score_cutoff = std::max(score_cutoff, result);</div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    <span class="keywordflow">return</span> std::max(result, <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(diff_ab.join(), diff_ba.join(), score_cutoff));</div>
+<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;    <span class="keywordflow">return</span> std::max(result, <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(diff_ab.join(), diff_ba.join(), score_cutoff));</div>
 <div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;}</div>
 <div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160; </div>
 <div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;} <span class="comment">// namespace fuzz_detail</span></div>
@@ -843,7 +843,7 @@ $(function() {
 <div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;<span class="keywordtype">double</span> CachedPartialTokenRatio&lt;CharT1&gt;::similarity(InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff,</div>
 <div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;                                                   [[maybe_unused]] <span class="keywordtype">double</span> score_hint)<span class="keyword"> const</span></div>
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;<span class="keyword"></span>{</div>
-<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">fuzz_detail::partial_token_ratio</a>(s1_sorted, tokens_s1, first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">fuzz_detail::partial_token_ratio</a>(s1_sorted, tokens_s1, first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;}</div>
 <div class="line"><a name="l00777"></a><span class="lineno">  777</span>&#160; </div>
 <div class="line"><a name="l00778"></a><span class="lineno">  778</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> CharT1&gt;</div>
@@ -859,7 +859,7 @@ $(function() {
 <div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160; </div>
 <div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00791"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gaa144360e61d1301672d05751ec356123">  791</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaa144360e61d1301672d05751ec356123">WRatio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00791"></a><span class="lineno">  791</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga0d510c43917869e7533d5bb1ba74aef3">WRatio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;{</div>
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;    <span class="keywordflow">if</span> (score_cutoff &gt; 100) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160; </div>
@@ -875,28 +875,28 @@ $(function() {
 <div class="line"><a name="l00804"></a><span class="lineno">  804</span>&#160;    <span class="keywordtype">double</span> len_ratio = (len1 &gt; len2) ? <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(len1) / <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(len2)</div>
 <div class="line"><a name="l00805"></a><span class="lineno">  805</span>&#160;                                     : <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(len2) / <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(len1);</div>
 <div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160; </div>
-<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;    <span class="keywordtype">double</span> end_ratio = <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(first1, last1, first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;    <span class="keywordtype">double</span> end_ratio = <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(first1, last1, first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160; </div>
 <div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;    <span class="keywordflow">if</span> (len_ratio &lt; 1.5) {</div>
 <div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;        score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;</div>
-<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;        <span class="keywordflow">return</span> std::max(end_ratio, <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">token_ratio</a>(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);</div>
+<div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;        <span class="keywordflow">return</span> std::max(end_ratio, <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);</div>
 <div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;    }</div>
 <div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160; </div>
 <div class="line"><a name="l00814"></a><span class="lineno">  814</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> PARTIAL_SCALE = (len_ratio &lt; 8.0) ? 0.9 : 0.6;</div>
 <div class="line"><a name="l00815"></a><span class="lineno">  815</span>&#160; </div>
 <div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;    score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;</div>
 <div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;    end_ratio =</div>
-<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;        std::max(end_ratio, <a class="code" href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">partial_ratio</a>(first1, last1, first2, last2, score_cutoff) * PARTIAL_SCALE);</div>
+<div class="line"><a name="l00818"></a><span class="lineno">  818</span>&#160;        std::max(end_ratio, <a class="code" href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">partial_ratio</a>(first1, last1, first2, last2, score_cutoff) * PARTIAL_SCALE);</div>
 <div class="line"><a name="l00819"></a><span class="lineno">  819</span>&#160; </div>
 <div class="line"><a name="l00820"></a><span class="lineno">  820</span>&#160;    score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;</div>
-<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    <span class="keywordflow">return</span> std::max(end_ratio, <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">partial_token_ratio</a>(first1, last1, first2, last2, score_cutoff) *</div>
+<div class="line"><a name="l00821"></a><span class="lineno">  821</span>&#160;    <span class="keywordflow">return</span> std::max(end_ratio, <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">partial_token_ratio</a>(first1, last1, first2, last2, score_cutoff) *</div>
 <div class="line"><a name="l00822"></a><span class="lineno">  822</span>&#160;                                   UNBASE_SCALE * PARTIAL_SCALE);</div>
 <div class="line"><a name="l00823"></a><span class="lineno">  823</span>&#160;}</div>
 <div class="line"><a name="l00824"></a><span class="lineno">  824</span>&#160; </div>
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gaa144360e61d1301672d05751ec356123">WRatio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00826"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga0d510c43917869e7533d5bb1ba74aef3">  826</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga0d510c43917869e7533d5bb1ba74aef3">WRatio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160;{</div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gaa144360e61d1301672d05751ec356123">WRatio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga0d510c43917869e7533d5bb1ba74aef3">WRatio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
 <div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;                  score_cutoff);</div>
 <div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160;}</div>
 <div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160; </div>
@@ -935,7 +935,7 @@ $(function() {
 <div class="line"><a name="l00864"></a><span class="lineno">  864</span>&#160;        score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;</div>
 <div class="line"><a name="l00865"></a><span class="lineno">  865</span>&#160;        <span class="comment">// use pre calculated values</span></div>
 <div class="line"><a name="l00866"></a><span class="lineno">  866</span>&#160;        <span class="keyword">auto</span> r =</div>
-<div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;            <a class="code" href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">fuzz_detail::token_ratio</a>(s1_sorted, tokens_s1, blockmap_s1_sorted, first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;            <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">fuzz_detail::token_ratio</a>(s1_sorted, tokens_s1, blockmap_s1_sorted, first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;        <span class="keywordflow">return</span> std::max(end_ratio, r * UNBASE_SCALE);</div>
 <div class="line"><a name="l00869"></a><span class="lineno">  869</span>&#160;    }</div>
 <div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160; </div>
@@ -946,7 +946,7 @@ $(function() {
 <div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;        std::max(end_ratio, cached_partial_ratio.similarity(first2, last2, score_cutoff) * PARTIAL_SCALE);</div>
 <div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160; </div>
 <div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;    score_cutoff = std::max(score_cutoff, end_ratio) / UNBASE_SCALE;</div>
-<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;    <span class="keyword">auto</span> r = <a class="code" href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">fuzz_detail::partial_token_ratio</a>(s1_sorted, tokens_s1, first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;    <span class="keyword">auto</span> r = <a class="code" href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">fuzz_detail::partial_token_ratio</a>(s1_sorted, tokens_s1, first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;    <span class="keywordflow">return</span> std::max(end_ratio, r * UNBASE_SCALE * PARTIAL_SCALE);</div>
 <div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;}</div>
 <div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160; </div>
@@ -963,7 +963,7 @@ $(function() {
 <div class="line"><a name="l00892"></a><span class="lineno">  892</span>&#160;<span class="comment"> *********************************************/</span></div>
 <div class="line"><a name="l00893"></a><span class="lineno">  893</span>&#160; </div>
 <div class="line"><a name="l00894"></a><span class="lineno">  894</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a name="l00895"></a><span class="lineno"><a class="line" href="group__Fuzz.html#gacdca33b08c5937824b385db55fd54a2e">  895</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gacdca33b08c5937824b385db55fd54a2e">QRatio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga54d01a1f46d05d9eaa99708e66a1c502">QRatio</a>(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160;{</div>
 <div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;    ptrdiff_t len1 = std::distance(first1, last1);</div>
 <div class="line"><a name="l00898"></a><span class="lineno">  898</span>&#160;    ptrdiff_t len2 = std::distance(first2, last2);</div>
@@ -972,13 +972,13 @@ $(function() {
 <div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160;<span class="comment">     * see https://github.com/rapidfuzz/RapidFuzz/issues/110 */</span></div>
 <div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;    <span class="keywordflow">if</span> (!len1 || !len2) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160; </div>
-<div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">ratio</a>(first1, last1, first2, last2, score_cutoff);</div>
+<div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">ratio</a>(first1, last1, first2, last2, score_cutoff);</div>
 <div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;}</div>
 <div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160; </div>
 <div class="line"><a name="l00907"></a><span class="lineno">  907</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
-<div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#gacdca33b08c5937824b385db55fd54a2e">QRatio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
+<div class="line"><a name="l00908"></a><span class="lineno"><a class="line" href="group__Fuzz.html#ga54d01a1f46d05d9eaa99708e66a1c502">  908</a></span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga54d01a1f46d05d9eaa99708e66a1c502">QRatio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff)</div>
 <div class="line"><a name="l00909"></a><span class="lineno">  909</span>&#160;{</div>
-<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#gacdca33b08c5937824b385db55fd54a2e">QRatio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
+<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="group__Fuzz.html#ga54d01a1f46d05d9eaa99708e66a1c502">QRatio</a>(detail::to_begin(s1), detail::to_end(s1), detail::to_begin(s2), detail::to_end(s2),</div>
 <div class="line"><a name="l00911"></a><span class="lineno">  911</span>&#160;                  score_cutoff);</div>
 <div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160;}</div>
 <div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160; </div>
@@ -1005,16 +1005,16 @@ $(function() {
 <div class="line"><a name="l00934"></a><span class="lineno">  934</span>&#160;}</div>
 <div class="line"><a name="l00935"></a><span class="lineno">  935</span>&#160; </div>
 <div class="line"><a name="l00936"></a><span class="lineno">  936</span>&#160;} <span class="comment">// namespace rapidfuzz::fuzz</span></div>
-<div class="ttc" id="agroup__Fuzz_html_ga2bd067bd88457cb2e21add5678ac5ae1"><div class="ttname"><a href="group__Fuzz.html#ga2bd067bd88457cb2e21add5678ac5ae1">rapidfuzz::fuzz::token_sort_ratio</a></div><div class="ttdeci">double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Sorts the words in the strings and calculates the fuzz::ratio between them.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:294</div></div>
-<div class="ttc" id="agroup__Fuzz_html_ga3edd989a6f37b2b642c7574285f4af4c"><div class="ttname"><a href="group__Fuzz.html#ga3edd989a6f37b2b642c7574285f4af4c">rapidfuzz::fuzz::partial_ratio</a></div><div class="ttdeci">double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">calculates the fuzz::ratio of the optimal string alignment</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:234</div></div>
-<div class="ttc" id="agroup__Fuzz_html_ga54be06100cd6d2dbee6c7b4c028b593b"><div class="ttname"><a href="group__Fuzz.html#ga54be06100cd6d2dbee6c7b4c028b593b">rapidfuzz::fuzz::token_ratio</a></div><div class="ttdeci">double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Helper method that returns the maximum of fuzz::token_set_ratio and fuzz::token_sort_ratio (faster th...</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:519</div></div>
-<div class="ttc" id="agroup__Fuzz_html_ga7100a454d3bc20b43eec8262a26e2eb9"><div class="ttname"><a href="group__Fuzz.html#ga7100a454d3bc20b43eec8262a26e2eb9">rapidfuzz::fuzz::ratio</a></div><div class="ttdeci">double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">calculates a simple ratio between two strings</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:21</div></div>
-<div class="ttc" id="agroup__Fuzz_html_ga871db1dc809604cb302cfde6b2d55f10"><div class="ttname"><a href="group__Fuzz.html#ga871db1dc809604cb302cfde6b2d55f10">rapidfuzz::fuzz::partial_token_sort_ratio</a></div><div class="ttdeci">double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Sorts the words in the strings and calculates the fuzz::partial_ratio between them.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:332</div></div>
-<div class="ttc" id="agroup__Fuzz_html_ga949f8ab6b568d0ec5ea5d245fb62a1cf"><div class="ttname"><a href="group__Fuzz.html#ga949f8ab6b568d0ec5ea5d245fb62a1cf">rapidfuzz::fuzz::partial_token_set_ratio</a></div><div class="ttdeci">double partial_token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Compares the words in the strings based on unique and common words between them using fuzz::partial_r...</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:480</div></div>
-<div class="ttc" id="agroup__Fuzz_html_gaa144360e61d1301672d05751ec356123"><div class="ttname"><a href="group__Fuzz.html#gaa144360e61d1301672d05751ec356123">rapidfuzz::fuzz::WRatio</a></div><div class="ttdeci">double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Calculates a weighted ratio based on the other ratio algorithms.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:791</div></div>
-<div class="ttc" id="agroup__Fuzz_html_gacdca33b08c5937824b385db55fd54a2e"><div class="ttname"><a href="group__Fuzz.html#gacdca33b08c5937824b385db55fd54a2e">rapidfuzz::fuzz::QRatio</a></div><div class="ttdeci">double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Calculates a quick ratio between two strings using fuzz.ratio.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:895</div></div>
-<div class="ttc" id="agroup__Fuzz_html_gaef2447fac84ea8f23ce4803bf9284a62"><div class="ttname"><a href="group__Fuzz.html#gaef2447fac84ea8f23ce4803bf9284a62">rapidfuzz::fuzz::partial_token_ratio</a></div><div class="ttdeci">double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Helper method that returns the maximum of fuzz::partial_token_set_ratio and fuzz::partial_token_sort_...</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:705</div></div>
-<div class="ttc" id="agroup__Fuzz_html_gafa3f916422723699b5352d73c5d2335f"><div class="ttname"><a href="group__Fuzz.html#gafa3f916422723699b5352d73c5d2335f">rapidfuzz::fuzz::token_set_ratio</a></div><div class="ttdeci">double token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff=0)</div><div class="ttdoc">Compares the words in the strings based on unique and common words between them using fuzz::ratio.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:422</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga0d510c43917869e7533d5bb1ba74aef3"><div class="ttname"><a href="group__Fuzz.html#ga0d510c43917869e7533d5bb1ba74aef3">rapidfuzz::fuzz::WRatio</a></div><div class="ttdeci">double WRatio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Calculates a weighted ratio based on the other ratio algorithms.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:826</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga306278c79c5f49d696dff2e0dff7f819"><div class="ttname"><a href="group__Fuzz.html#ga306278c79c5f49d696dff2e0dff7f819">rapidfuzz::fuzz::ratio</a></div><div class="ttdeci">double ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">calculates a simple ratio between two strings</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:27</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga54d01a1f46d05d9eaa99708e66a1c502"><div class="ttname"><a href="group__Fuzz.html#ga54d01a1f46d05d9eaa99708e66a1c502">rapidfuzz::fuzz::QRatio</a></div><div class="ttdeci">double QRatio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Calculates a quick ratio between two strings using fuzz.ratio.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:908</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga63d57e2425a7e4c0ff43565b95fc9390"><div class="ttname"><a href="group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390">rapidfuzz::fuzz::partial_token_set_ratio</a></div><div class="ttdeci">double partial_token_set_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Compares the words in the strings based on unique and common words between them using fuzz::partial_r...</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:490</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga6c3d4f9ebf3a92334b97e0fb3a204cf7"><div class="ttname"><a href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">rapidfuzz::fuzz::token_ratio</a></div><div class="ttdeci">double token_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Helper method that returns the maximum of fuzz::token_set_ratio and fuzz::token_sort_ratio (faster th...</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:567</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga7908598f2c3cc9454137063748e2dca1"><div class="ttname"><a href="group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1">rapidfuzz::fuzz::partial_token_ratio</a></div><div class="ttdeci">double partial_token_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Helper method that returns the maximum of fuzz::partial_token_set_ratio and fuzz::partial_token_sort_...</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:733</div></div>
+<div class="ttc" id="agroup__Fuzz_html_ga806f12bbb364f60488cb20fd6011bed1"><div class="ttname"><a href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">rapidfuzz::fuzz::token_set_ratio</a></div><div class="ttdeci">double token_set_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Compares the words in the strings based on unique and common words between them using fuzz::ratio.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:431</div></div>
+<div class="ttc" id="agroup__Fuzz_html_gabc2ec33c2f0c2e324c0088e18e75c88c"><div class="ttname"><a href="group__Fuzz.html#gabc2ec33c2f0c2e324c0088e18e75c88c">rapidfuzz::fuzz::partial_token_sort_ratio</a></div><div class="ttdeci">double partial_token_sort_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Sorts the words in the strings and calculates the fuzz::partial_ratio between them.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:342</div></div>
+<div class="ttc" id="agroup__Fuzz_html_gad11b4e6223b7e258ac1df2549a476fdd"><div class="ttname"><a href="group__Fuzz.html#gad11b4e6223b7e258ac1df2549a476fdd">rapidfuzz::fuzz::token_sort_ratio</a></div><div class="ttdeci">double token_sort_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">Sorts the words in the strings and calculates the fuzz::ratio between them.</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:303</div></div>
+<div class="ttc" id="agroup__Fuzz_html_gaf3233dbb354b88066dc51bf1f27dbdee"><div class="ttname"><a href="group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee">rapidfuzz::fuzz::partial_ratio</a></div><div class="ttdeci">double partial_ratio(const Sentence1 &amp;s1, const Sentence2 &amp;s2, double score_cutoff=0)</div><div class="ttdoc">calculates the fuzz::ratio of the optimal string alignment</div><div class="ttdef"><b>Definition:</b> fuzz_impl.hpp:240</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
