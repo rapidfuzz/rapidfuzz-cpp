@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.0.1] - 2023-03-03
+### Fixed
+- fix doxygen warnings
+
 ## [3.0.0] - 2023-12-26
 ### Performance
 - add banded implementation of LCS / Indel. This improves the runtime from `O((|s1|/64) * |s2|)` to `O((score_cutoff/64) * |s2|)`
