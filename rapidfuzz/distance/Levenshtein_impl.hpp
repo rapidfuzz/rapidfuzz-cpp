@@ -167,7 +167,7 @@ size_t levenshtein_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>&
     assert(len1 > 0);
     assert(len2 > 0);
     assert(*s1.begin() != *s2.begin());
-    assert(*(--s1.end()) != *(--s2.end()));
+    assert(*std::prev(s1.end()) != *std::prev(s2.end()));
 
     if (len1 < len2) return levenshtein_mbleven2018(s2, s1, max);
 

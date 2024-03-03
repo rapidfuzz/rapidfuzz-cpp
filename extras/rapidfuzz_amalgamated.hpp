@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2023-12-25 16:10:46.428949
+//  Generated: 2024-03-04 01:05:33.165575
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -6820,7 +6820,7 @@ size_t levenshtein_mbleven2018(const Range<InputIt1>& s1, const Range<InputIt2>&
     assert(len1 > 0);
     assert(len2 > 0);
     assert(*s1.begin() != *s2.begin());
-    assert(*(--s1.end()) != *(--s2.end()));
+    assert(*std::prev(s1.end()) != *std::prev(s2.end()));
 
     if (len1 < len2) return levenshtein_mbleven2018(s2, s1, max);
 
@@ -9326,11 +9326,11 @@ namespace rapidfuzz::fuzz {
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename InputIt1, typename InputIt2>
-double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
-
 template <typename Sentence1, typename Sentence2>
 double ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
+template <typename InputIt1, typename InputIt2>
+double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
@@ -9441,12 +9441,12 @@ ScoreAlignment<double> partial_ratio_alignment(const Sentence1& s1, const Senten
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
+template <typename Sentence1, typename Sentence2>
+double partial_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 template <typename InputIt1, typename InputIt2>
 double partial_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                      double score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-double partial_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // todo add real implementation
 template <typename CharT1>
@@ -9507,12 +9507,12 @@ CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_v
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
+template <typename Sentence1, typename Sentence2>
+double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 template <typename InputIt1, typename InputIt2>
 double token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                         double score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
@@ -9610,12 +9610,12 @@ CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<it
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
+template <typename Sentence1, typename Sentence2>
+double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 template <typename InputIt1, typename InputIt2>
 double partial_token_sort_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                 double score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // TODO documentation
 template <typename CharT1>
@@ -9678,12 +9678,12 @@ CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
+template <typename Sentence1, typename Sentence2>
+double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 template <typename InputIt1, typename InputIt2>
 double token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                        double score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // TODO documentation
 template <typename CharT1>
@@ -9735,12 +9735,12 @@ CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
+template <typename Sentence1, typename Sentence2>
+double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 template <typename InputIt1, typename InputIt2>
 double partial_token_set_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // TODO documentation
 template <typename CharT1>
@@ -9793,11 +9793,11 @@ CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename InputIt1, typename InputIt2>
-double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
-
 template <typename Sentence1, typename Sentence2>
 double token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
+template <typename InputIt1, typename InputIt2>
+double token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 // todo add real implementation
 template <typename CharT1>
@@ -9855,12 +9855,12 @@ CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
+template <typename Sentence1, typename Sentence2>
+double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
 template <typename InputIt1, typename InputIt2>
 double partial_token_ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                            double score_cutoff = 0);
-
-template <typename Sentence1, typename Sentence2>
-double partial_token_ratio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
 
 // todo add real implementation
 template <typename CharT1>
@@ -9917,11 +9917,11 @@ CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRa
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename InputIt1, typename InputIt2>
-double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
-
 template <typename Sentence1, typename Sentence2>
 double WRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
+template <typename InputIt1, typename InputIt2>
+double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 // todo add real implementation
 template <typename CharT1>
@@ -9977,11 +9977,11 @@ CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<Input
  *
  * @return returns the ratio between s1 and s2 or 0 when ratio < score_cutoff
  */
-template <typename InputIt1, typename InputIt2>
-double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
-
 template <typename Sentence1, typename Sentence2>
 double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0);
+
+template <typename InputIt1, typename InputIt2>
+double QRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff = 0);
 
 #ifdef RAPIDFUZZ_SIMD
 namespace experimental {
