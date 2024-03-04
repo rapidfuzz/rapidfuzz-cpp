@@ -1,6 +1,6 @@
 ## Changelog
 
-## [3.0.2] - 2023-03-
+## [3.0.2] - 2023-03-04
 ### Fixed
 - fix assert leading to compilation failures
 
