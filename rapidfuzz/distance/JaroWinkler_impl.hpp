@@ -29,7 +29,10 @@ double jaro_winkler_similarity(const Range<InputIt1>& P, const Range<InputIt2>& 
     }
 
     double Sim = jaro_similarity(P, T, jaro_score_cutoff);
-    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+    if (Sim > 0.7) {
+        Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+        Sim = std::min(Sim, 1.0);
+    }
 
     return (Sim >= score_cutoff) ? Sim : 0;
 }
@@ -58,7 +61,10 @@ double jaro_winkler_similarity(const BlockPatternMatchVector& PM, const Range<In
     }
 
     double Sim = jaro_similarity(PM, P, T, jaro_score_cutoff);
-    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+    if (Sim > 0.7) {
+        Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+        Sim = std::min(Sim, 1.0);
+    }
 
     return (Sim >= score_cutoff) ? Sim : 0;
 }
