@@ -4,8 +4,8 @@
 #pragma once
 
 #include <array>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 namespace rapidfuzz::detail {
 

@@ -673,8 +673,9 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
                     VecType PatternFlagMask = blsi(P_flag_cur);
 
-                    uint64_t PM_j = block.get(
-                        cur_vec + cur_block, s2[countr_zero(T_flag_cur) + T_word_index * sizeof(VecType) * 8]);
+                    uint64_t PM_j =
+                        block.get(cur_vec + cur_block,
+                                  s2[countr_zero(T_flag_cur) + T_word_index * sizeof(VecType) * 8]);
                     Transpositions += !(PM_j & (static_cast<uint64_t>(PatternFlagMask) << offset));
 
                     T_flag_cur = blsr(T_flag_cur);

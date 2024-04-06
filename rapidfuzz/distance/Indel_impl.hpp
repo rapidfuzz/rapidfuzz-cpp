@@ -12,7 +12,7 @@ namespace rapidfuzz::detail {
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_distance(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
-                       const Range<InputIt2>& s2, size_t score_cutoff)
+                      const Range<InputIt2>& s2, size_t score_cutoff)
 {
     size_t maximum = s1.size() + s2.size();
     size_t lcs_cutoff = (maximum / 2 >= score_cutoff) ? maximum / 2 - score_cutoff : 0;
@@ -54,7 +54,7 @@ class Indel : public DistanceBase<Indel, size_t, 0, std::numeric_limits<int64_t>
 
     template <typename InputIt1, typename InputIt2>
     static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                             size_t score_hint)
+                            size_t score_hint)
     {
         size_t maximum = Indel::maximum(s1, s2);
         size_t lcs_cutoff = (maximum / 2 >= score_cutoff) ? maximum / 2 - score_cutoff : 0;

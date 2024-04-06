@@ -11,21 +11,21 @@ namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                       size_t score_cutoff = std::numeric_limits<size_t>::max())
+                      size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Indel::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 size_t indel_distance(const Sentence1& s1, const Sentence2& s2,
-                       size_t score_cutoff = std::numeric_limits<size_t>::max())
+                      size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::Indel::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         size_t score_cutoff = 0.0)
+                        size_t score_cutoff = 0.0)
 {
     return detail::Indel::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
@@ -146,8 +146,8 @@ private:
 #endif
 
 template <typename CharT1>
-struct CachedIndel : public detail::CachedDistanceBase<CachedIndel<CharT1>, size_t, 0,
-                                                       std::numeric_limits<int64_t>::max()> {
+struct CachedIndel
+    : public detail::CachedDistanceBase<CachedIndel<CharT1>, size_t, 0, std::numeric_limits<int64_t>::max()> {
     template <typename Sentence1>
     explicit CachedIndel(const Sentence1& s1_) : CachedIndel(detail::to_begin(s1_), detail::to_end(s1_))
     {}

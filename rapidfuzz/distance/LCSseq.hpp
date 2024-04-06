@@ -11,21 +11,21 @@ namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2>
 size_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                         size_t score_cutoff = std::numeric_limits<size_t>::max())
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::LCSseq::distance(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
 size_t lcs_seq_distance(const Sentence1& s1, const Sentence2& s2,
-                         size_t score_cutoff = std::numeric_limits<size_t>::max())
+                        size_t score_cutoff = std::numeric_limits<size_t>::max())
 {
     return detail::LCSseq::distance(s1, s2, score_cutoff, score_cutoff);
 }
 
 template <typename InputIt1, typename InputIt2>
 size_t lcs_seq_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                           size_t score_cutoff = 0)
+                          size_t score_cutoff = 0)
 {
     return detail::LCSseq::similarity(first1, last1, first2, last2, score_cutoff, score_cutoff);
 }
@@ -206,8 +206,7 @@ struct CachedLCSseq
     {}
 
 private:
-    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>, size_t, 0,
-                                        std::numeric_limits<int64_t>::max()>;
+    friend detail::CachedSimilarityBase<CachedLCSseq<CharT1>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::CachedNormalizedMetricBase<CachedLCSseq<CharT1>>;
 
     template <typename InputIt2>
@@ -218,7 +217,7 @@ private:
 
     template <typename InputIt2>
     size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                        [[maybe_unused]] size_t score_hint) const
+                       [[maybe_unused]] size_t score_hint) const
     {
         return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
     }

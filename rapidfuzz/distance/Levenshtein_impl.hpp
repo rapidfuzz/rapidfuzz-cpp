@@ -71,8 +71,7 @@ size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const R
 
         for (const auto& ch1 : s1) {
             if (ch1 != ch2)
-                temp = std::min({*cache_iter + weights.delete_cost,
-                                 *(cache_iter + 1) + weights.insert_cost,
+                temp = std::min({*cache_iter + weights.delete_cost, *(cache_iter + 1) + weights.insert_cost,
                                  temp + weights.replace_cost});
             ++cache_iter;
             std::swap(*cache_iter, temp);
@@ -89,15 +88,12 @@ size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const R
  */
 static inline size_t levenshtein_maximum(size_t len1, size_t len2, LevenshteinWeightTable weights)
 {
-    size_t max_dist =
-        len1 * weights.delete_cost + len2 * weights.insert_cost;
+    size_t max_dist = len1 * weights.delete_cost + len2 * weights.insert_cost;
 
     if (len1 >= len2)
-        max_dist = std::min(max_dist, len2 * weights.replace_cost +
-                                          (len1 - len2) * weights.delete_cost);
+        max_dist = std::min(max_dist, len2 * weights.replace_cost + (len1 - len2) * weights.delete_cost);
     else
-        max_dist = std::min(max_dist, len1 * weights.replace_cost +
-                                          (len2 - len1) * weights.insert_cost);
+        max_dist = std::min(max_dist, len1 * weights.replace_cost + (len2 - len1) * weights.insert_cost);
 
     return max_dist;
 }
@@ -647,8 +643,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
     size_t first_block = 0;
     /* last_block is the index of the last block in Ukkonen band. */
     size_t last_block =
-        std::min(words, ceil_div(std::min(max, (max + s1.size() - s2.size()) / 2) + 1, word_size)) -
-        1;
+        std::min(words, ceil_div(std::min(max, (max + s1.size() - s2.size()) / 2) + 1, word_size)) - 1;
 
     /* Searching */
     auto iter_s2 = s2.begin();
@@ -725,7 +720,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
          * band. */
         if (last_block + 1 < words) {
             ptrdiff_t cond = static_cast<ptrdiff_t>(max + 2 * word_size + row + s1.size()) -
-                           static_cast<ptrdiff_t>(scores[last_block] + 2 + s2.size());
+                             static_cast<ptrdiff_t>(scores[last_block] + 2 + s2.size());
             if (static_cast<ptrdiff_t>(get_row_num(last_block)) < cond) {
                 last_block++;
                 vecs[last_block].VP = ~UINT64_C(0);
@@ -734,8 +729,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
                 size_t chars_in_block = (last_block + 1 == words) ? ((s1.size() - 1) % word_size + 1) : 64;
                 scores[last_block] = scores[last_block - 1] + chars_in_block - HP_carry + HN_carry;
                 // todo probably wrong types
-                scores[last_block] =
-                    static_cast<size_t>(static_cast<ptrdiff_t>(scores[last_block]) + advance_block(last_block));
+                scores[last_block] = static_cast<size_t>(static_cast<ptrdiff_t>(scores[last_block]) +
+                                                         advance_block(last_block));
             }
         }
 
@@ -751,7 +746,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
              * https://github.com/Martinsos/edlib
              */
             ptrdiff_t cond = static_cast<ptrdiff_t>(max + 2 * word_size + row + s1.size() + 1) -
-                           static_cast<ptrdiff_t>(scores[last_block] + 2 + s2.size());
+                             static_cast<ptrdiff_t>(scores[last_block] + 2 + s2.size());
             bool in_band_cond2 = static_cast<ptrdiff_t>(get_row_num(last_block)) <= cond;
 
             if (in_band_cond1 && in_band_cond2) break;
@@ -767,7 +762,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
              * is met for all other cells in the blocks as well
              */
             ptrdiff_t cond = static_cast<ptrdiff_t>(scores[first_block] + s1.size() + row) -
-                           static_cast<ptrdiff_t>(max + s2.size());
+                             static_cast<ptrdiff_t>(max + s2.size());
             bool in_band_cond2 = static_cast<ptrdiff_t>(get_row_num(first_block)) >= cond;
 
             if (in_band_cond1 && in_band_cond2) break;
@@ -1017,9 +1012,9 @@ LevenshteinResult<false, true> levenshtein_row(const Range<InputIt1>& s1, const 
 
 template <typename InputIt1, typename InputIt2>
 size_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
-                             LevenshteinWeightTable weights = {1, 1, 1},
-                             size_t score_cutoff = std::numeric_limits<size_t>::max(),
-                             size_t score_hint = std::numeric_limits<size_t>::max())
+                            LevenshteinWeightTable weights = {1, 1, 1},
+                            size_t score_cutoff = std::numeric_limits<size_t>::max(),
+                            size_t score_hint = std::numeric_limits<size_t>::max())
 {
     if (weights.insert_cost == weights.delete_cost) {
         /* when insertions + deletions operations are free there can not be any edit distance */
@@ -1030,8 +1025,7 @@ size_t levenshtein_distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2
             // score_cutoff can make use of the common divisor of the three weights
             size_t new_score_cutoff = ceil_div(score_cutoff, weights.insert_cost);
             size_t new_score_hint = ceil_div(score_hint, weights.insert_cost);
-            size_t distance = uniform_levenshtein_distance(
-                s1, s2, new_score_cutoff, new_score_hint);
+            size_t distance = uniform_levenshtein_distance(s1, s2, new_score_cutoff, new_score_hint);
             distance *= weights.insert_cost;
             return (distance <= score_cutoff) ? distance : score_cutoff + 1;
         }
@@ -1170,14 +1164,14 @@ class Levenshtein : public DistanceBase<Levenshtein, size_t, 0, std::numeric_lim
 
     template <typename InputIt1, typename InputIt2>
     static size_t maximum(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
-                           LevenshteinWeightTable weights)
+                          LevenshteinWeightTable weights)
     {
         return levenshtein_maximum(s1.size(), s2.size(), weights);
     }
 
     template <typename InputIt1, typename InputIt2>
     static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
-                             LevenshteinWeightTable weights, size_t score_cutoff, size_t score_hint)
+                            LevenshteinWeightTable weights, size_t score_cutoff, size_t score_hint)
     {
         return levenshtein_distance(s1, s2, weights, score_cutoff, score_hint);
     }

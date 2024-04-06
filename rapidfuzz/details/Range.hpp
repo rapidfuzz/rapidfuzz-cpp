@@ -9,9 +9,9 @@
 #include <limits>
 #include <ostream>
 #include <stdexcept>
+#include <stdint.h>
 #include <sys/types.h>
 #include <vector>
-#include <stdint.h>
 
 namespace rapidfuzz::detail {
 
@@ -76,8 +76,7 @@ public:
     }
 
     constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
-    {
-    }
+    {}
 
     template <typename T>
     constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
@@ -156,8 +155,7 @@ public:
 
         Range res = *this;
         res.remove_prefix(pos);
-        if(count < res.size())
-            res.remove_suffix(res.size() - count);
+        if (count < res.size()) res.remove_suffix(res.size() - count);
 
         return res;
     }

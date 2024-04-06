@@ -343,7 +343,7 @@ size_t longest_common_subsequence(const Range<InputIt1>& s1, const Range<InputIt
 
 template <typename InputIt1, typename InputIt2>
 size_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> s1, Range<InputIt2> s2,
-                           size_t score_cutoff)
+                          size_t score_cutoff)
 {
     auto len1 = s1.size();
     auto len2 = s2.size();
@@ -520,7 +520,7 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                               [[maybe_unused]] size_t score_hint)
+                              [[maybe_unused]] size_t score_hint)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }

@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-03-04 01:05:33.165575
+//  Generated: 2024-04-06 15:39:26.940916
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -6408,7 +6408,10 @@ double jaro_winkler_similarity(const Range<InputIt1>& P, const Range<InputIt2>& 
     }
 
     double Sim = jaro_similarity(P, T, jaro_score_cutoff);
-    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+    if (Sim > 0.7) {
+        Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+        Sim = std::min(Sim, 1.0);
+    }
 
     return (Sim >= score_cutoff) ? Sim : 0;
 }
@@ -6437,7 +6440,10 @@ double jaro_winkler_similarity(const BlockPatternMatchVector& PM, const Range<In
     }
 
     double Sim = jaro_similarity(PM, P, T, jaro_score_cutoff);
-    if (Sim > 0.7) Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+    if (Sim > 0.7) {
+        Sim += static_cast<double>(prefix) * prefix_weight * (1.0 - Sim);
+        Sim = std::min(Sim, 1.0);
+    }
 
     return (Sim >= score_cutoff) ? Sim : 0;
 }
@@ -6593,6 +6599,7 @@ private:
                     if (static_cast<uint64_t>(s2[prefix]) != prefixes[i][prefix]) break;
 
                 scores[i] += static_cast<double>(prefix) * prefix_weight * (1.0 - scores[i]);
+                scores[i] = std::min(scores[i], 1.0);
             }
 
             if (scores[i] < score_cutoff) scores[i] = 0.0;

@@ -139,34 +139,34 @@ namespace rapidfuzz {
  */
 template <typename InputIt1, typename InputIt2>
 size_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                             LevenshteinWeightTable weights = {1, 1, 1},
-                             size_t score_cutoff = std::numeric_limits<size_t>::max(),
-                             size_t score_hint = std::numeric_limits<size_t>::max())
+                            LevenshteinWeightTable weights = {1, 1, 1},
+                            size_t score_cutoff = std::numeric_limits<size_t>::max(),
+                            size_t score_hint = std::numeric_limits<size_t>::max())
 {
     return detail::Levenshtein::distance(first1, last1, first2, last2, weights, score_cutoff, score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 size_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                             LevenshteinWeightTable weights = {1, 1, 1},
-                             size_t score_cutoff = std::numeric_limits<size_t>::max(),
-                             size_t score_hint = std::numeric_limits<size_t>::max())
+                            LevenshteinWeightTable weights = {1, 1, 1},
+                            size_t score_cutoff = std::numeric_limits<size_t>::max(),
+                            size_t score_hint = std::numeric_limits<size_t>::max())
 {
     return detail::Levenshtein::distance(s1, s2, weights, score_cutoff, score_hint);
 }
 
 template <typename InputIt1, typename InputIt2>
 size_t levenshtein_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, size_t score_cutoff = 0,
-                               size_t score_hint = 0)
+                              LevenshteinWeightTable weights = {1, 1, 1}, size_t score_cutoff = 0,
+                              size_t score_hint = 0)
 {
     return detail::Levenshtein::similarity(first1, last1, first2, last2, weights, score_cutoff, score_hint);
 }
 
 template <typename Sentence1, typename Sentence2>
 size_t levenshtein_similarity(const Sentence1& s1, const Sentence2& s2,
-                               LevenshteinWeightTable weights = {1, 1, 1}, size_t score_cutoff = 0,
-                               size_t score_hint = 0)
+                              LevenshteinWeightTable weights = {1, 1, 1}, size_t score_cutoff = 0,
+                              size_t score_hint = 0)
 {
     return detail::Levenshtein::similarity(s1, s2, weights, score_cutoff, score_hint);
 }
@@ -389,17 +389,13 @@ private:
 
         detail::Range scores_(scores, scores + score_count);
         if constexpr (MaxLen == 8)
-            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2,
-                                                         score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 16)
-            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2,
-                                                          score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 32)
-            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2,
-                                                        score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
         else if constexpr (MaxLen == 64)
-            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2,
-                                                          score_cutoff);
+            detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
     template <typename InputIt2>
@@ -458,9 +454,8 @@ private:
                 // max can make use of the common divisor of the three weights
                 size_t new_score_cutoff = detail::ceil_div(score_cutoff, weights.insert_cost);
                 size_t new_score_hint = detail::ceil_div(score_hint, weights.insert_cost);
-                size_t dist = detail::uniform_levenshtein_distance(
-                    PM, detail::Range(s1), s2, new_score_cutoff,
-                    new_score_hint);
+                size_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2,
+                                                                   new_score_cutoff, new_score_hint);
                 dist *= weights.insert_cost;
 
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
@@ -478,8 +473,7 @@ private:
             }
         }
 
-        return detail::generalized_levenshtein_distance(
-            detail::Range(s1), s2, weights, score_cutoff);
+        return detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, score_cutoff);
     }
 
     std::vector<CharT1> s1;
