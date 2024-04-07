@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.0.4] - 2023-04-07
+### Fixed
+- fix tagged version
+
 ## [3.0.3] - 2023-04-06
 ### Fixed
 - fix potentially incorrect results of JaroWinkler when using high prefix weights
