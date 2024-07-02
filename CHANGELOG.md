@@ -1,5 +1,10 @@
 ## Changelog
 
+## [3.0.5] - 2024-07-02
+### Fixed
+- the editops implementation didn't properly account for some cells in the Levenshtein matrix.
+  This could lead both to incorrect results and crashes.
+
 ## [3.0.4] - 2023-04-07
 ### Fixed
 - fix tagged version

@@ -1055,6 +1055,9 @@ template <typename InputIt1, typename InputIt2>
 HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                   size_t max = std::numeric_limits<size_t>::max())
 {
+    assert(s1.size() > 1);
+    assert(s2.size() > 1);
+
     HirschbergPos hpos = {};
     size_t left_size = s2.size() / 2;
     size_t right_size = s2.size() - left_size;
@@ -1063,8 +1066,9 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
     size_t best_score = std::numeric_limits<size_t>::max();
     size_t right_first_pos = 0;
     size_t right_last_pos = 0;
+    // todo: we could avoid this allocation by counting up the right score twice
+    // not sure whats faster though
     std::vector<size_t> right_scores;
-
     {
         auto right_row = levenshtein_row(s1.reversed(), s2.reversed(), max, right_size - 1);
         if (right_row.dist > max) return find_hirschberg_pos(s1, s2, max * 2);
@@ -1094,6 +1098,17 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
     auto left_last_pos = std::min(s1_len, left_row.last_block * 64 + 64);
 
     size_t left_score = left_row.prev_score;
+    // take boundary into account
+    if (s1_len >= left_first_pos + right_first_pos) {
+        size_t right_index = s1_len - left_first_pos - right_first_pos;
+        if (right_index < right_scores.size()) {
+            best_score = right_scores[right_index] + left_score;
+            hpos.left_score = left_score;
+            hpos.right_score = right_scores[right_index];
+            hpos.s1_mid = left_first_pos;
+        }
+    }
+
     for (size_t i = left_first_pos; i < left_last_pos; ++i) {
         size_t col_pos = i % 64;
         size_t col_word = i / 64;
