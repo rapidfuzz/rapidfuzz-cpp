@@ -43,6 +43,13 @@ Matrix<size_t> levenshtein_matrix(InputIt1 first1, InputIt1 last1, InputIt2 firs
     return matrix;
 }
 
+template <typename Sentence1, typename Sentence2>
+Matrix<size_t> levenshtein_matrix(const Sentence1& s1, const Sentence2& s2,
+                                  LevenshteinWeightTable weights = {1, 1, 1})
+{
+    return levenshtein_matrix(std::begin(s1), std::end(s1), std::begin(s2), std::end(s2), weights);
+}
+
 template <typename InputIt1, typename InputIt2>
 size_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                             LevenshteinWeightTable weights = {1, 1, 1},
