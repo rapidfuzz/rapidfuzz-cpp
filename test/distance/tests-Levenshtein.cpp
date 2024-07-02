@@ -6,14 +6,15 @@
 #include <string>
 
 #include "examples/ocr.hpp"
+#include "examples/pythonLevenshteinIssue9.hpp"
 #include <rapidfuzz/distance.hpp>
 
 #include "../common.hpp"
 
 template <typename Sentence1, typename Sentence2>
 size_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
-                             rapidfuzz::LevenshteinWeightTable weights = {1, 1, 1},
-                             size_t max = std::numeric_limits<size_t>::max())
+                            rapidfuzz::LevenshteinWeightTable weights = {1, 1, 1},
+                            size_t max = std::numeric_limits<size_t>::max())
 {
     size_t res1 = rapidfuzz::levenshtein_distance(s1, s2, weights, max);
     size_t res2 = rapidfuzz::levenshtein_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), weights, max);
@@ -262,6 +263,18 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         REQUIRE(hpos.s2_mid == 1536);
         REQUIRE(hpos.s1_mid == 766);
     }
+
+    {
+        std::string s1 = "aaaa";
+        std::string s2 = "bbbbbbaaaa";
+
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
+                                                           rapidfuzz::detail::Range(s2));
+        REQUIRE(hpos.left_score == 5);
+        REQUIRE(hpos.right_score == 1);
+        REQUIRE(hpos.s2_mid == 5);
+        REQUIRE(hpos.s1_mid == 0);
+    }
 }
 
 TEST_CASE("Levenshtein_blockwise")
@@ -395,7 +408,33 @@ TEST_CASE("Levenshtein small band")
     }
 }
 
-TEST_CASE("Levenshtein large band")
+TEST_CASE("Levenshtein large band (python-Levenshtein issue 9)")
+{
+    using namespace pythonLevenshteinIssue9;
+
+    REQUIRE(example1.size() == 5227);
+    REQUIRE(example2.size() == 5569);
+
+    {
+        std::basic_string<uint8_t> s1 = get_subsequence(example1, 3718, 1509);
+        std::basic_string<uint8_t> s2 = get_subsequence(example2, 2784, 2785);
+
+        REQUIRE(rapidfuzz::levenshtein_distance(s1, s2) == 1587);
+
+        rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(s1, s2);
+        REQUIRE(ops1.size() == 1587);
+        REQUIRE(s2 == rapidfuzz::editops_apply<uint8_t>(ops1, s1, s2));
+    }
+
+    {
+        REQUIRE(rapidfuzz::levenshtein_distance(example1, example2) == 2590);
+        rapidfuzz::Editops ops1 = rapidfuzz::levenshtein_editops(example1, example2);
+        REQUIRE(ops1.size() == 2590);
+        REQUIRE(example2 == rapidfuzz::editops_apply<uint8_t>(ops1, example1, example2));
+    }
+}
+
+TEST_CASE("Levenshtein large band (ocr example)")
 {
     REQUIRE(ocr_example1.size() == 106514);
     REQUIRE(ocr_example2.size() == 107244);
