@@ -11,7 +11,7 @@ using Catch::Approx;
 
 template <typename Sentence1, typename Sentence2>
 size_t indel_distance(const Sentence1& s1, const Sentence2& s2,
-                       size_t max = std::numeric_limits<size_t>::max())
+                      size_t max = std::numeric_limits<size_t>::max())
 {
     size_t res1 = rapidfuzz::indel_distance(s1, s2, max);
     size_t res2 = rapidfuzz::indel_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
