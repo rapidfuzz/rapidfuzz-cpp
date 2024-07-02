@@ -29,6 +29,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         validate_editops(s1, s2, score, score != 0 ? score - 1 : 0);
         validate_editops(s1, s2, score, score);
 
+        if (s1.size() > 1 && s2.size() > 1) {
+            auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
+                                                               rapidfuzz::detail::Range(s2));
+            if (hpos.left_score + hpos.right_score != score)
+                throw std::logic_error("find_hirschberg_pos failed");
+        }
+
         s1 = str_multiply(s1, 2);
         s2 = str_multiply(s2, 2);
     }
