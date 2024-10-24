@@ -1,6 +1,6 @@
 ## Changelog
 
-## [3.1.0] - 2024-07-02
+## [3.1.0] - 2024-10-24
 ### Changed
 - split `editops_apply`/`opcodes_apply` into `*_apply_str` and `*_apply_vec`. This avoids the instantiation of
   std::basic_string for unsupported types.
