@@ -50,6 +50,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y libc6-dev-i386 g++-multilib
+
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.BUILD_TYPE}} -DRAPIDFUZZ_BUILD_TESTING=1 -DRAPIDFUZZ_ENABLE_LINTERS=1 -DRAPIDFUZZ_BUILD_FUZZERS=1 -DCMAKE_CXX_COMPILER=clang++
 
