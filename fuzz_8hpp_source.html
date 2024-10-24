@@ -331,8 +331,8 @@ $(function() {
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    -&gt; CachedPartialTokenSortRatio&lt;char_type&lt;Sentence1&gt;&gt;;</div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160; </div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1&gt;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    -&gt; CachedPartialTokenSortRatio&lt;iter_value_t&lt;InputIt1&gt;&gt;;</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;CachedPartialTokenSortRatio(InputIt1 first1,</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;                            InputIt1 last1) -&gt; CachedPartialTokenSortRatio&lt;iter_value_t&lt;InputIt1&gt;&gt;;</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160; </div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga806f12bbb364f60488cb20fd6011bed1">token_set_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff = 0);</div>
@@ -408,8 +408,8 @@ $(function() {
 <div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="keyword">explicit</span> CachedPartialTokenSetRatio(<span class="keyword">const</span> Sentence1&amp; s1) -&gt; CachedPartialTokenSetRatio&lt;char_type&lt;Sentence1&gt;&gt;;</div>
 <div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160; </div>
 <div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1&gt;</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;    -&gt; CachedPartialTokenSetRatio&lt;iter_value_t&lt;InputIt1&gt;&gt;;</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;CachedPartialTokenSetRatio(InputIt1 first1,</div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;                           InputIt1 last1) -&gt; CachedPartialTokenSetRatio&lt;iter_value_t&lt;InputIt1&gt;&gt;;</div>
 <div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160; </div>
 <div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Sentence1, <span class="keyword">typename</span> Sentence2&gt;</div>
 <div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;<span class="keywordtype">double</span> <a class="code" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(<span class="keyword">const</span> Sentence1&amp; s1, <span class="keyword">const</span> Sentence2&amp; s2, <span class="keywordtype">double</span> score_cutoff = 0);</div>
