@@ -482,11 +482,11 @@ private:
 };
 
 template <typename Sentence1>
-explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
-    -> CachedLevenshtein<char_type<Sentence1>>;
+explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {
+                                                     1, 1, 1}) -> CachedLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
-    -> CachedLevenshtein<iter_value_t<InputIt1>>;
+CachedLevenshtein(InputIt1 first1, InputIt1 last1,
+                  LevenshteinWeightTable aWeights = {1, 1, 1}) -> CachedLevenshtein<iter_value_t<InputIt1>>;
 
 } // namespace rapidfuzz

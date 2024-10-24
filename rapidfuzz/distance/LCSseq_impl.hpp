@@ -188,8 +188,8 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 #endif
 
 template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
-auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>& s2, size_t score_cutoff = 0)
-    -> LCSseqResult<RecordMatrix>
+auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>& s2,
+                size_t score_cutoff = 0) -> LCSseqResult<RecordMatrix>
 {
     uint64_t S[N];
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });

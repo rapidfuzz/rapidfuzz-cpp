@@ -296,7 +296,8 @@ static inline size_t count_transpositions_block(const BlockPatternMatchVector& P
 
             uint64_t PatternFlagMask = blsi(P_flag);
 
-            Transpositions += !(PM.get(PatternWord, T_first[static_cast<ptrdiff_t>(countr_zero(T_flag))]) & PatternFlagMask);
+            Transpositions += !(PM.get(PatternWord, T_first[static_cast<ptrdiff_t>(countr_zero(T_flag))]) &
+                                PatternFlagMask);
 
             T_flag = blsr(T_flag);
             P_flag ^= PatternFlagMask;
@@ -649,7 +650,9 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         for (size_t i = 0; i < vec_width; ++i) {
             size_t CommonChars = static_cast<size_t>(counts[i]);
-            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, score_cutoff)) {
+            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                         CommonChars, score_cutoff))
+            {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -683,8 +686,8 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
                 }
             }
 
-            double Sim =
-                jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, Transpositions);
+            double Sim = jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                                   CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
@@ -760,7 +763,9 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         T_flag.store(T_flags.data());
         for (size_t i = 0; i < vec_width; ++i) {
             size_t CommonChars = static_cast<size_t>(counts[i]);
-            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, score_cutoff)) {
+            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                         CommonChars, score_cutoff))
+            {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -783,8 +788,8 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
                 P_flag_cur ^= PatternFlagMask;
             }
 
-            double Sim =
-                jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, Transpositions);
+            double Sim = jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                                   CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
