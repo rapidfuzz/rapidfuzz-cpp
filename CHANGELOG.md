@@ -1,5 +1,10 @@
 ## Changelog
 
+## [3.1.0] - 2024-07-02
+### Changed
+- split `editops_apply`/`opcodes_apply` into `*_apply_str` and `*_apply_vec`. This avoids the instantiation of
+  std::basic_string for unsupported types.
+
 ## [3.0.5] - 2024-07-02
 ### Fixed
 - the editops implementation didn't properly account for some cells in the Levenshtein matrix.
