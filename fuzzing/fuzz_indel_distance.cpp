@@ -8,8 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-void validate_distance(const std::basic_string<uint8_t>& s1, const std::basic_string<uint8_t>& s2,
-                       size_t score_cutoff)
+void validate_distance(const std::vector<uint8_t>& s1, const std::vector<uint8_t>& s2, size_t score_cutoff)
 {
     auto dist = rapidfuzz::indel_distance(s1, s2, score_cutoff);
     auto reference_dist = rapidfuzz_reference::indel_distance(s1, s2, score_cutoff);
@@ -25,7 +24,7 @@ void validate_distance(const std::basic_string<uint8_t>& s1, const std::basic_st
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    std::basic_string<uint8_t> s1, s2;
+    std::vector<uint8_t> s1, s2;
     if (!extract_strings(data, size, s1, s2)) return 0;
 
     validate_distance(s1, s2, 0);

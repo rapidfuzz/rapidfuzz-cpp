@@ -110,13 +110,13 @@ TEST_CASE("Hamming_editops")
 
     {
         rapidfuzz::Editops ops = rapidfuzz::hamming_editops(s, d);
-        REQUIRE(d == rapidfuzz::editops_apply<char>(ops, s, d));
+        REQUIRE(d == rapidfuzz::editops_apply_str<char>(ops, s, d));
         REQUIRE(ops.get_src_len() == s.size());
         REQUIRE(ops.get_dest_len() == d.size());
     }
     {
         rapidfuzz::Editops ops = rapidfuzz::hamming_editops(d, s);
-        REQUIRE(s == rapidfuzz::editops_apply<char>(ops, d, s));
+        REQUIRE(s == rapidfuzz::editops_apply_str<char>(ops, d, s));
         REQUIRE(ops.get_src_len() == d.size());
         REQUIRE(ops.get_dest_len() == s.size());
     }

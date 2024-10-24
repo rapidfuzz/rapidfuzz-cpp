@@ -361,8 +361,8 @@ explicit CachedPartialTokenSortRatio(const Sentence1& s1)
     -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
+CachedPartialTokenSortRatio(InputIt1 first1,
+                            InputIt1 last1) -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -485,8 +485,8 @@ template <typename Sentence1>
 explicit CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
-    -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
+CachedPartialTokenSetRatio(InputIt1 first1,
+                           InputIt1 last1) -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and

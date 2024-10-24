@@ -277,7 +277,7 @@ TEST_CASE("Indel")
             REQUIRE(indel_distance(s1, s2) == 231);
 
             rapidfuzz::Editops ops = rapidfuzz::indel_editops(s1, s2);
-            REQUIRE(s2 == rapidfuzz::editops_apply<char>(ops, s1, s2));
+            REQUIRE(s2 == rapidfuzz::editops_apply_str<char>(ops, s1, s2));
         }
     }
 }
