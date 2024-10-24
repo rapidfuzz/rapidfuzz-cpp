@@ -471,8 +471,8 @@ size_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, cons
 }
 
 template <bool RecordMatrix, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t max)
-    -> LevenshteinResult<RecordMatrix, false>
+auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
+                                       size_t max) -> LevenshteinResult<RecordMatrix, false>
 {
     assert(max <= s1.size());
     assert(max <= s2.size());
@@ -727,7 +727,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
                 vecs[last_block].VN = 0;
 
                 size_t chars_in_block = (last_block + 1 == words) ? ((s1.size() - 1) % word_size + 1) : 64;
-                scores[last_block] = scores[last_block - 1] + chars_in_block - static_cast<size_t>(HP_carry) + static_cast<size_t>(HN_carry);
+                scores[last_block] = scores[last_block - 1] + chars_in_block -
+                                     opt_static_cast<size_t>(HP_carry) + opt_static_cast<size_t>(HN_carry);
                 // todo probably wrong types
                 scores[last_block] = static_cast<size_t>(static_cast<ptrdiff_t>(scores[last_block]) +
                                                          advance_block(last_block));

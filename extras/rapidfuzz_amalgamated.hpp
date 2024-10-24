@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-10-24 14:15:39.050296
+//  Generated: 2024-10-24 15:27:27.715931
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1592,6 +1592,15 @@ struct DecomposedSet {
 static inline size_t abs_diff(size_t a, size_t b)
 {
     return a > b ? a - b : b - a;
+}
+
+template <typename TO, typename FROM>
+TO opt_static_cast(const FROM& value)
+{
+    if constexpr (std::is_same_v<TO, FROM>)
+        return value;
+    else
+        return static_cast<TO>(value);
 }
 
 /**
@@ -7396,8 +7405,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
                 vecs[last_block].VN = 0;
 
                 size_t chars_in_block = (last_block + 1 == words) ? ((s1.size() - 1) % word_size + 1) : 64;
-                scores[last_block] = scores[last_block - 1] + chars_in_block - static_cast<size_t>(HP_carry) +
-                                     static_cast<size_t>(HN_carry);
+                scores[last_block] = scores[last_block - 1] + chars_in_block -
+                                     opt_static_cast<size_t>(HP_carry) + opt_static_cast<size_t>(HN_carry);
                 // todo probably wrong types
                 scores[last_block] = static_cast<size_t>(static_cast<ptrdiff_t>(scores[last_block]) +
                                                          advance_block(last_block));
