@@ -151,7 +151,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                if constexpr (!std::is_same_v<VecType, uint64_t>) {
+                if constexpr (std::numeric_limits<VecType>::max() < std::numeric_limits<size_t>::max()) {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
                     size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
