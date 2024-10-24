@@ -296,7 +296,7 @@ static inline size_t count_transpositions_block(const BlockPatternMatchVector& P
 
             uint64_t PatternFlagMask = blsi(P_flag);
 
-            Transpositions += !(PM.get(PatternWord, T_first[countr_zero(T_flag)]) & PatternFlagMask);
+            Transpositions += !(PM.get(PatternWord, T_first[static_cast<ptrdiff_t>(countr_zero(T_flag))]) & PatternFlagMask);
 
             T_flag = blsr(T_flag);
             P_flag ^= PatternFlagMask;
@@ -505,7 +505,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
     // todo try to find a simd implementation for sse2
     for (size_t i = 0; i < vec_width; ++i) {
-        size_t Bound = jaro_bounds(s1_lengths[i], s2.size());
+        size_t Bound = jaro_bounds(static_cast<size_t>(s1_lengths[i]), s2.size());
 
         if (Bound > bounds.maxBound) bounds.maxBound = Bound;
 
@@ -517,7 +517,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     bounds.boundMask = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMask_.data()));
 #    endif
 
-    size_t lastRelevantChar = maxLen + bounds.maxBound;
+    size_t lastRelevantChar = static_cast<size_t>(maxLen) + bounds.maxBound;
     if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
 
     return bounds;
@@ -547,7 +547,7 @@ static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengt
     bounds.boundMaskSize = native_simd<VecType>(bit_mask_lsb<VecType>(2 * bounds.maxBound));
     bounds.boundMask = native_simd<VecType>(bit_mask_lsb<VecType>(bounds.maxBound + 1));
 
-    size_t lastRelevantChar = maxLen + bounds.maxBound;
+    size_t lastRelevantChar = static_cast<size_t>(maxLen) + bounds.maxBound;
     if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
 
     return bounds;
@@ -648,8 +648,8 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             T_flag[i].store(T_flags + i * vec_width);
 
         for (size_t i = 0; i < vec_width; ++i) {
-            VecType CommonChars = counts[i];
-            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
+            size_t CommonChars = static_cast<size_t>(counts[i]);
+            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, score_cutoff)) {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -684,7 +684,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             }
 
             double Sim =
-                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+                jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
@@ -759,8 +759,8 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         alignas(alignment) std::array<VecType, vec_width> T_flags;
         T_flag.store(T_flags.data());
         for (size_t i = 0; i < vec_width; ++i) {
-            VecType CommonChars = counts[i];
-            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
+            size_t CommonChars = static_cast<size_t>(counts[i]);
+            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, score_cutoff)) {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -784,7 +784,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
             }
 
             double Sim =
-                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+                jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(), CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;

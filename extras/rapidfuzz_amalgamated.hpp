@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-10-24 14:07:33.184436
+//  Generated: 2024-10-24 14:15:39.050296
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3572,7 +3572,7 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
 
     template <typename Sentence2>
     void distance(ResType* scores, size_t score_count, const Sentence2& s2,
-                  ResType score_cutoff = WorstDistance) const
+                  ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         _distance(scores, score_count, Range(s2), score_cutoff);
     }
@@ -3671,10 +3671,10 @@ size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<
 
         auto iter_s2 = s2.begin();
         for (IntType j = 1; j <= len2; j++) {
-            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(*iter_s1 != *iter_s2);
-            ptrdiff_t left = R[j - 1] + 1;
-            ptrdiff_t up = R1[j] + 1;
-            ptrdiff_t temp = std::min({diag, left, up});
+            int64_t diag = R1[j - 1] + static_cast<IntType>(*iter_s1 != *iter_s2);
+            int64_t left = R[j - 1] + 1;
+            int64_t up = R1[j] + 1;
+            int64_t temp = std::min({diag, left, up});
 
             if (*iter_s1 == *iter_s2) {
                 last_col_id = j;   // last occurence of s1_i
@@ -3682,15 +3682,15 @@ size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<
                 T = last_i2l1;     // save H_i-2,l-1
             }
             else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(*iter_s2)).val;
-                ptrdiff_t l = last_col_id;
+                int64_t k = last_row_id.get(static_cast<uint64_t>(*iter_s2)).val;
+                int64_t l = last_col_id;
 
                 if ((j - l) == 1) {
-                    ptrdiff_t transpose = FR[j] + (i - k);
+                    int64_t transpose = FR[j] + (i - k);
                     temp = std::min(temp, transpose);
                 }
                 else if ((i - k) == 1) {
-                    ptrdiff_t transpose = T + (j - l);
+                    int64_t transpose = T + (j - l);
                     temp = std::min(temp, transpose);
                 }
             }
@@ -4482,7 +4482,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         unroll<int, interleaveCount>([&](auto j) {
             auto counts = popcount(~S[j]);
             unroll<int, counts.size()>([&](auto i) {
-                *score_iter = (counts[i] >= score_cutoff) ? counts[i] : 0;
+                *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
         });
@@ -4502,7 +4502,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         auto counts = popcount(~S);
         unroll<int, counts.size()>([&](auto i) {
-            *score_iter = (counts[i] >= score_cutoff) ? counts[i] : 0;
+            *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });
     }
@@ -5614,7 +5614,8 @@ static inline size_t count_transpositions_block(const BlockPatternMatchVector& P
 
             uint64_t PatternFlagMask = blsi(P_flag);
 
-            Transpositions += !(PM.get(PatternWord, T_first[countr_zero(T_flag)]) & PatternFlagMask);
+            Transpositions += !(PM.get(PatternWord, T_first[static_cast<ptrdiff_t>(countr_zero(T_flag))]) &
+                                PatternFlagMask);
 
             T_flag = blsr(T_flag);
             P_flag ^= PatternFlagMask;
@@ -5823,7 +5824,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
     // todo try to find a simd implementation for sse2
     for (size_t i = 0; i < vec_width; ++i) {
-        size_t Bound = jaro_bounds(s1_lengths[i], s2.size());
+        size_t Bound = jaro_bounds(static_cast<size_t>(s1_lengths[i]), s2.size());
 
         if (Bound > bounds.maxBound) bounds.maxBound = Bound;
 
@@ -5835,7 +5836,7 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     bounds.boundMask = native_simd<VecType>(reinterpret_cast<uint64_t*>(boundMask_.data()));
 #    endif
 
-    size_t lastRelevantChar = maxLen + bounds.maxBound;
+    size_t lastRelevantChar = static_cast<size_t>(maxLen) + bounds.maxBound;
     if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
 
     return bounds;
@@ -5865,7 +5866,7 @@ static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengt
     bounds.boundMaskSize = native_simd<VecType>(bit_mask_lsb<VecType>(2 * bounds.maxBound));
     bounds.boundMask = native_simd<VecType>(bit_mask_lsb<VecType>(bounds.maxBound + 1));
 
-    size_t lastRelevantChar = maxLen + bounds.maxBound;
+    size_t lastRelevantChar = static_cast<size_t>(maxLen) + bounds.maxBound;
     if (s2.size() > lastRelevantChar) s2.remove_suffix(s2.size() - lastRelevantChar);
 
     return bounds;
@@ -5966,8 +5967,10 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
             T_flag[i].store(T_flags + i * vec_width);
 
         for (size_t i = 0; i < vec_width; ++i) {
-            VecType CommonChars = counts[i];
-            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
+            size_t CommonChars = static_cast<size_t>(counts[i]);
+            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                         CommonChars, score_cutoff))
+            {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -6001,8 +6004,8 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
                 }
             }
 
-            double Sim =
-                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+            double Sim = jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                                   CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
@@ -6077,8 +6080,10 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         alignas(alignment) std::array<VecType, vec_width> T_flags;
         T_flag.store(T_flags.data());
         for (size_t i = 0; i < vec_width; ++i) {
-            VecType CommonChars = counts[i];
-            if (!jaro_common_char_filter(s1_lengths[result_index], s2.size(), CommonChars, score_cutoff)) {
+            size_t CommonChars = static_cast<size_t>(counts[i]);
+            if (!jaro_common_char_filter(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                         CommonChars, score_cutoff))
+            {
                 scores[result_index] = 0.0;
                 result_index++;
                 continue;
@@ -6101,8 +6106,8 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
                 P_flag_cur ^= PatternFlagMask;
             }
 
-            double Sim =
-                jaro_calculate_similarity(s1_lengths[result_index], s2.size(), CommonChars, Transpositions);
+            double Sim = jaro_calculate_similarity(static_cast<size_t>(s1_lengths[result_index]), s2.size(),
+                                                   CommonChars, Transpositions);
 
             scores[result_index] = (Sim >= score_cutoff) ? Sim : 0;
             result_index++;
@@ -7391,7 +7396,8 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
                 vecs[last_block].VN = 0;
 
                 size_t chars_in_block = (last_block + 1 == words) ? ((s1.size() - 1) % word_size + 1) : 64;
-                scores[last_block] = scores[last_block - 1] + chars_in_block - HP_carry + HN_carry;
+                scores[last_block] = scores[last_block - 1] + chars_in_block - static_cast<size_t>(HP_carry) +
+                                     static_cast<size_t>(HN_carry);
                 // todo probably wrong types
                 scores[last_block] = static_cast<size_t>(static_cast<ptrdiff_t>(scores[last_block]) +
                                                          advance_block(last_block));

@@ -64,10 +64,10 @@ size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<
 
         auto iter_s2 = s2.begin();
         for (IntType j = 1; j <= len2; j++) {
-            ptrdiff_t diag = R1[j - 1] + static_cast<IntType>(*iter_s1 != *iter_s2);
-            ptrdiff_t left = R[j - 1] + 1;
-            ptrdiff_t up = R1[j] + 1;
-            ptrdiff_t temp = std::min({diag, left, up});
+            int64_t diag = R1[j - 1] + static_cast<IntType>(*iter_s1 != *iter_s2);
+            int64_t left = R[j - 1] + 1;
+            int64_t up = R1[j] + 1;
+            int64_t temp = std::min({diag, left, up});
 
             if (*iter_s1 == *iter_s2) {
                 last_col_id = j;   // last occurence of s1_i
@@ -75,15 +75,15 @@ size_t damerau_levenshtein_distance_zhao(const Range<InputIt1>& s1, const Range<
                 T = last_i2l1;     // save H_i-2,l-1
             }
             else {
-                ptrdiff_t k = last_row_id.get(static_cast<uint64_t>(*iter_s2)).val;
-                ptrdiff_t l = last_col_id;
+                int64_t k = last_row_id.get(static_cast<uint64_t>(*iter_s2)).val;
+                int64_t l = last_col_id;
 
                 if ((j - l) == 1) {
-                    ptrdiff_t transpose = FR[j] + (i - k);
+                    int64_t transpose = FR[j] + (i - k);
                     temp = std::min(temp, transpose);
                 }
                 else if ((i - k) == 1) {
-                    ptrdiff_t transpose = T + (j - l);
+                    int64_t transpose = T + (j - l);
                     temp = std::min(temp, transpose);
                 }
             }

@@ -501,7 +501,7 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
 
     template <typename Sentence2>
     void distance(ResType* scores, size_t score_count, const Sentence2& s2,
-                  ResType score_cutoff = WorstDistance) const
+                  ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         _distance(scores, score_count, Range(s2), score_cutoff);
     }

@@ -159,7 +159,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         unroll<int, interleaveCount>([&](auto j) {
             auto counts = popcount(~S[j]);
             unroll<int, counts.size()>([&](auto i) {
-                *score_iter = (counts[i] >= score_cutoff) ? counts[i] : 0;
+                *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
         });
@@ -179,7 +179,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         auto counts = popcount(~S);
         unroll<int, counts.size()>([&](auto i) {
-            *score_iter = (counts[i] >= score_cutoff) ? counts[i] : 0;
+            *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });
     }
