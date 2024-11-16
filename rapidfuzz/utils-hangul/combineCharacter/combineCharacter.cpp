@@ -32,56 +32,28 @@ std::wstring combineCharacter(const std::wstring& choseong, const std::wstring& 
         throw std::invalid_argument("Invalid Jungseong character: " +
                                     std::string(jungseong.begin(), jungseong.end()));
     }
-    if (!jongseong.empty() && !CanBe::canBeJongseong(jongseong)) {
+    if (!CanBe::canBeJongseong(jongseong)) {
         throw std::invalid_argument("Invalid Jongseong character: " +
                                     std::string(jongseong.begin(), jongseong.end()));
     }
 
-    // Retrieve indices
-    int choseongIndex = -1;
-    int jungseongIndex = -1;
-    int jongseongIndex = 0; // Defaults to 0 (no Jongseong)
-
     // Find choseong index
     auto it_choseong = std::find(_Internal::CHOSEONGS.begin(), _Internal::CHOSEONGS.end(), choseong);
-    if (it_choseong != _Internal::CHOSEONGS.end()) {
-        choseongIndex = std::distance(_Internal::CHOSEONGS.begin(), it_choseong);
-    }
-    else {
-        throw std::invalid_argument("Choseong character not found: " +
-                                    std::string(choseong.begin(), choseong.end()));
-    }
+    int choseongIndex = std::distance(_Internal::CHOSEONGS.begin(), it_choseong);
 
     // Find jungseong index
     auto it_jungseong = std::find(_Internal::JUNSEONGS.begin(), _Internal::JUNSEONGS.end(), jungseong);
-    if (it_jungseong != _Internal::JUNSEONGS.end()) {
-        jungseongIndex = std::distance(_Internal::JUNSEONGS.begin(), it_jungseong);
-    }
-    else {
-        throw std::invalid_argument("Jungseong character not found: " +
-                                    std::string(jungseong.begin(), jungseong.end()));
-    }
+    int jungseongIndex = std::distance(_Internal::JUNSEONGS.begin(), it_jungseong);
 
-    // Find jongseong index if jongseong is provided
-    if (!jongseong.empty()) {
-        auto it_jongseong = std::find(_Internal::JONGSEONGS.begin(), _Internal::JONGSEONGS.end(), jongseong);
-        if (it_jongseong != _Internal::JONGSEONGS.end()) {
-            jongseongIndex = std::distance(_Internal::JONGSEONGS.begin(), it_jongseong);
-        }
-        else {
-            throw std::invalid_argument("Jongseong character not found: " +
-                                        std::string(jongseong.begin(), jongseong.end()));
-        }
-    }
+    // Find jongseong index
+    auto it_jongseong = std::find(_Internal::JONGSEONGS.begin(), _Internal::JONGSEONGS.end(), jongseong);
+    int jongseongIndex = std::distance(_Internal::JONGSEONGS.begin(), it_jongseong);
 
     // Calculate Unicode code point
     // Formula: S = 0xAC00 + (Choseong_index * 21 * 28) + (Jungseong_index * 28) + Jongseong_index
-    const int numOfJungseongs = _Internal::JUNSEONGS.size();  // 21
-    const int numOfJongseongs = _Internal::JONGSEONGS.size(); // 28
-
     int unicode = _Internal::COMPLETE_HANGUL_START_CHARCODE +
-                  (choseongIndex * numOfJungseongs * numOfJongseongs) + (jungseongIndex * numOfJongseongs) +
-                  jongseongIndex;
+                  (choseongIndex * _Internal::NUMBER_OF_JUNGSEONG * _Internal::NUMBER_OF_JONGSEONG) +
+                  (jungseongIndex * _Internal::NUMBER_OF_JONGSEONG) + jongseongIndex;
 
     // Convert code point to wchar_t
     wchar_t syllable = static_cast<wchar_t>(unicode);

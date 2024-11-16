@@ -69,13 +69,10 @@ inline const std::vector<std::wstring> CHOSEONGS = {
 /**
  * 중성으로 올 수 있는 한글 글자
  */
-inline const std::vector<std::wstring> JUNSEONGS = [] {
-    std::vector<std::wstring> values;
-    for (const auto& pair : DISASSEMBLED_VOWELS_BY_VOWEL) {
-        values.push_back(pair.second);
-    }
-    return values;
-}();
+inline const std::vector<std::wstring> JUNSEONGS = {
+    L"ㅏ",   L"ㅐ", L"ㅑ", L"ㅒ",   L"ㅓ",   L"ㅔ",   L"ㅕ", L"ㅖ", L"ㅗ",   L"ㅗㅏ", L"ㅗㅐ",
+    L"ㅗㅣ", L"ㅛ", L"ㅜ", L"ㅜㅓ", L"ㅜㅔ", L"ㅜㅣ", L"ㅠ", L"ㅡ", L"ㅡㅣ", L"ㅣ",
+};
 
 /**
  * 종성으로 올 수 있는 한글 글자
