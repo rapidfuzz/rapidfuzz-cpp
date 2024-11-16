@@ -1,7 +1,7 @@
 #ifndef RULES_TYPES_HPP
 #define RULES_TYPES_HPP
 
-#include "disassembleCompleteCharacter.hpp"
+#include "disassembleCompleteCharacter/disassembleCompleteCharacter.hpp"
 #include <optional>
 #include <string>
 

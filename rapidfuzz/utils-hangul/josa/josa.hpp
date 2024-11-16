@@ -2,7 +2,7 @@
 #define JOSA_HPP
 
 #include "_internal/constants.hpp"
-#include "utils.hpp"
+#include "_internal/utils.hpp"
 #include <optional>
 #include <string>
 

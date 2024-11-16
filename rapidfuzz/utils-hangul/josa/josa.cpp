@@ -1,6 +1,6 @@
 #include "josa.hpp"
-#include "disassembleCompleteCharacter.hpp"
-#include "hasBatchim.hpp"
+#include "disassembleCompleteCharacter/disassembleCompleteCharacter.hpp"
+#include "hasBatchim/hasBatchim.hpp"
 #include <algorithm> // For std::find
 
 namespace RapidFuzz {

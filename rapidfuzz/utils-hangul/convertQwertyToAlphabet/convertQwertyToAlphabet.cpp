@@ -1,5 +1,5 @@
 #include "convertQwertyToAlphabet.hpp"
-#include "utils.hpp"
+#include "_internal/utils.hpp"
 #include <algorithm>
 
 namespace RapidFuzz {

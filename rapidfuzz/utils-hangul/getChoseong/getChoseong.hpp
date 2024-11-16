@@ -1,8 +1,8 @@
 #ifndef GET_CHOSEONG_HPP
 #define GET_CHOSEONG_HPP
 
-#include "_internal/constants.hpp"
-#include "utils.hpp"
+#include "_internal/utils.hpp"
+#include "constants.hpp"
 #include <regex>
 #include <string>
 

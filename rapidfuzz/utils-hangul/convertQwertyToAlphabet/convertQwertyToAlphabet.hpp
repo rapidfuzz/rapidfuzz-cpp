@@ -1,7 +1,7 @@
 #ifndef CONVERT_QWERTY_TO_ALPHABET_HPP
 #define CONVERT_QWERTY_TO_ALPHABET_HPP
 
-#include "assemble.hpp"
+#include "assemble/assemble.hpp"
 #include "constants.hpp"
 #include <string>
 #include <vector>

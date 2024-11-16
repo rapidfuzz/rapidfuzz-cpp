@@ -23,12 +23,12 @@ struct JasoHangulNFD {
 
 // Initialize JASO_HANGUL_NFD struct from _JASO_HANGUL_NFD array
 inline const JasoHangulNFD JASO_HANGUL_NFD = {
-    _JASO_HANGUL_NFD[0], // START_CHOSEONG: 'ㄱ'
-    _JASO_HANGUL_NFD[1], // START_JUNGSEONG: 'ㅏ'
-    _JASO_HANGUL_NFD[2], // START_JONGSEONG: 'ㄱ'
-    _JASO_HANGUL_NFD[3], // END_CHOSEONG: 'ㅎ'
-    _JASO_HANGUL_NFD[4], // END_JUNGSEONG: 'ㅣ'
-    _JASO_HANGUL_NFD[5]  // END_JONGSEONG: 'ㅎ'
+    _Internal::_JASO_HANGUL_NFD[0], // START_CHOSEONG: 'ㄱ'
+    _Internal::_JASO_HANGUL_NFD[1], // START_JUNGSEONG: 'ㅏ'
+    _Internal::_JASO_HANGUL_NFD[2], // START_JONGSEONG: 'ㄱ'
+    _Internal::_JASO_HANGUL_NFD[3], // END_CHOSEONG: 'ㅎ'
+    _Internal::_JASO_HANGUL_NFD[4], // END_JUNGSEONG: 'ㅣ'
+    _Internal::_JASO_HANGUL_NFD[5]  // END_JONGSEONG: 'ㅎ'
 };
 
 } // namespace GetChoseong

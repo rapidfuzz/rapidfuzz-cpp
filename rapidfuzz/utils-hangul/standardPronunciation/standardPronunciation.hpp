@@ -3,9 +3,9 @@
 
 #include "_internal/hangul.hpp" // Includes isHangulAlphabet, isHangulCharacter
 #include "_internal/utils.hpp"
-#include "combineCharacter.hpp"
-#include "disassembleCompleteCharacter.hpp"
-#include "rules.types.hpp" // Include Nullable, Syllables
+#include "combineCharacter/combineCharacter.hpp"
+#include "disassembleCompleteCharacter/disassembleCompleteCharacter.hpp"
+#include "rules/rules.types.hpp" // Include Nullable, Syllables
 #include <string>
 #include <vector>
 

@@ -6,7 +6,6 @@
 namespace RapidFuzz {
 namespace Utils {
 namespace Hangul {
-namespace Internal {
 namespace Assemble {
 
 std::wstring assemble(const std::vector<std::wstring>& words)
@@ -33,7 +32,6 @@ std::wstring assemble(const std::vector<std::wstring>& words)
 }
 
 } // namespace Assemble
-} // namespace Internal
 } // namespace Hangul
 } // namespace Utils
 } // namespace RapidFuzz

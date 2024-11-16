@@ -2,17 +2,16 @@
 #define ROMANIZE_HPP
 
 #include "_internal/utils.hpp"
-#include "assemble.hpp"
-#include "canBe.hpp"
+#include "assemble/assemble.hpp"
+#include "canBe/canBe.hpp"
 #include "constants.hpp"
-#include "disassembleCompleteCharacter.hpp"
-#include "standardPronunciation.hpp"
+#include "disassembleCompleteCharacter/disassembleCompleteCharacter.hpp"
+#include "standardPronunciation/standardPronunciation.hpp"
 #include <string>
 
 namespace RapidFuzz {
 namespace Utils {
 namespace Hangul {
-namespace Internal {
 namespace Romanize {
 
 /**
@@ -30,7 +29,6 @@ namespace Romanize {
 std::wstring romanize(const std::wstring& hangul);
 
 } // namespace Romanize
-} // namespace Internal
 } // namespace Hangul
 } // namespace Utils
 } // namespace RapidFuzz
