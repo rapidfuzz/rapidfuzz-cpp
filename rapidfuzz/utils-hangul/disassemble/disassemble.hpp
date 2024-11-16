@@ -2,8 +2,8 @@
 #define DISASSEMBLE_HPP
 
 #include "_internal/constants.hpp"
-#include "disassembleCompleteCharacter.hpp"
-#include "utils.hpp"
+#include "_internal/utils.hpp"
+#include "disassembleCompleteCharacter/disassembleCompleteCharacter.hpp"
 #include <string>
 #include <utility>
 #include <vector>

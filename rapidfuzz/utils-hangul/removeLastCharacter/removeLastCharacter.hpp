@@ -3,9 +3,9 @@
 
 #include "_internal/constants.hpp"
 #include "_internal/utils.hpp"
-#include "canBe.hpp"
-#include "combineCharacter.hpp"
-#include "disassemble.hpp"
+#include "canBe/canBe.hpp"
+#include "combineCharacter/combineCharacter.hpp"
+#include "disassemble/disassemble.hpp"
 #include <optional>
 #include <string>
 
