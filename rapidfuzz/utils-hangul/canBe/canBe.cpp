@@ -20,7 +20,7 @@ namespace CanBe {
  */
 bool canBeChoseong(const std::wstring& character)
 {
-    return hasValueInReadOnlyStringList(_Internal::CHOSEONGS, character);
+    return _Internal::hasValueInReadOnlyStringList(_Internal::CHOSEONGS, character);
 }
 
 /**
@@ -40,7 +40,7 @@ bool canBeChoseong(const std::wstring& character)
  */
 bool canBeJungseong(const std::wstring& character)
 {
-    return hasValueInReadOnlyStringList(_Internal::JUNSEONGS, character);
+    return _Internal::hasValueInReadOnlyStringList(_Internal::JUNSEONGS, character);
 }
 
 /**
@@ -59,7 +59,7 @@ bool canBeJungseong(const std::wstring& character)
  */
 bool canBeJongseong(const std::wstring& character)
 {
-    return hasValueInReadOnlyStringList(_Internal::JONGSEONGS, character);
+    return _Internal::hasValueInReadOnlyStringList(_Internal::JONGSEONGS, character);
 }
 
 } // namespace CanBe

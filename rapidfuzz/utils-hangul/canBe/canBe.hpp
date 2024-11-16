@@ -2,6 +2,7 @@
 #define CAN_BE_HPP
 
 #include "_internal/constants.hpp"
+#include "_internal/utils.hpp"
 #include <algorithm>
 #include <string>
 
@@ -9,23 +10,6 @@ namespace RapidFuzz {
 namespace Utils {
 namespace Hangul {
 namespace CanBe {
-
-/**
- * @brief Checks if a given value exists in a read-only list.
- *
- * This helper function searches for a specific value within a container.
- * It returns `true` if the value is found, and `false` otherwise.
- *
- * @tparam Container The container type (e.g., std::array, std::vector).
- * @param list The container to search within.
- * @param value The value to search for.
- * @return `true` if `value` is found in `list`, `false` otherwise.
- */
-template <typename Container>
-inline bool hasValueInReadOnlyStringList(const Container& list, const std::wstring& value)
-{
-    return std::find(list.begin(), list.end(), value) != list.end();
-}
 
 /**
  * @brief 인자로 받은 문자가 초성으로 위치할 수 있는 문자인지 검사합니다.

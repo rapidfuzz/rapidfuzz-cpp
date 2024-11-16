@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace RapidFuzz {
 namespace Utils {
@@ -60,7 +61,7 @@ inline const std::unordered_map<std::wstring, std::wstring> DISASSEMBLED_VOWELS_
 /**
  * 초성으로 올 수 있는 한글 글자
  */
-inline const std::array<std::wstring, 19> CHOSEONGS = {
+inline const std::vector<std::wstring> CHOSEONGS = {
     L"ㄱ", L"ㄲ", L"ㄴ", L"ㄷ", L"ㄸ", L"ㄹ", L"ㅁ", L"ㅂ", L"ㅃ", L"ㅅ",
     L"ㅆ", L"ㅇ", L"ㅈ", L"ㅉ", L"ㅊ", L"ㅋ", L"ㅌ", L"ㅍ", L"ㅎ",
 };
@@ -68,15 +69,18 @@ inline const std::array<std::wstring, 19> CHOSEONGS = {
 /**
  * 중성으로 올 수 있는 한글 글자
  */
-inline const std::array<std::wstring, 21> JUNSEONGS = {
-    L"ㅏ", L"ㅐ", L"ㅑ", L"ㅒ", L"ㅓ", L"ㅔ", L"ㅕ", L"ㅖ", L"ㅗ", L"ㅘ", L"ㅙ",
-    L"ㅚ", L"ㅛ", L"ㅜ", L"ㅝ", L"ㅞ", L"ㅟ", L"ㅠ", L"ㅡ", L"ㅢ", L"ㅣ",
-};
+inline const std::vector<std::wstring> JUNSEONGS = [] {
+    std::vector<std::wstring> values;
+    for (const auto& pair : DISASSEMBLED_VOWELS_BY_VOWEL) {
+        values.push_back(pair.second);
+    }
+    return values;
+}();
 
 /**
  * 종성으로 올 수 있는 한글 글자
  */
-inline const std::array<std::wstring, 28> JONGSEONGS = {
+inline const std::vector<std::wstring> JONGSEONGS = {
     L"",     L"ㄱ",   L"ㄲ",   L"ㄱㅅ", L"ㄴ",   L"ㄴㅈ", L"ㄴㅎ", L"ㄷ", L"ㄹ",   L"ㄹㄱ",
     L"ㄹㅁ", L"ㄹㅂ", L"ㄹㅅ", L"ㄹㅌ", L"ㄹㅍ", L"ㄹㅎ", L"ㅁ",   L"ㅂ", L"ㅂㅅ", L"ㅅ",
     L"ㅆ",   L"ㅇ",   L"ㅈ",   L"ㅊ",   L"ㅋ",   L"ㅌ",   L"ㅍ",   L"ㅎ",

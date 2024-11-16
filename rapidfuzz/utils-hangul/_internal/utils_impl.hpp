@@ -13,7 +13,9 @@ namespace _Internal {
 template <typename... Args>
 std::wstring joinString(const Args&... args)
 {
-    return (args + ...);
+    std::wstring result;
+    (void)std::initializer_list<int>{(result += args, 0)...};
+    return result;
 }
 
 template <typename T>

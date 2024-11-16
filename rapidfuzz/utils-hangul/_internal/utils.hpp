@@ -20,7 +20,7 @@ std::wstring joinString(const Args&... args);
 
 bool isBlank(const std::wstring& character);
 
-void assertCondition(bool condition, const std::string& errorMessage);
+void assertCondition(bool condition, const std::string& errorMessage = "");
 
 template <typename T>
 bool isNotUndefined(const std::optional<T>& value);
