@@ -22,4 +22,17 @@ size_t indel_distance(const Sentence1& s1, const Sentence2& s2,
     return levenshtein_distance(s1, s2, {1, 1, 2}, score_cutoff);
 }
 
+template <typename InputIt1, typename InputIt2>
+double indel_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
+                        double score_cutoff = 0.0)
+{
+    return levenshtein_similarity(first1, last1, first2, last2, {1, 1, 2}, score_cutoff);
+}
+
+template <typename Sentence1, typename Sentence2>
+double indel_similarity(const Sentence1& s1, const Sentence2& s2, double score_cutoff = 0.0)
+{
+    return levenshtein_similarity(s1, s2, {1, 1, 2}, score_cutoff);
+}
+
 } // namespace rapidfuzz_reference

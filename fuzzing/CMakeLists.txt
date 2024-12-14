@@ -20,3 +20,5 @@ create_fuzzer(osa_distance)
 create_fuzzer(damerau_levenshtein_distance)
 
 create_fuzzer(jaro_similarity)
+
+create_fuzzer(partial_ratio)
