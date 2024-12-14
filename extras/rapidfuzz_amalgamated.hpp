@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-10-24 15:27:27.715931
+//  Generated: 2024-12-14 13:57:57.746331
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -10281,9 +10281,10 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
                 /* find the minimum score possible in the range first <-> last */
                 size_t known_edits = detail::abs_diff(scores[window.first], scores[window.second]);
                 /* half of the cells that are not needed for known_edits can lead to a better score */
+                size_t max_score_improvement = (cell_diff - known_edits / 2) / 2 * 2;
                 ptrdiff_t min_score =
                     static_cast<ptrdiff_t>(std::min(scores[window.first], scores[window.second])) -
-                    static_cast<ptrdiff_t>(cell_diff + known_edits / 2);
+                    static_cast<ptrdiff_t>(max_score_improvement);
                 if (min_score < static_cast<ptrdiff_t>(cutoff_dist)) {
                     size_t center = cell_diff / 2;
                     new_windows.emplace_back(window.first, window.first + center);

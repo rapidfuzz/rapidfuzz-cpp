@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.2.0] -
+### Performance
+- improve calculation of min score inside partial_ratio so it can skip more alignments
+
 ## [3.1.1] - 2024-10-24
 ### Fixed
 - Fixed incorrect score calculation for SIMD implementations of Levenshtein and OSA on 32 bit systems
