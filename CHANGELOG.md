@@ -1,6 +1,6 @@
 ## Changelog
 
-## [3.2.0] -
+## [3.2.0] - 2024-12-17
 ### Performance
 - improve calculation of min score inside partial_ratio so it can skip more alignments
 
