@@ -1,24 +1,24 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-14 13:57:57.746331
+//  Generated: 2024-12-25 01:15:57.554308
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
 //  ----------------------------------------------------------
 #ifndef RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
-#define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
+#    define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 
-#include <algorithm>
+#    include <algorithm>
 
-#include <cassert>
-#include <cstddef>
-#include <limits>
-#include <numeric>
+#    include <cassert>
+#    include <cstddef>
+#    include <limits>
+#    include <numeric>
 
-#include <array>
-#include <stddef.h>
-#include <stdint.h>
+#    include <array>
+#    include <stddef.h>
+#    include <stdint.h>
 
 namespace rapidfuzz::detail {
 
@@ -215,11 +215,11 @@ private:
 
 } // namespace rapidfuzz::detail
 
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <stdio.h>
-#include <vector>
+#    include <algorithm>
+#    include <cassert>
+#    include <cstddef>
+#    include <stdio.h>
+#    include <vector>
 
 namespace rapidfuzz::detail {
 
@@ -411,27 +411,27 @@ private:
 
 } // namespace rapidfuzz::detail
 
-#include <cassert>
-#include <cstddef>
-#include <iterator>
-#include <limits>
-#include <ostream>
-#include <stdexcept>
-#include <stdint.h>
-#include <sys/types.h>
-#include <vector>
+#    include <cassert>
+#    include <cstddef>
+#    include <iterator>
+#    include <limits>
+#    include <ostream>
+#    include <stdexcept>
+#    include <stdint.h>
+#    include <sys/types.h>
+#    include <vector>
 
 namespace rapidfuzz::detail {
 
 static inline void assume(bool b)
 {
-#if defined(__clang__)
+#    if defined(__clang__)
     __builtin_assume(b);
-#elif defined(__GNUC__) || defined(__GNUG__)
+#    elif defined(__GNUC__) || defined(__GNUG__)
     if (!b) __builtin_unreachable();
-#elif defined(_MSC_VER)
+#    elif defined(_MSC_VER)
     __assume(b);
-#endif
+#    endif
 }
 
 template <typename CharT>
@@ -536,24 +536,12 @@ public:
 
     constexpr void remove_prefix(size_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _first += static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _first++;
-
+        std::advance(_first, static_cast<ptrdiff_t>(n));
         _size -= n;
     }
     constexpr void remove_suffix(size_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _last -= static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _last--;
-
+        std::advance(_last, -static_cast<ptrdiff_t>(n));
         _size -= n;
     }
 
@@ -637,14 +625,24 @@ using RangeVec = std::vector<Range<InputIt>>;
 
 } // namespace rapidfuzz::detail
 
-#include <cstring>
+#    include <cstring>
 
-#include <algorithm>
+#    include <algorithm>
 
-#include <algorithm>
-#include <stddef.h>
-#include <stdexcept>
-#include <vector>
+#    include <algorithm>
+
+#    if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+#        define RAPIDFUZZ_DEDUCTION_GUIDES
+#        define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 1
+#        define RAPIDFUZZ_IF_CONSTEXPR if constexpr
+#    else
+#        define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
+#        define RAPIDFUZZ_IF_CONSTEXPR if
+#    endif
+
+#    include <stddef.h>
+#    include <stdexcept>
+#    include <vector>
 
 namespace rapidfuzz {
 
@@ -1233,8 +1231,8 @@ inline bool operator==(const ScoreAlignment<T>& a, const ScoreAlignment<T>& b)
 
 } // namespace rapidfuzz
 
-#include <iterator>
-#include <utility>
+#    include <iterator>
+#    include <utility>
 
 namespace rapidfuzz {
 
@@ -1362,16 +1360,16 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
 
 } // namespace rapidfuzz::detail
 
-#include <bitset>
-#include <cassert>
-#include <cstddef>
-#include <limits>
-#include <stdint.h>
-#include <type_traits>
+#    include <bitset>
+#    include <cassert>
+#    include <cstddef>
+#    include <limits>
+#    include <stdint.h>
+#    include <type_traits>
 
-#if defined(_MSC_VER) && !defined(__clang__)
-#    include <intrin.h>
-#endif
+#    if defined(_MSC_VER) && !defined(__clang__)
+#        include <intrin.h>
+#    endif
 
 namespace rapidfuzz::detail {
 
@@ -1462,15 +1460,15 @@ constexpr T rotl(T x, unsigned int n)
     assert(n < num_bits);
     unsigned int count_mask = num_bits - 1;
 
-#if _MSC_VER && !defined(__clang__)
-#    pragma warning(push)
+#    if _MSC_VER && !defined(__clang__)
+#        pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#    pragma warning(disable : 4146)
-#endif
+#        pragma warning(disable : 4146)
+#    endif
     return (x << n) | (x >> (-n & count_mask));
-#if _MSC_VER && !defined(__clang__)
-#    pragma warning(pop)
-#endif
+#    if _MSC_VER && !defined(__clang__)
+#        pragma warning(pop)
+#    endif
 }
 
 /**
@@ -1479,15 +1477,15 @@ constexpr T rotl(T x, unsigned int n)
 template <typename T>
 constexpr T blsi(T a)
 {
-#if _MSC_VER && !defined(__clang__)
-#    pragma warning(push)
+#    if _MSC_VER && !defined(__clang__)
+#        pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#    pragma warning(disable : 4146)
-#endif
+#        pragma warning(disable : 4146)
+#    endif
     return a & -a;
-#if _MSC_VER && !defined(__clang__)
-#    pragma warning(pop)
-#endif
+#    if _MSC_VER && !defined(__clang__)
+#        pragma warning(pop)
+#    endif
 }
 
 /**
@@ -1509,7 +1507,7 @@ constexpr T blsmsk(T a)
     return a ^ (a - 1);
 }
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#    if defined(_MSC_VER) && !defined(__clang__)
 static inline unsigned int countr_zero(uint32_t x)
 {
     unsigned long trailing_zero = 0;
@@ -1517,14 +1515,14 @@ static inline unsigned int countr_zero(uint32_t x)
     return trailing_zero;
 }
 
-#    if defined(_M_ARM) || defined(_M_X64)
+#        if defined(_M_ARM) || defined(_M_X64)
 static inline unsigned int countr_zero(uint64_t x)
 {
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
-#    else
+#        else
 static inline unsigned int countr_zero(uint64_t x)
 {
     uint32_t msh = (uint32_t)(x >> 32);
@@ -1532,9 +1530,9 @@ static inline unsigned int countr_zero(uint64_t x)
     if (lsh != 0) return countr_zero(lsh);
     return 32 + countr_zero(msh);
 }
-#    endif
+#        endif
 
-#else /*  gcc / clang */
+#    else /*  gcc / clang */
 static inline unsigned int countr_zero(uint32_t x)
 {
     return static_cast<unsigned int>(__builtin_ctz(x));
@@ -1544,7 +1542,7 @@ static inline unsigned int countr_zero(uint64_t x)
 {
     return static_cast<unsigned int>(__builtin_ctzll(x));
 }
-#endif
+#    endif
 
 static inline unsigned int countr_zero(uint16_t x)
 {
@@ -1570,9 +1568,9 @@ constexpr void unroll(F&& f)
 
 } // namespace rapidfuzz::detail
 
-#if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
-#    include <mm_malloc.h>
-#endif
+#    if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#        include <mm_malloc.h>
+#    endif
 
 namespace rapidfuzz::detail {
 
@@ -1597,10 +1595,8 @@ static inline size_t abs_diff(size_t a, size_t b)
 template <typename TO, typename FROM>
 TO opt_static_cast(const FROM& value)
 {
-    if constexpr (std::is_same_v<TO, FROM>)
-        return value;
-    else
-        return static_cast<TO>(value);
+    /* calling the cast through this template function somehow avoids useless cast warnings */
+    return static_cast<TO>(value);
 }
 
 /**
@@ -1632,36 +1628,36 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 static inline void* rf_aligned_alloc(size_t alignment, size_t size)
 {
-#if defined(_WIN32)
+#    if defined(_WIN32)
     return _aligned_malloc(size, alignment);
-#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#    elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
     return _mm_malloc(size, alignment);
-#elif defined(__ANDROID__) && __ANDROID_API__ > 16
+#    elif defined(__ANDROID__) && __ANDROID_API__ > 16
     void* ptr = nullptr;
     return posix_memalign(&ptr, alignment, size) ? nullptr : ptr;
-#else
+#    else
     return aligned_alloc(alignment, size);
-#endif
+#    endif
 }
 
 static inline void rf_aligned_free(void* ptr)
 {
-#if defined(_WIN32)
+#    if defined(_WIN32)
     _aligned_free(ptr);
-#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#    elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
     _mm_free(ptr);
-#else
+#    else
     free(ptr);
-#endif
+#    endif
 }
 
 /**@}*/
 
 } // namespace rapidfuzz::detail
 
-#include <algorithm>
-#include <array>
-#include <iterator>
+#    include <algorithm>
+#    include <array>
+#    include <iterator>
 
 namespace rapidfuzz::detail {
 
@@ -1829,20 +1825,20 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
 
 } // namespace rapidfuzz::detail
 
-#include <cmath>
+#    include <cmath>
 
 /* RAPIDFUZZ_LTO_HACK is used to differentiate functions between different
  * translation units to avoid warnings when using lto */
-#ifndef RAPIDFUZZ_EXCLUDE_SIMD
-#    if __AVX2__
-#        define RAPIDFUZZ_SIMD
-#        define RAPIDFUZZ_AVX2
-#        define RAPIDFUZZ_LTO_HACK 0
+#    ifndef RAPIDFUZZ_EXCLUDE_SIMD
+#        if __AVX2__
+#            define RAPIDFUZZ_SIMD
+#            define RAPIDFUZZ_AVX2
+#            define RAPIDFUZZ_LTO_HACK 0
 
-#        include <array>
-#        include <immintrin.h>
-#        include <ostream>
-#        include <stdint.h>
+#            include <array>
+#            include <immintrin.h>
+#            include <ostream>
+#            include <stdint.h>
 
 namespace rapidfuzz {
 namespace detail {
@@ -2482,15 +2478,15 @@ static inline native_simd<uint64_t> sllv(const native_simd<uint64_t>& a,
 } // namespace detail
 } // namespace rapidfuzz
 
-#    elif (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE2__)
-#        define RAPIDFUZZ_SIMD
-#        define RAPIDFUZZ_SSE2
-#        define RAPIDFUZZ_LTO_HACK 1
+#        elif (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE2__)
+#            define RAPIDFUZZ_SIMD
+#            define RAPIDFUZZ_SSE2
+#            define RAPIDFUZZ_LTO_HACK 1
 
-#        include <array>
-#        include <emmintrin.h>
-#        include <ostream>
-#        include <stdint.h>
+#            include <array>
+#            include <emmintrin.h>
+#            include <ostream>
+#            include <stdint.h>
 
 namespace rapidfuzz {
 namespace detail {
@@ -3003,9 +2999,9 @@ static inline native_simd<uint16_t> operator>=(const native_simd<uint16_t>& a,
                                                const native_simd<uint16_t>& b) noexcept
 {
     /* sse4.1 */
-#        if 0
+#            if 0
     return _mm_cmpeq_epi16(_mm_max_epu16(a, b), a); // a == max(a,b)
-#        endif
+#            endif
 
     __m128i s = _mm_subs_epu16(b, a);               // b-a, saturated
     return _mm_cmpeq_epi16(s, _mm_setzero_si128()); // s == 0
@@ -3020,9 +3016,9 @@ static inline native_simd<uint32_t> operator>=(const native_simd<uint32_t>& a,
                                                const native_simd<uint32_t>& b) noexcept
 {
     /* sse4.1 */
-#        if 0
+#            if 0
     return (Vec4ib)_mm_cmpeq_epi32(_mm_max_epu32(a, b), a); // a == max(a,b)
-#        endif
+#            endif
 
     return ~(b > a);
 }
@@ -3085,9 +3081,9 @@ static inline native_simd<T> operator<(const native_simd<T>& a, const native_sim
 } // namespace detail
 } // namespace rapidfuzz
 
+#        endif
 #    endif
-#endif
-#include <type_traits>
+#    include <type_traits>
 
 namespace rapidfuzz::detail {
 
@@ -3260,11 +3256,21 @@ protected:
             (maximum >= score_hint) ? maximum - score_hint : static_cast<ResType>(WorstSimilarity);
         ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
+        return _apply_distance_score_cutoff(dist, score_cutoff);
+    }
 
-        if constexpr (std::is_floating_point_v<ResType>)
-            return (dist <= score_cutoff) ? dist : 1.0;
-        else
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    template <typename U>
+    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                         U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                          U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     SimilarityBase()
@@ -3430,11 +3436,21 @@ protected:
         ResType hint_similarity = (maximum > score_hint) ? maximum - score_hint : 0;
         ResType sim = derived._similarity(s2, cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
+        return _apply_distance_score_cutoff(dist, score_cutoff);
+    }
 
-        if constexpr (std::is_floating_point_v<ResType>)
-            return (dist <= score_cutoff) ? dist : 1.0;
-        else
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    template <typename U>
+    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                         U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                          U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     CachedSimilarityBase()
@@ -3483,7 +3499,8 @@ protected:
 
         // reinterpretation only works when the types have the same size
         ResType* scores_orig = nullptr;
-        if constexpr (sizeof(double) == sizeof(ResType))
+
+        RAPIDFUZZ_IF_CONSTEXPR (sizeof(double) == sizeof(ResType))
             scores_orig = reinterpret_cast<ResType*>(scores);
         else
             scores_orig = new ResType[derived.result_count()];
@@ -3497,7 +3514,7 @@ protected:
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
 
-        if constexpr (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
+        RAPIDFUZZ_IF_CONSTEXPR (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
     }
 
     template <typename InputIt2>
@@ -3612,12 +3629,22 @@ protected:
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             ResType maximum = derived.maximum(i, s2);
             ResType dist = maximum - scores[i];
-
-            if constexpr (std::is_floating_point_v<ResType>)
-                scores[i] = (dist <= score_cutoff) ? dist : 1.0;
-            else
-                scores[i] = (dist <= score_cutoff) ? dist : score_cutoff + 1;
+            scores[i] = _apply_distance_score_cutoff(dist, score_cutoff);
         }
+    }
+
+    template <typename U>
+    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                         U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                          U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     MultiSimilarityBase()
@@ -3902,9 +3929,9 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 } // namespace experimental
 } // namespace rapidfuzz
 
-#include <limits>
+#    include <limits>
 
-#include <stdexcept>
+#    include <stdexcept>
 
 namespace rapidfuzz::detail {
 
@@ -4124,11 +4151,11 @@ CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHammin
 
 } // namespace rapidfuzz
 
-#include <limits>
+#    include <limits>
 
-#include <array>
-#include <stdint.h>
-#include <stdio.h>
+#    include <array>
+#    include <stdint.h>
+#    include <stdio.h>
 
 namespace rapidfuzz::detail {
 
@@ -4340,10 +4367,10 @@ private:
 
 } // namespace rapidfuzz::detail
 
-#include <limits>
+#    include <limits>
 
-#include <algorithm>
-#include <array>
+#    include <algorithm>
+#    include <array>
 
 namespace rapidfuzz::detail {
 
@@ -4361,6 +4388,20 @@ template <>
 struct LCSseqResult<false> {
     size_t sim;
 };
+
+template <bool RecordMatrix>
+LCSseqResult<true>& getMatrixRef(LCSseqResult<RecordMatrix>& res)
+{
+#    RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+// this is a hack since the compiler doesn't know early enough that
+// this is never called when the types differ.
+// On C++17 this properly uses if constexpr
+assert(RecordMatrix);
+return reinterpret_cast<LCSseqResult<true>&>(res);
+#endif
+}
 
 /*
  * An encoded mbleven model table.
@@ -4527,7 +4568,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    }
 
     auto iter_s2 = s2.begin();
     for (size_t i = 0; i < s2.size(); ++i) {
@@ -4542,7 +4586,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
                 uint64_t x = addc64(S[word], u, carry, &carry);
                 S[word] = x | (S[word] - u);
 
-                if constexpr (RecordMatrix) res.S[i][word] = S[word];
+                RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                    auto& res_ = getMatrixRef(res);
+                    res_.S[i][word] = S[word];
+                }
             });
         }
 
@@ -4553,7 +4600,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
-            if constexpr (RecordMatrix) res.S[i][word] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[i][word] = S[word];
+            }
         });
 
         iter_s2++;
@@ -4588,10 +4638,11 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     size_t band_width_right = s2.size() - score_cutoff;
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = band_width_left + 1 + band_width_right;
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
     }
 
     /* first_block is the index of the first block in Ukkonen band. */
@@ -4602,7 +4653,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     for (size_t row = 0; row < s2.size(); ++row) {
         uint64_t carry = 0;
 
-        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        }
 
         for (size_t word = first_block; word < last_block; ++word) {
             const uint64_t Matches = PM.get(word, *iter_s2);
@@ -4613,7 +4667,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            if constexpr (RecordMatrix) res.S[row][word - first_block] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[row][word - first_block] = S[word];
+            }
         }
 
         if (row > band_width_right) first_block = (row - band_width_right) / word_size;
@@ -4946,13 +5003,13 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
         static_assert(MaxLen <= 64);
@@ -5021,13 +5078,13 @@ private:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::lcs_simd<uint8_t>(scores_, PM, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::lcs_simd<uint16_t>(scores_, PM, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::lcs_simd<uint32_t>(scores_, PM, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::lcs_simd<uint64_t>(scores_, PM, s2, score_cutoff);
     }
 
@@ -6731,6 +6788,34 @@ struct LevenshteinResult<false, false> {
     size_t dist;
 };
 
+template <bool RecordMatrix, bool RecordBitRow>
+LevenshteinResult<true, false>& getMatrixRef(LevenshteinResult<RecordMatrix, RecordBitRow>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LevenshteinResult<true, false>&>(res);
+#endif
+}
+
+template <bool RecordMatrix, bool RecordBitRow>
+LevenshteinResult<false, true>& getBitRowRef(LevenshteinResult<RecordMatrix, RecordBitRow>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordBitRow);
+    return reinterpret_cast<LevenshteinResult<false, true>&>(res);
+#endif
+}
+
 template <typename InputIt1, typename InputIt2>
 size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
                                               LevenshteinWeightTable weights, size_t max)
@@ -6918,9 +7003,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
     }
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -6949,19 +7035,21 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
     if (res.dist > max) res.dist = max + 1;
 
-    if constexpr (RecordBitRow) {
-        res.first_block = 0;
-        res.last_block = 0;
-        res.prev_score = s2.size();
-        res.vecs.emplace_back(VP, VN);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
+        auto& res_ = getBitRowRef(res);
+        res_.first_block = 0;
+        res_.last_block = 0;
+        res_.prev_score = s2.size();
+        res_.vecs.emplace_back(VP, VN);
     }
 
     return res;
@@ -7041,7 +7129,9 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                if constexpr (std::numeric_limits<VecType>::max() < std::numeric_limits<size_t>::max()) {
+                RAPIDFUZZ_IF_CONSTEXPR (std::numeric_limits<VecType>::max() <
+                                        std::numeric_limits<size_t>::max())
+                {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
                     size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
@@ -7162,14 +7252,15 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
 
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
-    if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
 
         ptrdiff_t start_offset = static_cast<ptrdiff_t>(max) + 2 - 64;
         for (size_t i = 0; i < s2.size(); ++i) {
-            res.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
-            res.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res_.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res_.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
         }
     }
 
@@ -7223,9 +7314,10 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
@@ -7265,9 +7357,10 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
@@ -7302,17 +7395,19 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
 
     scores[words - 1] = s1.size();
 
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = std::min(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, 0);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, 0);
     }
 
-    if constexpr (RecordBitRow) {
-        res.first_block = 0;
-        res.last_block = 0;
-        res.prev_score = 0;
+    RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
+        auto& res_ = getBitRowRef(res);
+        res_.first_block = 0;
+        res_.last_block = 0;
+        res_.prev_score = 0;
     }
 
     max = std::min(max, std::max(s1.size(), s2.size()));
@@ -7329,9 +7424,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        if constexpr (RecordMatrix) {
-            res.VP.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
-            res.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+            res_.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
         }
 
         auto advance_block = [&](size_t word) {
@@ -7365,9 +7461,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            if constexpr (RecordMatrix) {
-                res.VP[row][word - first_block] = vecs[word].VP;
-                res.VN[row][word - first_block] = vecs[word].VN;
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.VP[row][word - first_block] = vecs[word].VP;
+                res_.VN[row][word - first_block] = vecs[word].VN;
             }
 
             return static_cast<int64_t>(HP_carry) - static_cast<int64_t>(HN_carry);
@@ -7453,26 +7550,27 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             return res;
         }
 
-        if constexpr (RecordBitRow) {
+        RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
             if (row == stop_row) {
+                auto& res_ = getBitRowRef(res);
                 if (first_block == 0)
-                    res.prev_score = stop_row + 1;
+                    res_.prev_score = stop_row + 1;
                 else {
                     /* count backwards to find score at last position in previous block */
                     size_t relevant_bits = std::min((first_block + 1) * 64, s1.size()) % 64;
                     uint64_t mask = ~UINT64_C(0);
                     if (relevant_bits) mask >>= 64 - relevant_bits;
 
-                    res.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
-                                     popcount(vecs[first_block].VP & mask);
+                    res_.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
+                                      popcount(vecs[first_block].VP & mask);
                 }
 
-                res.first_block = first_block;
-                res.last_block = last_block;
-                res.vecs = std::move(vecs);
+                res_.first_block = first_block;
+                res_.last_block = last_block;
+                res_.vecs = std::move(vecs);
 
                 /* unknown so make sure it is <= max */
-                res.dist = 0;
+                res_.dist = 0;
                 return res;
             }
         }
@@ -8202,13 +8300,13 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
         static_assert(MaxLen <= 64);
@@ -8279,13 +8377,13 @@ private:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
@@ -8527,7 +8625,9 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                if constexpr (std::numeric_limits<VecType>::max() < std::numeric_limits<size_t>::max()) {
+                RAPIDFUZZ_IF_CONSTEXPR (std::numeric_limits<VecType>::max() <
+                                        std::numeric_limits<size_t>::max())
+                {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
                     size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
@@ -8767,13 +8867,13 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
         static_assert(MaxLen <= 64);
@@ -8841,13 +8941,13 @@ private:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 

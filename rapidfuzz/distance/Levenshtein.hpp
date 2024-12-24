@@ -311,13 +311,13 @@ private:
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
         static_assert(MaxLen <= 64);
@@ -388,13 +388,13 @@ private:
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
         detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 

@@ -128,24 +128,12 @@ public:
 
     constexpr void remove_prefix(size_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _first += static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _first++;
-
+        std::advance(_first, static_cast<ptrdiff_t>(n));
         _size -= n;
     }
     constexpr void remove_suffix(size_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _last -= static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _last--;
-
+        std::advance(_last, -static_cast<ptrdiff_t>(n));
         _size -= n;
     }
 

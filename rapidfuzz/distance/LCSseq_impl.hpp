@@ -30,6 +30,20 @@ struct LCSseqResult<false> {
     size_t sim;
 };
 
+template <bool RecordMatrix>
+LCSseqResult<true>& getMatrixRef(LCSseqResult<RecordMatrix>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LCSseqResult<true>&>(res);
+#endif
+}
+
 /*
  * An encoded mbleven model table.
  *
@@ -195,7 +209,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    }
 
     auto iter_s2 = s2.begin();
     for (size_t i = 0; i < s2.size(); ++i) {
@@ -210,7 +227,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
                 uint64_t x = addc64(S[word], u, carry, &carry);
                 S[word] = x | (S[word] - u);
 
-                if constexpr (RecordMatrix) res.S[i][word] = S[word];
+                RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                    auto& res_ = getMatrixRef(res);
+                    res_.S[i][word] = S[word];
+                }
             });
         }
 
@@ -221,7 +241,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
-            if constexpr (RecordMatrix) res.S[i][word] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[i][word] = S[word];
+            }
         });
 
         iter_s2++;
@@ -256,10 +279,11 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     size_t band_width_right = s2.size() - score_cutoff;
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = band_width_left + 1 + band_width_right;
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
     }
 
     /* first_block is the index of the first block in Ukkonen band. */
@@ -270,7 +294,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     for (size_t row = 0; row < s2.size(); ++row) {
         uint64_t carry = 0;
 
-        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        }
 
         for (size_t word = first_block; word < last_block; ++word) {
             const uint64_t Matches = PM.get(word, *iter_s2);
@@ -281,7 +308,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            if constexpr (RecordMatrix) res.S[row][word - first_block] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[row][word - first_block] = S[word];
+            }
         }
 
         if (row > band_width_right) first_block = (row - band_width_right) / word_size;

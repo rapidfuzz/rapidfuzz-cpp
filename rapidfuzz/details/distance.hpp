@@ -180,11 +180,21 @@ protected:
             (maximum >= score_hint) ? maximum - score_hint : static_cast<ResType>(WorstSimilarity);
         ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
+        return _apply_distance_score_cutoff(dist, score_cutoff);
+    }
 
-        if constexpr (std::is_floating_point_v<ResType>)
-            return (dist <= score_cutoff) ? dist : 1.0;
-        else
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    template <typename U>
+    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                         U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                          U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     SimilarityBase()
@@ -350,11 +360,21 @@ protected:
         ResType hint_similarity = (maximum > score_hint) ? maximum - score_hint : 0;
         ResType sim = derived._similarity(s2, cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
+        return _apply_distance_score_cutoff(dist, score_cutoff);
+    }
 
-        if constexpr (std::is_floating_point_v<ResType>)
-            return (dist <= score_cutoff) ? dist : 1.0;
-        else
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    template <typename U>
+    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                         U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                          U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     CachedSimilarityBase()
@@ -403,7 +423,8 @@ protected:
 
         // reinterpretation only works when the types have the same size
         ResType* scores_orig = nullptr;
-        if constexpr (sizeof(double) == sizeof(ResType))
+
+        RAPIDFUZZ_IF_CONSTEXPR (sizeof(double) == sizeof(ResType))
             scores_orig = reinterpret_cast<ResType*>(scores);
         else
             scores_orig = new ResType[derived.result_count()];
@@ -417,7 +438,7 @@ protected:
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
 
-        if constexpr (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
+        RAPIDFUZZ_IF_CONSTEXPR (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
     }
 
     template <typename InputIt2>
@@ -532,12 +553,22 @@ protected:
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             ResType maximum = derived.maximum(i, s2);
             ResType dist = maximum - scores[i];
-
-            if constexpr (std::is_floating_point_v<ResType>)
-                scores[i] = (dist <= score_cutoff) ? dist : 1.0;
-            else
-                scores[i] = (dist <= score_cutoff) ? dist : score_cutoff + 1;
+            scores[i] = _apply_distance_score_cutoff(dist, score_cutoff);
         }
+    }
+
+    template <typename U>
+    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                         U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
+                                                                                          U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     MultiSimilarityBase()

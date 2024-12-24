@@ -33,13 +33,11 @@ static inline size_t abs_diff(size_t a, size_t b)
     return a > b ? a - b : b - a;
 }
 
-template<typename TO, typename FROM>
-TO opt_static_cast(const FROM &value)
+template <typename TO, typename FROM>
+TO opt_static_cast(const FROM& value)
 {
-    if constexpr (std::is_same_v<TO, FROM>)
-        return value;
-    else
-        return static_cast<TO>(value);
+    /* calling the cast through this template function somehow avoids useless cast warnings */
+    return static_cast<TO>(value);
 }
 
 /**
