@@ -1,5 +1,4 @@
-#include <catch2/catch_approx.hpp>
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch.hpp>
 #include <string>
 
 #include <rapidfuzz/distance.hpp>
@@ -7,7 +6,7 @@
 
 #include "../common.hpp"
 
-using Catch::Approx;
+using Catch::Matchers::WithinAbs;
 
 template <typename Sentence1, typename Sentence2>
 size_t indel_distance(const Sentence1& s1, const Sentence2& s2,
@@ -141,13 +140,13 @@ double indel_normalized_distance(const Sentence1& s1, const Sentence2& s2, doubl
             simd_scorer.normalized_distance(&results[0], results.size(), s2, score_cutoff);
         }
 
-        REQUIRE(res1 == Catch::Approx(results[0]).epsilon(0.0001));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.0001));
     }
 #endif
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 
@@ -188,13 +187,13 @@ double indel_normalized_similarity(const Sentence1& s1, const Sentence2& s2, dou
             simd_scorer.normalized_similarity(&results[0], results.size(), s2, score_cutoff);
         }
 
-        REQUIRE(res1 == Catch::Approx(results[0]).epsilon(0.0001));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.0001));
     }
 #endif
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 
@@ -247,8 +246,9 @@ TEST_CASE("Indel")
     {
         std::string a = "001";
         std::string b = "220";
-        REQUIRE(Approx(0.3333333) == rapidfuzz::indel_normalized_similarity(a, b));
-        REQUIRE(Approx(0.3333333) == rapidfuzz::CachedIndel<char>(a).normalized_similarity(b));
+        REQUIRE_THAT(rapidfuzz::indel_normalized_similarity(a, b), WithinAbs(0.3333333, 0.000001));
+        REQUIRE_THAT(rapidfuzz::CachedIndel<char>(a).normalized_similarity(b),
+                     WithinAbs(0.3333333, 0.000001));
     }
 
     SECTION("test banded implementation")

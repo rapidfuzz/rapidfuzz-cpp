@@ -1,10 +1,11 @@
-#include <catch2/catch_approx.hpp>
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch.hpp>
 #include <rapidfuzz/distance.hpp>
 #include <rapidfuzz/distance/Hamming.hpp>
 #include <string>
 
 #include "../common.hpp"
+
+using Catch::Matchers::WithinAbs;
 
 template <typename Sentence1, typename Sentence2>
 size_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
@@ -55,10 +56,10 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, dou
     rapidfuzz::CachedHamming scorer(s1);
     double res4 = scorer.normalized_distance(s2, score_cutoff);
     double res5 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 
@@ -74,10 +75,10 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
     rapidfuzz::CachedHamming scorer(s1);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 

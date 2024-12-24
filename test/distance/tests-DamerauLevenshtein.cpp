@@ -1,5 +1,4 @@
-#include <catch2/catch_approx.hpp>
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch.hpp>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/types.hpp>
 #include <string>
@@ -7,6 +6,8 @@
 #include <rapidfuzz/distance/DamerauLevenshtein.hpp>
 
 #include "../common.hpp"
+
+using Catch::Matchers::WithinAbs;
 
 template <typename Sentence1, typename Sentence2>
 size_t damerau_levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
@@ -60,10 +61,10 @@ double damerau_levenshtein_normalized_distance(const Sentence1& s1, const Senten
     rapidfuzz::experimental::CachedDamerauLevenshtein scorer(s1);
     double res4 = scorer.normalized_distance(s2, score_cutoff);
     double res5 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 
@@ -80,10 +81,10 @@ double damerau_levenshtein_normalized_similarity(const Sentence1& s1, const Sent
     rapidfuzz::experimental::CachedDamerauLevenshtein scorer(s1);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 
@@ -114,19 +115,15 @@ TEST_CASE("Levenshtein")
     SECTION("weighted levenshtein calculates correct ratios")
     {
         REQUIRE(damerau_levenshtein_normalized_similarity(test, test) == 1.0);
-        REQUIRE(damerau_levenshtein_normalized_similarity(test, no_suffix) ==
-                Catch::Approx(0.75).epsilon(0.0001));
-        REQUIRE(damerau_levenshtein_normalized_similarity(swapped1, swapped2) ==
-                Catch::Approx(0.75).epsilon(0.0001));
-        REQUIRE(damerau_levenshtein_normalized_similarity(test, no_suffix2) ==
-                Catch::Approx(0.75).epsilon(0.0001));
+        REQUIRE_THAT(damerau_levenshtein_normalized_similarity(test, no_suffix), WithinAbs(0.75, 0.0001));
+        REQUIRE_THAT(damerau_levenshtein_normalized_similarity(swapped1, swapped2), WithinAbs(0.75, 0.0001));
+        REQUIRE_THAT(damerau_levenshtein_normalized_similarity(test, no_suffix2), WithinAbs(0.75, 0.0001));
         REQUIRE(damerau_levenshtein_normalized_similarity(test, replace_all) == 0.0);
 
         {
             std::string s1 = "CA";
             std::string s2 = "ABC";
-            REQUIRE(damerau_levenshtein_normalized_similarity(s1, s2) ==
-                    Catch::Approx(0.33333).epsilon(0.0001));
+            REQUIRE_THAT(damerau_levenshtein_normalized_similarity(s1, s2), WithinAbs(0.33333, 0.0001));
         }
     }
 }

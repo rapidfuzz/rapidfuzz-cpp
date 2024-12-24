@@ -1,11 +1,10 @@
 #include "../../rapidfuzz_reference/JaroWinkler.hpp"
-#include <catch2/catch_approx.hpp>
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch.hpp>
 #include <rapidfuzz/distance/JaroWinkler.hpp>
 
 #include "../common.hpp"
 
-using Catch::Approx;
+using Catch::Matchers::WithinAbs;
 
 template <typename Sentence1, typename Sentence2>
 double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double prefix_weight = 0.1,
@@ -31,35 +30,35 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
             simd_scorer.insert(s1);
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
         for (unsigned int i = 0; i < 32; ++i)
-            REQUIRE(res1 == Approx(results[i]));
+            REQUIRE_THAT(res1, WithinAbs(results[i], 0.000001));
     }
     if (s1.size() <= 16) {
         rapidfuzz::experimental::MultiJaroWinkler<16> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
     if (s1.size() <= 32) {
         rapidfuzz::experimental::MultiJaroWinkler<32> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
     if (s1.size() <= 64) {
         rapidfuzz::experimental::MultiJaroWinkler<64> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.similarity(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
 #endif
 
-    REQUIRE(res1 == Approx(res2));
-    REQUIRE(res1 == Approx(res3));
-    REQUIRE(res1 == Approx(res4));
-    REQUIRE(res1 == Approx(res5));
-    REQUIRE(res1 == Approx(res6));
-    REQUIRE(res1 == Approx(res7));
-    REQUIRE(res1 == Approx(res8));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res6, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res7, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res8, 0.000001));
     return res1;
 }
 
@@ -85,35 +84,35 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
         rapidfuzz::experimental::MultiJaroWinkler<8> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
     if (s1.size() <= 16) {
         rapidfuzz::experimental::MultiJaroWinkler<16> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
     if (s1.size() <= 32) {
         rapidfuzz::experimental::MultiJaroWinkler<32> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
     if (s1.size() <= 64) {
         rapidfuzz::experimental::MultiJaroWinkler<64> simd_scorer(1, prefix_weight);
         simd_scorer.insert(s1);
         simd_scorer.distance(&results[0], results.size(), s2, score_cutoff);
-        REQUIRE(res1 == Approx(results[0]));
+        REQUIRE_THAT(res1, WithinAbs(results[0], 0.000001));
     }
 #endif
 
-    REQUIRE(res1 == Approx(res2));
-    REQUIRE(res1 == Approx(res3));
-    REQUIRE(res1 == Approx(res4));
-    REQUIRE(res1 == Approx(res5));
-    REQUIRE(res1 == Approx(res6));
-    REQUIRE(res1 == Approx(res7));
-    REQUIRE(res1 == Approx(res8));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res6, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res7, 0.000001));
+    REQUIRE_THAT(res1, WithinAbs(res8, 0.000001));
     return res1;
 }
 
@@ -127,10 +126,10 @@ double jaro_winkler_sim_test(const Sentence1& s1, const Sentence2& s2, double sc
     double Sim_bitparallel2 = jaro_winkler_similarity(s2, s1, 0.1, score_cutoff);
     double Dist_bitparallel2 = jaro_winkler_distance(s2, s1, 0.1, 1.0 - score_cutoff);
 
-    REQUIRE(Sim_original == Approx(Sim_bitparallel));
-    REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel));
-    REQUIRE(Sim_original == Approx(Sim_bitparallel2));
-    REQUIRE((1.0 - Sim_original) == Approx(Dist_bitparallel2));
+    REQUIRE_THAT(Sim_original, WithinAbs(Sim_bitparallel, 0.000001));
+    REQUIRE_THAT((1.0 - Sim_original), WithinAbs(Dist_bitparallel, 0.000001));
+    REQUIRE_THAT(Sim_original, WithinAbs(Sim_bitparallel2, 0.000001));
+    REQUIRE_THAT((1.0 - Sim_original), WithinAbs(Dist_bitparallel2, 0.000001));
     return Sim_original;
 }
 
@@ -171,35 +170,42 @@ TEST_CASE("JaroWinklerTest")
 
     SECTION("testEdgeCaseLengths")
     {
-        REQUIRE(jaro_winkler_sim_test(std::string(""), std::string("")) == Approx(1));
-        REQUIRE(jaro_winkler_sim_test(std::string("0"), std::string("0")) == Approx(1));
-        REQUIRE(jaro_winkler_sim_test(std::string("00"), std::string("00")) == Approx(1));
-        REQUIRE(jaro_winkler_sim_test(std::string("0"), std::string("00")) == Approx(0.85));
+        REQUIRE_THAT(jaro_winkler_sim_test(std::string(""), std::string("")), WithinAbs(1, 0.000001));
+        REQUIRE_THAT(jaro_winkler_sim_test(std::string("0"), std::string("0")), WithinAbs(1, 0.000001));
+        REQUIRE_THAT(jaro_winkler_sim_test(std::string("00"), std::string("00")), WithinAbs(1, 0.000001));
+        REQUIRE_THAT(jaro_winkler_sim_test(std::string("0"), std::string("00")), WithinAbs(0.85, 0.000001));
 
-        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 65),
-                                      str_multiply(std::string("0"), 65)) == Approx(1));
-        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 64),
-                                      str_multiply(std::string("0"), 65)) == Approx(0.996923));
-        REQUIRE(jaro_winkler_sim_test(str_multiply(std::string("0"), 63),
-                                      str_multiply(std::string("0"), 65)) == Approx(0.993846));
+        REQUIRE_THAT(
+            jaro_winkler_sim_test(str_multiply(std::string("0"), 65), str_multiply(std::string("0"), 65)),
+            WithinAbs(1, 0.000001));
+        REQUIRE_THAT(
+            jaro_winkler_sim_test(str_multiply(std::string("0"), 64), str_multiply(std::string("0"), 65)),
+            WithinAbs(0.996923, 0.000001));
+        REQUIRE_THAT(
+            jaro_winkler_sim_test(str_multiply(std::string("0"), 63), str_multiply(std::string("0"), 65)),
+            WithinAbs(0.993846, 0.000001));
 
-        REQUIRE(jaro_winkler_sim_test(std::string("000000001"), std::string("0000010")) ==
-                Approx(0.926984127));
+        REQUIRE_THAT(jaro_winkler_sim_test(std::string("000000001"), std::string("0000010")),
+                     WithinAbs(0.926984127, 0.000001));
 
-        REQUIRE(jaro_winkler_sim_test(std::string("01"), std::string("1111100000")) == Approx(0.53333333));
+        REQUIRE_THAT(jaro_winkler_sim_test(std::string("01"), std::string("1111100000")),
+                     WithinAbs(0.53333333, 0.000001));
 
-        REQUIRE(jaro_winkler_sim_test(
-                    std::string("10000000000000000000000000000000000000000000000000000000000000020"),
-                    std::string("00000000000000000000000000000000000000000000000000000000000000000")) ==
-                Approx(0.979487));
-        REQUIRE(jaro_winkler_sim_test(
-                    std::string("00000000000000100000000000000000000000010000000000000000000000000"),
-                    std::string(
-                        "0000000000000000000000000000000000000000000000000000000000000000000000000000001")) ==
-                Approx(0.95334));
-        REQUIRE(jaro_winkler_sim_test(
-                    std::string("00000000000000000000000000000000000000000000000000000000000000000"),
-                    std::string("0100000000000000000000000000000000000000000000000000000000000000000000000000"
-                                "0000000000000000000000000000000000000000000000000000")) == Approx(0.852344));
+        REQUIRE_THAT(jaro_winkler_sim_test(
+                         std::string("10000000000000000000000000000000000000000000000000000000000000020"),
+                         std::string("00000000000000000000000000000000000000000000000000000000000000000")),
+                     WithinAbs(0.979487, 0.000001));
+        REQUIRE_THAT(
+            jaro_winkler_sim_test(
+                std::string("00000000000000100000000000000000000000010000000000000000000000000"),
+                std::string(
+                    "0000000000000000000000000000000000000000000000000000000000000000000000000000001")),
+            WithinAbs(0.95334, 0.000001));
+        REQUIRE_THAT(
+            jaro_winkler_sim_test(
+                std::string("00000000000000000000000000000000000000000000000000000000000000000"),
+                std::string("0100000000000000000000000000000000000000000000000000000000000000000000000000"
+                            "0000000000000000000000000000000000000000000000000000")),
+            WithinAbs(0.852344, 0.000001));
     }
 }

@@ -1,5 +1,4 @@
-#include <catch2/catch_approx.hpp>
-#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch.hpp>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/types.hpp>
 #include <rapidfuzz/distance/Levenshtein.hpp>
@@ -10,6 +9,8 @@
 #include <rapidfuzz/distance.hpp>
 
 #include "../common.hpp"
+
+using Catch::Matchers::WithinAbs;
 
 template <typename Sentence1, typename Sentence2>
 size_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
@@ -82,10 +83,10 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
     rapidfuzz::CachedLevenshtein scorer(s1, weights);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
-    REQUIRE(res1 == Catch::Approx(res2).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res3).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res4).epsilon(0.0001));
-    REQUIRE(res1 == Catch::Approx(res5).epsilon(0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res3, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res4, 0.0001));
+    REQUIRE_THAT(res1, WithinAbs(res5, 0.0001));
     return res1;
 }
 
@@ -127,12 +128,11 @@ TEST_CASE("Levenshtein")
     SECTION("weighted levenshtein calculates correct ratios")
     {
         REQUIRE(levenshtein_normalized_similarity(test, test, {1, 1, 2}) == 1.0);
-        REQUIRE(levenshtein_normalized_similarity(test, no_suffix, {1, 1, 2}) ==
-                Catch::Approx(0.8571).epsilon(0.0001));
-        REQUIRE(levenshtein_normalized_similarity(swapped1, swapped2, {1, 1, 2}) ==
-                Catch::Approx(0.75).epsilon(0.0001));
-        REQUIRE(levenshtein_normalized_similarity(test, no_suffix2, {1, 1, 2}) ==
-                Catch::Approx(0.75).epsilon(0.0001));
+        REQUIRE_THAT(levenshtein_normalized_similarity(test, no_suffix, {1, 1, 2}),
+                     WithinAbs(0.8571, 0.0001));
+        REQUIRE_THAT(levenshtein_normalized_similarity(swapped1, swapped2, {1, 1, 2}),
+                     WithinAbs(0.75, 0.0001));
+        REQUIRE_THAT(levenshtein_normalized_similarity(test, no_suffix2, {1, 1, 2}), WithinAbs(0.75, 0.0001));
         REQUIRE(levenshtein_normalized_similarity(test, replace_all, {1, 1, 2}) == 0.0);
     }
 

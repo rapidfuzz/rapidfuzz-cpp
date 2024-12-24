@@ -1,4 +1,4 @@
-find_package(Catch2 3 QUIET)
+#find_package(Catch2 2 QUIET)
 if (Catch2_FOUND)
     message("Using system supplied version of Catch2")
 else()
@@ -7,7 +7,7 @@ else()
     FetchContent_Declare(
         Catch2
         GIT_REPOSITORY  https://github.com/catchorg/Catch2.git
-        GIT_TAG         v3.4.0
+        GIT_TAG         v2.13.10
     )
     FetchContent_MakeAvailable(Catch2)
 endif()
@@ -50,9 +50,9 @@ if (RAPIDFUZZ_ENABLE_LINTERS)
 endif()
 
 function(rapidfuzz_add_test test)
-    add_executable(test_${test} tests-${test}.cpp)
+    add_executable(test_${test} tests-main.cpp tests-${test}.cpp)
     target_link_libraries(test_${test} ${PROJECT_NAME})
-    target_link_libraries(test_${test} Catch2::Catch2WithMain)
+    target_link_libraries(test_${test} Catch2::Catch2)
     if (RAPIDFUZZ_ENABLE_LINTERS)
         target_link_libraries(test_${test} project_warnings)
     endif()
