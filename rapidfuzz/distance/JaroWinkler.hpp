@@ -9,7 +9,7 @@
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -25,7 +25,7 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -41,7 +41,7 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -57,7 +57,7 @@ double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -145,7 +145,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -174,7 +174,7 @@ struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler
 
     template <typename InputIt1>
     CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
-        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::Range(first1, last1))
+        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -188,10 +188,9 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
-        return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);
+        return detail::jaro_winkler_similarity(PM, detail::make_range(s1), s2, prefix_weight, score_cutoff);
     }
 
     double prefix_weight;
@@ -199,6 +198,7 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaroWinkler(const Sentence1& s1_,
                            double _prefix_weight = 0.1) -> CachedJaroWinkler<char_type<Sentence1>>;
@@ -206,5 +206,6 @@ explicit CachedJaroWinkler(const Sentence1& s1_,
 template <typename InputIt1>
 CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
                   double _prefix_weight = 0.1) -> CachedJaroWinkler<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz

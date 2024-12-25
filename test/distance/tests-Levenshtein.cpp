@@ -19,10 +19,9 @@ size_t levenshtein_distance(const Sentence1& s1, const Sentence2& s2,
 {
     size_t res1 = rapidfuzz::levenshtein_distance(s1, s2, weights, max);
     size_t res2 = rapidfuzz::levenshtein_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), weights, max);
-    size_t res3 = rapidfuzz::levenshtein_distance(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), weights, max);
-    rapidfuzz::CachedLevenshtein scorer(s1, weights);
+    size_t res3 = rapidfuzz::levenshtein_distance(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                                  make_bidir(s2.begin()), make_bidir(s2.end()), weights, max);
+    rapidfuzz::CachedLevenshtein<rapidfuzz::char_type<Sentence1>> scorer(s1, weights);
     size_t res4 = scorer.distance(s2, max);
     size_t res5 = scorer.distance(s2.begin(), s2.end(), max);
 #ifdef RAPIDFUZZ_SIMD
@@ -77,10 +76,10 @@ double levenshtein_normalized_similarity(const Sentence1& s1, const Sentence2& s
     double res1 = rapidfuzz::levenshtein_normalized_similarity(s1, s2, weights, score_cutoff);
     double res2 = rapidfuzz::levenshtein_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(),
                                                                weights, score_cutoff);
-    double res3 = rapidfuzz::levenshtein_normalized_similarity(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), weights, score_cutoff);
-    rapidfuzz::CachedLevenshtein scorer(s1, weights);
+    double res3 = rapidfuzz::levenshtein_normalized_similarity(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                                               make_bidir(s2.begin()), make_bidir(s2.end()),
+                                                               weights, score_cutoff);
+    rapidfuzz::CachedLevenshtein<rapidfuzz::char_type<Sentence1>> scorer(s1, weights);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
     REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
@@ -244,8 +243,8 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         std::string s1 = str_multiply(std::string("abb"), 2);
         std::string s2 = str_multiply(std::string("ccccca"), 2);
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
-                                                           rapidfuzz::detail::Range(s2));
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
+                                                           rapidfuzz::detail::make_range(s2));
         REQUIRE(hpos.left_score == 5);
         REQUIRE(hpos.right_score == 6);
         REQUIRE(hpos.s2_mid == 6);
@@ -256,8 +255,8 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         std::string s1 = str_multiply(std::string("abb"), 8 * 64);
         std::string s2 = str_multiply(std::string("ccccca"), 8 * 64);
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
-                                                           rapidfuzz::detail::Range(s2));
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
+                                                           rapidfuzz::detail::make_range(s2));
         REQUIRE(hpos.left_score == 1280);
         REQUIRE(hpos.right_score == 1281);
         REQUIRE(hpos.s2_mid == 1536);
@@ -268,8 +267,8 @@ TEST_CASE("Levenshtein_find_hirschberg_pos")
         std::string s1 = "aaaa";
         std::string s2 = "bbbbbbaaaa";
 
-        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::Range(s1),
-                                                           rapidfuzz::detail::Range(s2));
+        auto hpos = rapidfuzz::detail::find_hirschberg_pos(rapidfuzz::detail::make_range(s1),
+                                                           rapidfuzz::detail::make_range(s2));
         REQUIRE(hpos.left_score == 5);
         REQUIRE(hpos.right_score == 1);
         REQUIRE(hpos.s2_mid == 5);
@@ -350,12 +349,12 @@ TEST_CASE("Levenshtein small band")
             "LOTJKTie3OINeOTeJKWeOSeCGOdccNKLYemunmeJKWk";
 
         rapidfuzz::Editops ops1;
-        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::Range(s1),
-                                             rapidfuzz::detail::Range(s2));
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2));
         REQUIRE(s2 == rapidfuzz::editops_apply_str<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
-        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2),
-                                             ops1.size());
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2), ops1.size());
         REQUIRE(ops1 == ops2);
     }
 
@@ -398,12 +397,12 @@ TEST_CASE("Levenshtein small band")
             "HXUJGDGOhccZ";
 
         rapidfuzz::Editops ops1;
-        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::Range(s1),
-                                             rapidfuzz::detail::Range(s2));
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2));
         REQUIRE(s2 == rapidfuzz::editops_apply_str<char>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
-        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2),
-                                             ops1.size());
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2), ops1.size());
         REQUIRE(ops1 == ops2);
     }
 }
@@ -444,12 +443,12 @@ TEST_CASE("Levenshtein large band (ocr example)")
         std::vector<uint8_t> s2 = get_subsequence(ocr_example2, 51, 6516);
 
         rapidfuzz::Editops ops1;
-        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::Range(s1),
-                                             rapidfuzz::detail::Range(s2));
+        rapidfuzz::detail::levenshtein_align(ops1, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2));
         REQUIRE(s2 == rapidfuzz::editops_apply_vec<uint8_t>(ops1, s1, s2));
         rapidfuzz::Editops ops2;
-        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::Range(s1), rapidfuzz::detail::Range(s2),
-                                             ops1.size());
+        rapidfuzz::detail::levenshtein_align(ops2, rapidfuzz::detail::make_range(s1),
+                                             rapidfuzz::detail::make_range(s2), ops1.size());
         REQUIRE(ops1 == ops2);
     }
 

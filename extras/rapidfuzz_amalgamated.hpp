@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-14 13:57:57.746331
+//  Generated: 2024-12-25 11:44:52.213162
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -20,7 +20,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /* hashmap for integers which can only grow, but can't remove elements */
 template <typename T_Key, typename T_Entry>
@@ -213,7 +214,8 @@ private:
     std::array<value_type, 256> m_extendedAscii;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <algorithm>
 #include <cassert>
@@ -221,15 +223,16 @@ private:
 #include <stdio.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T, bool IsConst>
 struct BitMatrixView {
 
     using value_type = T;
     using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+    using pointer = typename std::conditional<IsConst, const value_type*, value_type*>::type;
+    using reference = typename std::conditional<IsConst, const value_type&, value_type&>::type;
 
     BitMatrixView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
     {}
@@ -389,12 +392,12 @@ struct ShiftedBitMatrix {
         return bool(m_matrix[row][col_word] & col_mask);
     }
 
-    auto operator[](size_t row) noexcept
+    BitMatrixView<value_type, false> operator[](size_t row) noexcept
     {
         return m_matrix[row];
     }
 
-    auto operator[](size_t row) const noexcept
+    BitMatrixView<value_type, true> operator[](size_t row) const noexcept
     {
         return m_matrix[row];
     }
@@ -409,7 +412,8 @@ private:
     std::vector<ptrdiff_t> m_offsets;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <cassert>
 #include <cstddef>
@@ -421,227 +425,23 @@ private:
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+#include <algorithm>
 
-static inline void assume(bool b)
-{
-#if defined(__clang__)
-    __builtin_assume(b);
-#elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b) __builtin_unreachable();
-#elif defined(_MSC_VER)
-    __assume(b);
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+#    define RAPIDFUZZ_DEDUCTION_GUIDES
+#    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 1
+#    define RAPIDFUZZ_IF_CONSTEXPR if constexpr
+#else
+#    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
+#    define RAPIDFUZZ_IF_CONSTEXPR if
 #endif
-}
 
-template <typename CharT>
-CharT* to_begin(CharT* s)
-{
-    return s;
-}
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201402L) || __cplusplus >= 201402L)
+#    define RAPIDFUZZ_CONSTEXPR_CXX14 constexpr
+#else
+#    define RAPIDFUZZ_CONSTEXPR_CXX14
+#endif
 
-template <typename T>
-auto to_begin(T& x)
-{
-    using std::begin;
-    return begin(x);
-}
-
-template <typename CharT>
-CharT* to_end(CharT* s)
-{
-    assume(s != nullptr);
-    while (*s != 0)
-        ++s;
-
-    return s;
-}
-
-template <typename T>
-auto to_end(T& x)
-{
-    using std::end;
-    return end(x);
-}
-
-template <typename Iter>
-class Range {
-    Iter _first;
-    Iter _last;
-    // todo we might not want to cache the size for iterators
-    // that can can retrieve the size in O(1) time
-    size_t _size;
-
-public:
-    using value_type = typename std::iterator_traits<Iter>::value_type;
-    using iterator = Iter;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-
-    constexpr Range(Iter first, Iter last) : _first(first), _last(last)
-    {
-        assert(std::distance(_first, _last) >= 0);
-        _size = static_cast<size_t>(std::distance(_first, _last));
-    }
-
-    constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
-    {}
-
-    template <typename T>
-    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
-    {
-        assert(std::distance(_first, _last) >= 0);
-        _size = static_cast<size_t>(std::distance(_first, _last));
-    }
-
-    constexpr iterator begin() const noexcept
-    {
-        return _first;
-    }
-    constexpr iterator end() const noexcept
-    {
-        return _last;
-    }
-
-    constexpr reverse_iterator rbegin() const noexcept
-    {
-        return reverse_iterator(end());
-    }
-    constexpr reverse_iterator rend() const noexcept
-    {
-        return reverse_iterator(begin());
-    }
-
-    constexpr size_t size() const
-    {
-        return _size;
-    }
-
-    constexpr bool empty() const
-    {
-        return size() == 0;
-    }
-    explicit constexpr operator bool() const
-    {
-        return !empty();
-    }
-
-    template <
-        typename... Dummy, typename IterCopy = Iter,
-        typename = std::enable_if_t<std::is_base_of_v<
-            std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
-    constexpr decltype(auto) operator[](size_t n) const
-    {
-        return _first[static_cast<ptrdiff_t>(n)];
-    }
-
-    constexpr void remove_prefix(size_t n)
-    {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _first += static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _first++;
-
-        _size -= n;
-    }
-    constexpr void remove_suffix(size_t n)
-    {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _last -= static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _last--;
-
-        _size -= n;
-    }
-
-    constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
-    {
-        if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
-
-        Range res = *this;
-        res.remove_prefix(pos);
-        if (count < res.size()) res.remove_suffix(res.size() - count);
-
-        return res;
-    }
-
-    constexpr decltype(auto) front() const
-    {
-        return *(_first);
-    }
-
-    constexpr decltype(auto) back() const
-    {
-        return *(_last - 1);
-    }
-
-    constexpr Range<reverse_iterator> reversed() const
-    {
-        return {rbegin(), rend(), _size};
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const Range& seq)
-    {
-        os << "[";
-        for (auto x : seq)
-            os << static_cast<uint64_t>(x) << ", ";
-        os << "]";
-        return os;
-    }
-};
-
-template <typename T>
-Range(T& x) -> Range<decltype(to_begin(x))>;
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return std::equal(a.begin(), a.end(), b.begin(), b.end());
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator!=(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return !(a == b);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator<(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return (std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()));
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator>(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return b < a;
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator<=(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return !(b < a);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return !(a < b);
-}
-
-template <typename InputIt>
-using RangeVec = std::vector<Range<InputIt>>;
-
-} // namespace rapidfuzz::detail
-
-#include <cstring>
-
-#include <algorithm>
-
-#include <algorithm>
 #include <stddef.h>
 #include <stdexcept>
 #include <vector>
@@ -974,13 +774,10 @@ private:
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
-        return false;
-    }
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) return false;
 
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
+    if (lhs.size() != rhs.size()) return false;
+
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
@@ -1278,9 +1075,243 @@ struct is_explicitly_convertible {
     static bool const value = test<From, To>(0);
 };
 
+template <bool B, class T = void>
+using rf_enable_if_t = typename std::enable_if<B, T>::type;
+
 } // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
+
+static inline void assume(bool b)
+{
+#if defined(__clang__)
+    __builtin_assume(b);
+#elif defined(__GNUC__) || defined(__GNUG__)
+    if (!b) __builtin_unreachable();
+#elif defined(_MSC_VER)
+    __assume(b);
+#endif
+}
+
+namespace to_begin_detail {
+using std::begin;
+
+template <typename CharT>
+CharT* to_begin(CharT* s)
+{
+    return s;
+}
+
+template <typename T>
+auto to_begin(T& x) -> decltype(begin(x))
+{
+
+    return begin(x);
+}
+} // namespace to_begin_detail
+
+using to_begin_detail::to_begin;
+
+namespace to_end_detail {
+using std::end;
+
+template <typename CharT>
+CharT* to_end(CharT* s)
+{
+    assume(s != nullptr);
+    while (*s != 0)
+        ++s;
+
+    return s;
+}
+
+template <typename T>
+auto to_end(T& x) -> decltype(end(x))
+{
+    return end(x);
+}
+} // namespace to_end_detail
+
+using to_end_detail::to_end;
+
+template <typename Iter>
+class Range {
+    Iter _first;
+    Iter _last;
+    // todo we might not want to cache the size for iterators
+    // that can can retrieve the size in O(1) time
+    size_t _size;
+
+public:
+    using value_type = typename std::iterator_traits<Iter>::value_type;
+    using iterator = Iter;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+
+    Range(Iter first, Iter last) : _first(first), _last(last)
+    {
+        assert(std::distance(_first, _last) >= 0);
+        _size = static_cast<size_t>(std::distance(_first, _last));
+    }
+
+    Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
+    {}
+
+    template <typename T>
+    Range(T& x) : Range(to_begin(x), to_end(x))
+    {}
+
+    iterator begin() const noexcept
+    {
+        return _first;
+    }
+    iterator end() const noexcept
+    {
+        return _last;
+    }
+
+    reverse_iterator rbegin() const noexcept
+    {
+        return reverse_iterator(end());
+    }
+    reverse_iterator rend() const noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
+    size_t size() const
+    {
+        return _size;
+    }
+
+    bool empty() const
+    {
+        return size() == 0;
+    }
+    explicit operator bool() const
+    {
+        return !empty();
+    }
+
+    template <typename... Dummy, typename IterCopy = Iter,
+              typename = rapidfuzz::rf_enable_if_t<
+                  std::is_base_of<std::random_access_iterator_tag,
+                                  typename std::iterator_traits<IterCopy>::iterator_category>::value>>
+    auto operator[](size_t n) const -> decltype(*_first)
+    {
+        return _first[static_cast<ptrdiff_t>(n)];
+    }
+
+    void remove_prefix(size_t n)
+    {
+        std::advance(_first, static_cast<ptrdiff_t>(n));
+        _size -= n;
+    }
+
+    void remove_suffix(size_t n)
+    {
+        std::advance(_last, -static_cast<ptrdiff_t>(n));
+        _size -= n;
+    }
+
+    Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
+    {
+        if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
+
+        Range res = *this;
+        res.remove_prefix(pos);
+        if (count < res.size()) res.remove_suffix(res.size() - count);
+
+        return res;
+    }
+
+    const value_type& front() const
+    {
+        return *_first;
+    }
+
+    const value_type& back() const
+    {
+        return *(_last - 1);
+    }
+
+    Range<reverse_iterator> reversed() const
+    {
+        return {rbegin(), rend(), _size};
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Range& seq)
+    {
+        os << "[";
+        for (auto x : seq)
+            os << static_cast<uint64_t>(x) << ", ";
+        os << "]";
+        return os;
+    }
+};
+
+template <typename Iter>
+auto make_range(Iter first, Iter last) -> Range<Iter>
+{
+    return Range<Iter>(first, last);
+}
+
+template <typename T>
+auto make_range(T& x) -> Range<decltype(to_begin(x))>
+{
+    return {to_begin(x), to_end(x)};
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    if (a.size() != b.size()) return false;
+
+    return std::equal(a.begin(), a.end(), b.begin());
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator!=(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return !(a == b);
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator<(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return (std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()));
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator>(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return b < a;
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator<=(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return !(b < a);
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return !(a < b);
+}
+
+template <typename InputIt>
+using RangeVec = std::vector<Range<InputIt>>;
+
+} // namespace detail
+} // namespace rapidfuzz
+
+#include <cstring>
+
+#include <algorithm>
+
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt>
 class SplittedSentenceView {
@@ -1288,7 +1319,7 @@ public:
     using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible_v<RangeVec<InputIt>>)
+        std::is_nothrow_move_constructible<RangeVec<InputIt>>::value)
         : m_sentence(std::move(sentence))
     {}
 
@@ -1360,7 +1391,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
     return joined;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <bitset>
 #include <cassert>
@@ -1373,7 +1405,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
 #    include <intrin.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T>
 T bit_mask_lsb(size_t n)
@@ -1409,7 +1442,7 @@ constexpr uint64_t shl64(uint64_t a, U shift)
     return (shift < 64) ? a << shift : 0;
 }
 
-constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+RAPIDFUZZ_CONSTEXPR_CXX14 uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */
     a += carryin;
@@ -1420,7 +1453,7 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 }
 
 template <typename T, typename U>
-constexpr T ceil_div(T a, U divisor)
+RAPIDFUZZ_CONSTEXPR_CXX14 T ceil_div(T a, U divisor)
 {
     T _div = static_cast<T>(divisor);
     return a / _div + static_cast<T>(a % _div != 0);
@@ -1456,7 +1489,7 @@ static inline size_t popcount(uint8_t x)
 }
 
 template <typename T>
-constexpr T rotl(T x, unsigned int n)
+RAPIDFUZZ_CONSTEXPR_CXX14 T rotl(T x, unsigned int n)
 {
     unsigned int num_bits = std::numeric_limits<T>::digits;
     assert(n < num_bits);
@@ -1556,25 +1589,41 @@ static inline unsigned int countr_zero(uint8_t x)
     return countr_zero(static_cast<uint32_t>(x));
 }
 
-template <class T, T... inds, class F>
-constexpr void unroll_impl(std::integer_sequence<T, inds...>, F&& f)
+template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+struct UnrollImpl;
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, false> {
+    template <typename F>
+    static void call(F&& f)
+    {
+        f(Pos);
+        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
+    }
+};
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, true> {
+    template <typename F>
+    static void call(F&&)
+    {}
+};
+
+template <typename T, T N, class F>
+RAPIDFUZZ_CONSTEXPR_CXX14 void unroll(F&& f)
 {
-    (f(std::integral_constant<T, inds>{}), ...);
+    UnrollImpl<T, N>::call(f);
 }
 
-template <class T, T count, class F>
-constexpr void unroll(F&& f)
-{
-    unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
-}
-
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
 #    include <mm_malloc.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
 struct DecomposedSet {
@@ -1597,10 +1646,8 @@ static inline size_t abs_diff(size_t a, size_t b)
 template <typename TO, typename FROM>
 TO opt_static_cast(const FROM& value)
 {
-    if constexpr (std::is_same_v<TO, FROM>)
-        return value;
-    else
-        return static_cast<TO>(value);
+    /* calling the cast through this template function somehow avoids useless cast warnings */
+    return static_cast<TO>(value);
 }
 
 /**
@@ -1657,13 +1704,15 @@ static inline void rf_aligned_free(void* ptr)
 
 /**@}*/
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <algorithm>
 #include <array>
 #include <iterator>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
@@ -1691,6 +1740,15 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
     return {difference_ab, difference_ba, intersection};
 }
 
+template <class InputIt1, class InputIt2>
+std::pair<InputIt1, InputIt2> rf_mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+    while (first1 != last1 && first2 != last2 && *first1 == *first2)
+        ++first1, ++first2;
+
+    return std::make_pair(first1, first2);
+}
+
 /**
  * Removes common prefix of two string views
  */
@@ -1699,7 +1757,7 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto first1 = std::begin(s1);
     size_t prefix = static_cast<size_t>(
-        std::distance(first1, std::mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
+        std::distance(first1, rf_mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
     s1.remove_prefix(prefix);
     s2.remove_prefix(prefix);
     return prefix;
@@ -1711,9 +1769,9 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 template <typename InputIt1, typename InputIt2>
 size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
-    auto rfirst1 = std::rbegin(s1);
+    auto rfirst1 = s1.rbegin();
     size_t suffix = static_cast<size_t>(
-        std::distance(rfirst1, std::mismatch(rfirst1, std::rend(s1), std::rbegin(s2), std::rend(s2)).first));
+        std::distance(rfirst1, rf_mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
     s1.remove_suffix(suffix);
     s2.remove_suffix(suffix);
     return suffix;
@@ -1827,7 +1885,8 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
     return SplittedSentenceView<InputIt>(splitted);
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <cmath>
 
@@ -3089,42 +3148,43 @@ static inline native_simd<T> operator<(const native_simd<T>& a, const native_sim
 #endif
 #include <type_traits>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff, double score_hint)
     {
-        return _normalized_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                                    score_cutoff, score_hint);
+        return _normalized_distance(make_range(first1, last1), make_range(first2, last2),
+                                    std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
     static double normalized_distance(const Sentence1& s1, const Sentence2& s2, Args... args,
                                       double score_cutoff, double score_hint)
     {
-        return _normalized_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff,
+        return _normalized_distance(make_range(s1), make_range(s2), std::forward<Args>(args)..., score_cutoff,
                                     score_hint);
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff, double score_hint)
     {
-        return _normalized_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                                      score_cutoff, score_hint);
+        return _normalized_similarity(make_range(first1, last1), make_range(first2, last2),
+                                      std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
     static double normalized_similarity(const Sentence1& s1, const Sentence2& s2, Args... args,
                                         double score_cutoff, double score_hint)
     {
-        return _normalized_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff,
-                                      score_hint);
+        return _normalized_similarity(make_range(s1), make_range(s2), std::forward<Args>(args)...,
+                                      score_cutoff, score_hint);
     }
 
 protected:
@@ -3162,11 +3222,11 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
-        return T::_distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+        return T::_distance(make_range(first1, last1), make_range(first2, last2), std::forward<Args>(args)...,
                             score_cutoff, score_hint);
     }
 
@@ -3174,15 +3234,16 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
                             ResType score_hint)
     {
-        return T::_distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
+        return T::_distance(make_range(s1), make_range(s2), std::forward<Args>(args)..., score_cutoff,
+                            score_hint);
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
-        return _similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+        return _similarity(make_range(first1, last1), make_range(first2, last2), std::forward<Args>(args)...,
                            score_cutoff, score_hint);
     }
 
@@ -3190,7 +3251,8 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
                               ResType score_hint)
     {
-        return _similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
+        return _similarity(make_range(s1), make_range(s2), std::forward<Args>(args)..., score_cutoff,
+                           score_hint);
     }
 
 protected:
@@ -3217,11 +3279,11 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
-        return _distance(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
+        return _distance(make_range(first1, last1), make_range(first2, last2), std::forward<Args>(args)...,
                          score_cutoff, score_hint);
     }
 
@@ -3229,23 +3291,25 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     static ResType distance(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
                             ResType score_hint)
     {
-        return _distance(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
+        return _distance(make_range(s1), make_range(s2), std::forward<Args>(args)..., score_cutoff,
+                         score_hint);
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
-        return T::_similarity(Range(first1, last1), Range(first2, last2), std::forward<Args>(args)...,
-                              score_cutoff, score_hint);
+        return T::_similarity(make_range(first1, last1), make_range(first2, last2),
+                              std::forward<Args>(args)..., score_cutoff, score_hint);
     }
 
     template <typename Sentence1, typename Sentence2>
     static ResType similarity(const Sentence1& s1, const Sentence2& s2, Args... args, ResType score_cutoff,
                               ResType score_hint)
     {
-        return T::_similarity(Range(s1), Range(s2), std::forward<Args>(args)..., score_cutoff, score_hint);
+        return T::_similarity(make_range(s1), make_range(s2), std::forward<Args>(args)..., score_cutoff,
+                              score_hint);
     }
 
 protected:
@@ -3260,11 +3324,21 @@ protected:
             (maximum >= score_hint) ? maximum - score_hint : static_cast<ResType>(WorstSimilarity);
         ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
+        return _apply_distance_score_cutoff(dist, score_cutoff);
+    }
 
-        if constexpr (std::is_floating_point_v<ResType>)
-            return (dist <= score_cutoff) ? dist : 1.0;
-        else
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    template <typename U>
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     SimilarityBase()
@@ -3278,27 +3352,27 @@ struct CachedNormalizedMetricBase {
     double normalized_distance(InputIt2 first2, InputIt2 last2, double score_cutoff = 1.0,
                                double score_hint = 1.0) const
     {
-        return _normalized_distance(Range(first2, last2), score_cutoff, score_hint);
+        return _normalized_distance(make_range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
     double normalized_distance(const Sentence2& s2, double score_cutoff = 1.0, double score_hint = 1.0) const
     {
-        return _normalized_distance(Range(s2), score_cutoff, score_hint);
+        return _normalized_distance(make_range(s2), score_cutoff, score_hint);
     }
 
     template <typename InputIt2>
     double normalized_similarity(InputIt2 first2, InputIt2 last2, double score_cutoff = 0.0,
                                  double score_hint = 0.0) const
     {
-        return _normalized_similarity(Range(first2, last2), score_cutoff, score_hint);
+        return _normalized_similarity(make_range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
     double normalized_similarity(const Sentence2& s2, double score_cutoff = 0.0,
                                  double score_hint = 0.0) const
     {
-        return _normalized_similarity(Range(s2), score_cutoff, score_hint);
+        return _normalized_similarity(make_range(s2), score_cutoff, score_hint);
     }
 
 protected:
@@ -3339,7 +3413,7 @@ struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
                      ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(Range(first2, last2), score_cutoff, score_hint);
+        return derived._distance(make_range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
@@ -3347,7 +3421,7 @@ struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
                      ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._distance(Range(s2), score_cutoff, score_hint);
+        return derived._distance(make_range(s2), score_cutoff, score_hint);
     }
 
     template <typename InputIt2>
@@ -3355,14 +3429,14 @@ struct CachedDistanceBase : public CachedNormalizedMetricBase<T> {
                        ResType score_cutoff = static_cast<ResType>(WorstSimilarity),
                        ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
-        return _similarity(Range(first2, last2), score_cutoff, score_hint);
+        return _similarity(make_range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
     ResType similarity(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstSimilarity),
                        ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
-        return _similarity(Range(s2), score_cutoff, score_hint);
+        return _similarity(make_range(s2), score_cutoff, score_hint);
     }
 
 protected:
@@ -3393,14 +3467,14 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
                      ResType score_cutoff = static_cast<ResType>(WorstDistance),
                      ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
-        return _distance(Range(first2, last2), score_cutoff, score_hint);
+        return _distance(make_range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
     ResType distance(const Sentence2& s2, ResType score_cutoff = static_cast<ResType>(WorstDistance),
                      ResType score_hint = static_cast<ResType>(WorstDistance)) const
     {
-        return _distance(Range(s2), score_cutoff, score_hint);
+        return _distance(make_range(s2), score_cutoff, score_hint);
     }
 
     template <typename InputIt2>
@@ -3409,7 +3483,7 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
                        ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(Range(first2, last2), score_cutoff, score_hint);
+        return derived._similarity(make_range(first2, last2), score_cutoff, score_hint);
     }
 
     template <typename Sentence2>
@@ -3417,7 +3491,7 @@ struct CachedSimilarityBase : public CachedNormalizedMetricBase<T> {
                        ResType score_hint = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        return derived._similarity(Range(s2), score_cutoff, score_hint);
+        return derived._similarity(make_range(s2), score_cutoff, score_hint);
     }
 
 protected:
@@ -3430,11 +3504,21 @@ protected:
         ResType hint_similarity = (maximum > score_hint) ? maximum - score_hint : 0;
         ResType sim = derived._similarity(s2, cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
+        return _apply_distance_score_cutoff(dist, score_cutoff);
+    }
 
-        if constexpr (std::is_floating_point_v<ResType>)
-            return (dist <= score_cutoff) ? dist : 1.0;
-        else
-            return (dist <= score_cutoff) ? dist : score_cutoff + 1;
+    template <typename U>
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     CachedSimilarityBase()
@@ -3448,28 +3532,28 @@ struct MultiNormalizedMetricBase {
     void normalized_distance(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                              double score_cutoff = 1.0) const
     {
-        _normalized_distance(scores, score_count, Range(first2, last2), score_cutoff);
+        _normalized_distance(scores, score_count, make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     void normalized_distance(double* scores, size_t score_count, const Sentence2& s2,
                              double score_cutoff = 1.0) const
     {
-        _normalized_distance(scores, score_count, Range(s2), score_cutoff);
+        _normalized_distance(scores, score_count, make_range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     void normalized_similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                                double score_cutoff = 0.0) const
     {
-        _normalized_similarity(scores, score_count, Range(first2, last2), score_cutoff);
+        _normalized_similarity(scores, score_count, make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     void normalized_similarity(double* scores, size_t score_count, const Sentence2& s2,
                                double score_cutoff = 0.0) const
     {
-        _normalized_similarity(scores, score_count, Range(s2), score_cutoff);
+        _normalized_similarity(scores, score_count, make_range(s2), score_cutoff);
     }
 
 protected:
@@ -3483,7 +3567,8 @@ protected:
 
         // reinterpretation only works when the types have the same size
         ResType* scores_orig = nullptr;
-        if constexpr (sizeof(double) == sizeof(ResType))
+
+        RAPIDFUZZ_IF_CONSTEXPR (sizeof(double) == sizeof(ResType))
             scores_orig = reinterpret_cast<ResType*>(scores);
         else
             scores_orig = new ResType[derived.result_count()];
@@ -3497,7 +3582,7 @@ protected:
             scores[i] = (norm_dist <= score_cutoff) ? norm_dist : 1.0;
         }
 
-        if constexpr (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
+        RAPIDFUZZ_IF_CONSTEXPR (sizeof(double) != sizeof(ResType)) delete[] scores_orig;
     }
 
     template <typename InputIt2>
@@ -3525,7 +3610,7 @@ struct MultiDistanceBase : public MultiNormalizedMetricBase<T, ResType> {
                   ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        derived._distance(scores, score_count, Range(first2, last2), score_cutoff);
+        derived._distance(scores, score_count, make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
@@ -3533,21 +3618,21 @@ struct MultiDistanceBase : public MultiNormalizedMetricBase<T, ResType> {
                   ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        derived._distance(scores, score_count, Range(s2), score_cutoff);
+        derived._distance(scores, score_count, make_range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
     void similarity(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                     ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
-        _similarity(scores, score_count, Range(first2, last2), score_cutoff);
+        _similarity(scores, score_count, make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     void similarity(ResType* scores, size_t score_count, const Sentence2& s2,
                     ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
-        _similarity(scores, score_count, Range(s2), score_cutoff);
+        _similarity(scores, score_count, make_range(s2), score_cutoff);
     }
 
 protected:
@@ -3576,14 +3661,14 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
     void distance(ResType* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                   ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
-        _distance(scores, score_count, Range(first2, last2), score_cutoff);
+        _distance(scores, score_count, make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     void distance(ResType* scores, size_t score_count, const Sentence2& s2,
                   ResType score_cutoff = static_cast<ResType>(WorstDistance)) const
     {
-        _distance(scores, score_count, Range(s2), score_cutoff);
+        _distance(scores, score_count, make_range(s2), score_cutoff);
     }
 
     template <typename InputIt2>
@@ -3591,7 +3676,7 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
                     ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        derived._similarity(scores, score_count, Range(first2, last2), score_cutoff);
+        derived._similarity(scores, score_count, make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
@@ -3599,7 +3684,7 @@ struct MultiSimilarityBase : public MultiNormalizedMetricBase<T, ResType> {
                     ResType score_cutoff = static_cast<ResType>(WorstSimilarity)) const
     {
         const T& derived = static_cast<const T&>(*this);
-        derived._similarity(scores, score_count, Range(s2), score_cutoff);
+        derived._similarity(scores, score_count, make_range(s2), score_cutoff);
     }
 
 protected:
@@ -3612,12 +3697,22 @@ protected:
         for (size_t i = 0; i < derived.get_input_count(); ++i) {
             ResType maximum = derived.maximum(i, s2);
             ResType dist = maximum - scores[i];
-
-            if constexpr (std::is_floating_point_v<ResType>)
-                scores[i] = (dist <= score_cutoff) ? dist : 1.0;
-            else
-                scores[i] = (dist <= score_cutoff) ? dist : score_cutoff + 1;
+            scores[i] = _apply_distance_score_cutoff(dist, score_cutoff);
         }
+    }
+
+    template <typename U>
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : 1.0;
+    }
+
+    template <typename U>
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
+    {
+        return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
 
     MultiSimilarityBase()
@@ -3625,9 +3720,11 @@ protected:
     friend T;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename IntType>
 struct RowId {
@@ -3746,14 +3843,14 @@ class DamerauLevenshtein
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                            [[maybe_unused]] size_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff, size_t)
     {
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 /* the API will require a change when adding custom weights */
@@ -3884,8 +3981,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         return rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -3893,11 +3989,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace experimental
 } // namespace rapidfuzz
@@ -3906,7 +4004,8 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 
 #include <stdexcept>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool> {
     friend DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool>;
@@ -3920,7 +4019,7 @@ class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad,
-                            size_t score_cutoff, [[maybe_unused]] size_t score_hint)
+                            size_t score_cutoff, size_t)
     {
         if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
@@ -3957,7 +4056,8 @@ Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bo
     return ops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -4031,7 +4131,7 @@ template <typename InputIt1, typename InputIt2>
 Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
                         size_t score_hint = std::numeric_limits<size_t>::max())
 {
-    return detail::hamming_editops(detail::Range(first1, last1), detail::Range(first2, last2), pad_,
+    return detail::hamming_editops(detail::make_range(first1, last1), detail::make_range(first2, last2), pad_,
                                    score_hint);
 }
 
@@ -4039,7 +4139,7 @@ template <typename Sentence1, typename Sentence2>
 Editops hamming_editops(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
                         size_t score_hint = std::numeric_limits<size_t>::max())
 {
-    return detail::hamming_editops(detail::Range(s1), detail::Range(s2), pad_, score_hint);
+    return detail::hamming_editops(detail::make_range(s1), detail::make_range(s2), pad_, score_hint);
 }
 
 /**
@@ -4104,8 +4204,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t score_hint) const
     {
         return detail::Hamming::distance(s1, s2, pad, score_cutoff, score_hint);
     }
@@ -4114,11 +4213,13 @@ private:
     bool pad;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedHamming(const Sentence1& s1_, bool pad_ = true) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHamming<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 
@@ -4130,7 +4231,8 @@ CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHammin
 #include <stdint.h>
 #include <stdio.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct BitvectorHashmap {
     BitvectorHashmap() : m_map()
@@ -4338,14 +4440,16 @@ private:
     BitMatrix<uint64_t> m_extendedAscii;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <limits>
 
 #include <algorithm>
 #include <array>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <bool RecordMatrix>
 struct LCSseqResult;
@@ -4361,6 +4465,20 @@ template <>
 struct LCSseqResult<false> {
     size_t sim;
 };
+
+template <bool RecordMatrix>
+LCSseqResult<true>& getMatrixRef(LCSseqResult<RecordMatrix>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LCSseqResult<true>&>(res);
+#endif
+}
 
 /*
  * An encoded mbleven model table.
@@ -4475,12 +4593,12 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
     size_t cur_vec = 0;
     for (; cur_vec + interleaveCount * vecs <= block.size(); cur_vec += interleaveCount * vecs) {
         std::array<native_simd<VecType>, interleaveCount> S;
-        unroll<int, interleaveCount>([&](auto j) { S[j] = static_cast<VecType>(-1); });
+        unroll<size_t, interleaveCount>([&](size_t j) { S[j] = static_cast<VecType>(-1); });
 
         for (const auto& ch : s2) {
-            unroll<int, interleaveCount>([&](auto j) {
+            unroll<size_t, interleaveCount>([&](size_t j) {
                 alignas(32) std::array<uint64_t, vecs> stored;
-                unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
+                unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
 
                 native_simd<VecType> Matches(stored.data());
                 native_simd<VecType> u = S[j] & Matches;
@@ -4488,9 +4606,9 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
             });
         }
 
-        unroll<int, interleaveCount>([&](auto j) {
+        unroll<size_t, interleaveCount>([&](size_t j) {
             auto counts = popcount(~S[j]);
-            unroll<int, counts.size()>([&](auto i) {
+            unroll<size_t, counts.size()>([&](size_t i) {
                 *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
@@ -4502,7 +4620,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         for (const auto& ch : s2) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> Matches(stored.data());
             native_simd<VecType> u = S & Matches;
@@ -4510,7 +4628,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         }
 
         auto counts = popcount(~S);
-        unroll<int, counts.size()>([&](auto i) {
+        unroll<size_t, counts.size()>([&](size_t i) {
             *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });
@@ -4527,7 +4645,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    }
 
     auto iter_s2 = s2.begin();
     for (size_t i = 0; i < s2.size(); ++i) {
@@ -4542,7 +4663,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
                 uint64_t x = addc64(S[word], u, carry, &carry);
                 S[word] = x | (S[word] - u);
 
-                if constexpr (RecordMatrix) res.S[i][word] = S[word];
+                RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                    auto& res_ = getMatrixRef(res);
+                    res_.S[i][word] = S[word];
+                }
             });
         }
 
@@ -4553,7 +4677,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
-            if constexpr (RecordMatrix) res.S[i][word] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[i][word] = S[word];
+            }
         });
 
         iter_s2++;
@@ -4588,10 +4715,11 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     size_t band_width_right = s2.size() - score_cutoff;
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = band_width_left + 1 + band_width_right;
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
     }
 
     /* first_block is the index of the first block in Ukkonen band. */
@@ -4602,7 +4730,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     for (size_t row = 0; row < s2.size(); ++row) {
         uint64_t carry = 0;
 
-        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        }
 
         for (size_t word = first_block; word < last_block; ++word) {
             const uint64_t Matches = PM.get(word, *iter_s2);
@@ -4613,7 +4744,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            if constexpr (RecordMatrix) res.S[row][word - first_block] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[row][word - first_block] = S[word];
+            }
         }
 
         if (row > band_width_right) first_block = (row - band_width_right) / word_size;
@@ -4685,8 +4819,7 @@ size_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> 
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -4718,8 +4851,7 @@ size_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_c
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -4753,7 +4885,9 @@ Editops recover_alignment(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
 
     if (dist == 0) return editops;
 
-    [[maybe_unused]] size_t band_width_right = s2.size() - matrix.sim;
+#ifndef NDEBUG
+    size_t band_width_right = s2.size() - matrix.sim;
+#endif
 
     auto col = len1;
     auto row = len2;
@@ -4852,13 +4986,14 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+                              size_t)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <algorithm>
 #include <limits>
@@ -4921,13 +5056,13 @@ double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 template <typename InputIt1, typename InputIt2>
 Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
-    return detail::lcs_seq_editops(detail::Range(first1, last1), detail::Range(first2, last2));
+    return detail::lcs_seq_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return detail::lcs_seq_editops(detail::Range(s1), detail::Range(s2));
+    return detail::lcs_seq_editops(detail::make_range(s1), detail::make_range(s2));
 }
 
 #ifdef RAPIDFUZZ_SIMD
@@ -4939,26 +5074,26 @@ private:
     friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>, size_t>;
 
-    constexpr static size_t get_vec_size()
+    RAPIDFUZZ_CONSTEXPR_CXX14 static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
-        static_assert(MaxLen <= 64);
+        static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);
@@ -5020,14 +5155,14 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        auto scores_ = detail::make_range(scores, scores + score_count);
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::lcs_simd<uint8_t>(scores_, PM, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::lcs_simd<uint16_t>(scores_, PM, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::lcs_simd<uint32_t>(scores_, PM, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::lcs_simd<uint64_t>(scores_, PM, s2, score_cutoff);
     }
 
@@ -5058,7 +5193,7 @@ struct CachedLCSseq
     {}
 
     template <typename InputIt1>
-    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -5072,25 +5207,27 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
-        return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
+        return detail::lcs_seq_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }
 
     std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_distance(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
@@ -5147,7 +5284,8 @@ class Indel : public DistanceBase<Indel, size_t, 0, std::numeric_limits<int64_t>
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -5324,11 +5462,13 @@ private:
     CachedLCSseq<CharT1> scorer;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -5336,7 +5476,8 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 #include <cstdint>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct FlaggedCharsWord {
     uint64_t P_flag;
@@ -5419,7 +5560,11 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
 static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
-                                                            [[maybe_unused]] const Range<InputIt1>& P,
+#ifdef NDEBUG
+                                                            const Range<InputIt1>&,
+#else
+                                                            const Range<InputIt1>& P,
+#endif
                                                             const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() <= 64);
@@ -5487,7 +5632,7 @@ static inline void flag_similar_characters_step(const BlockPatternMatchVector& P
     if (T_j >= 0 && T_j < 256) {
         for (; word + 3 < last_word - 1; word += 4) {
             uint64_t PM_j[4];
-            unroll<int, 4>([&](auto i) {
+            unroll<size_t, 4>([&](size_t i) {
                 PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
             });
 
@@ -5786,6 +5931,11 @@ struct JaroSimilaritySimdBounds {
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -5793,7 +5943,9 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     using namespace simd_sse2;
 #    endif
 
-    [[maybe_unused]] static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    ifndef RAPIDFUZZ_AVX2
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    endif
     static constexpr size_t vec_width = native_simd<VecType>::size;
     assert(s2.size() <= sizeof(VecType) * 8);
 
@@ -5853,6 +6005,11 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -5942,7 +6099,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -5956,7 +6113,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6059,7 +6216,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6072,7 +6229,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6163,13 +6320,14 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double score_cutoff,
-                              [[maybe_unused]] double score_hint)
+                              double)
     {
         return jaro_similarity(s1, s2, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <stdlib.h>
 
@@ -6236,12 +6394,13 @@ private:
     friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
     friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>, double>;
 
-    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
+    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64, "incorrect MaxLen used");
 
-    using VecType = typename std::conditional_t<
+    using VecType = typename std::conditional<
         MaxLen == 8, uint8_t,
-        typename std::conditional_t<MaxLen == 16, uint16_t,
-                                    typename std::conditional_t<MaxLen == 32, uint32_t, uint64_t>>>;
+        typename std::conditional<MaxLen == 16, uint16_t,
+                                  typename std::conditional<MaxLen == 32, uint32_t, uint64_t>::type>::type>::
+        type;
 
     constexpr static size_t get_vec_size()
     {
@@ -6261,7 +6420,7 @@ private:
 #    endif
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);
@@ -6332,12 +6491,12 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
+        auto scores_ = detail::make_range(scores, scores + score_count);
         detail::jaro_similarity_simd<VecType>(scores_, PM, str_lens, str_lens_size, s2, score_cutoff);
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -6364,7 +6523,7 @@ struct CachedJaro : public detail::CachedSimilarityBase<CachedJaro<CharT1>, doub
     {}
 
     template <typename InputIt1>
-    CachedJaro(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedJaro(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -6378,25 +6537,27 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
-        return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
+        return detail::jaro_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }
 
     std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaro(const Sentence1& s1_) -> CachedJaro<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 double jaro_winkler_similarity(const Range<InputIt1>& P, const Range<InputIt2>& T, double prefix_weight,
@@ -6474,18 +6635,19 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double prefix_weight,
-                              double score_cutoff, [[maybe_unused]] double score_hint)
+                              double score_cutoff, double)
     {
         return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -6501,7 +6663,7 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -6517,7 +6679,7 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -6533,7 +6695,7 @@ double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -6621,7 +6783,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -6650,7 +6812,7 @@ struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler
 
     template <typename InputIt1>
     CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
-        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::Range(first1, last1))
+        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -6664,10 +6826,9 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
-        return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);
+        return detail::jaro_winkler_similarity(PM, detail::make_range(s1), s2, prefix_weight, score_cutoff);
     }
 
     double prefix_weight;
@@ -6675,6 +6836,7 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaroWinkler(const Sentence1& s1_,
                            double _prefix_weight = 0.1) -> CachedJaroWinkler<char_type<Sentence1>>;
@@ -6682,6 +6844,7 @@ explicit CachedJaroWinkler(const Sentence1& s1_,
 template <typename InputIt1>
 CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
                   double _prefix_weight = 0.1) -> CachedJaroWinkler<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -6692,7 +6855,8 @@ CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
 #include <limits>
 #include <sys/types.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct LevenshteinRow {
     uint64_t VP;
@@ -6730,6 +6894,34 @@ template <>
 struct LevenshteinResult<false, false> {
     size_t dist;
 };
+
+template <bool RecordMatrix, bool RecordBitRow>
+LevenshteinResult<true, false>& getMatrixRef(LevenshteinResult<RecordMatrix, RecordBitRow>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LevenshteinResult<true, false>&>(res);
+#endif
+}
+
+template <bool RecordMatrix, bool RecordBitRow>
+LevenshteinResult<false, true>& getBitRowRef(LevenshteinResult<RecordMatrix, RecordBitRow>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordBitRow);
+    return reinterpret_cast<LevenshteinResult<false, true>&>(res);
+#endif
+}
 
 template <typename InputIt1, typename InputIt2>
 size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
@@ -6918,9 +7110,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
     }
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -6949,19 +7142,21 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
     if (res.dist > max) res.dist = max + 1;
 
-    if constexpr (RecordBitRow) {
-        res.first_block = 0;
-        res.last_block = 0;
-        res.prev_score = s2.size();
-        res.vecs.emplace_back(VP, VN);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
+        auto& res_ = getBitRowRef(res);
+        res_.first_block = 0;
+        res_.last_block = 0;
+        res_.prev_score = s2.size();
+        res_.vecs.emplace_back(VP, VN);
     }
 
     return res;
@@ -6993,12 +7188,12 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         native_simd<VecType> VN(VecType(0));
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>(
-            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+        unroll<size_t, vec_width>(
+            [&](size_t i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -7009,7 +7204,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> X(stored.data());
             auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -7033,7 +7228,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {
@@ -7041,7 +7236,9 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                if constexpr (std::numeric_limits<VecType>::max() < std::numeric_limits<size_t>::max()) {
+                RAPIDFUZZ_IF_CONSTEXPR (std::numeric_limits<VecType>::max() <
+                                        std::numeric_limits<size_t>::max())
+                {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
                     size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
@@ -7162,14 +7359,15 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
 
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
-    if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
 
         ptrdiff_t start_offset = static_cast<ptrdiff_t>(max) + 2 - 64;
         for (size_t i = 0; i < s2.size(); ++i) {
-            res.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
-            res.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res_.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res_.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
         }
     }
 
@@ -7223,9 +7421,10 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
@@ -7265,9 +7464,10 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
@@ -7302,17 +7502,19 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
 
     scores[words - 1] = s1.size();
 
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = std::min(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, 0);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, 0);
     }
 
-    if constexpr (RecordBitRow) {
-        res.first_block = 0;
-        res.last_block = 0;
-        res.prev_score = 0;
+    RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
+        auto& res_ = getBitRowRef(res);
+        res_.first_block = 0;
+        res_.last_block = 0;
+        res_.prev_score = 0;
     }
 
     max = std::min(max, std::max(s1.size(), s2.size()));
@@ -7329,9 +7531,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        if constexpr (RecordMatrix) {
-            res.VP.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
-            res.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+            res_.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
         }
 
         auto advance_block = [&](size_t word) {
@@ -7365,9 +7568,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            if constexpr (RecordMatrix) {
-                res.VP[row][word - first_block] = vecs[word].VP;
-                res.VN[row][word - first_block] = vecs[word].VN;
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.VP[row][word - first_block] = vecs[word].VP;
+                res_.VN[row][word - first_block] = vecs[word].VN;
             }
 
             return static_cast<int64_t>(HP_carry) - static_cast<int64_t>(HN_carry);
@@ -7453,26 +7657,27 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             return res;
         }
 
-        if constexpr (RecordBitRow) {
+        RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
             if (row == stop_row) {
+                auto& res_ = getBitRowRef(res);
                 if (first_block == 0)
-                    res.prev_score = stop_row + 1;
+                    res_.prev_score = stop_row + 1;
                 else {
                     /* count backwards to find score at last position in previous block */
                     size_t relevant_bits = std::min((first_block + 1) * 64, s1.size()) % 64;
                     uint64_t mask = ~UINT64_C(0);
                     if (relevant_bits) mask >>= 64 - relevant_bits;
 
-                    res.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
-                                     popcount(vecs[first_block].VP & mask);
+                    res_.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
+                                      popcount(vecs[first_block].VP & mask);
                 }
 
-                res.first_block = first_block;
-                res.last_block = last_block;
-                res.vecs = std::move(vecs);
+                res_.first_block = first_block;
+                res_.last_block = last_block;
+                res_.vecs = std::move(vecs);
 
                 /* unknown so make sure it is <= max */
-                res.dist = 0;
+                res_.dist = 0;
                 return res;
             }
         }
@@ -7494,7 +7699,7 @@ size_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<
     if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
-    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return s1 != s2;
 
     if (score_cutoff < abs_diff(s1.size(), s2.size())) return score_cutoff + 1;
 
@@ -7552,7 +7757,7 @@ size_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
     if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
-    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return s1 != s2;
 
     // at least length difference insertions/deletions required
     if (score_cutoff < (s1.size() - s2.size())) return score_cutoff + 1;
@@ -7895,7 +8100,8 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
     return editops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -8174,7 +8380,7 @@ template <typename InputIt1, typename InputIt2>
 Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                             size_t score_hint = std::numeric_limits<size_t>::max())
 {
-    return detail::levenshtein_editops(detail::Range(first1, last1), detail::Range(first2, last2),
+    return detail::levenshtein_editops(detail::make_range(first1, last1), detail::make_range(first2, last2),
                                        score_hint);
 }
 
@@ -8182,7 +8388,7 @@ template <typename Sentence1, typename Sentence2>
 Editops levenshtein_editops(const Sentence1& s1, const Sentence2& s2,
                             size_t score_hint = std::numeric_limits<size_t>::max())
 {
-    return detail::levenshtein_editops(detail::Range(s1), detail::Range(s2), score_hint);
+    return detail::levenshtein_editops(detail::make_range(s1), detail::make_range(s2), score_hint);
 }
 
 #ifdef RAPIDFUZZ_SIMD
@@ -8195,26 +8401,26 @@ private:
                                      std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiLevenshtein<MaxLen>, size_t>;
 
-    constexpr static size_t get_vec_size()
+    RAPIDFUZZ_CONSTEXPR_CXX14 static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
-        static_assert(MaxLen <= 64);
+        static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);
@@ -8278,14 +8484,14 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        auto scores_ = detail::make_range(scores, scores + score_count);
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::levenshtein_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::levenshtein_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::levenshtein_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::levenshtein_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
@@ -8319,7 +8525,7 @@ struct CachedLevenshtein : public detail::CachedDistanceBase<CachedLevenshtein<C
 
     template <typename InputIt1>
     CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
-        : s1(first1, last1), PM(detail::Range(first1, last1)), weights(aWeights)
+        : s1(first1, last1), PM(detail::make_range(first1, last1)), weights(aWeights)
     {}
 
 private:
@@ -8345,7 +8551,7 @@ private:
                 // max can make use of the common divisor of the three weights
                 size_t new_score_cutoff = detail::ceil_div(score_cutoff, weights.insert_cost);
                 size_t new_score_hint = detail::ceil_div(score_hint, weights.insert_cost);
-                size_t dist = detail::uniform_levenshtein_distance(PM, detail::Range(s1), s2,
+                size_t dist = detail::uniform_levenshtein_distance(PM, detail::make_range(s1), s2,
                                                                    new_score_cutoff, new_score_hint);
                 dist *= weights.insert_cost;
 
@@ -8358,13 +8564,13 @@ private:
             else if (weights.replace_cost >= weights.insert_cost + weights.delete_cost) {
                 // max can make use of the common divisor of the three weights
                 size_t new_max = detail::ceil_div(score_cutoff, weights.insert_cost);
-                size_t dist = detail::indel_distance(PM, detail::Range(s1), s2, new_max);
+                size_t dist = detail::indel_distance(PM, detail::make_range(s1), s2, new_max);
                 dist *= weights.insert_cost;
                 return (dist <= score_cutoff) ? dist : score_cutoff + 1;
             }
         }
 
-        return detail::generalized_levenshtein_distance(detail::Range(s1), s2, weights, score_cutoff);
+        return detail::generalized_levenshtein_distance(detail::make_range(s1), s2, weights, score_cutoff);
     }
 
     std::vector<CharT1> s1;
@@ -8372,6 +8578,7 @@ private:
     LevenshteinWeightTable weights;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {
                                                      1, 1, 1}) -> CachedLevenshtein<char_type<Sentence1>>;
@@ -8379,6 +8586,7 @@ explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights
 template <typename InputIt1>
 CachedLevenshtein(InputIt1 first1, InputIt1 last1,
                   LevenshteinWeightTable aWeights = {1, 1, 1}) -> CachedLevenshtein<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -8386,7 +8594,8 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1,
 
 #include <cstdint>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /**
  * @brief Bitparallel implementation of the OSA distance.
@@ -8476,12 +8685,12 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         native_simd<VecType> PM_j_old(VecType(0));
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>(
-            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+        unroll<size_t, vec_width>(
+            [&](size_t i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -8492,7 +8701,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> PM_j(stored.data());
             auto TR = (andnot(PM_j, D0) << 1) & PM_j_old;
@@ -8519,7 +8728,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {
@@ -8527,7 +8736,9 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                if constexpr (std::numeric_limits<VecType>::max() < std::numeric_limits<size_t>::max()) {
+                RAPIDFUZZ_IF_CONSTEXPR (std::numeric_limits<VecType>::max() <
+                                        std::numeric_limits<size_t>::max())
+                {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
                     size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
@@ -8646,7 +8857,8 @@ class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::ma
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -8760,26 +8972,26 @@ private:
     friend detail::MultiDistanceBase<MultiOSA<MaxLen>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiOSA<MaxLen>, size_t>;
 
-    constexpr static size_t get_vec_size()
+    RAPIDFUZZ_CONSTEXPR_CXX14 static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
-        static_assert(MaxLen <= 64);
+        static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);
@@ -8840,14 +9052,14 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        auto scores_ = detail::make_range(scores, scores + score_count);
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
@@ -8878,7 +9090,7 @@ struct CachedOSA
     {}
 
     template <typename InputIt1>
-    CachedOSA(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedOSA(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -8892,8 +9104,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         size_t res;
         if (s1.empty())
@@ -8901,9 +9112,9 @@ private:
         else if (s2.empty())
             res = s1.size();
         else if (s1.size() < 64)
-            res = detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003(PM, detail::make_range(s1), s2, score_cutoff);
         else
-            res = detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003_block(PM, detail::make_range(s1), s2, score_cutoff);
 
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }
@@ -8912,18 +9123,21 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 CachedOSA(const Sentence1& s1_) -> CachedOSA<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
+#endif
 /**@}*/
 
 } // namespace rapidfuzz
 
 #include <limits>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<int64_t>::max()> {
     friend SimilarityBase<Postfix, size_t, 0, std::numeric_limits<int64_t>::max()>;
@@ -8936,15 +9150,15 @@ class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<in
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff, size_t)
     {
         size_t dist = remove_common_suffix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -9024,8 +9238,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff, size_t score_hint) const
     {
         return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
@@ -9033,19 +9246,21 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPostfix(const Sentence1& s1_) -> CachedPostfix<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<InputIt1>>;
-
+#endif
 /**@}*/
 
 } // namespace rapidfuzz
 
 #include <limits>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()> {
     friend SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()>;
@@ -9058,15 +9273,15 @@ class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int6
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff, size_t)
     {
         size_t dist = remove_common_prefix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -9145,8 +9360,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff, size_t) const
     {
         return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }
@@ -9154,11 +9368,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPrefix(const Sentence1& s1_) -> CachedPrefix<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPrefix(InputIt1 first1, InputIt1 last1) -> CachedPrefix<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 
@@ -9318,7 +9534,8 @@ std::vector<CharT> opcodes_apply_vec(const Opcodes& ops, const Sentence1& s1, co
 #include <type_traits>
 #include <unordered_set>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
@@ -9380,9 +9597,11 @@ struct CharSet {
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
-namespace rapidfuzz::fuzz {
+namespace rapidfuzz {
+namespace fuzz {
 
 /**
  * @defgroup Fuzz Fuzz
@@ -9449,7 +9668,7 @@ public:
     void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                     double score_cutoff = 0.0) const
     {
-        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+        similarity(scores, score_count, detail::make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
@@ -9490,11 +9709,13 @@ struct CachedRatio {
     CachedIndel<CharT1> cached_indel;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iter_value_t<InputIt1>>;
+#endif
 
 template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
@@ -9563,11 +9784,13 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -9672,11 +9895,13 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -9730,6 +9955,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialTokenSortRatio(const Sentence1& s1)
     -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
@@ -9737,6 +9963,7 @@ explicit CachedPartialTokenSortRatio(const Sentence1& s1)
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1,
                             InputIt1 last1) -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -9798,11 +10025,13 @@ private:
     detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -9855,12 +10084,14 @@ private:
     detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSetRatio(InputIt1 first1,
                            InputIt1 last1) -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
@@ -9917,11 +10148,13 @@ private:
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Helper method that returns the maximum of
@@ -9978,11 +10211,13 @@ private:
     std::vector<CharT1> s1_sorted;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -10038,11 +10273,13 @@ private:
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Calculates a quick ratio between two strings using fuzz.ratio
@@ -10101,13 +10338,13 @@ public:
     void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                     double score_cutoff = 0.0) const
     {
-        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+        similarity(scores, score_count, detail::make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
     {
-        rapidfuzz::detail::Range s2_(s2);
+        auto s2_ = detail::make_range(s2);
         if (s2_.empty()) {
             for (size_t i = 0; i < str_lens.size(); ++i)
                 scores[i] = 0;
@@ -10150,15 +10387,18 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 
-} // namespace rapidfuzz::fuzz
+} // namespace fuzz
+} // namespace rapidfuzz
 
 #include <limits>
 
@@ -10168,7 +10408,8 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::fuzz {
+namespace rapidfuzz {
+namespace fuzz {
 
 /**********************************************
  *                  ratio
@@ -10177,7 +10418,7 @@ namespace rapidfuzz::fuzz {
 template <typename InputIt1, typename InputIt2>
 double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
-    return ratio(detail::Range(first1, last1), detail::Range(first2, last2), score_cutoff);
+    return ratio(detail::make_range(first1, last1), detail::make_range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -10191,7 +10432,7 @@ template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
                                        double score_hint) const
 {
-    return similarity(detail::Range(first2, last2), score_cutoff, score_hint);
+    return similarity(detail::make_range(first2, last2), score_cutoff, score_hint);
 }
 
 template <typename CharT1>
@@ -10207,7 +10448,7 @@ double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
 
 namespace fuzz_detail {
 
-static constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
+static RAPIDFUZZ_CONSTEXPR_CXX14 double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
 {
     double score =
         (lensum > 0) ? (100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0;
@@ -10247,8 +10488,10 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
             for (const auto& window : windows) {
                 auto subseq1_first = s2.begin() + static_cast<ptrdiff_t>(window.first);
                 auto subseq2_first = s2.begin() + static_cast<ptrdiff_t>(window.second);
-                detail::Range subseq1(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
-                detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
+                auto subseq1 =
+                    detail::make_range(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
+                auto subseq2 =
+                    detail::make_range(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
 
                 if (scores[window.first] == std::numeric_limits<size_t>::max()) {
                     scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
@@ -10302,7 +10545,7 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
     }
 
     for (size_t i = 1; i < len1; ++i) {
-        rapidfuzz::detail::Range subseq(s2.begin(), s2.begin() + static_cast<ptrdiff_t>(i));
+        auto subseq = rapidfuzz::detail::make_range(s2.begin(), s2.begin() + static_cast<ptrdiff_t>(i));
         if (!s1_char_set.find(subseq.back())) continue;
 
         double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
@@ -10315,7 +10558,7 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
     }
 
     for (size_t i = len2 - len1; i < len2; ++i) {
-        rapidfuzz::detail::Range subseq(s2.begin() + static_cast<ptrdiff_t>(i), s2.end());
+        auto subseq = rapidfuzz::detail::make_range(s2.begin() + static_cast<ptrdiff_t>(i), s2.end());
         if (!s1_char_set.find(subseq.front())) continue;
 
         double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
@@ -10364,8 +10607,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    auto s1 = detail::Range(first1, last1);
-    auto s2 = detail::Range(first2, last2);
+    auto s1 = detail::make_range(first1, last1);
+    auto s2 = detail::make_range(first2, last2);
 
     auto alignment = fuzz_detail::partial_ratio_impl(s1, s2, score_cutoff);
     if (alignment.score != 100 && s1.size() == s2.size()) {
@@ -10412,7 +10655,7 @@ CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                              [[maybe_unused]] double score_hint) const
+                                              double) const
 {
     size_t len1 = s1.size();
     size_t len2 = static_cast<size_t>(std::distance(first2, last2));
@@ -10424,8 +10667,8 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    auto s1_ = detail::Range(s1);
-    auto s2 = detail::Range(first2, last2);
+    auto s1_ = detail::make_range(s1);
+    auto s2 = detail::make_range(first2, last2);
 
     double score = fuzz_detail::partial_ratio_impl(s1_, s2, cached_ratio, s1_char_set, score_cutoff).score;
     if (score != 100 && s1_.size() == s2.size()) {
@@ -10439,8 +10682,7 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                              [[maybe_unused]] double score_hint) const
+double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10467,7 +10709,7 @@ double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_c
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                [[maybe_unused]] double score_hint) const
+                                                double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10476,8 +10718,7 @@ double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                [[maybe_unused]] double score_hint) const
+double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10506,7 +10747,7 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                       [[maybe_unused]] double score_hint) const
+                                                       double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10515,8 +10756,7 @@ double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                       [[maybe_unused]] double score_hint) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10595,7 +10835,7 @@ double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cu
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                               [[maybe_unused]] double score_hint) const
+                                               double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10604,8 +10844,7 @@ double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                               [[maybe_unused]] double score_hint) const
+double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10654,7 +10893,7 @@ double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double 
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                      [[maybe_unused]] double score_hint) const
+                                                      double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10663,8 +10902,7 @@ double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                      [[maybe_unused]] double score_hint) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10806,8 +11044,9 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        double norm_sim = detail::indel_normalized_similarity(blockmap_s1_sorted, detail::Range(s1_sorted),
-                                                              detail::Range(s2_sorted), score_cutoff / 100);
+        double norm_sim =
+            detail::indel_normalized_similarity(blockmap_s1_sorted, detail::make_range(s1_sorted),
+                                                detail::make_range(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -10842,15 +11081,14 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                            [[maybe_unused]] double score_hint) const
+                                            double) const
 {
     return fuzz_detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                            [[maybe_unused]] double score_hint) const
+double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10928,15 +11166,14 @@ double partial_token_ratio(const std::vector<CharT1>& s1_sorted,
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                   [[maybe_unused]] double score_hint) const
+                                                   double) const
 {
     return fuzz_detail::partial_token_ratio(s1_sorted, tokens_s1, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                   [[maybe_unused]] double score_hint) const
+double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10994,13 +11231,12 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
       cached_partial_ratio(first1, last1),
       tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join()),
-      blockmap_s1_sorted(detail::Range(s1_sorted))
+      blockmap_s1_sorted(detail::make_range(s1_sorted))
 {}
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff, double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -11039,8 +11275,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -11071,8 +11306,7 @@ double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff, double) const
 {
     auto len2 = std::distance(first2, last2);
 
@@ -11085,12 +11319,12 @@ double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
-} // namespace rapidfuzz::fuzz
+} // namespace fuzz
+} // namespace rapidfuzz
 
 #endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED

@@ -7,7 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /* hashmap for integers which can only grow, but can't remove elements */
 template <typename T_Key, typename T_Entry>
@@ -200,4 +201,5 @@ private:
     std::array<value_type, 256> m_extendedAscii;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

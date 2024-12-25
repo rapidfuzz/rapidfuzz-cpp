@@ -1,4 +1,4 @@
-#find_package(Catch2 2 QUIET)
+find_package(Catch2 2 QUIET)
 if (Catch2_FOUND)
     message("Using system supplied version of Catch2")
 else()

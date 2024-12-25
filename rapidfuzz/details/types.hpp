@@ -4,6 +4,7 @@
 #pragma once
 
 #include <algorithm>
+#include <rapidfuzz/details/config.hpp>
 #include <stddef.h>
 #include <stdexcept>
 #include <vector>
@@ -336,13 +337,10 @@ private:
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
-        return false;
-    }
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) return false;
 
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
+    if (lhs.size() != rhs.size()) return false;
+
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 

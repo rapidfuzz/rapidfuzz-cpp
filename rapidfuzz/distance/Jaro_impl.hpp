@@ -9,7 +9,8 @@
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct FlaggedCharsWord {
     uint64_t P_flag;
@@ -92,7 +93,11 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
 static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
-                                                            [[maybe_unused]] const Range<InputIt1>& P,
+#ifdef NDEBUG
+                                                            const Range<InputIt1>&,
+#else
+                                                            const Range<InputIt1>& P,
+#endif
                                                             const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() <= 64);
@@ -160,7 +165,7 @@ static inline void flag_similar_characters_step(const BlockPatternMatchVector& P
     if (T_j >= 0 && T_j < 256) {
         for (; word + 3 < last_word - 1; word += 4) {
             uint64_t PM_j[4];
-            unroll<int, 4>([&](auto i) {
+            unroll<size_t, 4>([&](size_t i) {
                 PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
             });
 
@@ -459,6 +464,11 @@ struct JaroSimilaritySimdBounds {
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -466,7 +476,9 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     using namespace simd_sse2;
 #    endif
 
-    [[maybe_unused]] static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    ifndef RAPIDFUZZ_AVX2
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    endif
     static constexpr size_t vec_width = native_simd<VecType>::size;
     assert(s2.size() <= sizeof(VecType) * 8);
 
@@ -526,6 +538,11 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -615,7 +632,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -629,7 +646,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -732,7 +749,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -745,7 +762,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -836,10 +853,11 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double score_cutoff,
-                              [[maybe_unused]] double score_hint)
+                              double)
     {
         return jaro_similarity(s1, s2, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

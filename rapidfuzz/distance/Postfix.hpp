@@ -85,8 +85,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff, size_t score_hint) const
     {
         return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
@@ -94,12 +93,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPostfix(const Sentence1& s1_) -> CachedPostfix<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<InputIt1>>;
-
+#endif
 /**@}*/
 
 } // namespace rapidfuzz

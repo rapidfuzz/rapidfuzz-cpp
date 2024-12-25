@@ -133,8 +133,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         return rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -142,11 +141,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace experimental
 } // namespace rapidfuzz

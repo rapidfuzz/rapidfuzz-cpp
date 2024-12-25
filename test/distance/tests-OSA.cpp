@@ -10,10 +10,9 @@ size_t osa_distance(const Sentence1& s1, const Sentence2& s2, size_t max = std::
 {
     size_t res1 = rapidfuzz::osa_distance(s1, s2, max);
     size_t res2 = rapidfuzz::osa_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    size_t res3 = rapidfuzz::osa_distance(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
-    rapidfuzz::CachedOSA scorer(s1);
+    size_t res3 = rapidfuzz::osa_distance(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                          make_bidir(s2.begin()), make_bidir(s2.end()), max);
+    rapidfuzz::CachedOSA<rapidfuzz::char_type<Sentence1>> scorer(s1);
     size_t res4 = scorer.distance(s2, max);
     size_t res5 = scorer.distance(s2.begin(), s2.end(), max);
 #ifdef RAPIDFUZZ_SIMD

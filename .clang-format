@@ -25,4 +25,6 @@ BraceWrapping:
 AllowAllConstructorInitializersOnNextLine: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 AllowShortCaseLabelsOnASingleLine: true
+IfMacros:
+  - RAPIDFUZZ_IF_CONSTEXPR
 IndentPPDirectives: AfterHash

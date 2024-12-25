@@ -70,12 +70,13 @@ private:
     friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
     friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>, double>;
 
-    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
+    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64, "incorrect MaxLen used");
 
-    using VecType = typename std::conditional_t<
+    using VecType = typename std::conditional<
         MaxLen == 8, uint8_t,
-        typename std::conditional_t<MaxLen == 16, uint16_t,
-                                    typename std::conditional_t<MaxLen == 32, uint32_t, uint64_t>>>;
+        typename std::conditional<MaxLen == 16, uint16_t,
+                                  typename std::conditional<MaxLen == 32, uint32_t, uint64_t>::type>::type>::
+        type;
 
     constexpr static size_t get_vec_size()
     {
@@ -95,7 +96,7 @@ private:
 #    endif
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);
@@ -166,12 +167,12 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
+        auto scores_ = detail::make_range(scores, scores + score_count);
         detail::jaro_similarity_simd<VecType>(scores_, PM, str_lens, str_lens_size, s2, score_cutoff);
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -198,7 +199,7 @@ struct CachedJaro : public detail::CachedSimilarityBase<CachedJaro<CharT1>, doub
     {}
 
     template <typename InputIt1>
-    CachedJaro(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedJaro(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -212,20 +213,21 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
-        return detail::jaro_similarity(PM, detail::Range(s1), s2, score_cutoff);
+        return detail::jaro_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }
 
     std::vector<CharT1> s1;
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaro(const Sentence1& s1_) -> CachedJaro<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz

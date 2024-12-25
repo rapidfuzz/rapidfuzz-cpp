@@ -3,7 +3,8 @@
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt>
 class SplittedSentenceView {
@@ -11,7 +12,7 @@ public:
     using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible_v<RangeVec<InputIt>>)
+        std::is_nothrow_move_constructible<RangeVec<InputIt>>::value)
         : m_sentence(std::move(sentence))
     {}
 
@@ -83,4 +84,5 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
     return joined;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

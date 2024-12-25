@@ -16,7 +16,7 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
     double res3 = rapidfuzz::jaro_winkler_normalized_similarity(s1, s2, prefix_weight, score_cutoff);
     double res4 = rapidfuzz::jaro_winkler_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(),
                                                                 prefix_weight, score_cutoff);
-    rapidfuzz::CachedJaroWinkler scorer(s1, prefix_weight);
+    rapidfuzz::CachedJaroWinkler<rapidfuzz::char_type<Sentence1>> scorer(s1, prefix_weight);
     double res5 = scorer.similarity(s2, score_cutoff);
     double res6 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
     double res7 = scorer.normalized_similarity(s2, score_cutoff);
@@ -72,7 +72,7 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
     double res3 = rapidfuzz::jaro_winkler_normalized_distance(s1, s2, prefix_weight, score_cutoff);
     double res4 = rapidfuzz::jaro_winkler_normalized_distance(s1.begin(), s1.end(), s2.begin(), s2.end(),
                                                               prefix_weight, score_cutoff);
-    rapidfuzz::CachedJaroWinkler scorer(s1, prefix_weight);
+    rapidfuzz::CachedJaroWinkler<rapidfuzz::char_type<Sentence1>> scorer(s1, prefix_weight);
     double res5 = scorer.distance(s2, score_cutoff);
     double res6 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
     double res7 = scorer.normalized_distance(s2, score_cutoff);

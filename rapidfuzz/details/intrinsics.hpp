@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstddef>
 #include <limits>
+#include <rapidfuzz/details/config.hpp>
 #include <stdint.h>
 #include <type_traits>
 
@@ -14,7 +15,8 @@
 #    include <intrin.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T>
 T bit_mask_lsb(size_t n)
@@ -50,7 +52,7 @@ constexpr uint64_t shl64(uint64_t a, U shift)
     return (shift < 64) ? a << shift : 0;
 }
 
-constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+RAPIDFUZZ_CONSTEXPR_CXX14 uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */
     a += carryin;
@@ -61,7 +63,7 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 }
 
 template <typename T, typename U>
-constexpr T ceil_div(T a, U divisor)
+RAPIDFUZZ_CONSTEXPR_CXX14 T ceil_div(T a, U divisor)
 {
     T _div = static_cast<T>(divisor);
     return a / _div + static_cast<T>(a % _div != 0);
@@ -97,7 +99,7 @@ static inline size_t popcount(uint8_t x)
 }
 
 template <typename T>
-constexpr T rotl(T x, unsigned int n)
+RAPIDFUZZ_CONSTEXPR_CXX14 T rotl(T x, unsigned int n)
 {
     unsigned int num_bits = std::numeric_limits<T>::digits;
     assert(n < num_bits);
@@ -197,16 +199,31 @@ static inline unsigned int countr_zero(uint8_t x)
     return countr_zero(static_cast<uint32_t>(x));
 }
 
-template <class T, T... inds, class F>
-constexpr void unroll_impl(std::integer_sequence<T, inds...>, F&& f)
+template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+struct UnrollImpl;
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, false> {
+    template <typename F>
+    static void call(F&& f)
+    {
+        f(Pos);
+        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
+    }
+};
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, true> {
+    template <typename F>
+    static void call(F&&)
+    {}
+};
+
+template <typename T, T N, class F>
+RAPIDFUZZ_CONSTEXPR_CXX14 void unroll(F&& f)
 {
-    (f(std::integral_constant<T, inds>{}), ...);
+    UnrollImpl<T, N>::call(f);
 }
 
-template <class T, T count, class F>
-constexpr void unroll(F&& f)
-{
-    unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
-}
-
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

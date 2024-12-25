@@ -5,7 +5,8 @@
 #include <array>
 #include <iterator>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
@@ -33,6 +34,15 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
     return {difference_ab, difference_ba, intersection};
 }
 
+template <class InputIt1, class InputIt2>
+std::pair<InputIt1, InputIt2> rf_mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+    while (first1 != last1 && first2 != last2 && *first1 == *first2)
+        ++first1, ++first2;
+
+    return std::make_pair(first1, first2);
+}
+
 /**
  * Removes common prefix of two string views
  */
@@ -41,7 +51,7 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto first1 = std::begin(s1);
     size_t prefix = static_cast<size_t>(
-        std::distance(first1, std::mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
+        std::distance(first1, rf_mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
     s1.remove_prefix(prefix);
     s2.remove_prefix(prefix);
     return prefix;
@@ -53,9 +63,9 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 template <typename InputIt1, typename InputIt2>
 size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
-    auto rfirst1 = std::rbegin(s1);
+    auto rfirst1 = s1.rbegin();
     size_t suffix = static_cast<size_t>(
-        std::distance(rfirst1, std::mismatch(rfirst1, std::rend(s1), std::rbegin(s2), std::rend(s2)).first));
+        std::distance(rfirst1, rf_mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
     s1.remove_suffix(suffix);
     s2.remove_suffix(suffix);
     return suffix;
@@ -169,4 +179,5 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
     return SplittedSentenceView<InputIt>(splitted);
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

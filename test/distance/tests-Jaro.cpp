@@ -16,10 +16,10 @@ double jaro_similarity(const Sentence1& s1, const Sentence2& s2, double score_cu
         rapidfuzz::jaro_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
 #if 0 // todo
     double res5 = rapidfuzz::jaro_similarity(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
+        make_bidir(s1.begin()), make_bidir(s1.end()),
+        make_bidir(s2.begin()), make_bidir(s2.end()), score_cutoff);
 #endif
-    rapidfuzz::CachedJaro scorer(s1);
+    rapidfuzz::CachedJaro<rapidfuzz::char_type<Sentence1>> scorer(s1);
     double res6 = scorer.similarity(s2, score_cutoff);
     double res7 = scorer.similarity(s2.begin(), s2.end(), score_cutoff);
     double res8 = scorer.normalized_similarity(s2, score_cutoff);
@@ -86,10 +86,10 @@ double jaro_distance(const Sentence1& s1, const Sentence2& s2, double score_cuto
         rapidfuzz::jaro_normalized_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
 #if 0 // todo
     double res5 = rapidfuzz::jaro_distance(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
+        make_bidir(s1.begin()), make_bidir(s1.end()),
+        make_bidir(s2.begin()), make_bidir(s2.end()), score_cutoff);
 #endif
-    rapidfuzz::CachedJaro scorer(s1);
+    rapidfuzz::CachedJaro<rapidfuzz::char_type<Sentence1>> scorer(s1);
     double res6 = scorer.distance(s2, score_cutoff);
     double res7 = scorer.distance(s2.begin(), s2.end(), score_cutoff);
     double res8 = scorer.normalized_distance(s2, score_cutoff);
