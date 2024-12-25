@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 01:37:33.201987
+//  Generated: 2024-12-25 01:42:39.581315
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1563,16 +1563,30 @@ static inline unsigned int countr_zero(uint8_t x)
     return countr_zero(static_cast<uint32_t>(x));
 }
 
-template <class T, T... inds, class F>
-constexpr void unroll_impl(std::integer_sequence<T, inds...>, F&& f)
-{
-    (f(std::integral_constant<T, inds>{}), ...);
-}
+template <typename T, T N, T Pos = 0, bool IsEmpty = (N == 0)>
+struct UnrollImpl;
 
-template <class T, T count, class F>
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, false> {
+    template <typename F>
+    static void call(F&& f)
+    {
+        f(Pos);
+        UnrollImpl<T, N - 1, Pos + 1>::call(std::forward<F>(f));
+    }
+};
+
+template <typename T, T N, T Pos>
+struct UnrollImpl<T, N, Pos, true> {
+    template <typename F>
+    static void call(F&&)
+    {}
+};
+
+template <typename T, int N, class F>
 constexpr void unroll(F&& f)
 {
-    unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
+    UnrollImpl<T, N>::call(f);
 }
 
 } // namespace detail
