@@ -220,7 +220,7 @@ struct UnrollImpl<T, N, Pos, true> {
 };
 
 template <typename T, T N, class F>
-constexpr void unroll(F&& f)
+RAPIDFUZZ_CONSTEXPR_CXX14 void unroll(F&& f)
 {
     UnrollImpl<T, N>::call(f);
 }

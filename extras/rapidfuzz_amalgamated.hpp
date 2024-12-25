@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 11:20:05.194568
+//  Generated: 2024-12-25 11:29:11.666527
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1610,7 +1610,7 @@ struct UnrollImpl<T, N, Pos, true> {
 };
 
 template <typename T, T N, class F>
-constexpr void unroll(F&& f)
+RAPIDFUZZ_CONSTEXPR_CXX14 void unroll(F&& f)
 {
     UnrollImpl<T, N>::call(f);
 }
