@@ -49,7 +49,7 @@ public:
         return *this;
     }
 
-    const auto& operator*() const
+    const value_type& operator*() const
     {
         return *iter;
     }
@@ -58,7 +58,7 @@ private:
     T iter;
 };
 
-template <typename T, typename = std::enable_if_t<std::is_same<T, char>::value>>
+template <typename T, typename = rapidfuzz::rf_enable_if_t<std::is_same<T, char>::value>>
 std::basic_string<T> str_multiply(std::basic_string<T> a, size_t b)
 {
     std::basic_string<T> output;

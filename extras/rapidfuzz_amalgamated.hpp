@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 02:01:10.995282
+//  Generated: 2024-12-25 02:20:23.323268
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -231,8 +231,8 @@ struct BitMatrixView {
 
     using value_type = T;
     using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+    using pointer = typename std::conditional<IsConst, const value_type*, value_type*>::type;
+    using reference = typename std::conditional<IsConst, const value_type&, value_type&>::type;
 
     BitMatrixView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
     {}
@@ -424,218 +424,6 @@ private:
 #include <stdint.h>
 #include <sys/types.h>
 #include <vector>
-
-namespace rapidfuzz {
-namespace detail {
-
-static inline void assume(bool b)
-{
-#if defined(__clang__)
-    __builtin_assume(b);
-#elif defined(__GNUC__) || defined(__GNUG__)
-    if (!b) __builtin_unreachable();
-#elif defined(_MSC_VER)
-    __assume(b);
-#endif
-}
-
-template <typename CharT>
-CharT* to_begin(CharT* s)
-{
-    return s;
-}
-
-template <typename T>
-auto to_begin(T& x)
-{
-    using std::begin;
-    return begin(x);
-}
-
-template <typename CharT>
-CharT* to_end(CharT* s)
-{
-    assume(s != nullptr);
-    while (*s != 0)
-        ++s;
-
-    return s;
-}
-
-template <typename T>
-auto to_end(T& x)
-{
-    using std::end;
-    return end(x);
-}
-
-template <typename Iter>
-class Range {
-    Iter _first;
-    Iter _last;
-    // todo we might not want to cache the size for iterators
-    // that can can retrieve the size in O(1) time
-    size_t _size;
-
-public:
-    using value_type = typename std::iterator_traits<Iter>::value_type;
-    using iterator = Iter;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-
-    constexpr Range(Iter first, Iter last) : _first(first), _last(last)
-    {
-        assert(std::distance(_first, _last) >= 0);
-        _size = static_cast<size_t>(std::distance(_first, _last));
-    }
-
-    constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
-    {}
-
-    template <typename T>
-    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
-    {
-        assert(std::distance(_first, _last) >= 0);
-        _size = static_cast<size_t>(std::distance(_first, _last));
-    }
-
-    constexpr iterator begin() const noexcept
-    {
-        return _first;
-    }
-    constexpr iterator end() const noexcept
-    {
-        return _last;
-    }
-
-    constexpr reverse_iterator rbegin() const noexcept
-    {
-        return reverse_iterator(end());
-    }
-    constexpr reverse_iterator rend() const noexcept
-    {
-        return reverse_iterator(begin());
-    }
-
-    constexpr size_t size() const
-    {
-        return _size;
-    }
-
-    constexpr bool empty() const
-    {
-        return size() == 0;
-    }
-    explicit constexpr operator bool() const
-    {
-        return !empty();
-    }
-
-    template <typename... Dummy, typename IterCopy = Iter,
-              typename = std::enable_if_t<
-                  std::is_base_of<std::random_access_iterator_tag,
-                                  typename std::iterator_traits<IterCopy>::iterator_category>::value>>
-    constexpr decltype(auto) operator[](size_t n) const
-    {
-        return _first[static_cast<ptrdiff_t>(n)];
-    }
-
-    constexpr void remove_prefix(size_t n)
-    {
-        std::advance(_first, static_cast<ptrdiff_t>(n));
-        _size -= n;
-    }
-    constexpr void remove_suffix(size_t n)
-    {
-        std::advance(_last, -static_cast<ptrdiff_t>(n));
-        _size -= n;
-    }
-
-    constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
-    {
-        if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
-
-        Range res = *this;
-        res.remove_prefix(pos);
-        if (count < res.size()) res.remove_suffix(res.size() - count);
-
-        return res;
-    }
-
-    constexpr decltype(auto) front() const
-    {
-        return *(_first);
-    }
-
-    constexpr decltype(auto) back() const
-    {
-        return *(_last - 1);
-    }
-
-    constexpr Range<reverse_iterator> reversed() const
-    {
-        return {rbegin(), rend(), _size};
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const Range& seq)
-    {
-        os << "[";
-        for (auto x : seq)
-            os << static_cast<uint64_t>(x) << ", ";
-        os << "]";
-        return os;
-    }
-};
-
-template <typename T>
-Range(T& x) -> Range<decltype(to_begin(x))>;
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    if (a.size() != b.size()) return false;
-
-    return std::equal(a.begin(), a.end(), b.begin());
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator!=(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return !(a == b);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator<(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return (std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()));
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator>(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return b < a;
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator<=(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return !(b < a);
-}
-
-template <typename InputIt1, typename InputIt2>
-inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
-{
-    return !(a < b);
-}
-
-template <typename InputIt>
-using RangeVec = std::vector<Range<InputIt>>;
-
-} // namespace detail
-} // namespace rapidfuzz
-
-#include <cstring>
-
-#include <algorithm>
 
 #include <algorithm>
 
@@ -1281,7 +1069,222 @@ struct is_explicitly_convertible {
     static bool const value = test<From, To>(0);
 };
 
+template <bool B, class T = void>
+using rf_enable_if_t = typename std::enable_if<B, T>::type;
+
 } // namespace rapidfuzz
+
+namespace rapidfuzz {
+namespace detail {
+
+static inline void assume(bool b)
+{
+#if defined(__clang__)
+    __builtin_assume(b);
+#elif defined(__GNUC__) || defined(__GNUG__)
+    if (!b) __builtin_unreachable();
+#elif defined(_MSC_VER)
+    __assume(b);
+#endif
+}
+
+template <typename CharT>
+CharT* to_begin(CharT* s)
+{
+    return s;
+}
+
+template <typename T>
+auto to_begin(T& x)
+{
+    using std::begin;
+    return begin(x);
+}
+
+template <typename CharT>
+CharT* to_end(CharT* s)
+{
+    assume(s != nullptr);
+    while (*s != 0)
+        ++s;
+
+    return s;
+}
+
+template <typename T>
+auto to_end(T& x)
+{
+    using std::end;
+    return end(x);
+}
+
+template <typename Iter>
+class Range {
+    Iter _first;
+    Iter _last;
+    // todo we might not want to cache the size for iterators
+    // that can can retrieve the size in O(1) time
+    size_t _size;
+
+public:
+    using value_type = typename std::iterator_traits<Iter>::value_type;
+    using iterator = Iter;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+
+    constexpr Range(Iter first, Iter last) : _first(first), _last(last)
+    {
+        assert(std::distance(_first, _last) >= 0);
+        _size = static_cast<size_t>(std::distance(_first, _last));
+    }
+
+    constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
+    {}
+
+    template <typename T>
+    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
+    {
+        assert(std::distance(_first, _last) >= 0);
+        _size = static_cast<size_t>(std::distance(_first, _last));
+    }
+
+    constexpr iterator begin() const noexcept
+    {
+        return _first;
+    }
+    constexpr iterator end() const noexcept
+    {
+        return _last;
+    }
+
+    constexpr reverse_iterator rbegin() const noexcept
+    {
+        return reverse_iterator(end());
+    }
+    constexpr reverse_iterator rend() const noexcept
+    {
+        return reverse_iterator(begin());
+    }
+
+    constexpr size_t size() const
+    {
+        return _size;
+    }
+
+    constexpr bool empty() const
+    {
+        return size() == 0;
+    }
+    explicit constexpr operator bool() const
+    {
+        return !empty();
+    }
+
+    template <typename... Dummy, typename IterCopy = Iter,
+              typename = rapidfuzz::rf_enable_if_t<
+                  std::is_base_of<std::random_access_iterator_tag,
+                                  typename std::iterator_traits<IterCopy>::iterator_category>::value>>
+    constexpr decltype(auto) operator[](size_t n) const
+    {
+        return _first[static_cast<ptrdiff_t>(n)];
+    }
+
+    constexpr void remove_prefix(size_t n)
+    {
+        std::advance(_first, static_cast<ptrdiff_t>(n));
+        _size -= n;
+    }
+    constexpr void remove_suffix(size_t n)
+    {
+        std::advance(_last, -static_cast<ptrdiff_t>(n));
+        _size -= n;
+    }
+
+    constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
+    {
+        if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
+
+        Range res = *this;
+        res.remove_prefix(pos);
+        if (count < res.size()) res.remove_suffix(res.size() - count);
+
+        return res;
+    }
+
+    constexpr decltype(auto) front() const
+    {
+        return *(_first);
+    }
+
+    constexpr decltype(auto) back() const
+    {
+        return *(_last - 1);
+    }
+
+    constexpr Range<reverse_iterator> reversed() const
+    {
+        return {rbegin(), rend(), _size};
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Range& seq)
+    {
+        os << "[";
+        for (auto x : seq)
+            os << static_cast<uint64_t>(x) << ", ";
+        os << "]";
+        return os;
+    }
+};
+
+template <typename T>
+Range(T& x) -> Range<decltype(to_begin(x))>;
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    if (a.size() != b.size()) return false;
+
+    return std::equal(a.begin(), a.end(), b.begin());
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator!=(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return !(a == b);
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator<(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return (std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()));
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator>(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return b < a;
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator<=(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return !(b < a);
+}
+
+template <typename InputIt1, typename InputIt2>
+inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
+{
+    return !(a < b);
+}
+
+template <typename InputIt>
+using RangeVec = std::vector<Range<InputIt>>;
+
+} // namespace detail
+} // namespace rapidfuzz
+
+#include <cstring>
+
+#include <algorithm>
 
 namespace rapidfuzz {
 namespace detail {
@@ -1733,9 +1736,9 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 template <typename InputIt1, typename InputIt2>
 size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
-    auto rfirst1 = std::rbegin(s1);
+    auto rfirst1 = s1.rbegin();
     size_t suffix = static_cast<size_t>(
-        std::distance(rfirst1, std::mismatch(rfirst1, std::rend(s1), std::rbegin(s2), std::rend(s2)).first));
+        std::distance(rfirst1, std::mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
     s1.remove_suffix(suffix);
     s2.remove_suffix(suffix);
     return suffix;
@@ -3118,7 +3121,7 @@ namespace detail {
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff, double score_hint)
     {
@@ -3135,7 +3138,7 @@ struct NormalizedMetricBase {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff, double score_hint)
     {
@@ -3186,7 +3189,7 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
@@ -3202,7 +3205,7 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
@@ -3241,7 +3244,7 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
@@ -3257,7 +3260,7 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
@@ -3288,15 +3291,15 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
-                                                                                              U score_cutoff)
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
-                                                                                               U score_cutoff)
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
@@ -3468,15 +3471,15 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
-                                                                                              U score_cutoff)
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
-                                                                                               U score_cutoff)
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
@@ -3662,15 +3665,15 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
-                                                                                              U score_cutoff)
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
-                                                                                               U score_cutoff)
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U>
+    _apply_distance_score_cutoff(U score, U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
@@ -4556,12 +4559,12 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
     size_t cur_vec = 0;
     for (; cur_vec + interleaveCount * vecs <= block.size(); cur_vec += interleaveCount * vecs) {
         std::array<native_simd<VecType>, interleaveCount> S;
-        unroll<size_t, interleaveCount>([&](auto j) { S[j] = static_cast<VecType>(-1); });
+        unroll<size_t, interleaveCount>([&](size_t j) { S[j] = static_cast<VecType>(-1); });
 
         for (const auto& ch : s2) {
-            unroll<size_t, interleaveCount>([&](auto j) {
+            unroll<size_t, interleaveCount>([&](size_t j) {
                 alignas(32) std::array<uint64_t, vecs> stored;
-                unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
+                unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
 
                 native_simd<VecType> Matches(stored.data());
                 native_simd<VecType> u = S[j] & Matches;
@@ -4569,9 +4572,9 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
             });
         }
 
-        unroll<size_t, interleaveCount>([&](auto j) {
+        unroll<size_t, interleaveCount>([&](size_t j) {
             auto counts = popcount(~S[j]);
-            unroll<size_t, counts.size()>([&](auto i) {
+            unroll<size_t, counts.size()>([&](size_t i) {
                 *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
@@ -4583,7 +4586,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         for (const auto& ch : s2) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> Matches(stored.data());
             native_simd<VecType> u = S & Matches;
@@ -4591,7 +4594,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         }
 
         auto counts = popcount(~S);
-        unroll<size_t, counts.size()>([&](auto i) {
+        unroll<size_t, counts.size()>([&](size_t i) {
             *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });
@@ -5590,7 +5593,7 @@ static inline void flag_similar_characters_step(const BlockPatternMatchVector& P
     if (T_j >= 0 && T_j < 256) {
         for (; word + 3 < last_word - 1; word += 4) {
             uint64_t PM_j[4];
-            unroll<size_t, 4>([&](auto i) {
+            unroll<size_t, 4>([&](size_t i) {
                 PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
             });
 
@@ -6045,7 +6048,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6059,7 +6062,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6162,7 +6165,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6175,7 +6178,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6342,10 +6345,11 @@ private:
 
     static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
 
-    using VecType = typename std::conditional_t<
+    using VecType = typename std::conditional<
         MaxLen == 8, uint8_t,
-        typename std::conditional_t<MaxLen == 16, uint16_t,
-                                    typename std::conditional_t<MaxLen == 32, uint32_t, uint64_t>>>;
+        typename std::conditional<MaxLen == 16, uint16_t,
+                                  typename std::conditional<MaxLen == 32, uint32_t, uint64_t>::type>::type>::
+        type;
 
     constexpr static size_t get_vec_size()
     {
@@ -6593,7 +6597,7 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -6609,7 +6613,7 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -6625,7 +6629,7 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -6641,7 +6645,7 @@ double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+          typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -7136,11 +7140,11 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
         unroll<size_t, vec_width>(
-            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+            [&](size_t i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<size_t, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -7151,7 +7155,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> X(stored.data());
             auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -7175,7 +7179,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<size_t, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {
@@ -8633,11 +8637,11 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
         unroll<size_t, vec_width>(
-            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+            [&](size_t i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<size_t, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -8648,7 +8652,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> PM_j(stored.data());
             auto TR = (andnot(PM_j, D0) << 1) & PM_j_old;
@@ -8675,7 +8679,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<size_t, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {

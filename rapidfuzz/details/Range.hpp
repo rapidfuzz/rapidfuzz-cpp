@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <vector>
 
+#include <rapidfuzz/details/type_traits.hpp>
+
 namespace rapidfuzz {
 namespace detail {
 
@@ -119,7 +121,7 @@ public:
     }
 
     template <typename... Dummy, typename IterCopy = Iter,
-              typename = std::enable_if_t<
+              typename = rapidfuzz::rf_enable_if_t<
                   std::is_base_of<std::random_access_iterator_tag,
                                   typename std::iterator_traits<IterCopy>::iterator_category>::value>>
     constexpr decltype(auto) operator[](size_t n) const

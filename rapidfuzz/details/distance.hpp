@@ -15,7 +15,7 @@ namespace detail {
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff, double score_hint)
     {
@@ -32,7 +32,7 @@ struct NormalizedMetricBase {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff, double score_hint)
     {
@@ -83,7 +83,7 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
@@ -99,7 +99,7 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
@@ -138,7 +138,7 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
@@ -154,7 +154,7 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
+              typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
@@ -185,14 +185,14 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
                                                                                               U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
                                                                                                U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
@@ -365,14 +365,14 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
                                                                                               U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
                                                                                                U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
@@ -559,14 +559,14 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+    static rapidfuzz::rf_enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
                                                                                               U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+    static rapidfuzz::rf_enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
                                                                                                U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;

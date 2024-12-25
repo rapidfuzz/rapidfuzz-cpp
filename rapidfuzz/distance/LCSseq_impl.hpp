@@ -158,12 +158,12 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
     size_t cur_vec = 0;
     for (; cur_vec + interleaveCount * vecs <= block.size(); cur_vec += interleaveCount * vecs) {
         std::array<native_simd<VecType>, interleaveCount> S;
-        unroll<size_t, interleaveCount>([&](auto j) { S[j] = static_cast<VecType>(-1); });
+        unroll<size_t, interleaveCount>([&](size_t j) { S[j] = static_cast<VecType>(-1); });
 
         for (const auto& ch : s2) {
-            unroll<size_t, interleaveCount>([&](auto j) {
+            unroll<size_t, interleaveCount>([&](size_t j) {
                 alignas(32) std::array<uint64_t, vecs> stored;
-                unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
+                unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
 
                 native_simd<VecType> Matches(stored.data());
                 native_simd<VecType> u = S[j] & Matches;
@@ -171,9 +171,9 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
             });
         }
 
-        unroll<size_t, interleaveCount>([&](auto j) {
+        unroll<size_t, interleaveCount>([&](size_t j) {
             auto counts = popcount(~S[j]);
-            unroll<size_t, counts.size()>([&](auto i) {
+            unroll<size_t, counts.size()>([&](size_t i) {
                 *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
@@ -185,7 +185,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         for (const auto& ch : s2) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> Matches(stored.data());
             native_simd<VecType> u = S & Matches;
@@ -193,7 +193,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         }
 
         auto counts = popcount(~S);
-        unroll<size_t, counts.size()>([&](auto i) {
+        unroll<size_t, counts.size()>([&](size_t i) {
             *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });

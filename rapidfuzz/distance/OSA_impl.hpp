@@ -102,11 +102,11 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
         unroll<size_t, vec_width>(
-            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+            [&](size_t i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<size_t, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -117,7 +117,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> PM_j(stored.data());
             auto TR = (andnot(PM_j, D0) << 1) & PM_j_old;
@@ -144,7 +144,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<size_t, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {

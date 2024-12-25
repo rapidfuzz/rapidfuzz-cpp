@@ -16,8 +16,8 @@ struct BitMatrixView {
 
     using value_type = T;
     using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+    using pointer = typename std::conditional<IsConst, const value_type*, value_type*>::type;
+    using reference = typename std::conditional<IsConst, const value_type&, value_type&>::type;
 
     BitMatrixView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
     {}

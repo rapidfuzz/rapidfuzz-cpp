@@ -72,10 +72,10 @@ private:
 
     static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
 
-    using VecType = typename std::conditional_t<
+    using VecType = typename std::conditional<
         MaxLen == 8, uint8_t,
-        typename std::conditional_t<MaxLen == 16, uint16_t,
-                                    typename std::conditional_t<MaxLen == 32, uint32_t, uint64_t>>>;
+        typename std::conditional<MaxLen == 16, uint16_t,
+                                    typename std::conditional<MaxLen == 32, uint32_t, uint64_t>::type>::type>::type;
 
     constexpr static size_t get_vec_size()
     {
