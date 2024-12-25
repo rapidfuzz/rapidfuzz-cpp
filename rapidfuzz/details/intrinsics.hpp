@@ -218,7 +218,7 @@ struct UnrollImpl<T, N, Pos, true> {
     {}
 };
 
-template <typename T, int N, class F>
+template <typename T, T N, class F>
 constexpr void unroll(F&& f)
 {
     UnrollImpl<T, N>::call(f);

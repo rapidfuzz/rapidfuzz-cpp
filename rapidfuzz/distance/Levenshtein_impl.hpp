@@ -347,12 +347,12 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         native_simd<VecType> VN(VecType(0));
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>(
+        unroll<size_t, vec_width>(
             [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](auto i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -363,7 +363,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> X(stored.data());
             auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -387,7 +387,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](auto i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {

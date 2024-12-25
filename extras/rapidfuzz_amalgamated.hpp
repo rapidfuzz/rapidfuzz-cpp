@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 01:42:39.581315
+//  Generated: 2024-12-25 02:01:10.995282
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -592,7 +592,9 @@ Range(T& x) -> Range<decltype(to_begin(x))>;
 template <typename InputIt1, typename InputIt2>
 inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
 {
-    return std::equal(a.begin(), a.end(), b.begin(), b.end());
+    if (a.size() != b.size()) return false;
+
+    return std::equal(a.begin(), a.end(), b.begin());
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -978,13 +980,10 @@ private:
 
 inline bool operator==(const Editops& lhs, const Editops& rhs)
 {
-    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) {
-        return false;
-    }
+    if (lhs.get_src_len() != rhs.get_src_len() || lhs.get_dest_len() != rhs.get_dest_len()) return false;
 
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
+    if (lhs.size() != rhs.size()) return false;
+
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
@@ -1583,7 +1582,7 @@ struct UnrollImpl<T, N, Pos, true> {
     {}
 };
 
-template <typename T, int N, class F>
+template <typename T, T N, class F>
 constexpr void unroll(F&& f)
 {
     UnrollImpl<T, N>::call(f);
@@ -4557,12 +4556,12 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
     size_t cur_vec = 0;
     for (; cur_vec + interleaveCount * vecs <= block.size(); cur_vec += interleaveCount * vecs) {
         std::array<native_simd<VecType>, interleaveCount> S;
-        unroll<int, interleaveCount>([&](auto j) { S[j] = static_cast<VecType>(-1); });
+        unroll<size_t, interleaveCount>([&](auto j) { S[j] = static_cast<VecType>(-1); });
 
         for (const auto& ch : s2) {
-            unroll<int, interleaveCount>([&](auto j) {
+            unroll<size_t, interleaveCount>([&](auto j) {
                 alignas(32) std::array<uint64_t, vecs> stored;
-                unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
+                unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
 
                 native_simd<VecType> Matches(stored.data());
                 native_simd<VecType> u = S[j] & Matches;
@@ -4570,9 +4569,9 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
             });
         }
 
-        unroll<int, interleaveCount>([&](auto j) {
+        unroll<size_t, interleaveCount>([&](auto j) {
             auto counts = popcount(~S[j]);
-            unroll<int, counts.size()>([&](auto i) {
+            unroll<size_t, counts.size()>([&](auto i) {
                 *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
@@ -4584,7 +4583,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         for (const auto& ch : s2) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> Matches(stored.data());
             native_simd<VecType> u = S & Matches;
@@ -4592,7 +4591,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         }
 
         auto counts = popcount(~S);
-        unroll<int, counts.size()>([&](auto i) {
+        unroll<size_t, counts.size()>([&](auto i) {
             *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });
@@ -4783,8 +4782,7 @@ size_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> 
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -4816,8 +4814,7 @@ size_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_c
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -5593,7 +5590,7 @@ static inline void flag_similar_characters_step(const BlockPatternMatchVector& P
     if (T_j >= 0 && T_j < 256) {
         for (; word + 3 < last_word - 1; word += 4) {
             uint64_t PM_j[4];
-            unroll<int, 4>([&](auto i) {
+            unroll<size_t, 4>([&](auto i) {
                 PM_j[i] = PM.get(word + i, static_cast<uint8_t>(T_j)) & (~flagged.P_flag[word + i]);
             });
 
@@ -6048,7 +6045,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6062,7 +6059,7 @@ jaro_similarity_simd_long_s2(Range<double*> scores, const detail::BlockPatternMa
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6165,7 +6162,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
         size_t j = 0;
         for (; j < std::min(bounds.maxBound, s2_cur.size()); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -6178,7 +6175,7 @@ jaro_similarity_simd_short_s2(Range<double*> scores, const detail::BlockPatternM
 
         for (; j < s2_cur.size(); ++j) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, s2_cur[j]); });
             native_simd<VecType> X(stored.data());
             native_simd<VecType> PM_j = andnot(X & bounds.boundMask, P_flag);
 
@@ -7138,12 +7135,12 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         native_simd<VecType> VN(VecType(0));
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>(
+        unroll<size_t, vec_width>(
             [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](auto i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -7154,7 +7151,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> X(stored.data());
             auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -7178,7 +7175,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](auto i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {
@@ -7649,7 +7646,7 @@ size_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<
     if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
-    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return s1 != s2;
 
     if (score_cutoff < abs_diff(s1.size(), s2.size())) return score_cutoff + 1;
 
@@ -7707,7 +7704,7 @@ size_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
     if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
-    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return s1 != s2;
 
     // at least length difference insertions/deletions required
     if (score_cutoff < (s1.size() - s2.size())) return score_cutoff + 1;
@@ -8635,12 +8632,12 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         native_simd<VecType> PM_j_old(VecType(0));
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>(
+        unroll<size_t, vec_width>(
             [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](auto i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -8651,7 +8648,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> PM_j(stored.data());
             auto TR = (andnot(PM_j, D0) << 1) & PM_j_old;
@@ -8678,7 +8675,7 @@ void osa_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatternMatchV
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](auto i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {
