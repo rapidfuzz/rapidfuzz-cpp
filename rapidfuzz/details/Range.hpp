@@ -180,7 +180,9 @@ Range(T& x) -> Range<decltype(to_begin(x))>;
 template <typename InputIt1, typename InputIt2>
 inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
 {
-    return std::equal(a.begin(), a.end(), b.begin(), b.end());
+    if (a.size() != b.size()) return false;
+
+    return std::equal(a.begin(), a.end(), b.begin());
 }
 
 template <typename InputIt1, typename InputIt2>

@@ -384,8 +384,7 @@ size_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> 
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -417,8 +416,7 @@ size_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_c
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
