@@ -1,24 +1,24 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 01:15:57.554308
+//  Generated: 2024-12-25 01:28:38.014689
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
 //  ----------------------------------------------------------
 #ifndef RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
-#    define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
+#define RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED
 
-#    include <algorithm>
+#include <algorithm>
 
-#    include <cassert>
-#    include <cstddef>
-#    include <limits>
-#    include <numeric>
+#include <cassert>
+#include <cstddef>
+#include <limits>
+#include <numeric>
 
-#    include <array>
-#    include <stddef.h>
-#    include <stdint.h>
+#include <array>
+#include <stddef.h>
+#include <stdint.h>
 
 namespace rapidfuzz::detail {
 
@@ -215,11 +215,11 @@ private:
 
 } // namespace rapidfuzz::detail
 
-#    include <algorithm>
-#    include <cassert>
-#    include <cstddef>
-#    include <stdio.h>
-#    include <vector>
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <stdio.h>
+#include <vector>
 
 namespace rapidfuzz::detail {
 
@@ -411,27 +411,27 @@ private:
 
 } // namespace rapidfuzz::detail
 
-#    include <cassert>
-#    include <cstddef>
-#    include <iterator>
-#    include <limits>
-#    include <ostream>
-#    include <stdexcept>
-#    include <stdint.h>
-#    include <sys/types.h>
-#    include <vector>
+#include <cassert>
+#include <cstddef>
+#include <iterator>
+#include <limits>
+#include <ostream>
+#include <stdexcept>
+#include <stdint.h>
+#include <sys/types.h>
+#include <vector>
 
 namespace rapidfuzz::detail {
 
 static inline void assume(bool b)
 {
-#    if defined(__clang__)
+#if defined(__clang__)
     __builtin_assume(b);
-#    elif defined(__GNUC__) || defined(__GNUG__)
+#elif defined(__GNUC__) || defined(__GNUG__)
     if (!b) __builtin_unreachable();
-#    elif defined(_MSC_VER)
+#elif defined(_MSC_VER)
     __assume(b);
-#    endif
+#endif
 }
 
 template <typename CharT>
@@ -625,24 +625,24 @@ using RangeVec = std::vector<Range<InputIt>>;
 
 } // namespace rapidfuzz::detail
 
-#    include <cstring>
+#include <cstring>
 
-#    include <algorithm>
+#include <algorithm>
 
-#    include <algorithm>
+#include <algorithm>
 
-#    if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
-#        define RAPIDFUZZ_DEDUCTION_GUIDES
-#        define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 1
-#        define RAPIDFUZZ_IF_CONSTEXPR if constexpr
-#    else
-#        define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
-#        define RAPIDFUZZ_IF_CONSTEXPR if
-#    endif
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+#    define RAPIDFUZZ_DEDUCTION_GUIDES
+#    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 1
+#    define RAPIDFUZZ_IF_CONSTEXPR if constexpr
+#else
+#    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
+#    define RAPIDFUZZ_IF_CONSTEXPR if
+#endif
 
-#    include <stddef.h>
-#    include <stdexcept>
-#    include <vector>
+#include <stddef.h>
+#include <stdexcept>
+#include <vector>
 
 namespace rapidfuzz {
 
@@ -1231,8 +1231,8 @@ inline bool operator==(const ScoreAlignment<T>& a, const ScoreAlignment<T>& b)
 
 } // namespace rapidfuzz
 
-#    include <iterator>
-#    include <utility>
+#include <iterator>
+#include <utility>
 
 namespace rapidfuzz {
 
@@ -1360,16 +1360,16 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
 
 } // namespace rapidfuzz::detail
 
-#    include <bitset>
-#    include <cassert>
-#    include <cstddef>
-#    include <limits>
-#    include <stdint.h>
-#    include <type_traits>
+#include <bitset>
+#include <cassert>
+#include <cstddef>
+#include <limits>
+#include <stdint.h>
+#include <type_traits>
 
-#    if defined(_MSC_VER) && !defined(__clang__)
-#        include <intrin.h>
-#    endif
+#if defined(_MSC_VER) && !defined(__clang__)
+#    include <intrin.h>
+#endif
 
 namespace rapidfuzz::detail {
 
@@ -1460,15 +1460,15 @@ constexpr T rotl(T x, unsigned int n)
     assert(n < num_bits);
     unsigned int count_mask = num_bits - 1;
 
-#    if _MSC_VER && !defined(__clang__)
-#        pragma warning(push)
+#if _MSC_VER && !defined(__clang__)
+#    pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#        pragma warning(disable : 4146)
-#    endif
+#    pragma warning(disable : 4146)
+#endif
     return (x << n) | (x >> (-n & count_mask));
-#    if _MSC_VER && !defined(__clang__)
-#        pragma warning(pop)
-#    endif
+#if _MSC_VER && !defined(__clang__)
+#    pragma warning(pop)
+#endif
 }
 
 /**
@@ -1477,15 +1477,15 @@ constexpr T rotl(T x, unsigned int n)
 template <typename T>
 constexpr T blsi(T a)
 {
-#    if _MSC_VER && !defined(__clang__)
-#        pragma warning(push)
+#if _MSC_VER && !defined(__clang__)
+#    pragma warning(push)
 /* unary minus operator applied to unsigned type, result still unsigned */
-#        pragma warning(disable : 4146)
-#    endif
+#    pragma warning(disable : 4146)
+#endif
     return a & -a;
-#    if _MSC_VER && !defined(__clang__)
-#        pragma warning(pop)
-#    endif
+#if _MSC_VER && !defined(__clang__)
+#    pragma warning(pop)
+#endif
 }
 
 /**
@@ -1507,7 +1507,7 @@ constexpr T blsmsk(T a)
     return a ^ (a - 1);
 }
 
-#    if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clang__)
 static inline unsigned int countr_zero(uint32_t x)
 {
     unsigned long trailing_zero = 0;
@@ -1515,14 +1515,14 @@ static inline unsigned int countr_zero(uint32_t x)
     return trailing_zero;
 }
 
-#        if defined(_M_ARM) || defined(_M_X64)
+#    if defined(_M_ARM) || defined(_M_X64)
 static inline unsigned int countr_zero(uint64_t x)
 {
     unsigned long trailing_zero = 0;
     _BitScanForward64(&trailing_zero, x);
     return trailing_zero;
 }
-#        else
+#    else
 static inline unsigned int countr_zero(uint64_t x)
 {
     uint32_t msh = (uint32_t)(x >> 32);
@@ -1530,9 +1530,9 @@ static inline unsigned int countr_zero(uint64_t x)
     if (lsh != 0) return countr_zero(lsh);
     return 32 + countr_zero(msh);
 }
-#        endif
+#    endif
 
-#    else /*  gcc / clang */
+#else /*  gcc / clang */
 static inline unsigned int countr_zero(uint32_t x)
 {
     return static_cast<unsigned int>(__builtin_ctz(x));
@@ -1542,7 +1542,7 @@ static inline unsigned int countr_zero(uint64_t x)
 {
     return static_cast<unsigned int>(__builtin_ctzll(x));
 }
-#    endif
+#endif
 
 static inline unsigned int countr_zero(uint16_t x)
 {
@@ -1568,9 +1568,9 @@ constexpr void unroll(F&& f)
 
 } // namespace rapidfuzz::detail
 
-#    if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
-#        include <mm_malloc.h>
-#    endif
+#if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#    include <mm_malloc.h>
+#endif
 
 namespace rapidfuzz::detail {
 
@@ -1628,36 +1628,36 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last);
 
 static inline void* rf_aligned_alloc(size_t alignment, size_t size)
 {
-#    if defined(_WIN32)
+#if defined(_WIN32)
     return _aligned_malloc(size, alignment);
-#    elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
     return _mm_malloc(size, alignment);
-#    elif defined(__ANDROID__) && __ANDROID_API__ > 16
+#elif defined(__ANDROID__) && __ANDROID_API__ > 16
     void* ptr = nullptr;
     return posix_memalign(&ptr, alignment, size) ? nullptr : ptr;
-#    else
+#else
     return aligned_alloc(alignment, size);
-#    endif
+#endif
 }
 
 static inline void rf_aligned_free(void* ptr)
 {
-#    if defined(_WIN32)
+#if defined(_WIN32)
     _aligned_free(ptr);
-#    elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
+#elif defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
     _mm_free(ptr);
-#    else
+#else
     free(ptr);
-#    endif
+#endif
 }
 
 /**@}*/
 
 } // namespace rapidfuzz::detail
 
-#    include <algorithm>
-#    include <array>
-#    include <iterator>
+#include <algorithm>
+#include <array>
+#include <iterator>
 
 namespace rapidfuzz::detail {
 
@@ -1825,20 +1825,20 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
 
 } // namespace rapidfuzz::detail
 
-#    include <cmath>
+#include <cmath>
 
 /* RAPIDFUZZ_LTO_HACK is used to differentiate functions between different
  * translation units to avoid warnings when using lto */
-#    ifndef RAPIDFUZZ_EXCLUDE_SIMD
-#        if __AVX2__
-#            define RAPIDFUZZ_SIMD
-#            define RAPIDFUZZ_AVX2
-#            define RAPIDFUZZ_LTO_HACK 0
+#ifndef RAPIDFUZZ_EXCLUDE_SIMD
+#    if __AVX2__
+#        define RAPIDFUZZ_SIMD
+#        define RAPIDFUZZ_AVX2
+#        define RAPIDFUZZ_LTO_HACK 0
 
-#            include <array>
-#            include <immintrin.h>
-#            include <ostream>
-#            include <stdint.h>
+#        include <array>
+#        include <immintrin.h>
+#        include <ostream>
+#        include <stdint.h>
 
 namespace rapidfuzz {
 namespace detail {
@@ -2478,15 +2478,15 @@ static inline native_simd<uint64_t> sllv(const native_simd<uint64_t>& a,
 } // namespace detail
 } // namespace rapidfuzz
 
-#        elif (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE2__)
-#            define RAPIDFUZZ_SIMD
-#            define RAPIDFUZZ_SSE2
-#            define RAPIDFUZZ_LTO_HACK 1
+#    elif (defined(_M_AMD64) || defined(_M_X64)) || defined(__SSE2__)
+#        define RAPIDFUZZ_SIMD
+#        define RAPIDFUZZ_SSE2
+#        define RAPIDFUZZ_LTO_HACK 1
 
-#            include <array>
-#            include <emmintrin.h>
-#            include <ostream>
-#            include <stdint.h>
+#        include <array>
+#        include <emmintrin.h>
+#        include <ostream>
+#        include <stdint.h>
 
 namespace rapidfuzz {
 namespace detail {
@@ -2999,9 +2999,9 @@ static inline native_simd<uint16_t> operator>=(const native_simd<uint16_t>& a,
                                                const native_simd<uint16_t>& b) noexcept
 {
     /* sse4.1 */
-#            if 0
+#        if 0
     return _mm_cmpeq_epi16(_mm_max_epu16(a, b), a); // a == max(a,b)
-#            endif
+#        endif
 
     __m128i s = _mm_subs_epu16(b, a);               // b-a, saturated
     return _mm_cmpeq_epi16(s, _mm_setzero_si128()); // s == 0
@@ -3016,9 +3016,9 @@ static inline native_simd<uint32_t> operator>=(const native_simd<uint32_t>& a,
                                                const native_simd<uint32_t>& b) noexcept
 {
     /* sse4.1 */
-#            if 0
+#        if 0
     return (Vec4ib)_mm_cmpeq_epi32(_mm_max_epu32(a, b), a); // a == max(a,b)
-#            endif
+#        endif
 
     return ~(b > a);
 }
@@ -3081,9 +3081,9 @@ static inline native_simd<T> operator<(const native_simd<T>& a, const native_sim
 } // namespace detail
 } // namespace rapidfuzz
 
-#        endif
 #    endif
-#    include <type_traits>
+#endif
+#include <type_traits>
 
 namespace rapidfuzz::detail {
 
@@ -3920,18 +3920,20 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedDamerauLevenshtein(const Sentence1& s1_) -> CachedDamerauLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevenshtein<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace experimental
 } // namespace rapidfuzz
 
-#    include <limits>
+#include <limits>
 
-#    include <stdexcept>
+#include <stdexcept>
 
 namespace rapidfuzz::detail {
 
@@ -4141,21 +4143,23 @@ private:
     bool pad;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedHamming(const Sentence1& s1_, bool pad_ = true) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHamming<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 
 } // namespace rapidfuzz
 
-#    include <limits>
+#include <limits>
 
-#    include <array>
-#    include <stdint.h>
-#    include <stdio.h>
+#include <array>
+#include <stdint.h>
+#include <stdio.h>
 
 namespace rapidfuzz::detail {
 
@@ -4367,10 +4371,10 @@ private:
 
 } // namespace rapidfuzz::detail
 
-#    include <limits>
+#include <limits>
 
-#    include <algorithm>
-#    include <array>
+#include <algorithm>
+#include <array>
 
 namespace rapidfuzz::detail {
 
@@ -4392,14 +4396,14 @@ struct LCSseqResult<false> {
 template <bool RecordMatrix>
 LCSseqResult<true>& getMatrixRef(LCSseqResult<RecordMatrix>& res)
 {
-#    RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
     return res;
 #else
-// this is a hack since the compiler doesn't know early enough that
-// this is never called when the types differ.
-// On C++17 this properly uses if constexpr
-assert(RecordMatrix);
-return reinterpret_cast<LCSseqResult<true>&>(res);
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LCSseqResult<true>&>(res);
 #endif
 }
 
@@ -5139,11 +5143,13 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedLCSseq(const Sentence1& s1_) -> CachedLCSseq<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -5381,11 +5387,13 @@ private:
     CachedLCSseq<CharT1> scorer;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -6445,11 +6453,13 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaro(const Sentence1& s1_) -> CachedJaro<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -6732,6 +6742,7 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaroWinkler(const Sentence1& s1_,
                            double _prefix_weight = 0.1) -> CachedJaroWinkler<char_type<Sentence1>>;
@@ -6739,6 +6750,7 @@ explicit CachedJaroWinkler(const Sentence1& s1_,
 template <typename InputIt1>
 CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
                   double _prefix_weight = 0.1) -> CachedJaroWinkler<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -8470,6 +8482,7 @@ private:
     LevenshteinWeightTable weights;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {
                                                      1, 1, 1}) -> CachedLevenshtein<char_type<Sentence1>>;
@@ -8477,6 +8490,7 @@ explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights
 template <typename InputIt1>
 CachedLevenshtein(InputIt1 first1, InputIt1 last1,
                   LevenshteinWeightTable aWeights = {1, 1, 1}) -> CachedLevenshtein<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz
 
@@ -9012,11 +9026,13 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 CachedOSA(const Sentence1& s1_) -> CachedOSA<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
+#endif
 /**@}*/
 
 } // namespace rapidfuzz
@@ -9133,12 +9149,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPostfix(const Sentence1& s1_) -> CachedPostfix<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<InputIt1>>;
-
+#endif
 /**@}*/
 
 } // namespace rapidfuzz
@@ -9254,11 +9271,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPrefix(const Sentence1& s1_) -> CachedPrefix<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPrefix(InputIt1 first1, InputIt1 last1) -> CachedPrefix<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 
@@ -9590,11 +9609,13 @@ struct CachedRatio {
     CachedIndel<CharT1> cached_indel;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 CachedRatio(const Sentence1& s1) -> CachedRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedRatio(InputIt1 first1, InputIt1 last1) -> CachedRatio<iter_value_t<InputIt1>>;
+#endif
 
 template <typename InputIt1, typename InputIt2>
 ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, InputIt2 first2,
@@ -9663,11 +9684,13 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialRatio(const Sentence1& s1) -> CachedPartialRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::ratio between
@@ -9772,11 +9795,13 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedTokenSortRatio(const Sentence1& s1) -> CachedTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSortRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSortRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Sorts the words in the strings and calculates the fuzz::partial_ratio
@@ -9830,6 +9855,7 @@ private:
     CachedPartialRatio<CharT1> cached_partial_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialTokenSortRatio(const Sentence1& s1)
     -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
@@ -9837,6 +9863,7 @@ explicit CachedPartialTokenSortRatio(const Sentence1& s1)
 template <typename InputIt1>
 CachedPartialTokenSortRatio(InputIt1 first1,
                             InputIt1 last1) -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -9898,11 +9925,13 @@ private:
     detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedTokenSetRatio(const Sentence1& s1) -> CachedTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenSetRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenSetRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Compares the words in the strings based on unique and common words
@@ -9955,12 +9984,14 @@ private:
     detail::SplittedSentenceView<typename std::vector<CharT1>::iterator> tokens_s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenSetRatio(InputIt1 first1,
                            InputIt1 last1) -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Helper method that returns the maximum of fuzz::token_set_ratio and
@@ -10017,11 +10048,13 @@ private:
     CachedRatio<CharT1> cached_ratio_s1_sorted;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedTokenRatio(const Sentence1& s1) -> CachedTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedTokenRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Helper method that returns the maximum of
@@ -10078,11 +10111,13 @@ private:
     std::vector<CharT1> s1_sorted;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPartialTokenRatio(const Sentence1& s1) -> CachedPartialTokenRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPartialTokenRatio(InputIt1 first1, InputIt1 last1) -> CachedPartialTokenRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Calculates a weighted ratio based on the other ratio algorithms
@@ -10138,11 +10173,13 @@ private:
     rapidfuzz::detail::BlockPatternMatchVector blockmap_s1_sorted;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedWRatio(const Sentence1& s1) -> CachedWRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedWRatio(InputIt1 first1, InputIt1 last1) -> CachedWRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**
  * @brief Calculates a quick ratio between two strings using fuzz.ratio
@@ -10250,11 +10287,13 @@ private:
     CachedRatio<CharT1> cached_ratio;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedQRatio(const Sentence1& s1) -> CachedQRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 

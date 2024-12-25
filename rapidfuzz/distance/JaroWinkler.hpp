@@ -199,6 +199,7 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedJaroWinkler(const Sentence1& s1_,
                            double _prefix_weight = 0.1) -> CachedJaroWinkler<char_type<Sentence1>>;
@@ -206,5 +207,6 @@ explicit CachedJaroWinkler(const Sentence1& s1_,
 template <typename InputIt1>
 CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
                   double _prefix_weight = 0.1) -> CachedJaroWinkler<iter_value_t<InputIt1>>;
+#endif
 
 } // namespace rapidfuzz

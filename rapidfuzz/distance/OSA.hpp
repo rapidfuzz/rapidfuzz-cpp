@@ -271,11 +271,13 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 CachedOSA(const Sentence1& s1_) -> CachedOSA<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
+#endif
 /**@}*/
 
 } // namespace rapidfuzz

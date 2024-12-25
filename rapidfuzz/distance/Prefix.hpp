@@ -93,11 +93,13 @@ private:
     std::vector<CharT1> s1;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedPrefix(const Sentence1& s1_) -> CachedPrefix<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedPrefix(InputIt1 first1, InputIt1 last1) -> CachedPrefix<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 
