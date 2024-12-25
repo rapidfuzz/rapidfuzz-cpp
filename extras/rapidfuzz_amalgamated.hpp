@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 03:52:00.425895
+//  Generated: 2024-12-25 03:55:48.239375
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1741,7 +1741,7 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
 }
 
 template <class InputIt1, class InputIt2>
-std::pair<InputIt1, InputIt2> mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+std::pair<InputIt1, InputIt2> rf_mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
     while (first1 != last1 && first2 != last2 && *first1 == *first2)
         ++first1, ++first2;
@@ -1757,7 +1757,7 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto first1 = std::begin(s1);
     size_t prefix = static_cast<size_t>(
-        std::distance(first1, mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
+        std::distance(first1, rf_mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
     s1.remove_prefix(prefix);
     s2.remove_prefix(prefix);
     return prefix;
@@ -1771,7 +1771,7 @@ size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto rfirst1 = s1.rbegin();
     size_t suffix = static_cast<size_t>(
-        std::distance(rfirst1, mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
+        std::distance(rfirst1, rf_mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
     s1.remove_suffix(suffix);
     s2.remove_suffix(suffix);
     return suffix;
