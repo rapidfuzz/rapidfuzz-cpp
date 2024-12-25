@@ -259,7 +259,7 @@ CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                              [[maybe_unused]] double score_hint) const
+                                              double) const
 {
     size_t len1 = s1.size();
     size_t len2 = static_cast<size_t>(std::distance(first2, last2));
@@ -286,8 +286,7 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                              [[maybe_unused]] double score_hint) const
+double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -314,7 +313,7 @@ double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_c
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                [[maybe_unused]] double score_hint) const
+                                                double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -323,8 +322,7 @@ double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                [[maybe_unused]] double score_hint) const
+double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -353,7 +351,7 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                       [[maybe_unused]] double score_hint) const
+                                                       double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -362,8 +360,7 @@ double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                       [[maybe_unused]] double score_hint) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -442,7 +439,7 @@ double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cu
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                               [[maybe_unused]] double score_hint) const
+                                               double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -451,8 +448,7 @@ double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                               [[maybe_unused]] double score_hint) const
+double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -501,7 +497,7 @@ double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double 
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                      [[maybe_unused]] double score_hint) const
+                                                      double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -510,8 +506,7 @@ double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                      [[maybe_unused]] double score_hint) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -690,15 +685,14 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                            [[maybe_unused]] double score_hint) const
+                                            double) const
 {
     return fuzz_detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                            [[maybe_unused]] double score_hint) const
+double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -776,15 +770,14 @@ double partial_token_ratio(const std::vector<CharT1>& s1_sorted,
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                   [[maybe_unused]] double score_hint) const
+                                                   double) const
 {
     return fuzz_detail::partial_token_ratio(s1_sorted, tokens_s1, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                   [[maybe_unused]] double score_hint) const
+double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -847,8 +840,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff, double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -887,8 +879,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -919,8 +910,7 @@ double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff, double) const
 {
     auto len2 = std::distance(first2, last2);
 
@@ -933,8 +923,7 @@ double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }

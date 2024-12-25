@@ -84,8 +84,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff, size_t) const
     {
         return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }

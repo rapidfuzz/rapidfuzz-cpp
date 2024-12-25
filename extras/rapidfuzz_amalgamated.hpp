@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 03:55:48.239375
+//  Generated: 2024-12-25 11:20:05.194568
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -3843,8 +3843,7 @@ class DamerauLevenshtein
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                            [[maybe_unused]] size_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff, size_t)
     {
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -3982,8 +3981,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         return rapidfuzz::experimental::damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
@@ -4021,7 +4019,7 @@ class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bool pad,
-                            size_t score_cutoff, [[maybe_unused]] size_t score_hint)
+                            size_t score_cutoff, size_t)
     {
         if (!pad && s1.size() != s2.size()) throw std::invalid_argument("Sequences are not the same length.");
 
@@ -4206,8 +4204,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t score_hint) const
     {
         return detail::Hamming::distance(s1, s2, pad, score_cutoff, score_hint);
     }
@@ -4888,7 +4885,9 @@ Editops recover_alignment(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
 
     if (dist == 0) return editops;
 
-    [[maybe_unused]] size_t band_width_right = s2.size() - matrix.sim;
+#ifndef NDEBUG
+    size_t band_width_right = s2.size() - matrix.sim;
+#endif
 
     auto col = len1;
     auto row = len2;
@@ -4987,7 +4986,7 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+                              size_t)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }
@@ -5208,8 +5207,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         return detail::lcs_seq_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }
@@ -5561,8 +5559,7 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 }
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
-static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
-                                                            [[maybe_unused]] const Range<InputIt1>& P,
+static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, const Range<InputIt1>&,
                                                             const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() <= 64);
@@ -5941,7 +5938,9 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     using namespace simd_sse2;
 #    endif
 
-    [[maybe_unused]] static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    ifndef RAPIDFUZZ_AVX2
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    endif
     static constexpr size_t vec_width = native_simd<VecType>::size;
     assert(s2.size() <= sizeof(VecType) * 8);
 
@@ -6316,7 +6315,7 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double score_cutoff,
-                              [[maybe_unused]] double score_hint)
+                              double)
     {
         return jaro_similarity(s1, s2, score_cutoff);
     }
@@ -6492,7 +6491,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -6533,8 +6532,7 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
         return detail::jaro_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }
@@ -6632,7 +6630,7 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double prefix_weight,
-                              double score_cutoff, [[maybe_unused]] double score_hint)
+                              double score_cutoff, double)
     {
         return jaro_winkler_similarity(s1, s2, prefix_weight, score_cutoff);
     }
@@ -6780,7 +6778,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -6823,8 +6821,7 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
         return detail::jaro_winkler_similarity(PM, detail::make_range(s1), s2, prefix_weight, score_cutoff);
     }
@@ -9102,8 +9099,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         size_t res;
         if (s1.empty())
@@ -9149,8 +9145,7 @@ class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<in
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff, size_t)
     {
         size_t dist = remove_common_suffix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
@@ -9238,8 +9233,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff, size_t score_hint) const
     {
         return detail::Postfix::similarity(s1, s2, score_cutoff, score_hint);
     }
@@ -9274,8 +9268,7 @@ class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int6
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+    static size_t _similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_cutoff, size_t)
     {
         size_t dist = remove_common_prefix(s1, s2);
         return (dist >= score_cutoff) ? dist : 0;
@@ -9362,8 +9355,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff,
-                       [[maybe_unused]] size_t score_hint) const
+    size_t _similarity(detail::Range<InputIt2> s2, size_t score_cutoff, size_t) const
     {
         return detail::Prefix::similarity(s1, s2, score_cutoff, score_cutoff);
     }
@@ -10658,7 +10650,7 @@ CachedPartialRatio<CharT1>::CachedPartialRatio(InputIt1 first1, InputIt1 last1)
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                              [[maybe_unused]] double score_hint) const
+                                              double) const
 {
     size_t len1 = s1.size();
     size_t len2 = static_cast<size_t>(std::distance(first2, last2));
@@ -10685,8 +10677,7 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                              [[maybe_unused]] double score_hint) const
+double CachedPartialRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10713,7 +10704,7 @@ double token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double score_c
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                [[maybe_unused]] double score_hint) const
+                                                double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10722,8 +10713,7 @@ double CachedTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2,
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                [[maybe_unused]] double score_hint) const
+double CachedTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10752,7 +10742,7 @@ double partial_token_sort_ratio(const Sentence1& s1, const Sentence2& s2, double
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                       [[maybe_unused]] double score_hint) const
+                                                       double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10761,8 +10751,7 @@ double CachedPartialTokenSortRatio<CharT1>::similarity(InputIt2 first2, InputIt2
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                       [[maybe_unused]] double score_hint) const
+double CachedPartialTokenSortRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10841,7 +10830,7 @@ double token_set_ratio(const Sentence1& s1, const Sentence2& s2, double score_cu
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                               [[maybe_unused]] double score_hint) const
+                                               double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10850,8 +10839,7 @@ double CachedTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                               [[maybe_unused]] double score_hint) const
+double CachedTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -10900,7 +10888,7 @@ double partial_token_set_ratio(const Sentence1& s1, const Sentence2& s2, double 
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                      [[maybe_unused]] double score_hint) const
+                                                      double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -10909,8 +10897,7 @@ double CachedPartialTokenSetRatio<CharT1>::similarity(InputIt2 first2, InputIt2 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                      [[maybe_unused]] double score_hint) const
+double CachedPartialTokenSetRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -11089,15 +11076,14 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
 template <typename CharT1>
 template <typename InputIt2>
 double CachedTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                            [[maybe_unused]] double score_hint) const
+                                            double) const
 {
     return fuzz_detail::token_ratio(s1_tokens, cached_ratio_s1_sorted, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                            [[maybe_unused]] double score_hint) const
+double CachedTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -11175,15 +11161,14 @@ double partial_token_ratio(const std::vector<CharT1>& s1_sorted,
 template <typename CharT1>
 template <typename InputIt2>
 double CachedPartialTokenRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                                   [[maybe_unused]] double score_hint) const
+                                                   double) const
 {
     return fuzz_detail::partial_token_ratio(s1_sorted, tokens_s1, first2, last2, score_cutoff);
 }
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                                   [[maybe_unused]] double score_hint) const
+double CachedPartialTokenRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -11246,8 +11231,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff, double) const
 {
     if (score_cutoff > 100) return 0;
 
@@ -11286,8 +11270,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedWRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
@@ -11318,8 +11301,7 @@ double QRatio(const Sentence1& s1, const Sentence2& s2, double score_cutoff)
 
 template <typename CharT1>
 template <typename InputIt2>
-double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff, double) const
 {
     auto len2 = std::distance(first2, last2);
 
@@ -11332,8 +11314,7 @@ double CachedQRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
 
 template <typename CharT1>
 template <typename Sentence2>
-double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
-                                        [[maybe_unused]] double score_hint) const
+double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff, double) const
 {
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }

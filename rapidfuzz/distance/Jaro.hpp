@@ -172,7 +172,7 @@ private:
     }
 
     template <typename InputIt2>
-    double maximum([[maybe_unused]] size_t s1_idx, const detail::Range<InputIt2>&) const
+    double maximum(size_t, const detail::Range<InputIt2>&) const
     {
         return 1.0;
     }
@@ -213,8 +213,7 @@ private:
     }
 
     template <typename InputIt2>
-    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
-                       [[maybe_unused]] double score_hint) const
+    double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff, double) const
     {
         return detail::jaro_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }

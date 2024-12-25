@@ -450,7 +450,9 @@ Editops recover_alignment(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
 
     if (dist == 0) return editops;
 
-    [[maybe_unused]] size_t band_width_right = s2.size() - matrix.sim;
+#ifndef NDEBUG
+    size_t band_width_right = s2.size() - matrix.sim;
+#endif
 
     auto col = len1;
     auto row = len2;
@@ -549,7 +551,7 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+                              size_t)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }

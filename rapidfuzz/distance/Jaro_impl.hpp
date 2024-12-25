@@ -92,8 +92,7 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 }
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
-static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
-                                                            [[maybe_unused]] const Range<InputIt1>& P,
+static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, const Range<InputIt1>&,
                                                             const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() <= 64);
@@ -472,7 +471,9 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
     using namespace simd_sse2;
 #    endif
 
-    [[maybe_unused]] static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    ifndef RAPIDFUZZ_AVX2
+    static constexpr size_t alignment = native_simd<VecType>::alignment;
+#    endif
     static constexpr size_t vec_width = native_simd<VecType>::size;
     assert(s2.size() <= sizeof(VecType) * 8);
 
@@ -847,7 +848,7 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
 
     template <typename InputIt1, typename InputIt2>
     static double _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, double score_cutoff,
-                              [[maybe_unused]] double score_hint)
+                              double)
     {
         return jaro_similarity(s1, s2, score_cutoff);
     }
