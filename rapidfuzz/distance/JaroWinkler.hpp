@@ -174,7 +174,7 @@ struct CachedJaroWinkler : public detail::CachedSimilarityBase<CachedJaroWinkler
 
     template <typename InputIt1>
     CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
-        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::Range(first1, last1))
+        : prefix_weight(_prefix_weight), s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -191,7 +191,7 @@ private:
     double _similarity(const detail::Range<InputIt2>& s2, double score_cutoff,
                        [[maybe_unused]] double score_hint) const
     {
-        return detail::jaro_winkler_similarity(PM, detail::Range(s1), s2, prefix_weight, score_cutoff);
+        return detail::jaro_winkler_similarity(PM, detail::make_range(s1), s2, prefix_weight, score_cutoff);
     }
 
     double prefix_weight;

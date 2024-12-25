@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../common.hpp"
+#include "rapidfuzz/details/type_traits.hpp"
 
 using Catch::Matchers::WithinAbs;
 
@@ -13,10 +14,9 @@ size_t hamming_distance(const Sentence1& s1, const Sentence2& s2,
 {
     size_t res1 = rapidfuzz::hamming_distance(s1, s2, max);
     size_t res2 = rapidfuzz::hamming_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    size_t res3 = rapidfuzz::hamming_distance(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
-    rapidfuzz::CachedHamming scorer(s1);
+    size_t res3 = rapidfuzz::hamming_distance(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                              make_bidir(s2.begin()), make_bidir(s2.end()), max);
+    rapidfuzz::CachedHamming<rapidfuzz::char_type<Sentence1>> scorer(s1);
     size_t res4 = scorer.distance(s2, max);
     size_t res5 = scorer.distance(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
@@ -31,10 +31,9 @@ size_t hamming_similarity(const Sentence1& s1, const Sentence2& s2, size_t max =
 {
     size_t res1 = rapidfuzz::hamming_similarity(s1, s2, max);
     size_t res2 = rapidfuzz::hamming_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), max);
-    size_t res3 = rapidfuzz::hamming_similarity(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), max);
-    rapidfuzz::CachedHamming scorer(s1);
+    size_t res3 = rapidfuzz::hamming_similarity(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                                make_bidir(s2.begin()), make_bidir(s2.end()), max);
+    rapidfuzz::CachedHamming<rapidfuzz::char_type<Sentence1>> scorer(s1);
     size_t res4 = scorer.similarity(s2, max);
     size_t res5 = scorer.similarity(s2.begin(), s2.end(), max);
     REQUIRE(res1 == res2);
@@ -50,10 +49,10 @@ double hamming_normalized_distance(const Sentence1& s1, const Sentence2& s2, dou
     double res1 = rapidfuzz::hamming_normalized_distance(s1, s2, score_cutoff);
     double res2 =
         rapidfuzz::hamming_normalized_distance(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
-    double res3 = rapidfuzz::hamming_normalized_distance(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
-    rapidfuzz::CachedHamming scorer(s1);
+    double res3 =
+        rapidfuzz::hamming_normalized_distance(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                               make_bidir(s2.begin()), make_bidir(s2.end()), score_cutoff);
+    rapidfuzz::CachedHamming<rapidfuzz::char_type<Sentence1>> scorer(s1);
     double res4 = scorer.normalized_distance(s2, score_cutoff);
     double res5 = scorer.normalized_distance(s2.begin(), s2.end(), score_cutoff);
     REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));
@@ -69,10 +68,10 @@ double hamming_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
     double res1 = rapidfuzz::hamming_normalized_similarity(s1, s2, score_cutoff);
     double res2 =
         rapidfuzz::hamming_normalized_similarity(s1.begin(), s1.end(), s2.begin(), s2.end(), score_cutoff);
-    double res3 = rapidfuzz::hamming_normalized_similarity(
-        BidirectionalIterWrapper(s1.begin()), BidirectionalIterWrapper(s1.end()),
-        BidirectionalIterWrapper(s2.begin()), BidirectionalIterWrapper(s2.end()), score_cutoff);
-    rapidfuzz::CachedHamming scorer(s1);
+    double res3 =
+        rapidfuzz::hamming_normalized_similarity(make_bidir(s1.begin()), make_bidir(s1.end()),
+                                                 make_bidir(s2.begin()), make_bidir(s2.end()), score_cutoff);
+    rapidfuzz::CachedHamming<rapidfuzz::char_type<Sentence1>> scorer(s1);
     double res4 = scorer.normalized_similarity(s2, score_cutoff);
     double res5 = scorer.normalized_similarity(s2.begin(), s2.end(), score_cutoff);
     REQUIRE_THAT(res1, WithinAbs(res2, 0.0001));

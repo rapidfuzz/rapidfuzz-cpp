@@ -135,7 +135,7 @@ private:
         else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
-        static_assert(MaxLen <= 64);
+        static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
     constexpr static size_t find_block_count(size_t count)
@@ -199,7 +199,7 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
+        auto scores_ = detail::make_range(scores, scores + score_count);
         RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
         else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
@@ -237,7 +237,7 @@ struct CachedOSA
     {}
 
     template <typename InputIt1>
-    CachedOSA(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedOSA(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -260,9 +260,9 @@ private:
         else if (s2.empty())
             res = s1.size();
         else if (s1.size() < 64)
-            res = detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003(PM, detail::make_range(s1), s2, score_cutoff);
         else
-            res = detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003_block(PM, detail::make_range(s1), s2, score_cutoff);
 
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }

@@ -2,6 +2,7 @@
 /* Copyright © 2021-present Max Bachmann */
 /* Copyright © 2011 Adam Cohen */
 
+#include "rapidfuzz/details/Range.hpp"
 #include <limits>
 #include <rapidfuzz/details/CharSet.hpp>
 
@@ -21,7 +22,7 @@ namespace fuzz {
 template <typename InputIt1, typename InputIt2>
 double ratio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, double score_cutoff)
 {
-    return ratio(detail::Range(first1, last1), detail::Range(first2, last2), score_cutoff);
+    return ratio(detail::make_range(first1, last1), detail::make_range(first2, last2), score_cutoff);
 }
 
 template <typename Sentence1, typename Sentence2>
@@ -35,7 +36,7 @@ template <typename InputIt2>
 double CachedRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double score_cutoff,
                                        double score_hint) const
 {
-    return similarity(detail::Range(first2, last2), score_cutoff, score_hint);
+    return similarity(detail::make_range(first2, last2), score_cutoff, score_hint);
 }
 
 template <typename CharT1>
@@ -91,8 +92,10 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
             for (const auto& window : windows) {
                 auto subseq1_first = s2.begin() + static_cast<ptrdiff_t>(window.first);
                 auto subseq2_first = s2.begin() + static_cast<ptrdiff_t>(window.second);
-                detail::Range subseq1(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
-                detail::Range subseq2(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
+                auto subseq1 =
+                    detail::make_range(subseq1_first, subseq1_first + static_cast<ptrdiff_t>(len1));
+                auto subseq2 =
+                    detail::make_range(subseq2_first, subseq2_first + static_cast<ptrdiff_t>(len1));
 
                 if (scores[window.first] == std::numeric_limits<size_t>::max()) {
                     scores[window.first] = cached_ratio.cached_indel.distance(subseq1);
@@ -146,7 +149,7 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
     }
 
     for (size_t i = 1; i < len1; ++i) {
-        rapidfuzz::detail::Range subseq(s2.begin(), s2.begin() + static_cast<ptrdiff_t>(i));
+        auto subseq = rapidfuzz::detail::make_range(s2.begin(), s2.begin() + static_cast<ptrdiff_t>(i));
         if (!s1_char_set.find(subseq.back())) continue;
 
         double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
@@ -159,7 +162,7 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
     }
 
     for (size_t i = len2 - len1; i < len2; ++i) {
-        rapidfuzz::detail::Range subseq(s2.begin() + static_cast<ptrdiff_t>(i), s2.end());
+        auto subseq = rapidfuzz::detail::make_range(s2.begin() + static_cast<ptrdiff_t>(i), s2.end());
         if (!s1_char_set.find(subseq.front())) continue;
 
         double ls_ratio = cached_ratio.similarity(subseq, score_cutoff);
@@ -208,8 +211,8 @@ ScoreAlignment<double> partial_ratio_alignment(InputIt1 first1, InputIt1 last1, 
     if (!len1 || !len2)
         return ScoreAlignment<double>(static_cast<double>(len1 == len2) * 100.0, 0, len1, 0, len1);
 
-    auto s1 = detail::Range(first1, last1);
-    auto s2 = detail::Range(first2, last2);
+    auto s1 = detail::make_range(first1, last1);
+    auto s2 = detail::make_range(first2, last2);
 
     auto alignment = fuzz_detail::partial_ratio_impl(s1, s2, score_cutoff);
     if (alignment.score != 100 && s1.size() == s2.size()) {
@@ -268,8 +271,8 @@ double CachedPartialRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, d
 
     if (!len1 || !len2) return static_cast<double>(len1 == len2) * 100.0;
 
-    auto s1_ = detail::Range(s1);
-    auto s2 = detail::Range(first2, last2);
+    auto s1_ = detail::make_range(s1);
+    auto s2 = detail::make_range(first2, last2);
 
     double score = fuzz_detail::partial_ratio_impl(s1_, s2, cached_ratio, s1_char_set, score_cutoff).score;
     if (score != 100 && s1_.size() == s2.size()) {
@@ -650,8 +653,9 @@ double token_ratio(const std::vector<CharT1>& s1_sorted,
     double result = 0;
     auto s2_sorted = tokens_b.join();
     if (s1_sorted.size() < 65) {
-        double norm_sim = detail::indel_normalized_similarity(blockmap_s1_sorted, detail::Range(s1_sorted),
-                                                              detail::Range(s2_sorted), score_cutoff / 100);
+        double norm_sim =
+            detail::indel_normalized_similarity(blockmap_s1_sorted, detail::make_range(s1_sorted),
+                                                detail::make_range(s2_sorted), score_cutoff / 100);
         result = norm_sim * 100;
     }
     else {
@@ -838,7 +842,7 @@ CachedWRatio<Sentence1>::CachedWRatio(InputIt1 first1, InputIt1 last1)
       cached_partial_ratio(first1, last1),
       tokens_s1(detail::sorted_split(std::begin(s1), std::end(s1))),
       s1_sorted(tokens_s1.join()),
-      blockmap_s1_sorted(detail::Range(s1_sorted))
+      blockmap_s1_sorted(detail::make_range(s1_sorted))
 {}
 
 template <typename CharT1>

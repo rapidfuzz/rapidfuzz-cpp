@@ -82,11 +82,8 @@ public:
     {}
 
     template <typename T>
-    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
-    {
-        assert(std::distance(_first, _last) >= 0);
-        _size = static_cast<size_t>(std::distance(_first, _last));
-    }
+    constexpr Range(T& x) : Range(to_begin(x), to_end(x))
+    {}
 
     constexpr iterator begin() const noexcept
     {
@@ -176,8 +173,18 @@ public:
     }
 };
 
+template <typename Iter>
+constexpr auto make_range(Iter first, Iter last) -> Range<Iter>
+{
+    return Range<Iter>(first, last);
+}
+
 template <typename T>
-Range(T& x) -> Range<decltype(to_begin(x))>;
+constexpr auto make_range(T& x) -> Range<decltype(to_begin(x))>
+{
+    auto first = to_begin(x);
+    return Range<decltype(first)>(first, to_end(x));
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)

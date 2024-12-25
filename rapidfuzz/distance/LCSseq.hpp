@@ -65,13 +65,13 @@ double lcs_seq_normalized_similarity(const Sentence1& s1, const Sentence2& s2, d
 template <typename InputIt1, typename InputIt2>
 Editops lcs_seq_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 {
-    return detail::lcs_seq_editops(detail::Range(first1, last1), detail::Range(first2, last2));
+    return detail::lcs_seq_editops(detail::make_range(first1, last1), detail::make_range(first2, last2));
 }
 
 template <typename Sentence1, typename Sentence2>
 Editops lcs_seq_editops(const Sentence1& s1, const Sentence2& s2)
 {
-    return detail::lcs_seq_editops(detail::Range(s1), detail::Range(s2));
+    return detail::lcs_seq_editops(detail::make_range(s1), detail::make_range(s2));
 }
 
 #ifdef RAPIDFUZZ_SIMD
@@ -99,7 +99,7 @@ private:
         else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
-        static_assert(MaxLen <= 64);
+        static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
     constexpr static size_t find_block_count(size_t count)
@@ -164,7 +164,7 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
+        auto scores_ = detail::make_range(scores, scores + score_count);
         RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::lcs_simd<uint8_t>(scores_, PM, s2, score_cutoff);
         else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
@@ -202,7 +202,7 @@ struct CachedLCSseq
     {}
 
     template <typename InputIt1>
-    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedLCSseq(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -219,7 +219,7 @@ private:
     size_t _similarity(const detail::Range<InputIt2>& s2, size_t score_cutoff,
                        [[maybe_unused]] size_t score_hint) const
     {
-        return detail::lcs_seq_similarity(PM, detail::Range(s1), s2, score_cutoff);
+        return detail::lcs_seq_similarity(PM, detail::make_range(s1), s2, score_cutoff);
     }
 
     std::vector<CharT1> s1;

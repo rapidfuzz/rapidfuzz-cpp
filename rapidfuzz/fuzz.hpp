@@ -76,7 +76,7 @@ public:
     void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                     double score_cutoff = 0.0) const
     {
-        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+        similarity(scores, score_count, detail::make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
@@ -746,13 +746,13 @@ public:
     void similarity(double* scores, size_t score_count, InputIt2 first2, InputIt2 last2,
                     double score_cutoff = 0.0) const
     {
-        similarity(scores, score_count, detail::Range(first2, last2), score_cutoff);
+        similarity(scores, score_count, detail::make_range(first2, last2), score_cutoff);
     }
 
     template <typename Sentence2>
     void similarity(double* scores, size_t score_count, const Sentence2& s2, double score_cutoff = 0) const
     {
-        rapidfuzz::detail::Range s2_(s2);
+        auto s2_ = detail::make_range(s2);
         if (s2_.empty()) {
             for (size_t i = 0; i < str_lens.size(); ++i)
                 scores[i] = 0;
