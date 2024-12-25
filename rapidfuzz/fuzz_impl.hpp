@@ -52,7 +52,7 @@ double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
 
 namespace fuzz_detail {
 
-static constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
+static RAPIDFUZZ_CONSTEXPR_CXX14 double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
 {
     double score =
         (lensum > 0) ? (100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0;

@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstddef>
 #include <limits>
+#include <rapidfuzz/details/config.hpp>
 #include <stdint.h>
 #include <type_traits>
 
@@ -51,7 +52,7 @@ constexpr uint64_t shl64(uint64_t a, U shift)
     return (shift < 64) ? a << shift : 0;
 }
 
-constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+RAPIDFUZZ_CONSTEXPR_CXX14 uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */
     a += carryin;
@@ -62,7 +63,7 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 }
 
 template <typename T, typename U>
-constexpr T ceil_div(T a, U divisor)
+RAPIDFUZZ_CONSTEXPR_CXX14 T ceil_div(T a, U divisor)
 {
     T _div = static_cast<T>(divisor);
     return a / _div + static_cast<T>(a % _div != 0);
@@ -98,7 +99,7 @@ static inline size_t popcount(uint8_t x)
 }
 
 template <typename T>
-constexpr T rotl(T x, unsigned int n)
+RAPIDFUZZ_CONSTEXPR_CXX14 T rotl(T x, unsigned int n)
 {
     unsigned int num_bits = std::numeric_limits<T>::digits;
     assert(n < num_bits);

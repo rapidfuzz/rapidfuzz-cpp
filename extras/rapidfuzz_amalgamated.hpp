@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 02:45:23.298368
+//  Generated: 2024-12-25 03:52:00.425895
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -392,12 +392,12 @@ struct ShiftedBitMatrix {
         return bool(m_matrix[row][col_word] & col_mask);
     }
 
-    auto operator[](size_t row) noexcept
+    BitMatrixView<value_type, false> operator[](size_t row) noexcept
     {
         return m_matrix[row];
     }
 
-    auto operator[](size_t row) const noexcept
+    BitMatrixView<value_type, true> operator[](size_t row) const noexcept
     {
         return m_matrix[row];
     }
@@ -434,6 +434,12 @@ private:
 #else
 #    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
 #    define RAPIDFUZZ_IF_CONSTEXPR if
+#endif
+
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201402L) || __cplusplus >= 201402L)
+#    define RAPIDFUZZ_CONSTEXPR_CXX14 constexpr
+#else
+#    define RAPIDFUZZ_CONSTEXPR_CXX14
 #endif
 
 #include <stddef.h>
@@ -1088,6 +1094,9 @@ static inline void assume(bool b)
 #endif
 }
 
+namespace to_begin_detail {
+using std::begin;
+
 template <typename CharT>
 CharT* to_begin(CharT* s)
 {
@@ -1095,11 +1104,17 @@ CharT* to_begin(CharT* s)
 }
 
 template <typename T>
-auto to_begin(T& x)
+auto to_begin(T& x) -> decltype(begin(x))
 {
-    using std::begin;
+
     return begin(x);
 }
+} // namespace to_begin_detail
+
+using to_begin_detail::to_begin;
+
+namespace to_end_detail {
+using std::end;
 
 template <typename CharT>
 CharT* to_end(CharT* s)
@@ -1112,11 +1127,13 @@ CharT* to_end(CharT* s)
 }
 
 template <typename T>
-auto to_end(T& x)
+auto to_end(T& x) -> decltype(end(x))
 {
-    using std::end;
     return end(x);
 }
+} // namespace to_end_detail
+
+using to_end_detail::to_end;
 
 template <typename Iter>
 class Range {
@@ -1131,47 +1148,47 @@ public:
     using iterator = Iter;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
-    constexpr Range(Iter first, Iter last) : _first(first), _last(last)
+    Range(Iter first, Iter last) : _first(first), _last(last)
     {
         assert(std::distance(_first, _last) >= 0);
         _size = static_cast<size_t>(std::distance(_first, _last));
     }
 
-    constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
+    Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
     {}
 
     template <typename T>
-    constexpr Range(T& x) : Range(to_begin(x), to_end(x))
+    Range(T& x) : Range(to_begin(x), to_end(x))
     {}
 
-    constexpr iterator begin() const noexcept
+    iterator begin() const noexcept
     {
         return _first;
     }
-    constexpr iterator end() const noexcept
+    iterator end() const noexcept
     {
         return _last;
     }
 
-    constexpr reverse_iterator rbegin() const noexcept
+    reverse_iterator rbegin() const noexcept
     {
         return reverse_iterator(end());
     }
-    constexpr reverse_iterator rend() const noexcept
+    reverse_iterator rend() const noexcept
     {
         return reverse_iterator(begin());
     }
 
-    constexpr size_t size() const
+    size_t size() const
     {
         return _size;
     }
 
-    constexpr bool empty() const
+    bool empty() const
     {
         return size() == 0;
     }
-    explicit constexpr operator bool() const
+    explicit operator bool() const
     {
         return !empty();
     }
@@ -1180,23 +1197,24 @@ public:
               typename = rapidfuzz::rf_enable_if_t<
                   std::is_base_of<std::random_access_iterator_tag,
                                   typename std::iterator_traits<IterCopy>::iterator_category>::value>>
-    constexpr decltype(auto) operator[](size_t n) const
+    auto operator[](size_t n) const -> decltype(*_first)
     {
         return _first[static_cast<ptrdiff_t>(n)];
     }
 
-    constexpr void remove_prefix(size_t n)
+    void remove_prefix(size_t n)
     {
         std::advance(_first, static_cast<ptrdiff_t>(n));
         _size -= n;
     }
-    constexpr void remove_suffix(size_t n)
+
+    void remove_suffix(size_t n)
     {
         std::advance(_last, -static_cast<ptrdiff_t>(n));
         _size -= n;
     }
 
-    constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
+    Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
     {
         if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
 
@@ -1207,17 +1225,17 @@ public:
         return res;
     }
 
-    constexpr decltype(auto) front() const
+    const value_type& front() const
     {
-        return *(_first);
+        return *_first;
     }
 
-    constexpr decltype(auto) back() const
+    const value_type& back() const
     {
         return *(_last - 1);
     }
 
-    constexpr Range<reverse_iterator> reversed() const
+    Range<reverse_iterator> reversed() const
     {
         return {rbegin(), rend(), _size};
     }
@@ -1233,16 +1251,15 @@ public:
 };
 
 template <typename Iter>
-constexpr auto make_range(Iter first, Iter last) -> Range<Iter>
+auto make_range(Iter first, Iter last) -> Range<Iter>
 {
     return Range<Iter>(first, last);
 }
 
 template <typename T>
-constexpr auto make_range(T& x) -> Range<decltype(to_begin(x))>
+auto make_range(T& x) -> Range<decltype(to_begin(x))>
 {
-    auto first = to_begin(x);
-    return Range<decltype(first)>(first, to_end(x));
+    return {to_begin(x), to_end(x)};
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -1425,7 +1442,7 @@ constexpr uint64_t shl64(uint64_t a, U shift)
     return (shift < 64) ? a << shift : 0;
 }
 
-constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
+RAPIDFUZZ_CONSTEXPR_CXX14 uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* carryout)
 {
     /* todo should use _addcarry_u64 when available */
     a += carryin;
@@ -1436,7 +1453,7 @@ constexpr uint64_t addc64(uint64_t a, uint64_t b, uint64_t carryin, uint64_t* ca
 }
 
 template <typename T, typename U>
-constexpr T ceil_div(T a, U divisor)
+RAPIDFUZZ_CONSTEXPR_CXX14 T ceil_div(T a, U divisor)
 {
     T _div = static_cast<T>(divisor);
     return a / _div + static_cast<T>(a % _div != 0);
@@ -1472,7 +1489,7 @@ static inline size_t popcount(uint8_t x)
 }
 
 template <typename T>
-constexpr T rotl(T x, unsigned int n)
+RAPIDFUZZ_CONSTEXPR_CXX14 T rotl(T x, unsigned int n)
 {
     unsigned int num_bits = std::numeric_limits<T>::digits;
     assert(n < num_bits);
@@ -1723,6 +1740,15 @@ DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceVi
     return {difference_ab, difference_ba, intersection};
 }
 
+template <class InputIt1, class InputIt2>
+std::pair<InputIt1, InputIt2> mismatch(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+    while (first1 != last1 && first2 != last2 && *first1 == *first2)
+        ++first1, ++first2;
+
+    return std::make_pair(first1, first2);
+}
+
 /**
  * Removes common prefix of two string views
  */
@@ -1731,7 +1757,7 @@ size_t remove_common_prefix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto first1 = std::begin(s1);
     size_t prefix = static_cast<size_t>(
-        std::distance(first1, std::mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
+        std::distance(first1, mismatch(first1, std::end(s1), std::begin(s2), std::end(s2)).first));
     s1.remove_prefix(prefix);
     s2.remove_prefix(prefix);
     return prefix;
@@ -1745,7 +1771,7 @@ size_t remove_common_suffix(Range<InputIt1>& s1, Range<InputIt2>& s2)
 {
     auto rfirst1 = s1.rbegin();
     size_t suffix = static_cast<size_t>(
-        std::distance(rfirst1, std::mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
+        std::distance(rfirst1, mismatch(rfirst1, s1.rend(), s2.rbegin(), s2.rend()).first));
     s1.remove_suffix(suffix);
     s2.remove_suffix(suffix);
     return suffix;
@@ -5903,6 +5929,11 @@ struct JaroSimilaritySimdBounds {
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -5970,6 +6001,11 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -6354,7 +6390,7 @@ private:
     friend detail::MultiSimilarityBase<MultiJaro<MaxLen>, double, 0, 1>;
     friend detail::MultiNormalizedMetricBase<MultiJaro<MaxLen>, double>;
 
-    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64);
+    static_assert(MaxLen == 8 || MaxLen == 16 || MaxLen == 32 || MaxLen == 64, "incorrect MaxLen used");
 
     using VecType = typename std::conditional<
         MaxLen == 8, uint8_t,
@@ -10415,7 +10451,7 @@ double CachedRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff,
 
 namespace fuzz_detail {
 
-static constexpr double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
+static RAPIDFUZZ_CONSTEXPR_CXX14 double norm_distance(size_t dist, size_t lensum, double score_cutoff = 0)
 {
     double score =
         (lensum > 0) ? (100.0 - 100.0 * static_cast<double>(dist) / static_cast<double>(lensum)) : 100.0;

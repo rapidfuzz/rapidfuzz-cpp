@@ -177,12 +177,12 @@ struct ShiftedBitMatrix {
         return bool(m_matrix[row][col_word] & col_mask);
     }
 
-    auto operator[](size_t row) noexcept
+    BitMatrixView<value_type, false> operator[](size_t row) noexcept
     {
         return m_matrix[row];
     }
 
-    auto operator[](size_t row) const noexcept
+    BitMatrixView<value_type, true> operator[](size_t row) const noexcept
     {
         return m_matrix[row];
     }

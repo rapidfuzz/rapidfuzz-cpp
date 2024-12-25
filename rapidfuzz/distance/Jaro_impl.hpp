@@ -460,6 +460,11 @@ struct JaroSimilaritySimdBounds {
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;
@@ -527,6 +532,11 @@ static inline auto jaro_similarity_prepare_bound_short_s2(const VecType* s1_leng
 
 template <typename VecType, typename InputIt, int _lto_hack = RAPIDFUZZ_LTO_HACK>
 static inline auto jaro_similarity_prepare_bound_long_s2(const VecType* s1_lengths, Range<InputIt>& s2)
+#    ifdef RAPIDFUZZ_AVX2
+    -> JaroSimilaritySimdBounds<simd_avx2::native_simd<VecType>>
+#    else
+    -> JaroSimilaritySimdBounds<simd_sse2::native_simd<VecType>>
+#    endif
 {
 #    ifdef RAPIDFUZZ_AVX2
     using namespace simd_avx2;

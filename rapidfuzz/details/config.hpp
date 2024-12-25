@@ -11,3 +11,9 @@
 #    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
 #    define RAPIDFUZZ_IF_CONSTEXPR if
 #endif
+
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201402L) || __cplusplus >= 201402L)
+#    define RAPIDFUZZ_CONSTEXPR_CXX14 constexpr
+#else
+#    define RAPIDFUZZ_CONSTEXPR_CXX14
+#endif
