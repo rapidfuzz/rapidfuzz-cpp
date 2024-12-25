@@ -14,7 +14,8 @@
 #    include <intrin.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T>
 T bit_mask_lsb(size_t n)
@@ -209,4 +210,5 @@ constexpr void unroll(F&& f)
     unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

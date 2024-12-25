@@ -13,7 +13,8 @@
 #    include <mm_malloc.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
 struct DecomposedSet {
@@ -94,6 +95,7 @@ static inline void rf_aligned_free(void* ptr)
 
 /**@}*/
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <rapidfuzz/details/common_impl.hpp>

@@ -10,7 +10,8 @@
 #include <rapidfuzz/details/distance.hpp>
 #include <rapidfuzz/details/simd.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /**
  * @brief Bitparallel implementation of the OSA distance.
@@ -272,4 +273,5 @@ class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::ma
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

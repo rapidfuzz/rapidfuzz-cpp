@@ -9,7 +9,8 @@
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct FlaggedCharsWord {
     uint64_t P_flag;
@@ -842,4 +843,5 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

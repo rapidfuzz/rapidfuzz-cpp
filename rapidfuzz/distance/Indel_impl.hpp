@@ -8,7 +8,8 @@
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/distance/LCSseq.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_distance(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
@@ -65,4 +66,5 @@ class Indel : public DistanceBase<Indel, size_t, 0, std::numeric_limits<int64_t>
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

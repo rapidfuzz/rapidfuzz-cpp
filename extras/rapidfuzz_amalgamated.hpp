@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 01:28:38.014689
+//  Generated: 2024-12-25 01:37:33.201987
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -20,7 +20,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /* hashmap for integers which can only grow, but can't remove elements */
 template <typename T_Key, typename T_Entry>
@@ -213,7 +214,8 @@ private:
     std::array<value_type, 256> m_extendedAscii;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <algorithm>
 #include <cassert>
@@ -221,7 +223,8 @@ private:
 #include <stdio.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T, bool IsConst>
 struct BitMatrixView {
@@ -409,7 +412,8 @@ private:
     std::vector<ptrdiff_t> m_offsets;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <cassert>
 #include <cstddef>
@@ -421,7 +425,8 @@ private:
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 static inline void assume(bool b)
 {
@@ -525,10 +530,10 @@ public:
         return !empty();
     }
 
-    template <
-        typename... Dummy, typename IterCopy = Iter,
-        typename = std::enable_if_t<std::is_base_of_v<
-            std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
+    template <typename... Dummy, typename IterCopy = Iter,
+              typename = std::enable_if_t<
+                  std::is_base_of<std::random_access_iterator_tag,
+                                  typename std::iterator_traits<IterCopy>::iterator_category>::value>>
     constexpr decltype(auto) operator[](size_t n) const
     {
         return _first[static_cast<ptrdiff_t>(n)];
@@ -623,7 +628,8 @@ inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
 template <typename InputIt>
 using RangeVec = std::vector<Range<InputIt>>;
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <cstring>
 
@@ -1278,7 +1284,8 @@ struct is_explicitly_convertible {
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt>
 class SplittedSentenceView {
@@ -1286,7 +1293,7 @@ public:
     using CharT = iter_value_t<InputIt>;
 
     SplittedSentenceView(RangeVec<InputIt> sentence) noexcept(
-        std::is_nothrow_move_constructible_v<RangeVec<InputIt>>)
+        std::is_nothrow_move_constructible<RangeVec<InputIt>>::value)
         : m_sentence(std::move(sentence))
     {}
 
@@ -1358,7 +1365,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
     return joined;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <bitset>
 #include <cassert>
@@ -1371,7 +1379,8 @@ auto SplittedSentenceView<InputIt>::join() const -> std::vector<CharT>
 #    include <intrin.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T>
 T bit_mask_lsb(size_t n)
@@ -1566,13 +1575,15 @@ constexpr void unroll(F&& f)
     unroll_impl(std::make_integer_sequence<T, count>{}, std::forward<F>(f));
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
 #    include <mm_malloc.h>
 #endif
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2, typename InputIt3>
 struct DecomposedSet {
@@ -1653,13 +1664,15 @@ static inline void rf_aligned_free(void* ptr)
 
 /**@}*/
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <algorithm>
 #include <array>
 #include <iterator>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
@@ -1823,7 +1836,8 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
     return SplittedSentenceView<InputIt>(splitted);
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <cmath>
 
@@ -3085,12 +3099,13 @@ static inline native_simd<T> operator<(const native_simd<T>& a, const native_sim
 #endif
 #include <type_traits>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T, typename... Args>
 struct NormalizedMetricBase {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                       Args... args, double score_cutoff, double score_hint)
     {
@@ -3107,7 +3122,7 @@ struct NormalizedMetricBase {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
     static double normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         Args... args, double score_cutoff, double score_hint)
     {
@@ -3158,7 +3173,7 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
@@ -3174,7 +3189,7 @@ struct DistanceBase : public NormalizedMetricBase<T, Args...> {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
@@ -3213,7 +3228,7 @@ protected:
 template <typename T, typename ResType, int64_t WorstSimilarity, int64_t WorstDistance, typename... Args>
 struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                             ResType score_cutoff, ResType score_hint)
     {
@@ -3229,7 +3244,7 @@ struct SimilarityBase : public NormalizedMetricBase<T, Args...> {
     }
 
     template <typename InputIt1, typename InputIt2,
-              typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+              typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
     static ResType similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Args... args,
                               ResType score_cutoff, ResType score_hint)
     {
@@ -3260,15 +3275,15 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
-                                                                                         U score_cutoff)
+    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+                                                                                              U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
-                                                                                          U score_cutoff)
+    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+                                                                                               U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
@@ -3440,15 +3455,15 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
-                                                                                         U score_cutoff)
+    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+                                                                                              U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
-                                                                                          U score_cutoff)
+    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+                                                                                               U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
@@ -3634,15 +3649,15 @@ protected:
     }
 
     template <typename U>
-    static std::enable_if_t<std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
-                                                                                         U score_cutoff)
+    static std::enable_if_t<std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+                                                                                              U score_cutoff)
     {
         return (score <= score_cutoff) ? score : 1.0;
     }
 
     template <typename U>
-    static std::enable_if_t<!std::is_floating_point_v<U>, U> _apply_distance_score_cutoff(U score,
-                                                                                          U score_cutoff)
+    static std::enable_if_t<!std::is_floating_point<U>::value, U> _apply_distance_score_cutoff(U score,
+                                                                                               U score_cutoff)
     {
         return (score <= score_cutoff) ? score : score_cutoff + 1;
     }
@@ -3652,9 +3667,11 @@ protected:
     friend T;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename IntType>
 struct RowId {
@@ -3780,7 +3797,8 @@ class DamerauLevenshtein
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 /* the API will require a change when adding custom weights */
@@ -3935,7 +3953,8 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 
 #include <stdexcept>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool> {
     friend DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool>;
@@ -3986,7 +4005,8 @@ Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bo
     return ops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -4161,7 +4181,8 @@ CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHammin
 #include <stdint.h>
 #include <stdio.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct BitvectorHashmap {
     BitvectorHashmap() : m_map()
@@ -4369,14 +4390,16 @@ private:
     BitMatrix<uint64_t> m_extendedAscii;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <limits>
 
 #include <algorithm>
 #include <array>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <bool RecordMatrix>
 struct LCSseqResult;
@@ -4919,7 +4942,8 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <algorithm>
 #include <limits>
@@ -5153,7 +5177,8 @@ CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<Input
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_distance(const BlockPatternMatchVector& block, const Range<InputIt1>& s1,
@@ -5210,7 +5235,8 @@ class Indel : public DistanceBase<Indel, size_t, 0, std::numeric_limits<int64_t>
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -5401,7 +5427,8 @@ CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt
 #include <cstdint>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct FlaggedCharsWord {
     uint64_t P_flag;
@@ -6234,7 +6261,8 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 #include <stdlib.h>
 
@@ -6463,7 +6491,8 @@ CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>
 
 } // namespace rapidfuzz
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 double jaro_winkler_similarity(const Range<InputIt1>& P, const Range<InputIt2>& T, double prefix_weight,
@@ -6547,12 +6576,13 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -6568,7 +6598,7 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -6584,7 +6614,7 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -6600,7 +6630,7 @@ double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -6761,7 +6791,8 @@ CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
 #include <limits>
 #include <sys/types.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct LevenshteinRow {
     uint64_t VP;
@@ -8005,7 +8036,8 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
     return editops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -8498,7 +8530,8 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1,
 
 #include <cstdint>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /**
  * @brief Bitparallel implementation of the OSA distance.
@@ -8760,7 +8793,8 @@ class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::ma
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -9039,7 +9073,8 @@ CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
 
 #include <limits>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<int64_t>::max()> {
     friend SimilarityBase<Postfix, size_t, 0, std::numeric_limits<int64_t>::max()>;
@@ -9060,7 +9095,8 @@ class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<in
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -9162,7 +9198,8 @@ CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<Inp
 
 #include <limits>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()> {
     friend SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()>;
@@ -9183,7 +9220,8 @@ class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int6
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
 namespace rapidfuzz {
 
@@ -9437,7 +9475,8 @@ std::vector<CharT> opcodes_apply_vec(const Opcodes& ops, const Sentence1& s1, co
 #include <type_traits>
 #include <unordered_set>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 /*
  * taken from https://stackoverflow.com/a/17251989/11335032
@@ -9499,9 +9538,11 @@ struct CharSet {
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
 
-namespace rapidfuzz::fuzz {
+namespace rapidfuzz {
+namespace fuzz {
 
 /**
  * @defgroup Fuzz Fuzz
@@ -10297,7 +10338,8 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 
 /**@}*/
 
-} // namespace rapidfuzz::fuzz
+} // namespace fuzz
+} // namespace rapidfuzz
 
 #include <limits>
 
@@ -10307,7 +10349,8 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::fuzz {
+namespace rapidfuzz {
+namespace fuzz {
 
 /**********************************************
  *                  ratio
@@ -11230,6 +11273,7 @@ double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
-} // namespace rapidfuzz::fuzz
+} // namespace fuzz
+} // namespace rapidfuzz
 
 #endif // RAPIDFUZZ_AMALGAMATED_HPP_INCLUDED

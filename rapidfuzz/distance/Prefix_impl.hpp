@@ -6,7 +6,8 @@
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/distance.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()> {
     friend SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int64_t>::max()>;
@@ -27,4 +28,5 @@ class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int6
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

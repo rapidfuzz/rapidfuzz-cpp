@@ -6,7 +6,8 @@
 #include <rapidfuzz/details/distance.hpp>
 #include <stdexcept>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 class Hamming : public DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool> {
     friend DistanceBase<Hamming, size_t, 0, std::numeric_limits<int64_t>::max(), bool>;
@@ -57,4 +58,5 @@ Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bo
     return ops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

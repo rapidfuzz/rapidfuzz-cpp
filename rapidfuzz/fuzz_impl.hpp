@@ -11,7 +11,8 @@
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::fuzz {
+namespace rapidfuzz {
+namespace fuzz {
 
 /**********************************************
  *                  ratio
@@ -934,4 +935,5 @@ double CachedQRatio<CharT1>::similarity(const Sentence2& s2, double score_cutoff
     return similarity(detail::to_begin(s2), detail::to_end(s2), score_cutoff);
 }
 
-} // namespace rapidfuzz::fuzz
+} // namespace fuzz
+} // namespace rapidfuzz

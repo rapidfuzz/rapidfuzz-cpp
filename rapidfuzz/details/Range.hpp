@@ -13,7 +13,8 @@
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 static inline void assume(bool b)
 {
@@ -117,10 +118,10 @@ public:
         return !empty();
     }
 
-    template <
-        typename... Dummy, typename IterCopy = Iter,
-        typename = std::enable_if_t<std::is_base_of_v<
-            std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
+    template <typename... Dummy, typename IterCopy = Iter,
+              typename = std::enable_if_t<
+                  std::is_base_of<std::random_access_iterator_tag,
+                                  typename std::iterator_traits<IterCopy>::iterator_category>::value>>
     constexpr decltype(auto) operator[](size_t n) const
     {
         return _first[static_cast<ptrdiff_t>(n)];
@@ -215,4 +216,5 @@ inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
 template <typename InputIt>
 using RangeVec = std::vector<Range<InputIt>>;
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

@@ -8,7 +8,8 @@
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/distance/Indel.hpp>
 
-namespace rapidfuzz::fuzz {
+namespace rapidfuzz {
+namespace fuzz {
 
 /**
  * @defgroup Fuzz Fuzz
@@ -804,6 +805,7 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 
 /**@}*/
 
-} // namespace rapidfuzz::fuzz
+} // namespace fuzz
+} // namespace rapidfuzz
 
 #include <rapidfuzz/fuzz_impl.hpp>

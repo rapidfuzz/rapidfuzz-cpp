@@ -14,7 +14,8 @@
 #include <rapidfuzz/distance/Indel.hpp>
 #include <sys/types.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct LevenshteinRow {
     uint64_t VP;
@@ -1258,4 +1259,5 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
     return editops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

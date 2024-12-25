@@ -5,7 +5,8 @@
 #include <array>
 #include <iterator>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
@@ -169,4 +170,5 @@ SplittedSentenceView<InputIt> sorted_split(InputIt first, InputIt last)
     return SplittedSentenceView<InputIt>(splitted);
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

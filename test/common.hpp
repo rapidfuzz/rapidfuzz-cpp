@@ -58,7 +58,7 @@ private:
     T iter;
 };
 
-template <typename T, typename = std::enable_if_t<std::is_same_v<T, char>>>
+template <typename T, typename = std::enable_if_t<std::is_same<T, char>::value>>
 std::basic_string<T> str_multiply(std::basic_string<T> a, size_t b)
 {
     std::basic_string<T> output;

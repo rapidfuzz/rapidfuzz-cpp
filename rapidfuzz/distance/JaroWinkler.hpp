@@ -9,7 +9,7 @@
 namespace rapidfuzz {
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                              double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -25,7 +25,7 @@ double jaro_winkler_distance(const Sentence1& s1, const Sentence2& s2, double pr
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {
@@ -41,7 +41,7 @@ double jaro_winkler_similarity(const Sentence1& s1, const Sentence2& s2, double 
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                         double prefix_weight = 0.1, double score_cutoff = 1.0)
 {
@@ -57,7 +57,7 @@ double jaro_winkler_normalized_distance(const Sentence1& s1, const Sentence2& s2
 }
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = std::enable_if_t<!std::is_same<InputIt2, double>::value>>
 double jaro_winkler_normalized_similarity(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                                           double prefix_weight = 0.1, double score_cutoff = 0.0)
 {

@@ -3,7 +3,8 @@
 
 #include <rapidfuzz/distance/Jaro.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename InputIt1, typename InputIt2>
 double jaro_winkler_similarity(const Range<InputIt1>& P, const Range<InputIt2>& T, double prefix_weight,
@@ -87,4 +88,5 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz
