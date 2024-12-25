@@ -83,7 +83,7 @@ private:
     friend detail::MultiSimilarityBase<MultiLCSseq<MaxLen>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiLCSseq<MaxLen>, size_t>;
 
-    constexpr static size_t get_vec_size()
+    RAPIDFUZZ_CONSTEXPR_CXX14 static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
@@ -102,7 +102,7 @@ private:
         static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);

@@ -92,7 +92,12 @@ static inline size_t count_common_chars(const FlaggedCharsMultiword& flagged)
 }
 
 template <typename PM_Vec, typename InputIt1, typename InputIt2>
-static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM, const Range<InputIt1>&,
+static inline FlaggedCharsWord flag_similar_characters_word(const PM_Vec& PM,
+#ifdef NDEBUG
+                                                            const Range<InputIt1>&,
+#else
+                                                            const Range<InputIt1>& P,
+#endif
                                                             const Range<InputIt2>& T, size_t Bound)
 {
     assert(P.size() <= 64);

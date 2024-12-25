@@ -7,6 +7,7 @@ jobs:
     name: ${{matrix.compiler.cxx}}, C++${{matrix.std}}, ${{matrix.build_type}}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         compiler:
           - {cxx: g++-5, other_pkgs: g++-5}
