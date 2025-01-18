@@ -1173,9 +1173,6 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
         }
     }
 
-    assert(hpos.left_score >= 0);
-    assert(hpos.right_score >= 0);
-
     if (hpos.left_score + hpos.right_score > max)
         return find_hirschberg_pos(s1, s2, max * 2);
     else {
