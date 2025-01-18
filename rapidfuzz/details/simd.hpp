@@ -6,7 +6,7 @@
 /* RAPIDFUZZ_LTO_HACK is used to differentiate functions between different
  * translation units to avoid warnings when using lto */
 #ifndef RAPIDFUZZ_EXCLUDE_SIMD
-#    if 0//__AVX2__
+#    if __AVX2__
 #        define RAPIDFUZZ_SIMD
 #        define RAPIDFUZZ_AVX2
 #        define RAPIDFUZZ_LTO_HACK 0
