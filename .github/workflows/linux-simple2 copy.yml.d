@@ -1,4 +1,4 @@
-name: Linux builds (basic2)
+name: Linux builds (basic)
 
 on: [push, pull_request]
 
@@ -10,7 +10,12 @@ jobs:
       fail-fast: false
       matrix:
         compiler:
-          - {cxx: clang++-14, other_pkgs: clang}
+          - {cxx: g++-10, other_pkgs: g++-10}
+          - {cxx: g++-11, other_pkgs: g++-11}
+          - {cxx: clang++-11, other_pkgs: clang-11}
+          - {cxx: clang++-12, other_pkgs: clang-12}
+          - {cxx: clang++-13, other_pkgs: clang-13}
+          - {cxx: clang++-14, other_pkgs: clang-14}
         build_type: [Debug, Release]
         std: [11, 14, 17, 20]
         #std: [11, 14, 17, 20]
