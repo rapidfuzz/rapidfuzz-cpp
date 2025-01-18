@@ -62,7 +62,7 @@ jobs:
 
     - name: Test
       working-directory: build
-      run: ctest -C ${{matrix.BUILD_TYPE}} --rerun-failed --output-on-failure -j `nproc`
+      run: ctest -C ${{matrix.BUILD_TYPE}} --rerun-failed --output-on-failure
 
     - name: Fuzz Test
       working-directory: build
