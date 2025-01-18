@@ -53,12 +53,14 @@ jobs:
               -DCMAKE_CXX_COMPILER=clang++ \
               -DRAPIDFUZZ_BUILD_TESTING=1 \
               -DRAPIDFUZZ_ENABLE_LINTERS=1 \
-              -DRAPIDFUZZ_BUILD_FUZZERS=1 \
-              -G Ninja
+              -DRAPIDFUZZ_BUILD_FUZZERS=1
+
+    #- name: Build
+    #  working-directory: build
+    #  run: ninja
 
     - name: Build
-      working-directory: build
-      run: ninja
+      run: cmake --build build --config ${{matrix.BUILD_TYPE}}
 
     - name: Test
       working-directory: build
