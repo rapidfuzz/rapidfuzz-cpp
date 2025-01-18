@@ -32,14 +32,25 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ninja-build ${{matrix.compiler.other_pkgs}}
 
+    #- name: Configure CMake
+    #  env:
+    #    CXX: ${{matrix.compiler.cxx}}
+    #  run: |
+    #    cmake -B build \
+    #          -DCMAKE_BUILD_TYPE=${{matrix.built_type}} \
+    #          -DCMAKE_CXX_STANDARD=${{matrix.std}} \
+    #          -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+    #          -DCMAKE_CXX_EXTENSIONS=OFF \
+    #          -DRAPIDFUZZ_BUILD_TESTING=1 \
+    #          -DRAPIDFUZZ_ENABLE_LINTERS=1 \
+    #          -DRAPIDFUZZ_BUILD_FUZZERS=1 \
+    #          -G Ninja
+
     - name: Configure CMake
-      env:
-        CXX: ${{matrix.compiler.cxx}}
       run: |
         cmake -B build \
               -DCMAKE_BUILD_TYPE=${{matrix.built_type}} \
-              -DCMAKE_CXX_STANDARD=${{matrix.std}} \
-              -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+              -DCMAKE_CXX_COMPILER=clang++ \
               -DRAPIDFUZZ_BUILD_TESTING=1 \
               -DRAPIDFUZZ_ENABLE_LINTERS=1 \
               -DRAPIDFUZZ_BUILD_FUZZERS=1 \
