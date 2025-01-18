@@ -11,7 +11,8 @@
 #include <rapidfuzz/details/common.hpp>
 #include <rapidfuzz/details/distance.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename IntType>
 struct RowId {
@@ -130,11 +131,11 @@ class DamerauLevenshtein
     }
 
     template <typename InputIt1, typename InputIt2>
-    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                            [[maybe_unused]] size_t score_hint)
+    static size_t _distance(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff, size_t)
     {
         return damerau_levenshtein_distance(s1, s2, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

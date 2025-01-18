@@ -119,26 +119,26 @@ private:
     friend detail::MultiDistanceBase<MultiOSA<MaxLen>, size_t, 0, std::numeric_limits<int64_t>::max()>;
     friend detail::MultiNormalizedMetricBase<MultiOSA<MaxLen>, size_t>;
 
-    constexpr static size_t get_vec_size()
+    RAPIDFUZZ_CONSTEXPR_CXX14 static size_t get_vec_size()
     {
 #    ifdef RAPIDFUZZ_AVX2
         using namespace detail::simd_avx2;
 #    else
         using namespace detail::simd_sse2;
 #    endif
-        if constexpr (MaxLen <= 8)
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 8)
             return native_simd<uint8_t>::size;
-        else if constexpr (MaxLen <= 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 16)
             return native_simd<uint16_t>::size;
-        else if constexpr (MaxLen <= 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 32)
             return native_simd<uint32_t>::size;
-        else if constexpr (MaxLen <= 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen <= 64)
             return native_simd<uint64_t>::size;
 
-        static_assert(MaxLen <= 64);
+        static_assert(MaxLen <= 64, "expected MaxLen <= 64");
     }
 
-    constexpr static size_t find_block_count(size_t count)
+    static size_t find_block_count(size_t count)
     {
         size_t vec_size = get_vec_size();
         size_t simd_vec_count = detail::ceil_div(count, vec_size);
@@ -199,14 +199,14 @@ private:
         if (score_count < result_count())
             throw std::invalid_argument("scores has to have >= result_count() elements");
 
-        detail::Range scores_(scores, scores + score_count);
-        if constexpr (MaxLen == 8)
+        auto scores_ = detail::make_range(scores, scores + score_count);
+        RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 8)
             detail::osa_hyrroe2003_simd<uint8_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 16)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 16)
             detail::osa_hyrroe2003_simd<uint16_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 32)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 32)
             detail::osa_hyrroe2003_simd<uint32_t>(scores_, PM, str_lens, s2, score_cutoff);
-        else if constexpr (MaxLen == 64)
+        else RAPIDFUZZ_IF_CONSTEXPR (MaxLen == 64)
             detail::osa_hyrroe2003_simd<uint64_t>(scores_, PM, str_lens, s2, score_cutoff);
     }
 
@@ -237,7 +237,7 @@ struct CachedOSA
     {}
 
     template <typename InputIt1>
-    CachedOSA(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::Range(first1, last1))
+    CachedOSA(InputIt1 first1, InputIt1 last1) : s1(first1, last1), PM(detail::make_range(first1, last1))
     {}
 
 private:
@@ -251,8 +251,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t) const
     {
         size_t res;
         if (s1.empty())
@@ -260,9 +259,9 @@ private:
         else if (s2.empty())
             res = s1.size();
         else if (s1.size() < 64)
-            res = detail::osa_hyrroe2003(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003(PM, detail::make_range(s1), s2, score_cutoff);
         else
-            res = detail::osa_hyrroe2003_block(PM, detail::Range(s1), s2, score_cutoff);
+            res = detail::osa_hyrroe2003_block(PM, detail::make_range(s1), s2, score_cutoff);
 
         return (res <= score_cutoff) ? res : score_cutoff + 1;
     }
@@ -271,11 +270,13 @@ private:
     detail::BlockPatternMatchVector PM;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 CachedOSA(const Sentence1& s1_) -> CachedOSA<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
+#endif
 /**@}*/
 
 } // namespace rapidfuzz

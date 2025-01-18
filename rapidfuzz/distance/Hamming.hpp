@@ -78,7 +78,7 @@ template <typename InputIt1, typename InputIt2>
 Editops hamming_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, bool pad_ = true,
                         size_t score_hint = std::numeric_limits<size_t>::max())
 {
-    return detail::hamming_editops(detail::Range(first1, last1), detail::Range(first2, last2), pad_,
+    return detail::hamming_editops(detail::make_range(first1, last1), detail::make_range(first2, last2), pad_,
                                    score_hint);
 }
 
@@ -86,7 +86,7 @@ template <typename Sentence1, typename Sentence2>
 Editops hamming_editops(const Sentence1& s1, const Sentence2& s2, bool pad_ = true,
                         size_t score_hint = std::numeric_limits<size_t>::max())
 {
-    return detail::hamming_editops(detail::Range(s1), detail::Range(s2), pad_, score_hint);
+    return detail::hamming_editops(detail::make_range(s1), detail::make_range(s2), pad_, score_hint);
 }
 
 /**
@@ -151,8 +151,7 @@ private:
     }
 
     template <typename InputIt2>
-    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff,
-                     [[maybe_unused]] size_t score_hint) const
+    size_t _distance(const detail::Range<InputIt2>& s2, size_t score_cutoff, size_t score_hint) const
     {
         return detail::Hamming::distance(s1, s2, pad, score_cutoff, score_hint);
     }
@@ -161,11 +160,13 @@ private:
     bool pad;
 };
 
+#ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
 explicit CachedHamming(const Sentence1& s1_, bool pad_ = true) -> CachedHamming<char_type<Sentence1>>;
 
 template <typename InputIt1>
 CachedHamming(InputIt1 first1, InputIt1 last1, bool pad_ = true) -> CachedHamming<iter_value_t<InputIt1>>;
+#endif
 
 /**@}*/
 

@@ -14,7 +14,8 @@
 #include <rapidfuzz/distance/Indel.hpp>
 #include <sys/types.h>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 struct LevenshteinRow {
     uint64_t VP;
@@ -52,6 +53,34 @@ template <>
 struct LevenshteinResult<false, false> {
     size_t dist;
 };
+
+template <bool RecordMatrix, bool RecordBitRow>
+LevenshteinResult<true, false>& getMatrixRef(LevenshteinResult<RecordMatrix, RecordBitRow>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LevenshteinResult<true, false>&>(res);
+#endif
+}
+
+template <bool RecordMatrix, bool RecordBitRow>
+LevenshteinResult<false, true>& getBitRowRef(LevenshteinResult<RecordMatrix, RecordBitRow>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordBitRow);
+    return reinterpret_cast<LevenshteinResult<false, true>&>(res);
+#endif
+}
 
 template <typename InputIt1, typename InputIt2>
 size_t generalized_levenshtein_wagner_fischer(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
@@ -240,9 +269,10 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
 
     LevenshteinResult<RecordMatrix, RecordBitRow> res;
     res.dist = s1.size();
-    if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
     }
 
     /* mask used when computing D[m,j] in the paper 10^(m-1) */
@@ -271,19 +301,21 @@ auto levenshtein_hyrroe2003(const PM_Vec& PM, const Range<InputIt1>& s1, const R
         VP = HN | ~(D0 | HP);
         VN = HP & D0;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
     if (res.dist > max) res.dist = max + 1;
 
-    if constexpr (RecordBitRow) {
-        res.first_block = 0;
-        res.last_block = 0;
-        res.prev_score = s2.size();
-        res.vecs.emplace_back(VP, VN);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
+        auto& res_ = getBitRowRef(res);
+        res_.first_block = 0;
+        res_.last_block = 0;
+        res_.prev_score = s2.size();
+        res_.vecs.emplace_back(VP, VN);
     }
 
     return res;
@@ -315,12 +347,12 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         native_simd<VecType> VN(VecType(0));
 
         alignas(alignment) std::array<VecType, vec_width> currDist_;
-        unroll<int, vec_width>(
-            [&](auto i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
+        unroll<size_t, vec_width>(
+            [&](size_t i) { currDist_[i] = static_cast<VecType>(s1_lengths[result_index + i]); });
         native_simd<VecType> currDist(reinterpret_cast<uint64_t*>(currDist_.data()));
         /* mask used when computing D[m,j] in the paper 10^(m-1) */
         alignas(alignment) std::array<VecType, vec_width> mask_;
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             if (s1_lengths[result_index + i] == 0)
                 mask_[i] = 0;
             else
@@ -331,7 +363,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         for (const auto& ch : s2) {
             /* Step 1: Computing D0 */
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> X(stored.data());
             auto D0 = (((X & VP) + VP) ^ VP) | X | VN;
@@ -355,7 +387,7 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
         alignas(alignment) std::array<VecType, vec_width> distances;
         currDist.store(distances.data());
 
-        unroll<int, vec_width>([&](auto i) {
+        unroll<size_t, vec_width>([&](size_t i) {
             size_t score = 0;
             /* strings of length 0 are not handled correctly */
             if (s1_lengths[result_index] == 0) {
@@ -363,7 +395,9 @@ void levenshtein_hyrroe2003_simd(Range<size_t*> scores, const detail::BlockPatte
             }
             /* calculate score under consideration of wraparounds in parallel counter */
             else {
-                if constexpr (std::numeric_limits<VecType>::max() < std::numeric_limits<size_t>::max()) {
+                RAPIDFUZZ_IF_CONSTEXPR (std::numeric_limits<VecType>::max() <
+                                        std::numeric_limits<size_t>::max())
+                {
                     size_t min_dist = abs_diff(s1_lengths[result_index], s2.size());
                     size_t wraparound_score = static_cast<size_t>(std::numeric_limits<VecType>::max()) + 1;
 
@@ -484,14 +518,15 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
 
     LevenshteinResult<RecordMatrix, false> res;
     res.dist = max;
-    if constexpr (RecordMatrix) {
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), 1, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), 1, 0);
 
         ptrdiff_t start_offset = static_cast<ptrdiff_t>(max) + 2 - 64;
         for (size_t i = 0; i < s2.size(); ++i) {
-            res.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
-            res.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res_.VP.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
+            res_.VN.set_offset(i, start_offset + static_cast<ptrdiff_t>(i));
         }
     }
 
@@ -545,9 +580,10 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
@@ -587,9 +623,10 @@ auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<In
         VP = HN | ~((D0 >> 1) | HP);
         VN = (D0 >> 1) & HP;
 
-        if constexpr (RecordMatrix) {
-            res.VP[i][0] = VP;
-            res.VN[i][0] = VN;
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP[i][0] = VP;
+            res_.VN[i][0] = VN;
         }
     }
 
@@ -624,17 +661,19 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
 
     scores[words - 1] = s1.size();
 
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = std::min(s1.size(), 2 * max + 1);
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.VP = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
-        res.VN = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, 0);
+        res_.VP = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.VN = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, 0);
     }
 
-    if constexpr (RecordBitRow) {
-        res.first_block = 0;
-        res.last_block = 0;
-        res.prev_score = 0;
+    RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
+        auto& res_ = getBitRowRef(res);
+        res_.first_block = 0;
+        res_.last_block = 0;
+        res_.prev_score = 0;
     }
 
     max = std::min(max, std::max(s1.size(), s2.size()));
@@ -651,9 +690,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
         uint64_t HP_carry = 1;
         uint64_t HN_carry = 0;
 
-        if constexpr (RecordMatrix) {
-            res.VP.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
-            res.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.VP.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+            res_.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
         }
 
         auto advance_block = [&](size_t word) {
@@ -687,9 +727,10 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             vecs[word].VP = HN | ~(D0 | HP);
             vecs[word].VN = HP & D0;
 
-            if constexpr (RecordMatrix) {
-                res.VP[row][word - first_block] = vecs[word].VP;
-                res.VN[row][word - first_block] = vecs[word].VN;
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.VP[row][word - first_block] = vecs[word].VP;
+                res_.VN[row][word - first_block] = vecs[word].VN;
             }
 
             return static_cast<int64_t>(HP_carry) - static_cast<int64_t>(HN_carry);
@@ -775,26 +816,27 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             return res;
         }
 
-        if constexpr (RecordBitRow) {
+        RAPIDFUZZ_IF_CONSTEXPR (RecordBitRow) {
             if (row == stop_row) {
+                auto& res_ = getBitRowRef(res);
                 if (first_block == 0)
-                    res.prev_score = stop_row + 1;
+                    res_.prev_score = stop_row + 1;
                 else {
                     /* count backwards to find score at last position in previous block */
                     size_t relevant_bits = std::min((first_block + 1) * 64, s1.size()) % 64;
                     uint64_t mask = ~UINT64_C(0);
                     if (relevant_bits) mask >>= 64 - relevant_bits;
 
-                    res.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
-                                     popcount(vecs[first_block].VP & mask);
+                    res_.prev_score = scores[first_block] + popcount(vecs[first_block].VN & mask) -
+                                      popcount(vecs[first_block].VP & mask);
                 }
 
-                res.first_block = first_block;
-                res.last_block = last_block;
-                res.vecs = std::move(vecs);
+                res_.first_block = first_block;
+                res_.last_block = last_block;
+                res_.vecs = std::move(vecs);
 
                 /* unknown so make sure it is <= max */
-                res.dist = 0;
+                res_.dist = 0;
                 return res;
             }
         }
@@ -816,7 +858,7 @@ size_t uniform_levenshtein_distance(const BlockPatternMatchVector& block, Range<
     if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
-    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return s1 != s2;
 
     if (score_cutoff < abs_diff(s1.size(), s2.size())) return score_cutoff + 1;
 
@@ -874,7 +916,7 @@ size_t uniform_levenshtein_distance(Range<InputIt1> s1, Range<InputIt2> s2, size
     if (score_hint < 31) score_hint = 31;
 
     // when no differences are allowed a direct comparision is sufficient
-    if (score_cutoff == 0) return !std::equal(s1.begin(), s1.end(), s2.begin(), s2.end());
+    if (score_cutoff == 0) return s1 != s2;
 
     // at least length difference insertions/deletions required
     if (score_cutoff < (s1.size() - s2.size())) return score_cutoff + 1;
@@ -1131,9 +1173,6 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
         }
     }
 
-    assert(hpos.left_score >= 0);
-    assert(hpos.right_score >= 0);
-
     if (hpos.left_score + hpos.right_score > max)
         return find_hirschberg_pos(s1, s2, max * 2);
     else {
@@ -1217,4 +1256,5 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
     return editops;
 }
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

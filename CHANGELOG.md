@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.3.0] - 2025-01-18
+### Changed
+- add C++11 and C++14 support
+
 ## [3.2.0] - 2024-12-17
 ### Performance
 - improve calculation of min score inside partial_ratio so it can skip more alignments

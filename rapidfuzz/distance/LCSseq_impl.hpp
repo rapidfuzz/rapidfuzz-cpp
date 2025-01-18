@@ -13,7 +13,8 @@
 #include <array>
 #include <rapidfuzz/details/types.hpp>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <bool RecordMatrix>
 struct LCSseqResult;
@@ -29,6 +30,20 @@ template <>
 struct LCSseqResult<false> {
     size_t sim;
 };
+
+template <bool RecordMatrix>
+LCSseqResult<true>& getMatrixRef(LCSseqResult<RecordMatrix>& res)
+{
+#if RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE
+    return res;
+#else
+    // this is a hack since the compiler doesn't know early enough that
+    // this is never called when the types differ.
+    // On C++17 this properly uses if constexpr
+    assert(RecordMatrix);
+    return reinterpret_cast<LCSseqResult<true>&>(res);
+#endif
+}
 
 /*
  * An encoded mbleven model table.
@@ -143,12 +158,12 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
     size_t cur_vec = 0;
     for (; cur_vec + interleaveCount * vecs <= block.size(); cur_vec += interleaveCount * vecs) {
         std::array<native_simd<VecType>, interleaveCount> S;
-        unroll<int, interleaveCount>([&](auto j) { S[j] = static_cast<VecType>(-1); });
+        unroll<size_t, interleaveCount>([&](size_t j) { S[j] = static_cast<VecType>(-1); });
 
         for (const auto& ch : s2) {
-            unroll<int, interleaveCount>([&](auto j) {
+            unroll<size_t, interleaveCount>([&](size_t j) {
                 alignas(32) std::array<uint64_t, vecs> stored;
-                unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
+                unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + j * vecs + i, ch); });
 
                 native_simd<VecType> Matches(stored.data());
                 native_simd<VecType> u = S[j] & Matches;
@@ -156,9 +171,9 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
             });
         }
 
-        unroll<int, interleaveCount>([&](auto j) {
+        unroll<size_t, interleaveCount>([&](size_t j) {
             auto counts = popcount(~S[j]);
-            unroll<int, counts.size()>([&](auto i) {
+            unroll<size_t, counts.size()>([&](size_t i) {
                 *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
                 score_iter++;
             });
@@ -170,7 +185,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 
         for (const auto& ch : s2) {
             alignas(alignment) std::array<uint64_t, vecs> stored;
-            unroll<int, vecs>([&](auto i) { stored[i] = block.get(cur_vec + i, ch); });
+            unroll<size_t, vecs>([&](size_t i) { stored[i] = block.get(cur_vec + i, ch); });
 
             native_simd<VecType> Matches(stored.data());
             native_simd<VecType> u = S & Matches;
@@ -178,7 +193,7 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
         }
 
         auto counts = popcount(~S);
-        unroll<int, counts.size()>([&](auto i) {
+        unroll<size_t, counts.size()>([&](size_t i) {
             *score_iter = (counts[i] >= score_cutoff) ? static_cast<size_t>(counts[i]) : 0;
             score_iter++;
         });
@@ -195,7 +210,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) res.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), N, ~UINT64_C(0));
+    }
 
     auto iter_s2 = s2.begin();
     for (size_t i = 0; i < s2.size(); ++i) {
@@ -210,7 +228,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
                 uint64_t x = addc64(S[word], u, carry, &carry);
                 S[word] = x | (S[word] - u);
 
-                if constexpr (RecordMatrix) res.S[i][word] = S[word];
+                RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                    auto& res_ = getMatrixRef(res);
+                    res_.S[i][word] = S[word];
+                }
             });
         }
 
@@ -221,7 +242,10 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
             uint64_t x = addc64(S[word], u, carry, &carry);
             S[word] = x | (S[word] - u);
 
-            if constexpr (RecordMatrix) res.S[i][word] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[i][word] = S[word];
+            }
         });
 
         iter_s2++;
@@ -256,10 +280,11 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     size_t band_width_right = s2.size() - score_cutoff;
 
     LCSseqResult<RecordMatrix> res;
-    if constexpr (RecordMatrix) {
+    RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+        auto& res_ = getMatrixRef(res);
         size_t full_band = band_width_left + 1 + band_width_right;
         size_t full_band_words = std::min(words, full_band / word_size + 2);
-        res.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
+        res_.S = ShiftedBitMatrix<uint64_t>(s2.size(), full_band_words, ~UINT64_C(0));
     }
 
     /* first_block is the index of the first block in Ukkonen band. */
@@ -270,7 +295,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
     for (size_t row = 0; row < s2.size(); ++row) {
         uint64_t carry = 0;
 
-        if constexpr (RecordMatrix) res.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+            auto& res_ = getMatrixRef(res);
+            res_.S.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
+        }
 
         for (size_t word = first_block; word < last_block; ++word) {
             const uint64_t Matches = PM.get(word, *iter_s2);
@@ -281,7 +309,10 @@ auto lcs_blockwise(const PMV& PM, const Range<InputIt1>& s1, const Range<InputIt
             uint64_t x = addc64(Stemp, u, carry, &carry);
             S[word] = x | (Stemp - u);
 
-            if constexpr (RecordMatrix) res.S[row][word - first_block] = S[word];
+            RAPIDFUZZ_IF_CONSTEXPR (RecordMatrix) {
+                auto& res_ = getMatrixRef(res);
+                res_.S[row][word - first_block] = S[word];
+            }
         }
 
         if (row > band_width_right) first_block = (row - band_width_right) / word_size;
@@ -353,8 +384,7 @@ size_t lcs_seq_similarity(const BlockPatternMatchVector& block, Range<InputIt1> 
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -386,8 +416,7 @@ size_t lcs_seq_similarity(Range<InputIt1> s1, Range<InputIt2> s2, size_t score_c
     size_t max_misses = len1 + len2 - 2 * score_cutoff;
 
     /* no edits are allowed */
-    if (max_misses == 0 || (max_misses == 1 && len1 == len2))
-        return std::equal(s1.begin(), s1.end(), s2.begin(), s2.end()) ? len1 : 0;
+    if (max_misses == 0 || (max_misses == 1 && len1 == len2)) return s1 == s2 ? len1 : 0;
 
     if (max_misses < abs_diff(len1, len2)) return 0;
 
@@ -421,7 +450,9 @@ Editops recover_alignment(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
 
     if (dist == 0) return editops;
 
-    [[maybe_unused]] size_t band_width_right = s2.size() - matrix.sim;
+#ifndef NDEBUG
+    size_t band_width_right = s2.size() - matrix.sim;
+#endif
 
     auto col = len1;
     auto row = len2;
@@ -520,10 +551,11 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
 
     template <typename InputIt1, typename InputIt2>
     static size_t _similarity(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t score_cutoff,
-                              [[maybe_unused]] size_t score_hint)
+                              size_t)
     {
         return lcs_seq_similarity(s1, s2, score_cutoff);
     }
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

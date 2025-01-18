@@ -8,15 +8,16 @@
 #include <stdio.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+namespace rapidfuzz {
+namespace detail {
 
 template <typename T, bool IsConst>
 struct BitMatrixView {
 
     using value_type = T;
     using size_type = size_t;
-    using pointer = std::conditional_t<IsConst, const value_type*, value_type*>;
-    using reference = std::conditional_t<IsConst, const value_type&, value_type&>;
+    using pointer = typename std::conditional<IsConst, const value_type*, value_type*>::type;
+    using reference = typename std::conditional<IsConst, const value_type&, value_type&>::type;
 
     BitMatrixView(pointer vector, size_type cols) noexcept : m_vector(vector), m_cols(cols)
     {}
@@ -176,12 +177,12 @@ struct ShiftedBitMatrix {
         return bool(m_matrix[row][col_word] & col_mask);
     }
 
-    auto operator[](size_t row) noexcept
+    BitMatrixView<value_type, false> operator[](size_t row) noexcept
     {
         return m_matrix[row];
     }
 
-    auto operator[](size_t row) const noexcept
+    BitMatrixView<value_type, true> operator[](size_t row) const noexcept
     {
         return m_matrix[row];
     }
@@ -196,4 +197,5 @@ private:
     std::vector<ptrdiff_t> m_offsets;
 };
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

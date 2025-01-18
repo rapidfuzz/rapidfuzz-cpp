@@ -13,7 +13,10 @@
 #include <sys/types.h>
 #include <vector>
 
-namespace rapidfuzz::detail {
+#include <rapidfuzz/details/type_traits.hpp>
+
+namespace rapidfuzz {
+namespace detail {
 
 static inline void assume(bool b)
 {
@@ -26,6 +29,9 @@ static inline void assume(bool b)
 #endif
 }
 
+namespace to_begin_detail {
+using std::begin;
+
 template <typename CharT>
 CharT* to_begin(CharT* s)
 {
@@ -33,11 +39,17 @@ CharT* to_begin(CharT* s)
 }
 
 template <typename T>
-auto to_begin(T& x)
+auto to_begin(T& x) -> decltype(begin(x))
 {
-    using std::begin;
+
     return begin(x);
 }
+} // namespace to_begin_detail
+
+using to_begin_detail::to_begin;
+
+namespace to_end_detail {
+using std::end;
 
 template <typename CharT>
 CharT* to_end(CharT* s)
@@ -50,11 +62,13 @@ CharT* to_end(CharT* s)
 }
 
 template <typename T>
-auto to_end(T& x)
+auto to_end(T& x) -> decltype(end(x))
 {
-    using std::end;
     return end(x);
 }
+} // namespace to_end_detail
+
+using to_end_detail::to_end;
 
 template <typename Iter>
 class Range {
@@ -69,87 +83,73 @@ public:
     using iterator = Iter;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
-    constexpr Range(Iter first, Iter last) : _first(first), _last(last)
+    Range(Iter first, Iter last) : _first(first), _last(last)
     {
         assert(std::distance(_first, _last) >= 0);
         _size = static_cast<size_t>(std::distance(_first, _last));
     }
 
-    constexpr Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
+    Range(Iter first, Iter last, size_t size) : _first(first), _last(last), _size(size)
     {}
 
     template <typename T>
-    constexpr Range(T& x) : _first(to_begin(x)), _last(to_end(x))
-    {
-        assert(std::distance(_first, _last) >= 0);
-        _size = static_cast<size_t>(std::distance(_first, _last));
-    }
+    Range(T& x) : Range(to_begin(x), to_end(x))
+    {}
 
-    constexpr iterator begin() const noexcept
+    iterator begin() const noexcept
     {
         return _first;
     }
-    constexpr iterator end() const noexcept
+    iterator end() const noexcept
     {
         return _last;
     }
 
-    constexpr reverse_iterator rbegin() const noexcept
+    reverse_iterator rbegin() const noexcept
     {
         return reverse_iterator(end());
     }
-    constexpr reverse_iterator rend() const noexcept
+    reverse_iterator rend() const noexcept
     {
         return reverse_iterator(begin());
     }
 
-    constexpr size_t size() const
+    size_t size() const
     {
         return _size;
     }
 
-    constexpr bool empty() const
+    bool empty() const
     {
         return size() == 0;
     }
-    explicit constexpr operator bool() const
+    explicit operator bool() const
     {
         return !empty();
     }
 
-    template <
-        typename... Dummy, typename IterCopy = Iter,
-        typename = std::enable_if_t<std::is_base_of_v<
-            std::random_access_iterator_tag, typename std::iterator_traits<IterCopy>::iterator_category>>>
-    constexpr decltype(auto) operator[](size_t n) const
+    template <typename... Dummy, typename IterCopy = Iter,
+              typename = rapidfuzz::rf_enable_if_t<
+                  std::is_base_of<std::random_access_iterator_tag,
+                                  typename std::iterator_traits<IterCopy>::iterator_category>::value>>
+    auto operator[](size_t n) const -> decltype(*_first)
     {
         return _first[static_cast<ptrdiff_t>(n)];
     }
 
-    constexpr void remove_prefix(size_t n)
+    void remove_prefix(size_t n)
     {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _first += static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _first++;
-
-        _size -= n;
-    }
-    constexpr void remove_suffix(size_t n)
-    {
-        if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
-                                        typename std::iterator_traits<Iter>::iterator_category>)
-            _last -= static_cast<ptrdiff_t>(n);
-        else
-            for (size_t i = 0; i < n; ++i)
-                _last--;
-
+        std::advance(_first, static_cast<ptrdiff_t>(n));
         _size -= n;
     }
 
-    constexpr Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
+    void remove_suffix(size_t n)
+    {
+        std::advance(_last, -static_cast<ptrdiff_t>(n));
+        _size -= n;
+    }
+
+    Range subseq(size_t pos = 0, size_t count = std::numeric_limits<size_t>::max())
     {
         if (pos > size()) throw std::out_of_range("Index out of range in Range::substr");
 
@@ -160,17 +160,17 @@ public:
         return res;
     }
 
-    constexpr decltype(auto) front() const
+    const value_type& front() const
     {
-        return *(_first);
+        return *_first;
     }
 
-    constexpr decltype(auto) back() const
+    const value_type& back() const
     {
         return *(_last - 1);
     }
 
-    constexpr Range<reverse_iterator> reversed() const
+    Range<reverse_iterator> reversed() const
     {
         return {rbegin(), rend(), _size};
     }
@@ -185,13 +185,24 @@ public:
     }
 };
 
+template <typename Iter>
+auto make_range(Iter first, Iter last) -> Range<Iter>
+{
+    return Range<Iter>(first, last);
+}
+
 template <typename T>
-Range(T& x) -> Range<decltype(to_begin(x))>;
+auto make_range(T& x) -> Range<decltype(to_begin(x))>
+{
+    return {to_begin(x), to_end(x)};
+}
 
 template <typename InputIt1, typename InputIt2>
 inline bool operator==(const Range<InputIt1>& a, const Range<InputIt2>& b)
 {
-    return std::equal(a.begin(), a.end(), b.begin(), b.end());
+    if (a.size() != b.size()) return false;
+
+    return std::equal(a.begin(), a.end(), b.begin());
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -227,4 +238,5 @@ inline bool operator>=(const Range<InputIt1>& a, const Range<InputIt2>& b)
 template <typename InputIt>
 using RangeVec = std::vector<Range<InputIt>>;
 
-} // namespace rapidfuzz::detail
+} // namespace detail
+} // namespace rapidfuzz

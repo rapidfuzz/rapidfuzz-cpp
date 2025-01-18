@@ -7,7 +7,7 @@
 namespace rapidfuzz_reference {
 
 template <typename InputIt1, typename InputIt2,
-          typename = std::enable_if_t<!std::is_same_v<InputIt2, double>>>
+          typename = typename std::enable_if<!std::is_same<InputIt2, double>::value>::type>
 double jaro_winkler_similarity(InputIt1 P_first, InputIt1 P_last, InputIt2 T_first, InputIt2 T_last,
                                double prefix_weight = 0.1, double score_cutoff = 0.0)
 {

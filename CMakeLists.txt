@@ -32,7 +32,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif()
 
-project(rapidfuzz LANGUAGES CXX VERSION 3.2.0)
+project(rapidfuzz LANGUAGES CXX VERSION 3.3.0)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
@@ -50,7 +50,7 @@ add_library(rapidfuzz INTERFACE)
 # provide a namespaced alias for clients to 'link' against if RapidFuzz is included as a sub-project
 add_library(rapidfuzz::rapidfuzz ALIAS rapidfuzz)
 
-target_compile_features(rapidfuzz INTERFACE cxx_std_17)
+target_compile_features(rapidfuzz INTERFACE cxx_std_11)
 
 target_include_directories(rapidfuzz
     INTERFACE
