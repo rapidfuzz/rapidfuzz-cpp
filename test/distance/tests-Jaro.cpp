@@ -1,5 +1,11 @@
+#if CATCH2_VERSION == 2
+#    include <catch2/catch.hpp>
+#else
+#    include <catch2/catch_test_macros.hpp>
+#    include <catch2/matchers/catch_matchers_floating_point.hpp>
+#endif
+
 #include "../../rapidfuzz_reference/Jaro.hpp"
-#include <catch2/catch.hpp>
 #include <rapidfuzz/distance/Jaro.hpp>
 
 #include "../common.hpp"

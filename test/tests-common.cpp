@@ -1,5 +1,11 @@
 #include "rapidfuzz/details/Range.hpp"
-#include <catch2/catch.hpp>
+
+#if CATCH2_VERSION == 2
+#    include <catch2/catch.hpp>
+#else
+#    include <catch2/catch_approx.hpp>
+#    include <catch2/catch_test_macros.hpp>
+#endif
 
 #include <rapidfuzz/details/common.hpp>
 

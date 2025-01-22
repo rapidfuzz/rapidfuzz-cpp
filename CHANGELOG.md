@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.3.1] - 2025-01-22
+### Fixed
+- fixed tests not building with catch2 versions >= 3.0
+
 ## [3.3.0] - 2025-01-18
 ### Changed
 - add C++11 and C++14 support
