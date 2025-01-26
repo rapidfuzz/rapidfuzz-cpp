@@ -221,7 +221,7 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
 
         static constexpr size_t unroll_factor = 3;
         for (unsigned int j = 0; j < N / unroll_factor; ++j) {
-            unroll<size_t, unroll_factor>([&](size_t word_) {
+            unroll<size_t, unroll_factor>([&res, &S, &j, &iter_s2, &carry, &block, &i](size_t word_) {
                 size_t word = word_ + j * unroll_factor;
                 uint64_t Matches = block.get(word, *iter_s2);
                 uint64_t u = S[word] & Matches;
@@ -235,7 +235,7 @@ auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>&
             });
         }
 
-        unroll<size_t, N % unroll_factor>([&](size_t word_) {
+        unroll<size_t, N % unroll_factor>([&res, &S, &carry, &block, &i, &iter_s2](size_t word_) {
             size_t word = word_ + N / unroll_factor * unroll_factor;
             uint64_t Matches = block.get(word, *iter_s2);
             uint64_t u = S[word] & Matches;

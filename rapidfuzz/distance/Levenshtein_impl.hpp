@@ -696,7 +696,7 @@ auto levenshtein_hyrroe2003_block(const BlockPatternMatchVector& PM, const Range
             res_.VN.set_offset(row, static_cast<ptrdiff_t>(first_block * word_size));
         }
 
-        auto advance_block = [&](size_t word) {
+        auto advance_block = [&res, &row, &PM, &words, &vecs, &Last, &iter_s2, &HP_carry, &HN_carry, &first_block](size_t word) {
             /* Step 1: Computing D0 */
             uint64_t PM_j = PM.get(word, *iter_s2);
             uint64_t VN = vecs[word].VN;
