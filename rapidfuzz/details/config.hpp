@@ -15,5 +15,5 @@
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201402L) || __cplusplus >= 201402L)
 #    define RAPIDFUZZ_CONSTEXPR_CXX14 constexpr
 #else
-#    define RAPIDFUZZ_CONSTEXPR_CXX14
+#    define RAPIDFUZZ_CONSTEXPR_CXX14 inline
 #endif
