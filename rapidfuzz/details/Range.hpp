@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <vector>
 
-#include <rapidfuzz/details/type_traits.hpp>
+#include "rapidfuzz/details/type_traits.hpp"
 
 namespace rapidfuzz {
 namespace detail {

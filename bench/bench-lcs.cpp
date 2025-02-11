@@ -1,7 +1,7 @@
-#include <benchmark/benchmark.h>
+#include "benchmark/benchmark.h"
 #include <random>
-#include <rapidfuzz/details/intrinsics.hpp>
-#include <rapidfuzz/distance/LCSseq.hpp>
+#include "rapidfuzz/details/intrinsics.hpp"
+#include "rapidfuzz/distance/LCSseq.hpp"
 #include <string>
 #include <vector>
 

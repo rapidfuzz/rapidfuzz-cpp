@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
-#include <rapidfuzz/details/PatternMatchVector.hpp>
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/distance.hpp>
-#include <rapidfuzz/details/intrinsics.hpp>
-#include <rapidfuzz/distance/LCSseq.hpp>
+#include "rapidfuzz/details/PatternMatchVector.hpp"
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/details/distance.hpp"
+#include "rapidfuzz/details/intrinsics.hpp"
+#include "rapidfuzz/distance/LCSseq.hpp"
 
 namespace rapidfuzz {
 namespace detail {

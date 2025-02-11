@@ -2,7 +2,7 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #include <algorithm>
-#include <rapidfuzz/distance/DamerauLevenshtein_impl.hpp>
+#include "rapidfuzz/distance/DamerauLevenshtein_impl.hpp"
 
 namespace rapidfuzz {
 /* the API will require a change when adding custom weights */

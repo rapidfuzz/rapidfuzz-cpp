@@ -2,16 +2,16 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #include <limits>
-#include <rapidfuzz/details/Matrix.hpp>
-#include <rapidfuzz/details/PatternMatchVector.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/distance.hpp>
-#include <rapidfuzz/details/intrinsics.hpp>
-#include <rapidfuzz/details/simd.hpp>
+#include "rapidfuzz/details/Matrix.hpp"
+#include "rapidfuzz/details/PatternMatchVector.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/details/distance.hpp"
+#include "rapidfuzz/details/intrinsics.hpp"
+#include "rapidfuzz/details/simd.hpp"
 
 #include <algorithm>
 #include <array>
-#include <rapidfuzz/details/types.hpp>
+#include "rapidfuzz/details/types.hpp"
 
 namespace rapidfuzz {
 namespace detail {

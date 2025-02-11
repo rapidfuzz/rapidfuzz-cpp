@@ -5,11 +5,11 @@
 #include <cstddef>
 #include <limits>
 #include <numeric>
-#include <rapidfuzz/details/GrowingHashmap.hpp>
-#include <rapidfuzz/details/Matrix.hpp>
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/distance.hpp>
+#include "rapidfuzz/details/GrowingHashmap.hpp"
+#include "rapidfuzz/details/Matrix.hpp"
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/details/distance.hpp"
 
 namespace rapidfuzz {
 namespace detail {
