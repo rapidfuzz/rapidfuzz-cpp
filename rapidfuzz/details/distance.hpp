@@ -4,9 +4,9 @@
 #pragma once
 
 #include <cmath>
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/simd.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/details/simd.hpp"
 #include <type_traits>
 
 namespace rapidfuzz {

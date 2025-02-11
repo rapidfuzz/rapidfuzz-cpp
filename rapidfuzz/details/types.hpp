@@ -4,7 +4,7 @@
 #pragma once
 
 #include <algorithm>
-#include <rapidfuzz/details/config.hpp>
+#include "rapidfuzz/details/config.hpp"
 #include <stddef.h>
 #include <stdexcept>
 #include <vector>

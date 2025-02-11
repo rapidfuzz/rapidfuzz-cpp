@@ -4,7 +4,7 @@
 #include "../rapidfuzz_reference/fuzz.hpp"
 #include "fuzzing.hpp"
 #include <cstdint>
-#include <rapidfuzz/fuzz.hpp>
+#include "rapidfuzz/fuzz.hpp"
 #include <stdexcept>
 #include <string>
 

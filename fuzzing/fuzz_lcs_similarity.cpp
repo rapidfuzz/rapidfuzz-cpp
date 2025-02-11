@@ -3,8 +3,8 @@
 
 #include "../rapidfuzz_reference/LCSseq.hpp"
 #include "fuzzing.hpp"
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/distance/LCSseq.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/distance/LCSseq.hpp"
 #include <stdexcept>
 #include <string>
 

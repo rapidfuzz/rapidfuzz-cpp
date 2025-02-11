@@ -4,7 +4,7 @@
 #include "../rapidfuzz_reference/Indel.hpp"
 #include "fuzzing.hpp"
 #include <limits>
-#include <rapidfuzz/distance/Indel.hpp>
+#include "rapidfuzz/distance/Indel.hpp"
 #include <stdexcept>
 #include <string>
 

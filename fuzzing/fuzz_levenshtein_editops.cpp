@@ -3,7 +3,7 @@
 
 #include "../rapidfuzz_reference/Levenshtein.hpp"
 #include "fuzzing.hpp"
-#include <rapidfuzz/distance.hpp>
+#include "rapidfuzz/distance.hpp"
 #include <stdexcept>
 #include <string>
 

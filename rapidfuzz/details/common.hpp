@@ -3,11 +3,11 @@
 
 #pragma once
 #include <cstring>
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/SplittedSentenceView.hpp>
-#include <rapidfuzz/details/intrinsics.hpp>
-#include <rapidfuzz/details/type_traits.hpp>
-#include <rapidfuzz/details/types.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/SplittedSentenceView.hpp"
+#include "rapidfuzz/details/intrinsics.hpp"
+#include "rapidfuzz/details/type_traits.hpp"
+#include "rapidfuzz/details/types.hpp"
 
 #if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
 #    include <mm_malloc.h>
@@ -98,4 +98,4 @@ static inline void rf_aligned_free(void* ptr)
 } // namespace detail
 } // namespace rapidfuzz
 
-#include <rapidfuzz/details/common_impl.hpp>
+#include "rapidfuzz/details/common_impl.hpp"

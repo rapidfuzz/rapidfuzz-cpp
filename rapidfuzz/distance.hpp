@@ -2,16 +2,16 @@
 /* Copyright © 2022-present Max Bachmann */
 
 #pragma once
-#include <rapidfuzz/distance/DamerauLevenshtein.hpp>
-#include <rapidfuzz/distance/Hamming.hpp>
-#include <rapidfuzz/distance/Indel.hpp>
-#include <rapidfuzz/distance/Jaro.hpp>
-#include <rapidfuzz/distance/JaroWinkler.hpp>
-#include <rapidfuzz/distance/LCSseq.hpp>
-#include <rapidfuzz/distance/Levenshtein.hpp>
-#include <rapidfuzz/distance/OSA.hpp>
-#include <rapidfuzz/distance/Postfix.hpp>
-#include <rapidfuzz/distance/Prefix.hpp>
+#include "rapidfuzz/distance/DamerauLevenshtein.hpp"
+#include "rapidfuzz/distance/Hamming.hpp"
+#include "rapidfuzz/distance/Indel.hpp"
+#include "rapidfuzz/distance/Jaro.hpp"
+#include "rapidfuzz/distance/JaroWinkler.hpp"
+#include "rapidfuzz/distance/LCSseq.hpp"
+#include "rapidfuzz/distance/Levenshtein.hpp"
+#include "rapidfuzz/distance/OSA.hpp"
+#include "rapidfuzz/distance/Postfix.hpp"
+#include "rapidfuzz/distance/Prefix.hpp"
 
 namespace rapidfuzz {
 

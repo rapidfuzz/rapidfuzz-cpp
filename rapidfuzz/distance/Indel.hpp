@@ -4,8 +4,8 @@
 #pragma once
 
 #include <limits>
-#include <rapidfuzz/distance/Indel_impl.hpp>
-#include <rapidfuzz/distance/LCSseq.hpp>
+#include "rapidfuzz/distance/Indel_impl.hpp"
+#include "rapidfuzz/distance/LCSseq.hpp"
 
 namespace rapidfuzz {
 
