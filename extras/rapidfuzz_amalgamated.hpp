@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2025-02-11 13:43:07.694110
+//  Generated: 2025-02-11 13:48:20.141647
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -2503,7 +2503,7 @@ static inline native_simd<T> min32(const native_simd<T>& a, const native_simd<T>
     return _mm256_min_epu32(a, b);
 }
 
-/* taken from https://stackoverflow.com/a/51807800/11335032 */
+/* taken from https://stackoverflow.com/a/51807800 */
 static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
                                         const native_simd<uint8_t>& count_) noexcept
 {
@@ -2526,7 +2526,7 @@ static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
     return x;
 }
 
-/* taken from https://stackoverflow.com/a/51805592/11335032 */
+/* taken from https://stackoverflow.com/a/51805592 */
 static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a,
                                          const native_simd<uint16_t>& count) noexcept
 {
@@ -9546,7 +9546,7 @@ namespace rapidfuzz {
 namespace detail {
 
 /*
- * taken from https://stackoverflow.com/a/17251989/11335032
+ * taken from https://stackoverflow.com/a/17251989
  */
 template <typename T, typename U>
 bool CanTypeFitValue(const U value)

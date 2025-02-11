@@ -597,7 +597,7 @@ static inline native_simd<T> min32(const native_simd<T>& a, const native_simd<T>
     return _mm256_min_epu32(a, b);
 }
 
-/* taken from https://stackoverflow.com/a/51807800/11335032 */
+/* taken from https://stackoverflow.com/a/51807800 */
 static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
                                         const native_simd<uint8_t>& count_) noexcept
 {
@@ -620,7 +620,7 @@ static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
     return x;
 }
 
-/* taken from https://stackoverflow.com/a/51805592/11335032 */
+/* taken from https://stackoverflow.com/a/51805592 */
 static inline native_simd<uint16_t> sllv(const native_simd<uint16_t>& a,
                                          const native_simd<uint16_t>& count) noexcept
 {
