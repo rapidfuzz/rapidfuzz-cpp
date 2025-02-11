@@ -602,8 +602,8 @@ static inline native_simd<uint8_t> sllv(const native_simd<uint8_t>& a,
                                         const native_simd<uint8_t>& count_) noexcept
 {
     __m256i mask_hi = _mm256_set1_epi32(static_cast<int32_t>(0xFF00FF00));
-    __m256i multiplier_lut = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, char(128), 64, 32, 16, 8, 4, 2, 1, 0, 0,
-                                             0, 0, 0, 0, 0, 0, char(128), 64, 32, 16, 8, 4, 2, 1);
+    __m256i multiplier_lut = _mm256_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, char(-128), 64, 32, 16, 8, 4, 2, 1, 0, 0,
+                                             0, 0, 0, 0, 0, 0, char(-128), 64, 32, 16, 8, 4, 2, 1);
 
     __m256i count_sat =
         _mm256_min_epu8(count_, _mm256_set1_epi8(8)); /* AVX shift counts are not masked. So a_i << n_i = 0
