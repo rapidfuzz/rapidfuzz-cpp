@@ -1,5 +1,5 @@
 # Cmake config largely taken from catch2
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5..3.31)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   cmake_policy(SET CMP0135 NEW)
@@ -32,7 +32,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif()
 
-project(rapidfuzz LANGUAGES CXX VERSION 3.3.1)
+project(rapidfuzz LANGUAGES CXX VERSION 3.3.2)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(GNUInstallDirs)
