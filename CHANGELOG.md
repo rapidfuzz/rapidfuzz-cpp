@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.3.2] - 2025-02-11
+### Fixed
+- fixed compilation with old msvc versions that don't properly support if constexpr
+
 ## [3.3.1] - 2025-01-22
 ### Fixed
 - fixed tests not building with catch2 versions >= 3.0
