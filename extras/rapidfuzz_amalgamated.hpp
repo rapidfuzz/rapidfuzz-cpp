@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2024-12-25 11:44:52.213162
+//  Generated: 2025-02-11 13:40:17.377263
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -429,6 +429,17 @@ private:
 
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
 #    define RAPIDFUZZ_DEDUCTION_GUIDES
+#endif
+
+/* older versions of msvc have bugs in their if constexpr support
+ * see https://github.com/rapidfuzz/rapidfuzz-cpp/issues/122
+ * since we don't know the exact version this was fixed in, use the earliest we could test
+ */
+#if defined(_MSC_VER) && _MSC_VER < 1920
+#    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 0
+#    define RAPIDFUZZ_IF_CONSTEXPR if
+#elif ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
+#    define RAPIDFUZZ_DEDUCTION_GUIDES
 #    define RAPIDFUZZ_IF_CONSTEXPR_AVAILABLE 1
 #    define RAPIDFUZZ_IF_CONSTEXPR if constexpr
 #else
@@ -439,7 +450,7 @@ private:
 #if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201402L) || __cplusplus >= 201402L)
 #    define RAPIDFUZZ_CONSTEXPR_CXX14 constexpr
 #else
-#    define RAPIDFUZZ_CONSTEXPR_CXX14
+#    define RAPIDFUZZ_CONSTEXPR_CXX14 inline
 #endif
 
 #include <stddef.h>
@@ -4638,8 +4649,8 @@ void lcs_simd(Range<size_t*> scores, const BlockPatternMatchVector& block, const
 #endif
 
 template <size_t N, bool RecordMatrix, typename PMV, typename InputIt1, typename InputIt2>
-auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>& s2,
-                size_t score_cutoff = 0) -> LCSseqResult<RecordMatrix>
+auto lcs_unroll(const PMV& block, const Range<InputIt1>&, const Range<InputIt2>& s2, size_t score_cutoff = 0)
+    -> LCSseqResult<RecordMatrix>
 {
     uint64_t S[N];
     unroll<size_t, N>([&](size_t i) { S[i] = ~UINT64_C(0); });
@@ -6838,12 +6849,12 @@ private:
 
 #ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
-explicit CachedJaroWinkler(const Sentence1& s1_,
-                           double _prefix_weight = 0.1) -> CachedJaroWinkler<char_type<Sentence1>>;
+explicit CachedJaroWinkler(const Sentence1& s1_, double _prefix_weight = 0.1)
+    -> CachedJaroWinkler<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedJaroWinkler(InputIt1 first1, InputIt1 last1,
-                  double _prefix_weight = 0.1) -> CachedJaroWinkler<iter_value_t<InputIt1>>;
+CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
+    -> CachedJaroWinkler<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -7346,8 +7357,8 @@ size_t levenshtein_hyrroe2003_small_band(const BlockPatternMatchVector& PM, cons
 }
 
 template <bool RecordMatrix, typename InputIt1, typename InputIt2>
-auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<InputIt2>& s2,
-                                       size_t max) -> LevenshteinResult<RecordMatrix, false>
+auto levenshtein_hyrroe2003_small_band(const Range<InputIt1>& s1, const Range<InputIt2>& s2, size_t max)
+    -> LevenshteinResult<RecordMatrix, false>
 {
     assert(max <= s1.size());
     assert(max <= s2.size());
@@ -8014,9 +8025,6 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
         }
     }
 
-    assert(hpos.left_score >= 0);
-    assert(hpos.right_score >= 0);
-
     if (hpos.left_score + hpos.right_score > max)
         return find_hirschberg_pos(s1, s2, max * 2);
     else {
@@ -8580,12 +8588,12 @@ private:
 
 #ifdef RAPIDFUZZ_DEDUCTION_GUIDES
 template <typename Sentence1>
-explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {
-                                                     1, 1, 1}) -> CachedLevenshtein<char_type<Sentence1>>;
+explicit CachedLevenshtein(const Sentence1& s1_, LevenshteinWeightTable aWeights = {1, 1, 1})
+    -> CachedLevenshtein<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedLevenshtein(InputIt1 first1, InputIt1 last1,
-                  LevenshteinWeightTable aWeights = {1, 1, 1}) -> CachedLevenshtein<iter_value_t<InputIt1>>;
+CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeights = {1, 1, 1})
+    -> CachedLevenshtein<iter_value_t<InputIt1>>;
 #endif
 
 } // namespace rapidfuzz
@@ -9961,8 +9969,8 @@ explicit CachedPartialTokenSortRatio(const Sentence1& s1)
     -> CachedPartialTokenSortRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedPartialTokenSortRatio(InputIt1 first1,
-                            InputIt1 last1) -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
+CachedPartialTokenSortRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedPartialTokenSortRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
@@ -10089,8 +10097,8 @@ template <typename Sentence1>
 explicit CachedPartialTokenSetRatio(const Sentence1& s1) -> CachedPartialTokenSetRatio<char_type<Sentence1>>;
 
 template <typename InputIt1>
-CachedPartialTokenSetRatio(InputIt1 first1,
-                           InputIt1 last1) -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
+CachedPartialTokenSetRatio(InputIt1 first1, InputIt1 last1)
+    -> CachedPartialTokenSetRatio<iter_value_t<InputIt1>>;
 #endif
 
 /**
