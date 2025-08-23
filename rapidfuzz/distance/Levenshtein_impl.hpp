@@ -4,14 +4,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <rapidfuzz/details/GrowingHashmap.hpp>
-#include <rapidfuzz/details/Matrix.hpp>
-#include <rapidfuzz/details/PatternMatchVector.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/distance.hpp>
-#include <rapidfuzz/details/intrinsics.hpp>
-#include <rapidfuzz/details/type_traits.hpp>
-#include <rapidfuzz/distance/Indel.hpp>
+#include "rapidfuzz/details/GrowingHashmap.hpp"
+#include "rapidfuzz/details/Matrix.hpp"
+#include "rapidfuzz/details/PatternMatchVector.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/details/distance.hpp"
+#include "rapidfuzz/details/intrinsics.hpp"
+#include "rapidfuzz/details/type_traits.hpp"
+#include "rapidfuzz/distance/Indel.hpp"
 #include <sys/types.h>
 
 namespace rapidfuzz {

@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/type_traits.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/type_traits.hpp"
 
 namespace rapidfuzz {
 namespace detail {

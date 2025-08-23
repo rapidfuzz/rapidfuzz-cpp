@@ -5,7 +5,7 @@
 #include <array>
 #include <immintrin.h>
 #include <ostream>
-#include <rapidfuzz/details/intrinsics.hpp>
+#include "rapidfuzz/details/intrinsics.hpp"
 #include <stdint.h>
 
 namespace rapidfuzz {
