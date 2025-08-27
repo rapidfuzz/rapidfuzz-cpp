@@ -909,7 +909,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>        <span class="keywordflow">return</span> std::max(end_ratio, <a class="code hl_function" href="group__Fuzz.html#ga6c3d4f9ebf3a92334b97e0fb3a204cf7">token_ratio</a>(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);</div>
 <div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>    }</div>
 <div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span> </div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>    <span class="keyword">const</span> <span class="keywordtype">double</span> PARTIAL_SCALE = (len_ratio &lt; 8.0) ? 0.9 : 0.6;</div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>    <span class="keyword">const</span> <span class="keywordtype">double</span> PARTIAL_SCALE = (len_ratio &lt;= 8.0) ? 0.9 : 0.6;</div>
 <div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span> </div>
 <div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>    score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;</div>
 <div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>    end_ratio =</div>
@@ -967,7 +967,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>        <span class="keywordflow">return</span> std::max(end_ratio, r * UNBASE_SCALE);</div>
 <div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>    }</div>
 <div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span> </div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>    <span class="keyword">const</span> <span class="keywordtype">double</span> PARTIAL_SCALE = (len_ratio &lt; 8.0) ? 0.9 : 0.6;</div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>    <span class="keyword">const</span> <span class="keywordtype">double</span> PARTIAL_SCALE = (len_ratio &lt;= 8.0) ? 0.9 : 0.6;</div>
 <div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span> </div>
 <div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span>    score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;</div>
 <div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>    end_ratio =</div>
