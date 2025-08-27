@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.3.3] - 2025-08-27
+### Fixed
+- fixed WRatio for a length ratio of exactly 8.0
+
 ## [3.3.2] - 2025-02-11
 ### Fixed
 - fixed compilation with old msvc versions that don't properly support if constexpr

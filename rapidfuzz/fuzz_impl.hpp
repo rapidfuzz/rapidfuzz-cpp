@@ -810,7 +810,7 @@ double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
         return std::max(end_ratio, token_ratio(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);
     }
 
-    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
+    const double PARTIAL_SCALE = (len_ratio <= 8.0) ? 0.9 : 0.6;
 
     score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
     end_ratio =
@@ -866,7 +866,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
         return std::max(end_ratio, r * UNBASE_SCALE);
     }
 
-    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
+    const double PARTIAL_SCALE = (len_ratio <= 8.0) ? 0.9 : 0.6;
 
     score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
     end_ratio =
