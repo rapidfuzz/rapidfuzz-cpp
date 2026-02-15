@@ -469,7 +469,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>    <span class="keywordflow">if</span> (max_misses &gt;= 5) <span class="keywordflow">return</span> longest_common_subsequence(block, s1, s2, score_cutoff);</div>
 <div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span> </div>
 <div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span>    <span class="comment">/* common affix does not effect Levenshtein distance */</span></div>
-<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>    StringAffix affix = <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>    StringAffix affix = remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>    <span class="keywordtype">size_t</span> lcs_sim = affix.prefix_len + affix.suffix_len;</div>
 <div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>    <span class="keywordflow">if</span> (!s1.empty() &amp;&amp; !s2.empty()) {</div>
 <div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>        <span class="keywordtype">size_t</span> adjusted_cutoff = score_cutoff &gt;= lcs_sim ? score_cutoff - lcs_sim : 0;</div>
@@ -498,7 +498,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>    <span class="keywordflow">if</span> (max_misses &lt; abs_diff(len1, len2)) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span> </div>
 <div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span>    <span class="comment">/* common affix does not effect Levenshtein distance */</span></div>
-<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>    StringAffix affix = <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>    StringAffix affix = remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>    <span class="keywordtype">size_t</span> lcs_sim = affix.prefix_len + affix.suffix_len;</div>
 <div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span>    <span class="keywordflow">if</span> (s1.size() &amp;&amp; s2.size()) {</div>
 <div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>        <span class="keywordtype">size_t</span> adjusted_cutoff = score_cutoff &gt;= lcs_sim ? score_cutoff - lcs_sim : 0;</div>
@@ -608,7 +608,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>Editops lcs_seq_editops(Range&lt;InputIt1&gt; s1, Range&lt;InputIt2&gt; s2)</div>
 <div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>{</div>
 <div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>    <span class="comment">/* prefix and suffix are no-ops, which do not need to be added to the editops */</span></div>
-<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>    StringAffix affix = <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>    StringAffix affix = remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span> </div>
 <div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span>    <span class="keywordflow">return</span> recover_alignment(s1, s2, lcs_matrix(s1, s2), affix);</div>
 <div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>}</div>
@@ -633,7 +633,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span> </div>
 <div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span>} <span class="comment">// namespace detail</span></div>
 <div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="ttc" id="agroup__Common_html_gaf49ee79ee1a34ef896dc2740eaf649a8"><div class="ttname"><a href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">rapidfuzz::detail::remove_common_affix</a></div><div class="ttdeci">StringAffix remove_common_affix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:78</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

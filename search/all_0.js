@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['bibliography_0',['Bibliography',['../citelist.html',1,'']]]
+  ['algorithms_0',['Distance Algorithms',['../group__Distance.html',1,'']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['common_0',['Common',['../group__Common.html',1,'']]]
+  ['algorithms_0',['Distance Algorithms',['../group__Distance.html',1,'']]]
 ];

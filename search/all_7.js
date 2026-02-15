@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['qratio_0',['QRatio',['../group__Fuzz.html#ga54d01a1f46d05d9eaa99708e66a1c502',1,'rapidfuzz::fuzz']]]
+  ['opcode_0',['Opcode',['../structrapidfuzz_1_1Opcode.html',1,'rapidfuzz']]],
+  ['osa_5fdistance_1',['osa_distance',['../group__Distance.html#ga265f94009a4cfc31749da8ab8eebc056',1,'rapidfuzz']]],
+  ['osa_5fnormalized_5fsimilarity_2',['osa_normalized_similarity',['../group__Distance.html#gaa842344d4a65ddaaa7320896acc2ff2c',1,'rapidfuzz']]]
 ];

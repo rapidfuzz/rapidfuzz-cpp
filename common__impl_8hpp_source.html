@@ -127,8 +127,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>}</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="foldopen" id="foldopen00050" data-start="{" data-end="}">
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">   50</a></span><span class="keywordtype">size_t</span> <a class="code hl_function" href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">remove_common_prefix</a>(Range&lt;InputIt1&gt;&amp; s1, Range&lt;InputIt2&gt;&amp; s2)</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keywordtype">size_t</span> remove_common_prefix(Range&lt;InputIt1&gt;&amp; s1, Range&lt;InputIt2&gt;&amp; s2)</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>{</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keyword">auto</span> first1 = std::begin(s1);</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordtype">size_t</span> prefix = <span class="keyword">static_cast&lt;</span><span class="keywordtype">size_t</span><span class="keyword">&gt;</span>(</div>
@@ -137,11 +136,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    s2.remove_prefix(prefix);</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keywordflow">return</span> prefix;</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>}</div>
-</div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="foldopen" id="foldopen00064" data-start="{" data-end="}">
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="group__Common.html#ga04b80bfd29f1f5252cdb3202fe19e4df">   64</a></span><span class="keywordtype">size_t</span> <a class="code hl_function" href="group__Common.html#ga04b80bfd29f1f5252cdb3202fe19e4df">remove_common_suffix</a>(Range&lt;InputIt1&gt;&amp; s1, Range&lt;InputIt2&gt;&amp; s2)</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keywordtype">size_t</span> remove_common_suffix(Range&lt;InputIt1&gt;&amp; s1, Range&lt;InputIt2&gt;&amp; s2)</div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>{</div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keyword">auto</span> rfirst1 = s1.rbegin();</div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordtype">size_t</span> suffix = <span class="keyword">static_cast&lt;</span><span class="keywordtype">size_t</span><span class="keyword">&gt;</span>(</div>
@@ -150,15 +147,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    s2.remove_suffix(suffix);</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordflow">return</span> suffix;</div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>}</div>
-</div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="foldopen" id="foldopen00078" data-start="{" data-end="}">
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">   78</a></span>StringAffix <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(Range&lt;InputIt1&gt;&amp; s1, Range&lt;InputIt2&gt;&amp; s2)</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>StringAffix remove_common_affix(Range&lt;InputIt1&gt;&amp; s1, Range&lt;InputIt2&gt;&amp; s2)</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>{</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordflow">return</span> StringAffix{<a class="code hl_function" href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">remove_common_prefix</a>(s1, s2), <a class="code hl_function" href="group__Common.html#ga04b80bfd29f1f5252cdb3202fe19e4df">remove_common_suffix</a>(s1, s2)};</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    <span class="keywordflow">return</span> StringAffix{remove_common_prefix(s1, s2), remove_common_suffix(s1, s2)};</div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>}</div>
-</div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span>, <span class="keyword">typename</span> = <span class="keywordtype">void</span>&gt;</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="keyword">struct </span>is_space_dispatch_tag : std::integral_constant&lt;int, 0&gt; {};</div>
@@ -261,9 +255,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
 <div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>} <span class="comment">// namespace detail</span></div>
 <div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="ttc" id="agroup__Common_html_ga04b80bfd29f1f5252cdb3202fe19e4df"><div class="ttname"><a href="group__Common.html#ga04b80bfd29f1f5252cdb3202fe19e4df">rapidfuzz::detail::remove_common_suffix</a></div><div class="ttdeci">size_t remove_common_suffix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:64</div></div>
-<div class="ttc" id="agroup__Common_html_gaf0d0fd7ddef296191b70db5c87ecd657"><div class="ttname"><a href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">rapidfuzz::detail::remove_common_prefix</a></div><div class="ttdeci">size_t remove_common_prefix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:50</div></div>
-<div class="ttc" id="agroup__Common_html_gaf49ee79ee1a34ef896dc2740eaf649a8"><div class="ttname"><a href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">rapidfuzz::detail::remove_common_affix</a></div><div class="ttdeci">StringAffix remove_common_affix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:78</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

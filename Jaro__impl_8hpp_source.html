@@ -447,7 +447,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span>    <span class="keywordtype">size_t</span> Bound = jaro_bounds(P, T);</div>
 <div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span> </div>
 <div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>    <span class="comment">/* common prefix never includes Transpositions */</span></div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>    <span class="keywordtype">size_t</span> CommonChars = <a class="code hl_function" href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">remove_common_prefix</a>(P, T);</div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>    <span class="keywordtype">size_t</span> CommonChars = remove_common_prefix(P, T);</div>
 <div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>    <span class="keywordtype">size_t</span> Transpositions = 0;</div>
 <div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span> </div>
 <div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span>    <span class="keywordflow">if</span> (P.empty() || T.empty()) {</div>
@@ -932,7 +932,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span> </div>
 <div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>} <span class="comment">// namespace detail</span></div>
 <div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="ttc" id="agroup__Common_html_gaf0d0fd7ddef296191b70db5c87ecd657"><div class="ttname"><a href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">rapidfuzz::detail::remove_common_prefix</a></div><div class="ttdeci">size_t remove_common_prefix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:50</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

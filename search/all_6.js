@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['partial_5fratio_0',['partial_ratio',['../group__Fuzz.html#gaf3233dbb354b88066dc51bf1f27dbdee',1,'rapidfuzz::fuzz']]],
-  ['partial_5ftoken_5fratio_1',['partial_token_ratio',['../group__Fuzz.html#ga7908598f2c3cc9454137063748e2dca1',1,'rapidfuzz::fuzz']]],
-  ['partial_5ftoken_5fset_5fratio_2',['partial_token_set_ratio',['../group__Fuzz.html#ga63d57e2425a7e4c0ff43565b95fc9390',1,'rapidfuzz::fuzz']]],
-  ['partial_5ftoken_5fsort_5fratio_3',['partial_token_sort_ratio',['../group__Fuzz.html#gabc2ec33c2f0c2e324c0088e18e75c88c',1,'rapidfuzz::fuzz']]]
+  ['levenshtein_5fdistance_0',['levenshtein_distance',['../group__Distance.html#ga32c98dc4371143e475eb2f18937e2638',1,'rapidfuzz']]],
+  ['levenshtein_5feditops_1',['levenshtein_editops',['../group__Distance.html#ga1195011db65fe45bcf3949483a204373',1,'rapidfuzz']]],
+  ['levenshtein_5fnormalized_5fsimilarity_2',['levenshtein_normalized_similarity',['../group__Distance.html#ga4890c1a8963f2d15463ce782848acb42',1,'rapidfuzz']]]
 ];

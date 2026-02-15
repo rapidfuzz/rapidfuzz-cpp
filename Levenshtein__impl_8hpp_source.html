@@ -224,7 +224,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    <span class="keywordflow">if</span> (min_edits &gt; max) <span class="keywordflow">return</span> max + 1;</div>
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    <span class="comment">/* common affix does not effect Levenshtein distance */</span></div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span> </div>
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    <span class="keywordflow">return</span> generalized_levenshtein_wagner_fischer(s1, s2, weights, max);</div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>}</div>
@@ -952,7 +952,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>    }</div>
 <div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span> </div>
 <div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>    <span class="comment">/* common affix does not effect Levenshtein distance */</span></div>
-<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>    <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>    remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span>    <span class="keywordflow">if</span> (s1.empty() || s2.empty()) <span class="keywordflow">return</span> s1.size() + s2.size();</div>
 <div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span> </div>
 <div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>    <span class="keywordflow">return</span> levenshtein_mbleven2018(s1, s2, score_cutoff);</div>
@@ -976,7 +976,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span>    <span class="keywordflow">if</span> (score_cutoff &lt; (s1.size() - s2.size())) <span class="keywordflow">return</span> score_cutoff + 1;</div>
 <div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span> </div>
 <div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span>    <span class="comment">/* common affix does not effect Levenshtein distance */</span></div>
-<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>    <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>    remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span>    <span class="keywordflow">if</span> (s1.empty() || s2.empty()) <span class="keywordflow">return</span> s1.size() + s2.size();</div>
 <div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span> </div>
 <div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span>    <span class="keywordflow">if</span> (score_cutoff &lt; 4) <span class="keywordflow">return</span> levenshtein_mbleven2018(s1, s2, score_cutoff);</div>
@@ -1105,7 +1105,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01054" name="l01054"></a><span class="lineno"> 1054</span>}</div>
 <div class="line"><a id="l01055" name="l01055"></a><span class="lineno"> 1055</span> </div>
 <div class="line"><a id="l01056" name="l01056"></a><span class="lineno"> 1056</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"> 1057</span><span class="keywordtype">size_t</span> levenshtein_distance(<span class="keyword">const</span> Range&lt;InputIt1&gt;&amp; s1, <span class="keyword">const</span> Range&lt;InputIt2&gt;&amp; s2,</div>
+<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"> 1057</span><span class="keywordtype">size_t</span> <a class="code hl_function" href="group__Distance.html#ga32c98dc4371143e475eb2f18937e2638">levenshtein_distance</a>(<span class="keyword">const</span> Range&lt;InputIt1&gt;&amp; s1, <span class="keyword">const</span> Range&lt;InputIt2&gt;&amp; s2,</div>
 <div class="line"><a id="l01058" name="l01058"></a><span class="lineno"> 1058</span>                            LevenshteinWeightTable weights = {1, 1, 1},</div>
 <div class="line"><a id="l01059" name="l01059"></a><span class="lineno"> 1059</span>                            <span class="keywordtype">size_t</span> score_cutoff = std::numeric_limits&lt;size_t&gt;::max(),</div>
 <div class="line"><a id="l01060" name="l01060"></a><span class="lineno"> 1060</span>                            <span class="keywordtype">size_t</span> score_hint = std::numeric_limits&lt;size_t&gt;::max())</div>
@@ -1227,7 +1227,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01176" name="l01176"></a><span class="lineno"> 1176</span>    <span class="keywordflow">if</span> (hpos.left_score + hpos.right_score &gt; max)</div>
 <div class="line"><a id="l01177" name="l01177"></a><span class="lineno"> 1177</span>        <span class="keywordflow">return</span> find_hirschberg_pos(s1, s2, max * 2);</div>
 <div class="line"><a id="l01178" name="l01178"></a><span class="lineno"> 1178</span>    <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l01179" name="l01179"></a><span class="lineno"> 1179</span>        assert(levenshtein_distance(s1, s2) == hpos.left_score + hpos.right_score);</div>
+<div class="line"><a id="l01179" name="l01179"></a><span class="lineno"> 1179</span>        assert(<a class="code hl_function" href="group__Distance.html#ga32c98dc4371143e475eb2f18937e2638">levenshtein_distance</a>(s1, s2) == hpos.left_score + hpos.right_score);</div>
 <div class="line"><a id="l01180" name="l01180"></a><span class="lineno"> 1180</span>        <span class="keywordflow">return</span> hpos;</div>
 <div class="line"><a id="l01181" name="l01181"></a><span class="lineno"> 1181</span>    }</div>
 <div class="line"><a id="l01182" name="l01182"></a><span class="lineno"> 1182</span>}</div>
@@ -1238,7 +1238,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01187" name="l01187"></a><span class="lineno"> 1187</span>                                  <span class="keywordtype">size_t</span> max = std::numeric_limits&lt;size_t&gt;::max())</div>
 <div class="line"><a id="l01188" name="l01188"></a><span class="lineno"> 1188</span>{</div>
 <div class="line"><a id="l01189" name="l01189"></a><span class="lineno"> 1189</span>    <span class="comment">/* prefix and suffix are no-ops, which do not need to be added to the editops */</span></div>
-<div class="line"><a id="l01190" name="l01190"></a><span class="lineno"> 1190</span>    StringAffix affix = <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l01190" name="l01190"></a><span class="lineno"> 1190</span>    StringAffix affix = remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l01191" name="l01191"></a><span class="lineno"> 1191</span>    src_pos += affix.prefix_len;</div>
 <div class="line"><a id="l01192" name="l01192"></a><span class="lineno"> 1192</span>    dest_pos += affix.prefix_len;</div>
 <div class="line"><a id="l01193" name="l01193"></a><span class="lineno"> 1193</span> </div>
@@ -1279,12 +1279,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01228" name="l01228"></a><span class="lineno"> 1228</span>    <span class="keyword">static</span> <span class="keywordtype">size_t</span> _distance(<span class="keyword">const</span> Range&lt;InputIt1&gt;&amp; s1, <span class="keyword">const</span> Range&lt;InputIt2&gt;&amp; s2,</div>
 <div class="line"><a id="l01229" name="l01229"></a><span class="lineno"> 1229</span>                            LevenshteinWeightTable weights, <span class="keywordtype">size_t</span> score_cutoff, <span class="keywordtype">size_t</span> score_hint)</div>
 <div class="line"><a id="l01230" name="l01230"></a><span class="lineno"> 1230</span>    {</div>
-<div class="line"><a id="l01231" name="l01231"></a><span class="lineno"> 1231</span>        <span class="keywordflow">return</span> levenshtein_distance(s1, s2, weights, score_cutoff, score_hint);</div>
+<div class="line"><a id="l01231" name="l01231"></a><span class="lineno"> 1231</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="group__Distance.html#ga32c98dc4371143e475eb2f18937e2638">levenshtein_distance</a>(s1, s2, weights, score_cutoff, score_hint);</div>
 <div class="line"><a id="l01232" name="l01232"></a><span class="lineno"> 1232</span>    }</div>
 <div class="line"><a id="l01233" name="l01233"></a><span class="lineno"> 1233</span>};</div>
 <div class="line"><a id="l01234" name="l01234"></a><span class="lineno"> 1234</span> </div>
 <div class="line"><a id="l01235" name="l01235"></a><span class="lineno"> 1235</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
-<div class="line"><a id="l01236" name="l01236"></a><span class="lineno"> 1236</span>Editops levenshtein_editops(<span class="keyword">const</span> Range&lt;InputIt1&gt;&amp; s1, <span class="keyword">const</span> Range&lt;InputIt2&gt;&amp; s2, <span class="keywordtype">size_t</span> score_hint)</div>
+<div class="line"><a id="l01236" name="l01236"></a><span class="lineno"> 1236</span>Editops <a class="code hl_function" href="group__Distance.html#ga1195011db65fe45bcf3949483a204373">levenshtein_editops</a>(<span class="keyword">const</span> Range&lt;InputIt1&gt;&amp; s1, <span class="keyword">const</span> Range&lt;InputIt2&gt;&amp; s2, <span class="keywordtype">size_t</span> score_hint)</div>
 <div class="line"><a id="l01237" name="l01237"></a><span class="lineno"> 1237</span>{</div>
 <div class="line"><a id="l01238" name="l01238"></a><span class="lineno"> 1238</span>    Editops editops;</div>
 <div class="line"><a id="l01239" name="l01239"></a><span class="lineno"> 1239</span>    <span class="keywordflow">if</span> (score_hint &lt; 31) score_hint = 31;</div>
@@ -1309,7 +1309,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01258" name="l01258"></a><span class="lineno"> 1258</span> </div>
 <div class="line"><a id="l01259" name="l01259"></a><span class="lineno"> 1259</span>} <span class="comment">// namespace detail</span></div>
 <div class="line"><a id="l01260" name="l01260"></a><span class="lineno"> 1260</span>} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="ttc" id="agroup__Common_html_gaf49ee79ee1a34ef896dc2740eaf649a8"><div class="ttname"><a href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">rapidfuzz::detail::remove_common_affix</a></div><div class="ttdeci">StringAffix remove_common_affix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:78</div></div>
+<div class="ttc" id="agroup__Distance_html_ga1195011db65fe45bcf3949483a204373"><div class="ttname"><a href="group__Distance.html#ga1195011db65fe45bcf3949483a204373">rapidfuzz::levenshtein_editops</a></div><div class="ttdeci">Editops levenshtein_editops(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, size_t score_hint=std::numeric_limits&lt; size_t &gt;::max())</div><div class="ttdoc">Return list of EditOp describing how to turn s1 into s2.</div><div class="ttdef"><b>Definition</b> Levenshtein.hpp:288</div></div>
+<div class="ttc" id="agroup__Distance_html_ga32c98dc4371143e475eb2f18937e2638"><div class="ttname"><a href="group__Distance.html#ga32c98dc4371143e475eb2f18937e2638">rapidfuzz::levenshtein_distance</a></div><div class="ttdeci">size_t levenshtein_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, LevenshteinWeightTable weights={1, 1, 1}, size_t score_cutoff=std::numeric_limits&lt; size_t &gt;::max(), size_t score_hint=std::numeric_limits&lt; size_t &gt;::max())</div><div class="ttdoc">Calculates the minimum number of insertions, deletions, and substitutions required to change one sequ...</div><div class="ttdef"><b>Definition</b> Levenshtein.hpp:146</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -328,7 +328,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>    {</div>
 <div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>        <span class="keywordflow">if</span> (s2.size() &lt; s1.size()) <span class="keywordflow">return</span> _distance(s2, s1, score_cutoff, score_hint);</div>
 <div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span> </div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        <a class="code hl_function" href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">remove_common_affix</a>(s1, s2);</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        remove_common_affix(s1, s2);</div>
 <div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>        <span class="keywordflow">if</span> (s1.empty())</div>
 <div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>            <span class="keywordflow">return</span> (s2.size() &lt;= score_cutoff) ? s2.size() : score_cutoff + 1;</div>
 <div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>        <span class="keywordflow">else</span> <span class="keywordflow">if</span> (s1.size() &lt; 64)</div>
@@ -340,7 +340,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span> </div>
 <div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>} <span class="comment">// namespace detail</span></div>
 <div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="ttc" id="agroup__Common_html_gaf49ee79ee1a34ef896dc2740eaf649a8"><div class="ttname"><a href="group__Common.html#gaf49ee79ee1a34ef896dc2740eaf649a8">rapidfuzz::detail::remove_common_affix</a></div><div class="ttdeci">StringAffix remove_common_affix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:78</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

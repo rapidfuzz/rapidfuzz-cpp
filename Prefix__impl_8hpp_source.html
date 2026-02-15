@@ -105,14 +105,13 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> InputIt1, <span class="keyword">typename</span> InputIt2&gt;</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keyword">static</span> <span class="keywordtype">size_t</span> _similarity(Range&lt;InputIt1&gt; s1, Range&lt;InputIt2&gt; s2, <span class="keywordtype">size_t</span> score_cutoff, <span class="keywordtype">size_t</span>)</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    {</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keywordtype">size_t</span> dist = <a class="code hl_function" href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">remove_common_prefix</a>(s1, s2);</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keywordtype">size_t</span> dist = remove_common_prefix(s1, s2);</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <span class="keywordflow">return</span> (dist &gt;= score_cutoff) ? dist : 0;</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    }</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>};</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>} <span class="comment">// namespace detail</span></div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>} <span class="comment">// namespace rapidfuzz</span></div>
-<div class="ttc" id="agroup__Common_html_gaf0d0fd7ddef296191b70db5c87ecd657"><div class="ttname"><a href="group__Common.html#gaf0d0fd7ddef296191b70db5c87ecd657">rapidfuzz::detail::remove_common_prefix</a></div><div class="ttdeci">size_t remove_common_prefix(Range&lt; InputIt1 &gt; &amp;s1, Range&lt; InputIt2 &gt; &amp;s2)</div><div class="ttdef"><b>Definition</b> common_impl.hpp:50</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
