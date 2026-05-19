@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <utility>
 #include <array>
 #include <stddef.h>
 #include <stdint.h>

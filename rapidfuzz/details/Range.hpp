@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <utility>
 #include <cassert>
 #include <cstddef>
 #include <iterator>
