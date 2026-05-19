@@ -32,7 +32,7 @@ if (RAPIDFUZZ_ENABLE_LINTERS)
             WARNINGS_AS_ERRORS
             # ENABLE_CPPCHECK
             # ENABLE_CLANG_TIDY
-            # ENABLE_INCLUDE_WHAT_YOU_USE
+            ENABLE_INCLUDE_WHAT_YOU_USE
             # ENABLE_COVERAGE
             # ENABLE_PCH
             # PCH_HEADERS <Eigen/Dense> <fmt/core.h> <vector> <utility> <string> <string_view>
