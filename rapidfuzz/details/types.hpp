@@ -304,6 +304,8 @@ public:
         size_t result_pos = 0;
         for (const auto& sop : subsequence) {
             for (; op_iter != op_end && sop != *op_iter; op_iter++) {
+                if (result_pos >= result.size()) throw std::invalid_argument("subsequence is not a subsequence");
+
                 result[result_pos] = *op_iter;
                 result[result_pos].src_pos =
                     static_cast<size_t>(static_cast<ptrdiff_t>(result[result_pos].src_pos) + offset);
