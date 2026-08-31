@@ -2,9 +2,9 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/details/distance.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/details/distance.hpp"
 
 namespace rapidfuzz {
 namespace detail {

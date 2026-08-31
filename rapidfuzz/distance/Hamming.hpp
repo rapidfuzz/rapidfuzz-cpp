@@ -3,8 +3,8 @@
 
 #pragma once
 #include <limits>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/distance/Hamming_impl.hpp>
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/distance/Hamming_impl.hpp"
 
 namespace rapidfuzz {
 

@@ -7,7 +7,7 @@
 #include <cassert>
 #include <cstddef>
 #include <limits>
-#include <rapidfuzz/details/config.hpp>
+#include "rapidfuzz/details/config.hpp"
 #include <stdint.h>
 #include <type_traits>
 

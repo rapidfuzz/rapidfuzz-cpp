@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 /* Copyright © 2022-present Max Bachmann */
 
-#include <rapidfuzz/distance/Jaro.hpp>
+#include "rapidfuzz/distance/Jaro.hpp"
 
 namespace rapidfuzz {
 namespace detail {

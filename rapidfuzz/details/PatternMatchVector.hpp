@@ -6,10 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <rapidfuzz/details/GrowingHashmap.hpp>
-#include <rapidfuzz/details/Matrix.hpp>
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/details/intrinsics.hpp>
+#include "rapidfuzz/details/GrowingHashmap.hpp"
+#include "rapidfuzz/details/Matrix.hpp"
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/details/intrinsics.hpp"
 
 namespace rapidfuzz {
 namespace detail {

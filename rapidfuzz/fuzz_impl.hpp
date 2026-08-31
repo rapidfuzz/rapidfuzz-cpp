@@ -4,7 +4,7 @@
 
 #include "rapidfuzz/details/Range.hpp"
 #include <limits>
-#include <rapidfuzz/details/CharSet.hpp>
+#include "rapidfuzz/details/CharSet.hpp"
 
 #include <algorithm>
 #include <cmath>

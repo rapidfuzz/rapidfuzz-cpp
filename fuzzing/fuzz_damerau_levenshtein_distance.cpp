@@ -3,8 +3,8 @@
 
 #include "../rapidfuzz_reference/DamerauLevenshtein.hpp"
 #include "fuzzing.hpp"
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/distance/DamerauLevenshtein.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/distance/DamerauLevenshtein.hpp"
 #include <stdexcept>
 #include <string>
 

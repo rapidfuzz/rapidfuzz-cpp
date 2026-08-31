@@ -3,8 +3,8 @@
 
 #include "../rapidfuzz_reference/Levenshtein.hpp"
 #include "fuzzing.hpp"
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/distance/Levenshtein.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/distance/Levenshtein.hpp"
 #include <stdexcept>
 #include <string>
 

@@ -3,8 +3,8 @@
 
 #include "../rapidfuzz_reference/OSA.hpp"
 #include "fuzzing.hpp"
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/distance/OSA.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/distance/OSA.hpp"
 #include <stdexcept>
 #include <string>
 

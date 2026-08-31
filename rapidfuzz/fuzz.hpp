@@ -3,10 +3,10 @@
 /* Copyright © 2011 Adam Cohen */
 
 #pragma once
-#include <rapidfuzz/details/CharSet.hpp>
-#include <rapidfuzz/details/PatternMatchVector.hpp>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/distance/Indel.hpp>
+#include "rapidfuzz/details/CharSet.hpp"
+#include "rapidfuzz/details/PatternMatchVector.hpp"
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/distance/Indel.hpp"
 
 namespace rapidfuzz {
 namespace fuzz {
@@ -808,4 +808,4 @@ CachedQRatio(InputIt1 first1, InputIt1 last1) -> CachedQRatio<iter_value_t<Input
 } // namespace fuzz
 } // namespace rapidfuzz
 
-#include <rapidfuzz/fuzz_impl.hpp>
+#include "rapidfuzz/fuzz_impl.hpp"
