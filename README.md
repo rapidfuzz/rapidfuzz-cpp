@@ -145,6 +145,29 @@ double score = rapidfuzz::fuzz::token_sort_ratio("fuzzy was a bear", "fuzzy fuzz
 double score = rapidfuzz::fuzz::token_set_ratio("fuzzy was a bear", "fuzzy fuzzy was a bear")
 ```
 
+### Sequence representation and Unicode
+
+RapidFuzz's C++ distance functions are generic over the input sequence type.
+The algorithms compare the sequence elements exposed by the supplied strings or
+ranges; they do not automatically decode, normalize, or segment Unicode text.
+
+This means the sequence unit depends on the input representation. For example,
+UTF-8 stored in a `std::string` is compared as `char` elements, so one Unicode
+code point can occupy multiple sequence positions. A `std::u16string` exposes
+UTF-16 code units, where supplementary code points are represented by surrogate
+pairs.
+
+A `std::u32string` provides 32-bit code units, which for valid UTF-32 text
+correspond to Unicode code points, but this still does not provide
+grapheme-cluster segmentation.
+
+Applications that require a specific Unicode interpretation should decode,
+normalize, or segment the input into the intended sequence units before
+calculating Levenshtein distance or other string metrics.
+
+For additional background on how runtime and string representations define the
+sequence supplied to edit-distance algorithms, see [Levenshtein implementations and Unicode sequence units](https://www.levenshtein.net/levenshtein-implementations).
+
 ### Process
 In the Python implementation, there is a module process, which is used to compare e.g. a string to a list of strings.
 In Python, this both saves the time to implement those features yourself and can be a lot more efficient than repeated type
