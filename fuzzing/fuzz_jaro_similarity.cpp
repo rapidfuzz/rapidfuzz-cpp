@@ -3,8 +3,8 @@
 
 #include "../rapidfuzz_reference/Jaro.hpp"
 #include "fuzzing.hpp"
-#include <rapidfuzz/details/Range.hpp>
-#include <rapidfuzz/distance/Jaro.hpp>
+#include "rapidfuzz/details/Range.hpp"
+#include "rapidfuzz/distance/Jaro.hpp"
 #include <stdexcept>
 #include <string>
 

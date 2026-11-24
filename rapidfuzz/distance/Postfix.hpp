@@ -4,8 +4,8 @@
 #pragma once
 
 #include <limits>
-#include <rapidfuzz/details/common.hpp>
-#include <rapidfuzz/distance/Postfix_impl.hpp>
+#include "rapidfuzz/details/common.hpp"
+#include "rapidfuzz/distance/Postfix_impl.hpp"
 
 namespace rapidfuzz {
 
