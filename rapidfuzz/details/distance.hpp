@@ -177,10 +177,12 @@ protected:
                              ResType score_cutoff, ResType score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        ResType cutoff_similarity =
-            (maximum >= score_cutoff) ? maximum - score_cutoff : static_cast<ResType>(WorstSimilarity);
-        ResType hint_similarity =
-            (maximum >= score_hint) ? maximum - score_hint : static_cast<ResType>(WorstSimilarity);
+        ResType cutoff_similarity = (maximum >= score_cutoff)
+                                        ? DistCutoff_to_SimCutoff<ResType>(maximum, score_cutoff)
+                                        : static_cast<ResType>(WorstSimilarity);
+        ResType hint_similarity = (maximum >= score_hint)
+                                      ? DistCutoff_to_SimCutoff<ResType>(maximum, score_hint)
+                                      : static_cast<ResType>(WorstSimilarity);
         ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
         return _apply_distance_score_cutoff(dist, score_cutoff);
@@ -357,8 +359,10 @@ protected:
     {
         const T& derived = static_cast<const T&>(*this);
         ResType maximum = derived.maximum(s2);
-        ResType cutoff_similarity = (maximum > score_cutoff) ? maximum - score_cutoff : 0;
-        ResType hint_similarity = (maximum > score_hint) ? maximum - score_hint : 0;
+        ResType cutoff_similarity =
+            (maximum > score_cutoff) ? DistCutoff_to_SimCutoff<ResType>(maximum, score_cutoff) : 0;
+        ResType hint_similarity =
+            (maximum > score_hint) ? DistCutoff_to_SimCutoff<ResType>(maximum, score_hint) : 0;
         ResType sim = derived._similarity(s2, cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
         return _apply_distance_score_cutoff(dist, score_cutoff);

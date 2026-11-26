@@ -2,12 +2,15 @@
 /* Copyright © 2021 Max Bachmann */
 
 #pragma once
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <rapidfuzz/details/Range.hpp>
 #include <rapidfuzz/details/SplittedSentenceView.hpp>
 #include <rapidfuzz/details/intrinsics.hpp>
 #include <rapidfuzz/details/type_traits.hpp>
 #include <rapidfuzz/details/types.hpp>
+#include <type_traits>
 
 #if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
 #    include <mm_malloc.h>
@@ -59,6 +62,20 @@ static inline rapidfuzz::rf_enable_if_t<!std::is_floating_point<T>::value, T>
 NormDist_to_Dist(T maximum, double norm_cutoff)
 {
     return static_cast<T>(std::ceil(static_cast<double>(maximum) * norm_cutoff));
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<std::is_floating_point<T>::value, T>
+DistCutoff_to_SimCutoff(T maximum, T dist_cutoff, T imprecision = 0.00001)
+{
+    return std::max(static_cast<T>(0), maximum - dist_cutoff - imprecision);
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<!std::is_floating_point<T>::value, T>
+DistCutoff_to_SimCutoff(T maximum, T dist_cutoff)
+{
+    return maximum - dist_cutoff;
 }
 
 template <typename InputIt1, typename InputIt2>

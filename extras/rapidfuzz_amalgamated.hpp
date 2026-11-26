@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2026-11-26 10:11:41.207318
+//  Generated: 2026-11-26 10:33:09.873435
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -1326,6 +1326,8 @@ using RangeVec = std::vector<Range<InputIt>>;
 } // namespace detail
 } // namespace rapidfuzz
 
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 
 #include <algorithm>
@@ -1638,6 +1640,8 @@ RAPIDFUZZ_CONSTEXPR_CXX14 void unroll(F&& f)
 } // namespace detail
 } // namespace rapidfuzz
 
+#include <type_traits>
+
 #if defined(__APPLE__) && !defined(_LIBCPP_HAS_C11_FEATURES)
 #    include <mm_malloc.h>
 #endif
@@ -1688,6 +1692,20 @@ static inline rapidfuzz::rf_enable_if_t<!std::is_floating_point<T>::value, T>
 NormDist_to_Dist(T maximum, double norm_cutoff)
 {
     return static_cast<T>(std::ceil(static_cast<double>(maximum) * norm_cutoff));
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<std::is_floating_point<T>::value, T>
+DistCutoff_to_SimCutoff(T maximum, T dist_cutoff, T imprecision = 0.00001)
+{
+    return std::max(static_cast<T>(0), maximum - dist_cutoff - imprecision);
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<!std::is_floating_point<T>::value, T>
+DistCutoff_to_SimCutoff(T maximum, T dist_cutoff)
+{
+    return maximum - dist_cutoff;
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -3343,10 +3361,12 @@ protected:
                              ResType score_cutoff, ResType score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        ResType cutoff_similarity =
-            (maximum >= score_cutoff) ? maximum - score_cutoff : static_cast<ResType>(WorstSimilarity);
-        ResType hint_similarity =
-            (maximum >= score_hint) ? maximum - score_hint : static_cast<ResType>(WorstSimilarity);
+        ResType cutoff_similarity = (maximum >= score_cutoff)
+                                        ? DistCutoff_to_SimCutoff<ResType>(maximum, score_cutoff)
+                                        : static_cast<ResType>(WorstSimilarity);
+        ResType hint_similarity = (maximum >= score_hint)
+                                      ? DistCutoff_to_SimCutoff<ResType>(maximum, score_hint)
+                                      : static_cast<ResType>(WorstSimilarity);
         ResType sim = T::_similarity(s1, s2, std::forward<Args>(args)..., cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
         return _apply_distance_score_cutoff(dist, score_cutoff);
@@ -3523,8 +3543,10 @@ protected:
     {
         const T& derived = static_cast<const T&>(*this);
         ResType maximum = derived.maximum(s2);
-        ResType cutoff_similarity = (maximum > score_cutoff) ? maximum - score_cutoff : 0;
-        ResType hint_similarity = (maximum > score_hint) ? maximum - score_hint : 0;
+        ResType cutoff_similarity =
+            (maximum > score_cutoff) ? DistCutoff_to_SimCutoff<ResType>(maximum, score_cutoff) : 0;
+        ResType hint_similarity =
+            (maximum > score_hint) ? DistCutoff_to_SimCutoff<ResType>(maximum, score_hint) : 0;
         ResType sim = derived._similarity(s2, cutoff_similarity, hint_similarity);
         ResType dist = maximum - sim;
         return _apply_distance_score_cutoff(dist, score_cutoff);
