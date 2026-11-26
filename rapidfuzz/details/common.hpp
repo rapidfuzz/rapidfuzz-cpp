@@ -46,6 +46,21 @@ static inline double NormSim_to_NormDist(double score_cutoff, double imprecision
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
 }
 
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<std::is_floating_point<T>::value, T>
+NormDist_to_Dist(T maximum, double norm_cutoff, double imprecision = 0.00001)
+{
+    return static_cast<T>(
+        std::min(static_cast<double>(maximum), static_cast<double>(maximum) * norm_cutoff + imprecision));
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<!std::is_floating_point<T>::value, T>
+NormDist_to_Dist(T maximum, double norm_cutoff)
+{
+    return static_cast<T>(std::ceil(static_cast<double>(maximum) * norm_cutoff));
+}
+
 template <typename InputIt1, typename InputIt2>
 DecomposedSet<InputIt1, InputIt2, InputIt1> set_decomposition(SplittedSentenceView<InputIt1> a,
                                                               SplittedSentenceView<InputIt2> b);

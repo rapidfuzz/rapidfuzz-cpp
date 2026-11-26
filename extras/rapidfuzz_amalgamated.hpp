@@ -1,7 +1,7 @@
 //  Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 //  SPDX-License-Identifier: MIT
 //  RapidFuzz v1.0.2
-//  Generated: 2025-02-11 13:48:20.141647
+//  Generated: 2026-11-26 10:11:41.207318
 //  ----------------------------------------------------------
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
@@ -16,9 +16,11 @@
 #include <limits>
 #include <numeric>
 
+#include <algorithm>
 #include <array>
 #include <stddef.h>
 #include <stdint.h>
+#include <utility>
 
 namespace rapidfuzz {
 namespace detail {
@@ -415,6 +417,7 @@ private:
 } // namespace detail
 } // namespace rapidfuzz
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <iterator>
@@ -423,6 +426,7 @@ private:
 #include <stdexcept>
 #include <stdint.h>
 #include <sys/types.h>
+#include <utility>
 #include <vector>
 
 #include <algorithm>
@@ -754,7 +758,8 @@ public:
         size_t result_pos = 0;
         for (const auto& sop : subsequence) {
             for (; op_iter != op_end && sop != *op_iter; op_iter++) {
-                if (result_pos >= result.size()) throw std::invalid_argument("subsequence is not a subsequence");
+                if (result_pos >= result.size())
+                    throw std::invalid_argument("subsequence is not a subsequence");
 
                 result[result_pos] = *op_iter;
                 result[result_pos].src_pos =
@@ -1665,15 +1670,24 @@ TO opt_static_cast(const FROM& value)
     return static_cast<TO>(value);
 }
 
-/**
- * @defgroup Common Common
- * Common utilities shared among multiple functions
- * @{
- */
-
 static inline double NormSim_to_NormDist(double score_cutoff, double imprecision = 0.00001)
 {
     return std::min(1.0, 1.0 - score_cutoff + imprecision);
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<std::is_floating_point<T>::value, T>
+NormDist_to_Dist(T maximum, double norm_cutoff, double imprecision = 0.00001)
+{
+    return static_cast<T>(
+        std::min(static_cast<double>(maximum), static_cast<double>(maximum) * norm_cutoff + imprecision));
+}
+
+template <typename T>
+static inline rapidfuzz::rf_enable_if_t<!std::is_floating_point<T>::value, T>
+NormDist_to_Dist(T maximum, double norm_cutoff)
+{
+    return static_cast<T>(std::ceil(static_cast<double>(maximum) * norm_cutoff));
 }
 
 template <typename InputIt1, typename InputIt2>
@@ -1716,8 +1730,6 @@ static inline void rf_aligned_free(void* ptr)
     free(ptr);
 #endif
 }
-
-/**@}*/
 
 } // namespace detail
 } // namespace rapidfuzz
@@ -3208,10 +3220,8 @@ protected:
                                        double score_cutoff, double score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        auto cutoff_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        auto hint_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_hint));
+        auto cutoff_distance = NormDist_to_Dist(maximum, score_cutoff);
+        auto hint_distance = NormDist_to_Dist(maximum, score_hint);
         auto dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance, hint_distance);
         double norm_dist = (maximum != 0) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
@@ -3396,10 +3406,8 @@ protected:
     {
         const T& derived = static_cast<const T&>(*this);
         auto maximum = derived.maximum(s2);
-        auto cutoff_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        auto hint_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_hint));
+        auto cutoff_distance = NormDist_to_Dist(maximum, score_cutoff);
+        auto hint_distance = NormDist_to_Dist(maximum, score_hint);
         double dist = static_cast<double>(derived._distance(s2, cutoff_distance, hint_distance));
         double norm_dist = (maximum != 0) ? dist / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
@@ -3868,6 +3876,12 @@ class DamerauLevenshtein
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
+
+/**
+ * @addtogroup Distance
+ * @{
+ */
+
 /* the API will require a change when adding custom weights */
 namespace experimental {
 /**
@@ -4013,6 +4027,9 @@ CachedDamerauLevenshtein(InputIt1 first1, InputIt1 last1) -> CachedDamerauLevens
 #endif
 
 } // namespace experimental
+
+/** @} */
+
 } // namespace rapidfuzz
 
 #include <limits>
@@ -4075,6 +4092,11 @@ Editops hamming_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2, bo
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
+
+/**
+ * @addtogroup Distance
+ * @{
+ */
 
 /**
  * @brief Calculates the Hamming distance between two strings.
@@ -5015,6 +5037,11 @@ class LCSseq : public SimilarityBase<LCSseq, size_t, 0, std::numeric_limits<int6
 
 namespace rapidfuzz {
 
+/**
+ * @addtogroup Distance
+ * @{
+ */
+
 template <typename InputIt1, typename InputIt2>
 size_t lcs_seq_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                         size_t score_cutoff = std::numeric_limits<size_t>::max())
@@ -5239,6 +5266,8 @@ template <typename InputIt1>
 CachedLCSseq(InputIt1 first1, InputIt1 last1) -> CachedLCSseq<iter_value_t<InputIt1>>;
 #endif
 
+/** @} */
+
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
@@ -5303,6 +5332,11 @@ class Indel : public DistanceBase<Indel, size_t, 0, std::numeric_limits<int64_t>
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
+
+/**
+ * @addtogroup Distance
+ * @{
+ */
 
 template <typename InputIt1, typename InputIt2>
 size_t indel_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
@@ -5484,6 +5518,8 @@ explicit CachedIndel(const Sentence1& s1_) -> CachedIndel<char_type<Sentence1>>;
 template <typename InputIt1>
 CachedIndel(InputIt1 first1, InputIt1 last1) -> CachedIndel<iter_value_t<InputIt1>>;
 #endif
+
+/** @} */
 
 } // namespace rapidfuzz
 
@@ -6348,6 +6384,11 @@ class Jaro : public SimilarityBase<Jaro, double, 0, 1> {
 
 namespace rapidfuzz {
 
+/**
+ * @addtogroup Distance
+ * @{
+ */
+
 template <typename InputIt1, typename InputIt2>
 double jaro_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
                      double score_cutoff = 1.0)
@@ -6569,6 +6610,8 @@ template <typename InputIt1>
 CachedJaro(InputIt1 first1, InputIt1 last1) -> CachedJaro<iter_value_t<InputIt1>>;
 #endif
 
+/** @} */
+
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
@@ -6660,6 +6703,11 @@ class JaroWinkler : public SimilarityBase<JaroWinkler, double, 0, 1, double> {
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
+
+/**
+ * @addtogroup Distance
+ * @{
+ */
 
 template <typename InputIt1, typename InputIt2,
           typename = rapidfuzz::rf_enable_if_t<!std::is_same<InputIt2, double>::value>>
@@ -6860,6 +6908,8 @@ template <typename InputIt1>
 CachedJaroWinkler(InputIt1 first1, InputIt1 last1, double _prefix_weight = 0.1)
     -> CachedJaroWinkler<iter_value_t<InputIt1>>;
 #endif
+
+/** @} */
 
 } // namespace rapidfuzz
 
@@ -8118,6 +8168,11 @@ Editops levenshtein_editops(const Range<InputIt1>& s1, const Range<InputIt2>& s2
 namespace rapidfuzz {
 
 /**
+ * @addtogroup Distance
+ * @{
+ */
+
+/**
  * @brief Calculates the minimum number of insertions, deletions, and substitutions
  * required to change one sequence into the other according to Levenshtein with custom
  * costs for insertion, deletion and substitution
@@ -8600,6 +8655,8 @@ CachedLevenshtein(InputIt1 first1, InputIt1 last1, LevenshteinWeightTable aWeigh
     -> CachedLevenshtein<iter_value_t<InputIt1>>;
 #endif
 
+/** @} */
+
 } // namespace rapidfuzz
 
 #include <limits>
@@ -8875,6 +8932,11 @@ class OSA : public DistanceBase<OSA, size_t, 0, std::numeric_limits<int64_t>::ma
 namespace rapidfuzz {
 
 /**
+ * @addtogroup Distance
+ * @{
+ */
+
+/**
  * @brief Calculates the optimal string alignment (OSA) distance between two strings.
  *
  * @details
@@ -9142,6 +9204,7 @@ CachedOSA(const Sentence1& s1_) -> CachedOSA<char_type<Sentence1>>;
 template <typename InputIt1>
 CachedOSA(InputIt1 first1, InputIt1 last1) -> CachedOSA<iter_value_t<InputIt1>>;
 #endif
+
 /**@}*/
 
 } // namespace rapidfuzz
@@ -9173,6 +9236,11 @@ class Postfix : public SimilarityBase<Postfix, size_t, 0, std::numeric_limits<in
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
+
+/**
+ * @addtogroup Distance
+ * @{
+ */
 
 template <typename InputIt1, typename InputIt2>
 size_t postfix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
@@ -9265,6 +9333,7 @@ explicit CachedPostfix(const Sentence1& s1_) -> CachedPostfix<char_type<Sentence
 template <typename InputIt1>
 CachedPostfix(InputIt1 first1, InputIt1 last1) -> CachedPostfix<iter_value_t<InputIt1>>;
 #endif
+
 /**@}*/
 
 } // namespace rapidfuzz
@@ -9296,6 +9365,11 @@ class Prefix : public SimilarityBase<Prefix, size_t, 0, std::numeric_limits<int6
 } // namespace rapidfuzz
 
 namespace rapidfuzz {
+
+/**
+ * @addtogroup Distance
+ * @{
+ */
 
 template <typename InputIt1, typename InputIt2>
 size_t prefix_distance(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2,
@@ -9481,6 +9555,12 @@ ReturnType opcodes_apply_impl(const Opcodes& ops, InputIt1 first1, InputIt1 last
 
 } // namespace detail
 
+/**
+ * @defgroup Distance Distance Algorithms
+ * @brief String distance and similarity measurements.
+ * @{
+ */
+
 template <typename CharT, typename InputIt1, typename InputIt2>
 std::basic_string<CharT> editops_apply_str(const Editops& ops, InputIt1 first1, InputIt1 last1,
                                            InputIt2 first2, InputIt2 last2)
@@ -9536,6 +9616,8 @@ std::vector<CharT> opcodes_apply_vec(const Opcodes& ops, const Sentence1& s1, co
     return detail::opcodes_apply_impl<std::vector<CharT>>(ops, detail::to_begin(s1), detail::to_end(s1),
                                                           detail::to_begin(s2), detail::to_end(s2));
 }
+
+/** @} */
 
 } // namespace rapidfuzz
 
@@ -11218,7 +11300,7 @@ double WRatio(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, 
         return std::max(end_ratio, token_ratio(first1, last1, first2, last2, score_cutoff) * UNBASE_SCALE);
     }
 
-    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
+    const double PARTIAL_SCALE = (len_ratio <= 8.0) ? 0.9 : 0.6;
 
     score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
     end_ratio =
@@ -11274,7 +11356,7 @@ double CachedWRatio<CharT1>::similarity(InputIt2 first2, InputIt2 last2, double 
         return std::max(end_ratio, r * UNBASE_SCALE);
     }
 
-    const double PARTIAL_SCALE = (len_ratio < 8.0) ? 0.9 : 0.6;
+    const double PARTIAL_SCALE = (len_ratio <= 8.0) ? 0.9 : 0.6;
 
     score_cutoff = std::max(score_cutoff, end_ratio) / PARTIAL_SCALE;
     end_ratio =

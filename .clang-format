@@ -4,7 +4,7 @@ AccessModifierOffset: -4
 
 AllowShortIfStatementsOnASingleLine: true
 PointerAlignment: Left
-AllowShortBlocksOnASingleLine: Always
+AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Custom
 AlwaysBreakTemplateDeclarations: true

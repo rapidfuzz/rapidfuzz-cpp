@@ -1,5 +1,9 @@
 ## Changelog
 
+## [3.3.5] - 2026-11-26
+### Fixed
+- fixed some issues with score cutoff calculation for Jaro/JaroWinkler
+
 ## [3.3.4] - 2026-08-29
 ### Fixed
 - fixed potential out of bound access inside Editops::remove_subsequence

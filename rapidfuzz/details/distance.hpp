@@ -54,10 +54,8 @@ protected:
                                        double score_cutoff, double score_hint)
     {
         auto maximum = T::maximum(s1, s2, args...);
-        auto cutoff_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        auto hint_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_hint));
+        auto cutoff_distance = NormDist_to_Dist(maximum, score_cutoff);
+        auto hint_distance = NormDist_to_Dist(maximum, score_hint);
         auto dist = T::_distance(s1, s2, std::forward<Args>(args)..., cutoff_distance, hint_distance);
         double norm_dist = (maximum != 0) ? static_cast<double>(dist) / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
@@ -242,10 +240,8 @@ protected:
     {
         const T& derived = static_cast<const T&>(*this);
         auto maximum = derived.maximum(s2);
-        auto cutoff_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_cutoff));
-        auto hint_distance =
-            static_cast<decltype(maximum)>(std::ceil(static_cast<double>(maximum) * score_hint));
+        auto cutoff_distance = NormDist_to_Dist(maximum, score_cutoff);
+        auto hint_distance = NormDist_to_Dist(maximum, score_hint);
         double dist = static_cast<double>(derived._distance(s2, cutoff_distance, hint_distance));
         double norm_dist = (maximum != 0) ? dist / static_cast<double>(maximum) : 0.0;
         return (norm_dist <= score_cutoff) ? norm_dist : 1.0;
