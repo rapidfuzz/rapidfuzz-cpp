@@ -1121,6 +1121,7 @@ HirschbergPos find_hirschberg_pos(const Range<InputIt1>& s1, const Range<InputIt
 
         right_scores.resize(right_last_pos - right_first_pos + 1, 0);
         assume(right_scores.size() != 0);
+        assume(right_scores.data() != nullptr);
         right_scores[0] = right_row.prev_score;
 
         for (size_t i = right_first_pos; i < right_last_pos; ++i) {
