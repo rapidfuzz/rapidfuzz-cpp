@@ -79,6 +79,12 @@ partial_ratio_impl(const detail::Range<InputIt1>& s1, const detail::Range<InputI
     res.dest_start = 0;
     res.dest_end = len1;
 
+    /* short needles are already handled efficiently by the bit-parallel implementation */
+    if (len1 > 64 && len1 == len2 && std::equal(s1.begin(), s1.end(), s2.begin())) {
+        res.score = 100.0;
+        return res;
+    }
+
     if (len2 > len1) {
         size_t maximum = len1 * 2;
         double norm_cutoff_sim = rapidfuzz::detail::NormSim_to_NormDist(score_cutoff / 100);

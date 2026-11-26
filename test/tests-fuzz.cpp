@@ -44,6 +44,35 @@ void score_test(double expected, double input)
     REQUIRE_THAT(input, Catch::Matchers::WithinAbs(expected, 0.000001));
 }
 
+TEST_CASE("PartialRatioIdenticalInputs")
+{
+    for (size_t length : {size_t(0), size_t(1), size_t(64), size_t(65), size_t(50000)}) {
+        const std::string s1(length, 'a');
+        const std::string s2(length, 'a');
+        fuzz::CachedPartialRatio<char> cached_ratio(s1);
+
+        for (double cutoff : {0.0, 50.0, 100.0, 100.0001}) {
+            const double expected = cutoff > 100 ? 0 : 100;
+            score_test(expected, fuzz::partial_ratio(s1, s2, cutoff));
+            score_test(expected, fuzz::partial_ratio(s1.begin(), s1.end(), s2.begin(), s2.end(), cutoff));
+            score_test(expected, cached_ratio.similarity(s2, cutoff));
+
+            auto alignment = fuzz::partial_ratio_alignment(s1, s2, cutoff);
+            score_test(expected, alignment.score);
+            REQUIRE(alignment.src_start == 0);
+            REQUIRE(alignment.src_end == s1.size());
+            REQUIRE(alignment.dest_start == 0);
+            REQUIRE(alignment.dest_end == s2.size());
+        }
+    }
+
+    const std::wstring ws1(50000, L'a');
+    const std::wstring ws2(50000, L'a');
+    score_test(100, fuzz::partial_ratio(ws1, ws2, 50));
+    score_test(100, fuzz::partial_ratio(ws1, ws2, 100));
+    score_test(0, fuzz::partial_ratio(ws1, ws2, 100.0001));
+}
+
 /**
  * @name RatioTest
  *
